@@ -1,0 +1,31 @@
+{
+  "name": "quicktrace",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^17.3.1",
+    "lucide-react": "^0.424.0",
+    "next": "14.2.5",
+    "next-auth": "^4.24.7",
+    "nodemailer": "^7.0.13",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "prisma": "^5.18.0"
+  }
+}

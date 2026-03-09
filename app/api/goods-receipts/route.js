@@ -1,0 +1,169 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export async function GET(req) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "CLIENT") {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  try {
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: parseInt(session.user.id) }
+    });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    const receipts = await prisma.goodsReceipt.findMany({
+      where: { clientProfileId: profile.id },
+      orderBy: { date: 'desc' }
+    });
+    return NextResponse.json(receipts);
+  } catch (error) {
+    console.error("Error fetching goods receipts:", error);
+    return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(req) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "CLIENT") {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  try {
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: parseInt(session.user.id) }
+    });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    const body = await req.json();
+    const { 
+      providerName, 
+      productName, 
+      lote, 
+      invoiceNumber, 
+      quantity, 
+      date, 
+      deliveryNoteImage 
+    } = body;
+
+    if (!productName || !date) {
+      return NextResponse.json({ error: "Producto y fecha son obligatorios" }, { status: 400 });
+    }
+
+    const receipt = await prisma.goodsReceipt.create({
+      data: {
+        providerName,
+        productName,
+        lote,
+        invoiceNumber,
+        quantity,
+        date: new Date(date),
+        deliveryNoteImage,
+        clientProfileId: profile.id
+      }
+    });
+
+    return NextResponse.json({ success: true, receipt });
+  } catch (error) {
+    console.error("Error creating goods receipt:", error);
+    return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "CLIENT") {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  try {
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: parseInt(session.user.id) }
+    });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    const body = await req.json();
+    const { 
+      id,
+      providerName, 
+      productName, 
+      lote, 
+      invoiceNumber, 
+      quantity, 
+      date, 
+      deliveryNoteImage 
+    } = body;
+
+    if (!id || !productName || !date) {
+      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+
+    const receipt = await prisma.goodsReceipt.update({
+      where: { 
+        id: parseInt(id),
+        clientProfileId: profile.id
+      },
+      data: {
+        providerName,
+        productName,
+        lote,
+        invoiceNumber,
+        quantity,
+        date: new Date(date),
+        deliveryNoteImage
+      }
+    });
+
+    return NextResponse.json({ success: true, receipt });
+  } catch (error) {
+    console.error("Error updating goods receipt:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "CLIENT") {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+  }
+
+  try {
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: parseInt(session.user.id) }
+    });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    await prisma.goodsReceipt.delete({
+      where: { 
+        id: parseInt(id),
+        clientProfileId: profile.id
+      }
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting goods receipt:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
