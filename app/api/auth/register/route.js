@@ -11,9 +11,11 @@ export async function POST(req) {
       return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 });
     }
 
+    const normalizedEmail = email.toLowerCase();
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (existingUser) {
@@ -28,7 +30,7 @@ export async function POST(req) {
     await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
-          email,
+          email: normalizedEmail,
           name,
           password: "", // Temporary empty password
           role: "CLIENT",
@@ -55,7 +57,7 @@ export async function POST(req) {
     const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`;
     
     await sendEmail({
-      to: email,
+      to: normalizedEmail,
       subject: "Verifica tu cuenta en QuickTrace",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">

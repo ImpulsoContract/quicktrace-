@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const adminEmail = 'fernando@quicktrace.es';
+    const adminEmail = 'fernando@quicktrace.es'.toLowerCase();
     const adminPassword = await bcrypt.hash('1alejandra1FERNANDO', 10);
 
     const admin = await prisma.user.upsert({
