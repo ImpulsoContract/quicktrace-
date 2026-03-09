@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
       <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '3rem', background: 'white' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
            <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto' }}>
-              <Image src="/images/logo.png" alt="QuickTrace" fill style={{ objectFit: 'contain' }} priority />
+              <Image src="/images/logo.jpg" alt="QuickTrace" fill style={{ objectFit: 'contain' }} priority />
            </div>
         </div>
         <Suspense fallback={<div style={{ textAlign: 'center' }}><Loader2 className="animate-spin" size={40} color="var(--corp-green)" /></div>}>

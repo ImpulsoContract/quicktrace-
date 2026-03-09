@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
       <div className="glass-card" style={{ width: '100%', maxWidth: '420px', padding: '3rem', background: 'white' }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 1.5rem' }}>
-             <Image src="/images/logo.png" alt="QuickTrace" fill style={{ objectFit: 'contain' }} priority />
+             <Image src="/images/logo.jpg" alt="QuickTrace" fill style={{ objectFit: 'contain' }} priority />
           </div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Recuperar Contraseña</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Te enviaremos un enlace para restablecer tu acceso</p>

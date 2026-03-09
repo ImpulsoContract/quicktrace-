@@ -151,7 +151,7 @@ export default function AdminDashboard() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ position: 'relative', width: '40px', height: '40px' }}>
-            <Image src="/images/logo.png" alt="Logo" fill style={{ objectFit: 'contain' }} />
+            <Image src="/images/logo.jpg" alt="Logo" fill style={{ objectFit: 'contain' }} />
           </div>
           <span style={{ fontWeight: '800', fontSize: '1.2rem', color: 'var(--corp-green)' }}>QuickTrace</span>
         </div>

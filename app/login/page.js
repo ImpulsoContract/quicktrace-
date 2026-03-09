@@ -56,7 +56,7 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ position: 'relative', width: '180px', height: '180px', margin: '0 auto 1.5rem' }}>
              <Image 
-               src="/images/logo.png" 
+               src="/images/logo.jpg" 
                alt="QuickTrace" 
                fill 
                style={{ objectFit: 'contain' }}

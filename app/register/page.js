@@ -73,7 +73,7 @@ export default function RegisterPage() {
       <div className="glass-card" style={{ width: '100%', maxWidth: '480px', padding: '3rem', background: 'white' }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 1.5rem' }}>
-             <Image src="/images/logo.png" alt="QuickTrace" fill style={{ objectFit: 'contain' }} priority />
+             <Image src="/images/logo.jpg" alt="QuickTrace" fill style={{ objectFit: 'contain' }} priority />
           </div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--corp-green)', marginBottom: '0.25rem' }}>Empieza Hoy</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Registra tu negocio en QuickTrace</p>

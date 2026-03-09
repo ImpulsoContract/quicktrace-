@@ -864,7 +864,8 @@ export default function ClientDashboard() {
         }} className="sidebar-responsive">
           <div style={{ padding: '2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ position: 'relative', width: '32px', height: '32px' }}>
-              <Image src="/images/logo.png" alt="Logo" fill style={{ objectFit: 'contain' }} />
+              <Image src="/images/logo.jpg"
+ alt="Logo" fill style={{ objectFit: 'contain' }} />
             </div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>
               QuickTrace
