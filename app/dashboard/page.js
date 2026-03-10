@@ -8,9 +8,10 @@ import {
   ArrowLeft, Save, Beaker,
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
-  Package, Truck, FileCheck, Camera, X
+  Package, Truck, FileCheck, Camera, X, Crown, Zap
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 import Image from "next/image";
 
@@ -1070,7 +1071,14 @@ export default function ClientDashboard() {
             <div>
               <header style={{ marginBottom: '3rem' }}>
                 <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>Trazabilidad</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Selecciona una de tus recetas para registrar una nueva elaboración.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Selecciona una de tus recetas para registrar una nueva elaboración.</p>
+                  <PlanUsageIndicator 
+                    label="Elaboraciones registradas" 
+                    current={totalElabs} 
+                    limit={profile?.plan?.elaborationsLimit} 
+                  />
+                </div>
               </header>
 
               {recipes.length === 0 ? (
@@ -1129,7 +1137,14 @@ export default function ClientDashboard() {
               <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>Entradas de mercancía</h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Gestiona los albaranes y entradas de productos de tus proveedores.</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Gestiona los albaranes y entradas de productos de tus proveedores.</p>
+                    <PlanUsageIndicator 
+                      label="Entradas" 
+                      current={goodsReceipts.length} 
+                      limit={profile?.plan?.goodsLimit} 
+                    />
+                  </div>
                 </div>
                 <button 
                   onClick={() => {
@@ -1277,7 +1292,14 @@ export default function ClientDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>Registros de limpieza</h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Gestiona y registra el mantenimiento de las áreas del establecimiento.</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Gestiona y registra el mantenimiento de las áreas del establecimiento.</p>
+                    <PlanUsageIndicator 
+                      label="Registros" 
+                      current={cleaningLogs.length} 
+                      limit={profile?.plan?.cleaningLimit} 
+                    />
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button 
@@ -1434,7 +1456,14 @@ export default function ClientDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '2rem', borderRadius: '1.5rem', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}>
                 <div>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>Temperaturas de Cámaras</h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Seguimiento y registro de las temperaturas de conservación.</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Seguimiento y registro de las temperaturas de conservación.</p>
+                    <PlanUsageIndicator 
+                      label="Registros" 
+                      current={tempRecords.length} 
+                      limit={profile?.plan?.temperaturesLimit} 
+                    />
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button 
@@ -1591,7 +1620,14 @@ export default function ClientDashboard() {
               <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>Gestión de Recetas</h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Crea y administra tus propias recetas.</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Crea y administra tus propias recetas.</p>
+                    <PlanUsageIndicator 
+                      label="Recetas creadas" 
+                      current={recipes.length} 
+                      limit={profile?.plan?.recipesLimit} 
+                    />
+                  </div>
                 </div>
                 <button 
                   onClick={() => {
@@ -2302,6 +2338,45 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function PlanUsageIndicator({ label, current, limit }) {
+  const isCapped = limit !== null && current >= limit;
+  const percentage = limit ? Math.min((current / limit) * 100, 100) : 0;
+
+  return (
+    <div style={{ 
+      display: 'inline-flex', alignItems: 'center', gap: '1.5rem', 
+      background: 'white', padding: '0.75rem 1.5rem', borderRadius: '1rem', 
+      border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {label}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '1.1rem', fontWeight: '900', color: isCapped ? '#ef4444' : 'var(--corp-green)' }}>
+            {current} / {limit === null ? '∞' : limit}
+          </span>
+          {limit && (
+            <div style={{ width: '60px', height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ width: `${percentage}%`, height: '100%', background: isCapped ? '#ef4444' : 'var(--corp-green)', transition: 'width 0.5s ease' }} />
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <Link href="/dashboard/plans" style={{ 
+        display: 'flex', alignItems: 'center', gap: '0.5rem', 
+        padding: '0.5rem 1rem', background: 'rgba(66, 98, 22, 0.1)', 
+        color: 'var(--corp-green)', borderRadius: '0.75rem', 
+        fontSize: '0.85rem', fontWeight: '800', textDecoration: 'none',
+        transition: 'all 0.2s'
+      }}>
+        <Crown size={14} /> AMPLIAR LÍMITE
+      </Link>
     </div>
   );
 }
