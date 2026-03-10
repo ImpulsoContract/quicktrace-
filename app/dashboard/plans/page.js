@@ -12,6 +12,8 @@ export default function PlansPage() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [submitting, setSubmitting] = useState(null);
+
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -28,6 +30,28 @@ export default function PlansPage() {
     };
     fetchPlans();
   }, []);
+
+  const handleSubscribe = async (planId) => {
+    setSubmitting(planId);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Error al iniciar el pago");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error de conexión");
+    } finally {
+      setSubmitting(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -106,12 +130,20 @@ export default function PlansPage() {
                   <FeatureToggle icon={<Thermometer size={18}/>} label="Control Temperatura" active={plan.hasTemperatures} limit={plan.temperaturesLimit} />
                 </div>
 
-                <button className={isDemo ? "btn-secondary" : "btn-primary"} style={{ 
-                  width: '100%', padding: '1rem', borderRadius: '1rem', 
-                  fontSize: '1rem', fontWeight: '800', textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}>
-                  {isDemo ? "Plan Actual" : "Contratar Plan"}
+                <button 
+                  onClick={() => !isDemo && handleSubscribe(plan.id)}
+                  disabled={submitting === plan.id}
+                  className={isDemo ? "btn-secondary" : "btn-primary"} 
+                  style={{ 
+                    width: '100%', padding: '1rem', borderRadius: '1rem', 
+                    fontSize: '1rem', fontWeight: '800', textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    cursor: (isDemo || submitting === plan.id) ? 'not-allowed' : 'pointer',
+                    opacity: (isDemo || submitting === plan.id) ? 0.7 : 1
+                  }}
+                >
+                  {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isDemo ? "Plan Actual" : "Contratar Plan")}
                 </button>
               </div>
             );

@@ -51,6 +51,7 @@ export async function POST(req) {
       data: {
         name: data.name,
         priceYearly: parseFloat(data.priceYearly) || 0,
+        stripePriceId: data.stripePriceId || null,
         recipesLimit: data.recipesLimit === "" ? null : parseInt(data.recipesLimit),
         elaborationsLimit: data.elaborationsLimit === "" ? null : parseInt(data.elaborationsLimit),
         hasCleaning: data.hasCleaning || false,

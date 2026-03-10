@@ -35,10 +35,17 @@ model ClientProfile {
   nif                    String
   phone                  String?
   urlClientify           String?
+  personName             String?
   
   // New Plan System
-  planId                Int?
+  planId                String?
   plan                  PricingPlan? @relation(fields: [planId], references: [id])
+  
+  // Campos de Stripe
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
   
   // Old fields (to be deprecated after migration)
   accountType           String   @default("DEMO") 
@@ -58,26 +65,26 @@ model ClientProfile {
 }
 
 model PricingPlan {
-  id                Int      @id @default(autoincrement())
-  name              String   @unique
-  priceYearly       Float    @default(0)
+  id                String          @id @default(cuid())
+  name              String          @unique
+  priceYearly       Float           @default(0)
+  stripePriceId     String?         // ID del precio en Stripe (price_...)
   
-  recipesLimit      Int?     // null = unlimited
-  elaborationsLimit Int?     // null = unlimited
+  recipesLimit      Int?            // null = ilimitadas
+  elaborationsLimit Int?
   
-  hasCleaning       Boolean  @default(false)
-  cleaningLimit     Int?     
+  hasCleaning       Boolean         @default(false)
+  cleaningLimit     Int?
   
-  hasGoods          Boolean  @default(false)
-  goodsLimit        Int?     
+  hasGoods          Boolean         @default(false)
+  goodsLimit        Int?
   
-  hasTemperatures   Boolean  @default(false)
-  temperaturesLimit Int?     
-
+  hasTemperatures   Boolean         @default(false)
+  temperaturesLimit Int?
+  
   clients           ClientProfile[]
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model Recipe {

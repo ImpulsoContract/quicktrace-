@@ -21,6 +21,7 @@ export async function PATCH(req, { params }) {
       data: {
         name: data.name,
         priceYearly: parseFloat(data.priceYearly) || 0,
+        stripePriceId: data.stripePriceId || null,
         recipesLimit: data.recipesLimit === "" || data.recipesLimit === null ? null : parseInt(data.recipesLimit),
         elaborationsLimit: data.elaborationsLimit === "" || data.elaborationsLimit === null ? null : parseInt(data.elaborationsLimit),
         hasCleaning: data.hasCleaning,

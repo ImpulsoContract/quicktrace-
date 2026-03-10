@@ -710,6 +710,7 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
   const [formData, setFormData] = useState({
     name: plan?.name || "",
     priceYearly: plan?.priceYearly || 0,
+    stripePriceId: plan?.stripePriceId || "",
     recipesLimit: plan?.recipesLimit === null ? "" : (plan?.recipesLimit || ""),
     elaborationsLimit: plan?.elaborationsLimit === null ? "" : (plan?.elaborationsLimit || ""),
     hasCleaning: plan?.hasCleaning || false,
@@ -754,6 +755,12 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
             <label className="label">Precio Anual (€)</label>
             <input type="number" step="0.01" className="input-field" value={formData.priceYearly} onChange={(e) => setFormData({...formData, priceYearly: e.target.value})} required />
           </div>
+        </div>
+
+        <div>
+          <label className="label">Stripe Price ID (price_...)</label>
+          <input type="text" className="input-field" value={formData.stripePriceId} onChange={(e) => setFormData({...formData, stripePriceId: e.target.value})} placeholder="Ej: price_1P..." />
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Indispensable para habilitar la suscripción automática.</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
