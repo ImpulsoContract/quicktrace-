@@ -55,7 +55,7 @@
     "cleaning": "Limpieza",
     "goods": "Entradas",
     "temperatures": "Temperaturas",
-    "manage_recipes": "Mis Elaboraciones",
+    "manage_recipes": "Mis Recetas",
     "plan": "PLAN",
     "logout": "Cerrar Sesión"
   },
@@ -102,8 +102,8 @@
     "unlimited": "ilimitadas",
     "create_first_recipe": "Pincha aquí para crear tu primera receta",
     "more": "más",
-    "my_elaborations": "Mis Elaboraciones",
-    "elaborations_list_desc": "Listado de elaboraciones registradas anteriormente.",
+    "my_elaborations": "Mis Recetas",
+    "elaborations_list_desc": "Listado de tus recetas configuradas.",
     "batch_search": "Buscador por Lote",
     "batch_placeholder": "Escribe un lote...",
     "show": "Mostrar",
@@ -154,6 +154,7 @@
     "manage_zones_desc": "Configura y gestiona las zonas de limpieza de tu establecimiento.",
     "new_zone": "Nueva Zona de Limpieza",
     "zone_placeholder": "Ej: Cocina, Aseos, Cámara...",
+    "new_recipe_btn": "NUEVA RECETA",
     "upgrade_plan": "AMPLIAR LÍMITE"
   },
   "alerts": {

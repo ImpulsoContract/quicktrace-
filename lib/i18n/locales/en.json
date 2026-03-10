@@ -102,8 +102,8 @@
     "unlimited": "unlimited",
     "create_first_recipe": "Click here to create your first recipe",
     "more": "more",
-    "my_elaborations": "My Productions",
-    "elaborations_list_desc": "List of previously recorded productions.",
+    "my_elaborations": "My Recipes",
+    "elaborations_list_desc": "List of your configured recipes.",
     "batch_search": "Batch Search",
     "batch_placeholder": "Enter a batch number...",
     "show": "Show",
@@ -154,6 +154,7 @@
     "manage_zones_desc": "Configure and manage cleaning zones for your establishment.",
     "new_zone": "New Cleaning Zone",
     "zone_placeholder": "Example: Kitchen, Toilets, Cold Room...",
+    "new_recipe_btn": "NEW RECIPE",
     "upgrade_plan": "UPGRADE PLAN"
   },
   "alerts": {
