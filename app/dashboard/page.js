@@ -8,7 +8,7 @@ import {
   ArrowLeft, Save, Beaker,
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
-  Package, Truck, FileCheck, Camera, X, Crown, Zap
+  Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -53,6 +53,7 @@ export default function ClientDashboard() {
   const [totalElabs, setTotalElabs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [elaboracionesSearch, setElaboracionesSearch] = useState("");
 
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
@@ -1196,7 +1197,10 @@ export default function ClientDashboard() {
                     </thead>
                     <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
                       {elaboraciones
-                        .filter(el => el.titulo?.toLowerCase().includes(elaboracionesSearch.toLowerCase()) || el.recipe?.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase()))
+                        .filter(el => 
+                          (el.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase())) || 
+                          (el.recipe?.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase()))
+                        )
                         .map(el => (
                         <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: 'white' }}>
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
