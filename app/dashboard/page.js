@@ -1152,7 +1152,7 @@ export default function ClientDashboard() {
                     <div 
                       key={recipe.id} 
                       className="glass-card" 
-                      onClick={() => handleSelectRecipe(recipe)}
+                      onClick={() => handleOpenRecipe(recipe)}
                       style={{ padding: '2rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', background: 'white' }}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
