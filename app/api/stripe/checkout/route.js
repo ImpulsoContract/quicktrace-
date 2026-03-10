@@ -14,15 +14,8 @@ export async function POST(req) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   
   const missingVars = [];
-  if (!stripeKey) missingVars.push("STRIPE_SECRET_KEY");
-  if (!webhookSecret) missingVars.push("STRIPE_WEBHOOK_SECRET");
-  
-  if (missingVars.length > 0) {
-    console.error("Missing Env Vars:", missingVars);
-    return NextResponse.json({ 
-      error: `Configuración incompleta en Vercel. Faltan las siguientes variables de entorno: ${missingVars.join(", ")}.`,
-      howToFix: "Añádalas en el panel de Vercel > Settings > Environment Variables."
-    }, { status: 500 });
+  if (!stripeKey) {
+    return NextResponse.json({ error: "Configuración incompleta: STRIPE_SECRET_KEY no está definida." }, { status: 500 });
   }
 
   const stripe = new Stripe(stripeKey);
@@ -30,17 +23,14 @@ export async function POST(req) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-      console.log("No authorization session");
-      return NextResponse.json({ error: "No autorizado: Por favor, inicia sesión de nuevo." }, { status: 401 });
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
-    console.log("User:", session.user.email, "ID:", session.user.id);
 
     let planId;
     try {
       const body = await req.json();
       planId = body.planId;
     } catch (e) {
-      console.error("Error parsing request body:", e);
       return NextResponse.json({ error: "Cuerpo de solicitud no válido" }, { status: 400 });
     }
 
@@ -53,8 +43,7 @@ export async function POST(req) {
     });
 
     if (!plan) {
-      console.error("Plan not found:", planId);
-      return NextResponse.json({ error: "Plan no encontrado en la base de datos." }, { status: 404 });
+      return NextResponse.json({ error: "Plan no encontrado" }, { status: 404 });
     }
 
     let priceId = plan.stripePriceId;
@@ -70,19 +59,15 @@ export async function POST(req) {
     }
 
     if (!priceId) {
-      console.error("No Price ID found for plan:", plan.name);
-      return NextResponse.json({ error: `El plan "${plan.name}" no tiene un ID de precio de Stripe configurado.` }, { status: 400 });
+      return NextResponse.json({ error: `El plan "${plan.name}" no tiene un ID de precio configurado.` }, { status: 400 });
     }
-
-    console.log("Creating session with Price ID:", priceId);
 
     const clientProfile = await prisma.clientProfile.findUnique({
       where: { userId: Number(session.user.id) }
     });
 
     if (!clientProfile) {
-      console.error("Client profile missing for user:", session.user.id);
-      return NextResponse.json({ error: "Tu perfil de cliente no está configurado correctamente. Contacta con soporte." }, { status: 404 });
+      return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
     const baseUrl = process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
@@ -100,13 +85,12 @@ export async function POST(req) {
       },
     });
 
-    console.log("Checkout session created:", checkoutSession.id);
     return NextResponse.json({ url: checkoutSession.url });
 
   } catch (error) {
-    console.error("CRITICAL Stripe Checkout Error:", error);
+    console.error("Stripe Checkout Error:", error);
     return NextResponse.json({ 
-      error: "Error interno del servidor al procesar el pago.",
+      error: "Error al procesar el pago",
       details: error.message 
     }, { status: 500 });
   }

@@ -40,14 +40,7 @@ export default function PlansPage() {
         body: JSON.stringify({ planId }),
       });
       
-      let data;
-      const text = await res.text();
-      try {
-        data = JSON.parse(text);
-      } catch (err) {
-        console.error("Failed to parse JSON:", text);
-        throw new Error(`Respuesta no válida del servidor: ${text.substring(0, 100)}...`);
-      }
+      const data = await res.json();
 
       if (data.url) {
         window.location.href = data.url;
@@ -56,7 +49,7 @@ export default function PlansPage() {
       }
     } catch (e) {
       console.error("Fetch error:", e);
-      alert(`Error de conexión: ${e.message || 'Error desconocido'}`);
+      alert("Error de conexión al procesar el pago");
     } finally {
       setSubmitting(null);
     }
