@@ -53,7 +53,7 @@ export default function ClientDashboard() {
   const [totalElabs, setTotalElabs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [elaboracionesSearch, setElaboracionesSearch] = useState("");
+  const [elaborationsSearch, setElaborationsSearch] = useState("");
 
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
@@ -542,6 +542,25 @@ export default function ClientDashboard() {
       titulo: elab.name,
       ingredientes: initialIngredientes
     });
+  };
+
+  const handleDeleteElaboration = async (id) => {
+    if (!confirm(t('alerts.delete_confirm_elaboration') || '¿Seguro que quieres eliminar esta elaboración?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/elaborations/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        fetchElaborations();
+      } else {
+        alert(data.error || t('alerts.delete_error'));
+      }
+    } catch (error) {
+      console.error("Error deleting elaboration:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleIngredientChange = (ingId, field, value) => {
@@ -1174,8 +1193,8 @@ export default function ClientDashboard() {
                     placeholder={t('dashboard.search')}
                     className="input-field"
                     style={{ paddingLeft: '2.75rem', margin: 0 }}
-                    value={elaboracionesSearch}
-                    onChange={(e) => setElaboracionesSearch(e.target.value)}
+                    value={elaborationsSearch}
+                    onChange={(e) => setElaborationsSearch(e.target.value)}
                   />
                 </div>
               </div>
@@ -1198,8 +1217,8 @@ export default function ClientDashboard() {
                     <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
                       {elaborations
                         .filter(el => 
-                          (el.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase())) || 
-                          (el.recipe?.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase()))
+                          (el.name?.toLowerCase().includes(elaborationsSearch.toLowerCase())) || 
+                          (el.recipe?.name?.toLowerCase().includes(elaborationsSearch.toLowerCase()))
                         )
                         .map(el => (
                         <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: 'white' }}>
@@ -1213,13 +1232,13 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                               <button 
-                                onClick={() => handleEditElaboracion(el)}
+                                onClick={() => handleEditElaboration(el)}
                                 style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
                               >
                                 <Edit size={16} />
                               </button>
                               <button 
-                                onClick={() => handleDeleteElaboracion(el.id)}
+                                onClick={() => handleDeleteElaboration(el.id)}
                                 style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
                               >
                                 <Trash2 size={16} />
