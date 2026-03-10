@@ -46,8 +46,8 @@ export default function PlansPage() {
         alert(data.error || "Error al iniciar el pago");
       }
     } catch (e) {
-      console.error(e);
-      alert("Error de conexión");
+      console.error("Fetch error:", e);
+      alert(`Error de conexión: ${e.message || 'Error desconocido'}`);
     } finally {
       setSubmitting(null);
     }
