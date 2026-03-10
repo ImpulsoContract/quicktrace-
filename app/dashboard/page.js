@@ -1180,7 +1180,7 @@ export default function ClientDashboard() {
                 </div>
               </div>
 
-              {elaboraciones.length === 0 ? (
+              {elaborations.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
                   <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_records')}</p>
                 </div>
@@ -1196,7 +1196,7 @@ export default function ClientDashboard() {
                       </tr>
                     </thead>
                     <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
-                      {elaboraciones
+                      {elaborations
                         .filter(el => 
                           (el.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase())) || 
                           (el.recipe?.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase()))
