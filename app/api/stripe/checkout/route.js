@@ -19,8 +19,26 @@ export async function POST(req) {
       where: { id: planId }
     });
 
-    if (!plan || !plan.stripePriceId) {
-      return NextResponse.json({ error: "Plan no válido o sin configuración de Stripe" }, { status: 400 });
+    if (!plan) {
+      return NextResponse.json({ error: "Plan no encontrado" }, { status: 404 });
+    }
+
+    let priceId = plan.stripePriceId;
+
+    // Fallback a variables de entorno si no está en la base de datos
+    if (!priceId) {
+      const planName = plan.name.toLowerCase();
+      if (planName.includes('gold') || planName.includes('oro')) {
+        priceId = process.env.STRIPE_PRICE_GOLD;
+      } else if (planName.includes('premium')) {
+        priceId = process.env.STRIPE_PRICE_PREMIUM;
+      } else if (planName.includes('basico') || planName.includes('básico')) {
+        priceId = process.env.STRIPE_PRICE_BASIC;
+      }
+    }
+
+    if (!priceId) {
+      return NextResponse.json({ error: "Este plan aún no está configurado para pagos (falta Stripe Price ID)" }, { status: 400 });
     }
 
     const clientProfile = await prisma.clientProfile.findUnique({
