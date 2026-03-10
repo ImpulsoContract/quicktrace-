@@ -39,7 +39,16 @@ export default function PlansPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planId }),
       });
-      const data = await res.json();
+      
+      let data;
+      const text = await res.text();
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.error("Failed to parse JSON:", text);
+        throw new Error(`Respuesta no válida del servidor: ${text.substring(0, 100)}...`);
+      }
+
       if (data.url) {
         window.location.href = data.url;
       } else {
