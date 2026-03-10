@@ -4,8 +4,11 @@ import { useState } from "react";
 import { Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n/I18nContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function ForgotPasswordPage() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -27,10 +30,10 @@ export default function ForgotPasswordPage() {
       if (data.success) {
         setSuccess(true);
       } else {
-        setError(data.error || "Error al procesar la solicitud");
+        setError(data.error || t('forgot_password.error_processing'));
       }
     } catch (err) {
-      setError("Error de conexión");
+      setError(t('common.error_connection') || "Error de conexión");
     } finally {
       setLoading(false);
     }
@@ -38,16 +41,20 @@ export default function ForgotPasswordPage() {
 
   return (
     <div style={{ 
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       background: '#f8fafc', padding: '1.5rem'
     }}>
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+        <LanguageSwitcher />
+      </div>
+
       <div className="glass-card" style={{ width: '100%', maxWidth: '420px', padding: '3rem', background: 'white' }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 1.5rem' }}>
              <Image src="/images/logo.jpg" alt="QuickTrace" fill style={{ objectFit: 'contain' }} priority />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Recuperar Contraseña</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Te enviaremos un enlace para restablecer tu acceso</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{t('forgot_password.title')}</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('forgot_password.subtitle')}</p>
         </div>
 
         {success ? (
@@ -55,10 +62,10 @@ export default function ForgotPasswordPage() {
             <div style={{ width: '60px', height: '60px', background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <CheckCircle2 size={32} color="#166534" />
             </div>
-            <p style={{ color: 'var(--text-main)', fontWeight: '600', marginBottom: '1rem' }}>¡Correo enviado!</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>Si el email existe en nuestro sistema, recibirás instrucciones en breve.</p>
+            <p style={{ color: 'var(--text-main)', fontWeight: '600', marginBottom: '1rem' }}>{t('forgot_password.success_title')}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>{t('forgot_password.success_desc')}</p>
             <Link href="/login" style={{ color: 'var(--corp-green)', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <ArrowLeft size={18} /> Volver al Login
+              <ArrowLeft size={18} /> {t('forgot_password.cancel').replace('Cancelar y volver', t('auth.back_to_login') || 'Volver al Login')}
             </Link>
           </div>
         ) : (
@@ -71,21 +78,21 @@ export default function ForgotPasswordPage() {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <label className="label">Tu Email Corporativo</label>
+                <label className="label">{t('forgot_password.email_label')}</label>
                 <div style={{ position: 'relative' }}>
                   <Mail style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
                   <input 
-                    type="email" className="input-field" style={{ paddingLeft: '2.75rem' }} value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="email@negocio.com"
+                    type="email" className="input-field" style={{ paddingLeft: '2.75rem' }} value={email} onChange={(e) => setEmail(e.target.value)} required placeholder={t('forgot_password.email_placeholder')}
                   />
                 </div>
               </div>
 
               <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '0.5rem', fontSize: '1rem', padding: '1rem' }}>
-                {loading ? <Loader2 className="animate-spin" size={20} /> : "Enviar enlace de recuperación"}
+                {loading ? <Loader2 className="animate-spin" size={20} /> : t('forgot_password.submit')}
               </button>
 
               <Link href="/login" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', textDecoration: 'none', marginTop: '1rem' }}>
-                Cancelar y volver
+                {t('forgot_password.cancel')}
               </Link>
             </form>
           </>

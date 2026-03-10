@@ -14,8 +14,11 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/I18nContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function ClientDashboard() {
+  const { t } = useI18n();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("trazabilidad");
   const [recipes, setRecipes] = useState([]);
@@ -146,7 +149,7 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteRecipe = async (id) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.")) return;
+    if (!confirm(t('alerts.delete_confirm_recipe'))) return;
     
     try {
       const res = await fetch(`/api/client/recipes/manage/${id}`, { method: 'DELETE' });
@@ -154,10 +157,11 @@ export default function ClientDashboard() {
       if (data.success) {
         fetchRecipes();
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.delete_error'));
       }
     } catch (error) {
-      alert("Error al eliminar la receta");
+      console.error("Error deleting recipe:", error);
+      alert(t('alerts.connection_error'));
     }
   };
 
@@ -177,13 +181,15 @@ export default function ClientDashboard() {
       
       const data = await res.json();
       if (data.success) {
+        alert(editingRecipe ? t('alerts.recipe_updated') : t('alerts.recipe_saved'));
         setIsRecipeManageModalOpen(false);
         fetchRecipes();
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.request_error'));
       }
     } catch (error) {
-      alert("Error al guardar la receta");
+      console.error("Error saving recipe:", error);
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -290,14 +296,16 @@ export default function ClientDashboard() {
       });
       const data = await res.json();
       if (data.success) {
+        alert(t('alerts.chamber_created'));
         fetchChambers();
         return true;
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.request_error'));
         return false;
       }
     } catch (error) {
-      alert("Error de conexión");
+      console.error("Error creating chamber:", error);
+      alert(t('alerts.connection_error'));
       return false;
     }
   };
@@ -311,31 +319,34 @@ export default function ClientDashboard() {
       });
       const data = await res.json();
       if (data.success) {
+        alert(t('alerts.chamber_updated'));
         fetchChambers();
         fetchTempRecords(); // Refresh to show new name in records if needed
         return true;
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.request_error'));
         return false;
       }
     } catch (error) {
-      alert("Error de conexión");
+      console.error("Error editing chamber:", error);
+      alert(t('alerts.connection_error'));
       return false;
     }
   };
 
   const handleDeleteChamber = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar esta cámara?")) return;
+    if (!confirm(t('alerts.delete_confirm_chamber'))) return;
     try {
       const res = await fetch(`/api/client/chambers?id=${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         fetchChambers();
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.delete_error'));
       }
     } catch (error) {
-      alert("Error de conexión");
+      console.error("Error deleting chamber:", error);
+      alert(t('alerts.connection_error'));
     }
   };
 
@@ -348,14 +359,16 @@ export default function ClientDashboard() {
       });
       const data = await res.json();
       if (data.success) {
+        alert(t('alerts.zone_created'));
         fetchCleaningZones();
         return true;
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.request_error'));
         return false;
       }
     } catch (error) {
-      alert("Error de conexión");
+      console.error("Error creating zone:", error);
+      alert(t('alerts.connection_error'));
       return false;
     }
   };
@@ -369,31 +382,34 @@ export default function ClientDashboard() {
       });
       const data = await res.json();
       if (data.success) {
+        alert(t('alerts.zone_updated'));
         fetchCleaningZones();
         fetchCleaningLogs(); // Refresh to show new name in logs if needed
         return true;
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.request_error'));
         return false;
       }
     } catch (error) {
-      alert("Error de conexión");
+      console.error("Error editing zone:", error);
+      alert(t('alerts.connection_error'));
       return false;
     }
   };
 
   const handleDeleteZone = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar esta zona?")) return;
+    if (!confirm(t('alerts.delete_confirm_zone'))) return;
     try {
       const res = await fetch(`/api/client/cleaning-zones?id=${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         fetchCleaningZones();
       } else {
-        alert(data.error);
+        alert(data.error || t('alerts.delete_error'));
       }
     } catch (error) {
-      alert("Error de conexión");
+      console.error("Error deleting zone:", error);
+      alert(t('alerts.connection_error'));
     }
   };
 
@@ -415,9 +431,8 @@ export default function ClientDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
-      const data = await res.json();
-      if (data.success) {
-        alert(editingGoodsReceipt ? "Entrada actualizada" : "Entrada registrada correctamente");
+      if (res.ok) {
+        alert(editingGoodsReceipt ? t('alerts.goods_updated') : t('alerts.goods_saved'));
         setIsGoodsModalOpen(false);
         setEditingGoodsReceipt(null);
         setGoodsForm({
@@ -431,11 +446,12 @@ export default function ClientDashboard() {
         });
         fetchGoodsReceipts();
       } else {
-        alert(`${data.error}${data.details ? ':\n' + data.details : ''}`);
+        const errorData = await res.json().catch(() => ({}));
+        alert(errorData.error || t('alerts.request_error'));
       }
     } catch (error) {
       console.error("Error saving goods receipt:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -456,7 +472,7 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteGoods = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar esta entrada de mercancía?")) return;
+    if (!confirm(t('alerts.delete_confirm_goods'))) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/goods-receipts?id=${id}`, { method: "DELETE" });
@@ -464,11 +480,11 @@ export default function ClientDashboard() {
       if (data.success) {
         fetchGoodsReceipts();
       } else {
-        alert(data.error || "Error al eliminar la entrada");
+        alert(data.error || t('alerts.delete_error'));
       }
     } catch (error) {
       console.error("Error deleting goods receipt:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -596,9 +612,9 @@ export default function ClientDashboard() {
     });
 
     if (missingLotes.length > 0 || missingCantidades.length > 0) {
-      let errorMsg = "Faltan datos obligatorios:\n";
-      if (missingLotes.length > 0) errorMsg += `- Lotes de: ${missingLotes.join(', ')}\n`;
-      if (missingCantidades.length > 0) errorMsg += `- Cantidades de: ${missingCantidades.join(', ')}\n`;
+      let errorMsg = t('alerts.missing_data') + "\n";
+      if (missingLotes.length > 0) errorMsg += t('alerts.missing_lotes') + missingLotes.join(', ') + "\n";
+      if (missingCantidades.length > 0) errorMsg += t('alerts.missing_amounts') + missingCantidades.join(', ') + "\n";
       alert(errorMsg);
       return;
     }
@@ -629,18 +645,18 @@ export default function ClientDashboard() {
       });
 
       if (res.ok) {
-        alert(editingElaboration ? "Elaboración actualizada" : "Elaboración guardada correctamente");
+        alert(editingElaboration ? t('alerts.elaboration_updated') : t('alerts.elaboration_saved'));
         fetchElaborations();
         setSelectedRecipe(null);
         setEditingElaboration(null);
         setActiveTab("historial");
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert(errorData.error || "Error al procesar la solicitud");
+        alert(errorData.error || t('alerts.request_error'));
       }
     } catch (error) {
       console.error("Error saving elaboration:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -672,16 +688,16 @@ export default function ClientDashboard() {
         }));
         
         if (count === 0) {
-          alert("No se encontraron lotes anteriores para estos ingredientes.");
+          alert(t('alerts.no_last_lotes'));
         } else {
-          alert(`Se han auto-rellenado ${count} lotes.`);
+          alert(t('alerts.auto_filled_lotes').replace('{count}', count));
         }
       } else {
-        alert("Error al recuperar los últimos lotes.");
+        alert(t('alerts.last_lotes_error'));
       }
     } catch (error) {
       console.error("Error auto-filling lotes:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -704,7 +720,7 @@ export default function ClientDashboard() {
   const handleSubmitCleaning = async (e) => {
     e.preventDefault();
     if (cleaningForm.selectedZones.length === 0) {
-      alert("Debes seleccionar al menos una zona de limpieza.");
+      alert(t('alerts.select_at_least_one_zone'));
       return;
     }
 
@@ -721,7 +737,7 @@ export default function ClientDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert(editingCleaningLog ? "Registro actualizado correctamente" : "Registro de limpieza guardado correctamente");
+        alert(editingCleaningLog ? t('alerts.cleaning_updated') : t('alerts.cleaning_saved'));
         setIsCleaningModalOpen(false);
         setEditingCleaningLog(null);
         setCleaningForm({
@@ -731,11 +747,11 @@ export default function ClientDashboard() {
         });
         fetchCleaningLogs();
       } else {
-        alert(data.error || "Error al procesar el registro");
+        alert(data.error || t('alerts.request_error'));
       }
     } catch (error) {
       console.error("Error saving cleaning log:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -752,7 +768,7 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteCleaning = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar este registro de limpieza?")) return;
+    if (!confirm(t('alerts.delete_confirm_cleaning'))) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/cleaning-logs?id=${id}`, { method: "DELETE" });
@@ -760,11 +776,11 @@ export default function ClientDashboard() {
       if (data.success) {
         fetchCleaningLogs();
       } else {
-        alert(data.error || "Error al eliminar el registro");
+        alert(data.error || t('alerts.delete_error'));
       }
     } catch (error) {
       console.error("Error deleting cleaning log:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -785,7 +801,7 @@ export default function ClientDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert(editingTempRecord ? "Registro actualizado correctamente" : "Registro de temperatura guardado correctamente");
+        alert(editingTempRecord ? t('alerts.temp_updated') : t('alerts.temp_saved'));
         setIsTempModalOpen(false);
         setEditingTempRecord(null);
         setTempForm({
@@ -794,11 +810,11 @@ export default function ClientDashboard() {
         });
         fetchTempRecords();
       } else {
-        alert(data.error || "Error al procesar el registro");
+        alert(data.error || t('alerts.request_error'));
       }
     } catch (error) {
       console.error("Error saving temperature record:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -818,7 +834,7 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteTemp = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar este registro de temperatura?")) return;
+    if (!confirm(t('alerts.delete_confirm_temp'))) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/temperature-records?id=${id}`, { method: "DELETE" });
@@ -826,11 +842,11 @@ export default function ClientDashboard() {
       if (data.success) {
         fetchTempRecords();
       } else {
-        alert(data.error || "Error al eliminar el registro");
+        alert(data.error || t('alerts.delete_error'));
       }
     } catch (error) {
       console.error("Error deleting temperature record:", error);
-      alert("Error de conexión");
+      alert(t('alerts.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -876,20 +892,20 @@ export default function ClientDashboard() {
           <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <SidebarBtn 
               icon={<ClipboardList size={20} />} 
-              label="Trazabilidad" 
+              label={t('sidebar.traceability')} 
               active={activeTab === 'trazabilidad'} 
               onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); }} 
             />
             <SidebarBtn 
               icon={<History size={20} />} 
-              label="Mis Elaboraciones" 
+              label={t('sidebar.history')} 
               active={activeTab === "historial"} 
               onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); }} 
             />
             {profile?.plan?.hasCleaning && (
               <SidebarBtn 
                 icon={<Brush size={20} />} 
-                label="Registros de limpieza" 
+                label={t('sidebar.cleaning')} 
                 active={activeTab === "limpieza"} 
                 onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); }} 
               />
@@ -897,7 +913,7 @@ export default function ClientDashboard() {
             {profile?.plan?.hasTemperatures && (
               <SidebarBtn 
                 icon={<Thermometer size={20} />} 
-                label="Temperaturas cámaras" 
+                label={t('sidebar.temperatures')} 
                 active={activeTab === "temperaturas"} 
                 onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); }} 
               />
@@ -905,7 +921,7 @@ export default function ClientDashboard() {
             {profile?.plan?.hasGoods && (
               <SidebarBtn 
                 icon={<Truck size={20} />} 
-                label="Entradas de mercancía" 
+                label={t('sidebar.goods')} 
                 active={activeTab === "entradas"} 
                 onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); }} 
               />
@@ -913,12 +929,16 @@ export default function ClientDashboard() {
             {session?.user?.role === "CLIENT" && (
               <SidebarBtn 
                 icon={<ChefHat size={20} />} 
-                label="Gestionar mis recetas" 
+                label={t('sidebar.manage_recipes')} 
                 active={activeTab === "gestionar-recetas"} 
                 onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); }} 
               />
             )}
           </nav>
+
+          <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
+            <LanguageSwitcher />
+          </div>
 
           <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
@@ -927,14 +947,14 @@ export default function ClientDashboard() {
               </div>
               <div style={{ overflow: 'hidden' }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user?.name}</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800' }}>Plan {profile?.plan?.name || 'Cargando...'}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800' }}>{t('sidebar.plan')} {profile?.plan?.name || '...'}</div>
               </div>
             </div>
             <button 
               onClick={() => signOut({ callbackUrl: '/login' })}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '0.5rem', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
             >
-              <LogOut size={16} /> Cerrar Sesión
+              <LogOut size={16} /> {t('auth.logout')}
             </button>
           </div>
         </aside>
@@ -1050,7 +1070,7 @@ export default function ClientDashboard() {
                                 style={{ cursor: 'pointer' }}
                               />
                               <label htmlFor={`prop-${ing.id}`} style={{ fontSize: '0.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                                Mantener proporciones
+                                {t('dashboard.maintain_proportions')}
                               </label>
                             </div>
                           </div>
@@ -1061,7 +1081,7 @@ export default function ClientDashboard() {
 
                   <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2.5rem', display: 'flex', justifyContent: 'flex-end' }}>
                     <button type="submit" className="btn-primary" style={{ minWidth: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-                      {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> Finalizar y Guardar</>}
+                      {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> {t('dashboard.save_record')}</>}
                     </button>
                   </div>
                 </form>
@@ -1070,11 +1090,11 @@ export default function ClientDashboard() {
           ) : activeTab === 'trazabilidad' ? (
             <div>
               <header style={{ marginBottom: '3rem' }}>
-                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>Trazabilidad</h2>
+                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.traceability')}</h2>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Selecciona una de tus recetas para registrar una nueva elaboración.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.traceability_desc')}</p>
                   <PlanUsageIndicator 
-                    label="Elaboraciones registradas" 
+                    label={t('dashboard.elaborations')} 
                     current={totalElabs} 
                     limit={profile?.plan?.elaborationsLimit} 
                   />
@@ -1086,9 +1106,9 @@ export default function ClientDashboard() {
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <ChefHat size={40} color="var(--border)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>No hay recetas disponibles</h3>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_recipes')}</h3>
                   <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                    Para empezar a producir, empieza a introducir tus recetas. Mira este video tutorial si necesitas más ayuda.
+                    {t('dashboard.no_recipes_desc')}
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                     <button 
@@ -1096,13 +1116,13 @@ export default function ClientDashboard() {
                       className="btn-secondary" 
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
-                      Ver video tutorial
+                      {t('dashboard.video_tutorial')}
                     </button>
                     <button 
                       onClick={() => setActiveTab('gestionar-recetas')}
                       className="btn-primary"
                     >
-                      Ir a recetas para introducir mis recetas
+                      {t('dashboard.go_to_recipes')}
                     </button>
                   </div>
                 </div>
@@ -1112,7 +1132,7 @@ export default function ClientDashboard() {
                     <div 
                       key={recipe.id} 
                       className="glass-card" 
-                      onClick={() => handleOpenRecipe(recipe)}
+                      onClick={() => handleSelectRecipe(recipe)}
                       style={{ padding: '2rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', background: 'white' }}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -1122,25 +1142,102 @@ export default function ClientDashboard() {
                       </div>
                       <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '0.75rem', color: 'var(--text-main)' }}>{recipe.name}</h3>
                       <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                        <Beaker size={16} /> {recipe.ingredients.length} Ingredientes detectados
+                        <Beaker size={16} /> {recipe.ingredients.length} {t('dashboard.ingredients_detected')}
                       </div>
                       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--corp-green)', fontWeight: '800' }}>
-                        REGISTRAR ELABORACIÓN <ChevronRight size={18} />
+                        {t('dashboard.register_elaboration')} <ChevronRight size={18} />
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          ) : activeTab === "entradas" ? (
+          ) : activeTab === 'historial' ? (
+            <div>
+              <header style={{ marginBottom: '3rem' }}>
+                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.history')}</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.history_info')}</p>
+              </header>
+
+              <div 
+                className="glass-card" 
+                style={{ 
+                  background: 'white', padding: '1.5rem', marginBottom: '3rem', 
+                  display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap-reverse'
+                }}
+              >
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input 
+                    type="text" 
+                    placeholder={t('dashboard.search')}
+                    className="input-field"
+                    style={{ paddingLeft: '2.75rem', margin: 0 }}
+                    value={elaboracionesSearch}
+                    onChange={(e) => setElaboracionesSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {elaboraciones.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_records')}</p>
+                </div>
+              ) : (
+                <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                      <tr>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>Lote Salida</th>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
+                      {elaboraciones
+                        .filter(el => el.titulo?.toLowerCase().includes(elaboracionesSearch.toLowerCase()) || el.recipe?.name?.toLowerCase().includes(elaboracionesSearch.toLowerCase()))
+                        .map(el => (
+                        <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: 'white' }}>
+                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
+                          <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
+                          <td style={{ padding: '1.5rem 2rem' }}>
+                            <span style={{ padding: '0.3rem 0.8rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '0.5rem', fontSize: '0.85rem', fontWeight: '700' }}>
+                              {el.loteSalida || '-'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                              <button 
+                                onClick={() => handleEditElaboracion(el)}
+                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteElaboracion(el.id)}
+                                style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'entradas' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
               <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>Entradas de mercancía</h2>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>{t('sidebar.goods')}</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Gestiona los albaranes y entradas de productos de tus proveedores.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.goods_info')}</p>
                     <PlanUsageIndicator 
-                      label="Entradas" 
+                      label={t('dashboard.goods')} 
                       current={goodsReceipts.length} 
                       limit={profile?.plan?.goodsLimit} 
                     />
@@ -1163,7 +1260,7 @@ export default function ClientDashboard() {
                   className="btn-primary" 
                   style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
                 >
-                  <Package size={20} /> AÑADIR ENTRADA
+                  <Package size={20} /> {t('dashboard.new_goods_entry')}
                 </button>
               </header>
 
@@ -1175,7 +1272,7 @@ export default function ClientDashboard() {
                 }}
               >
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label className="label" style={{ fontSize: '0.75rem' }}>Desde</label>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.from')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1184,7 +1281,7 @@ export default function ClientDashboard() {
                   />
                 </div>
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label className="label" style={{ fontSize: '0.75rem' }}>Hasta</label>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.to')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1196,7 +1293,7 @@ export default function ClientDashboard() {
                   onClick={() => setGoodsFilters({ startDate: "", endDate: "" })}
                   style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
                 >
-                  Limpiar
+                  {t('dashboard.cancel')}
                 </button>
               </div>
 
@@ -1205,8 +1302,8 @@ export default function ClientDashboard() {
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <Calendar size={40} color="var(--border)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>Consulta de entradas</h3>
-                  <p>Por favor, selecciona un rango de fechas para visualizar los registros.</p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{t('sidebar.goods')}</h3>
+                  <p>{t('dashboard.history_info')}</p>
                 </div>
               ) : goodsReceipts.filter(r => {
                 const date = new Date(r.date);
@@ -1219,8 +1316,8 @@ export default function ClientDashboard() {
                   <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <Truck size={40} color="var(--border)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>No hay registros en este rango</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>No se encontraron entradas de mercancía para las fechas seleccionadas.</p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_records')}</h3>
+                  <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_records')}</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
@@ -1262,7 +1359,7 @@ export default function ClientDashboard() {
                       
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', fontSize: '0.9rem', border: '1px solid var(--border)' }}>
                         <div>
-                          <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>LOTE</span>
+                          <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('dashboard.lote')}</span>
                           <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.lote || '-'}</span>
                         </div>
                         <div>
@@ -1278,7 +1375,7 @@ export default function ClientDashboard() {
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--corp-green)', fontWeight: '800', marginTop: '0.5rem' }}
                             onClick={() => setViewingImage(receipt.deliveryNoteImage)}
                           >
-                            <Camera size={16} /> VER ALBARÁN
+                            <Camera size={16} /> {t('dashboard.view_note')}
                           </div>
                         )}
                       </div>
@@ -1289,15 +1386,15 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'limpieza' ? (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>Registros de limpieza</h2>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>{t('sidebar.cleaning')}</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Gestiona y registra el mantenimiento de las áreas del establecimiento.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.cleaning_info')}</p>
                     <PlanUsageIndicator 
-                      label="Registros" 
+                      label={t('dashboard.cleaning')}
                       current={cleaningLogs.length} 
-                      limit={profile?.plan?.cleaningLimit} 
+                      limit={profile?.plan?.cleaningRecordsLimit} 
                     />
                   </div>
                 </div>
@@ -1307,13 +1404,13 @@ export default function ClientDashboard() {
                     className="btn-secondary" 
                     style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
                   >
-                    <Plus size={20} /> GESTIONAR ZONAS
+                    <Settings size={20} /> {t('dashboard.manage_zones')}
                   </button>
                   <button 
                     onClick={() => {
                       setEditingCleaningLog(null);
                       setCleaningForm({
-                        personName: "",
+                        personName: session?.user?.name || "",
                         date: new Date().toISOString().slice(0, 16),
                         selectedZones: []
                       });
@@ -1322,10 +1419,10 @@ export default function ClientDashboard() {
                     className="btn-primary" 
                     style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
                   >
-                    <Brush size={20} /> NUEVO REGISTRO
+                    <Plus size={20} /> {t('dashboard.new_record')}
                   </button>
                 </div>
-              </div>
+              </header>
 
               <div 
                 className="glass-card" 
@@ -1335,7 +1432,7 @@ export default function ClientDashboard() {
                 }}
               >
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label className="label" style={{ fontSize: '0.75rem' }}>Desde</label>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.from')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1344,7 +1441,7 @@ export default function ClientDashboard() {
                   />
                 </div>
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label className="label" style={{ fontSize: '0.75rem' }}>Hasta</label>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.to')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1356,7 +1453,7 @@ export default function ClientDashboard() {
                   onClick={() => setCleaningFilters({ startDate: "", endDate: "" })}
                   style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
                 >
-                  Limpiar
+                  {t('dashboard.cancel')}
                 </button>
               </div>
 
@@ -1453,13 +1550,13 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'temperaturas' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '2rem', borderRadius: '1.5rem', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}>
+              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '2rem', borderRadius: '1.5rem', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}>
                 <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>Temperaturas de Cámaras</h2>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.temperatures')}</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Seguimiento y registro de las temperaturas de conservación.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.temperature_info')}</p>
                     <PlanUsageIndicator 
-                      label="Registros" 
+                      label={t('dashboard.cleaning')} 
                       current={tempRecords.length} 
                       limit={profile?.plan?.temperaturesLimit} 
                     />
@@ -1471,7 +1568,7 @@ export default function ClientDashboard() {
                     className="btn-secondary" 
                     style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
                   >
-                    <Plus size={20} /> GESTIONAR CÁMARAS
+                    <Settings size={20} /> {t('dashboard.manage_chambers')}
                   </button>
                   <button 
                     onClick={() => {
@@ -1485,10 +1582,10 @@ export default function ClientDashboard() {
                     className="btn-primary" 
                     style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
                   >
-                    <Thermometer size={20} /> NUEVO REGISTRO
+                    <Thermometer size={20} /> {t('dashboard.new_temp_record')}
                   </button>
                 </div>
-              </div>
+              </header>
 
               <div 
                 className="glass-card" 
@@ -1498,7 +1595,7 @@ export default function ClientDashboard() {
                 }}
               >
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label className="label" style={{ fontSize: '0.75rem' }}>Desde</label>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.from')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1507,7 +1604,7 @@ export default function ClientDashboard() {
                   />
                 </div>
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label className="label" style={{ fontSize: '0.75rem' }}>Hasta</label>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.to')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1519,7 +1616,7 @@ export default function ClientDashboard() {
                   onClick={() => setTempFilters({ startDate: "", endDate: "" })}
                   style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
                 >
-                  Limpiar
+                  {t('dashboard.cancel')}
                 </button>
               </div>
 
@@ -1528,8 +1625,8 @@ export default function ClientDashboard() {
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <Calendar size={40} color="var(--border)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>Consulta de temperaturas</h3>
-                  <p>Por favor, selecciona un rango de fechas para visualizar los registros.</p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{t('dashboard.temp_consultation')}</h3>
+                  <p>{t('dashboard.temp_range_desc')}</p>
                 </div>
               ) : tempRecords.filter(record => {
                 const date = new Date(record.date);
@@ -1542,8 +1639,8 @@ export default function ClientDashboard() {
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <Thermometer size={40} color="var(--border)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>No hay registros en este rango</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>No se encontraron registros de temperatura para las fechas seleccionadas.</p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_records_range')}</h3>
+                  <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_temp_found')}</p>
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', border: '1px solid var(--border)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
@@ -1619,11 +1716,11 @@ export default function ClientDashboard() {
             <div>
               <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>Gestión de Recetas</h2>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>{t('sidebar.manage_recipes')}</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Crea y administra tus propias recetas.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.recipe_manage_desc')}</p>
                     <PlanUsageIndicator 
-                      label="Recetas creadas" 
+                      label={t('dashboard.manage_recipes')} 
                       current={recipes.length} 
                       limit={profile?.plan?.recipesLimit} 
                     />
@@ -1638,7 +1735,7 @@ export default function ClientDashboard() {
                   className="btn-primary" 
                   style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
                 >
-                  <Plus size={20} /> NUEVA RECETA
+                  <Plus size={20} /> {t('modals.new_recipe_btn')}
                 </button>
               </header>
 
@@ -1646,9 +1743,11 @@ export default function ClientDashboard() {
                 {recipes.length === 0 ? (
                   <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '2px dashed var(--border)', borderRadius: '1.5rem' }}>
                     <ChefHat size={48} color="var(--border)" style={{ marginBottom: '1.5rem' }} />
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>No tienes recetas propias</h3>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_own_recipes')}</h3>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                      Según tu plan <strong>{profile?.plan?.name}</strong>, puedes crear hasta {profile?.plan?.recipesLimit === null ? 'ilimitadas' : profile?.plan?.recipesLimit} recetas.
+                      {t('dashboard.recipe_limit_info')
+                        .replace('{plan}', profile?.plan?.name || "")
+                        .replace('{limit}', profile?.plan?.recipesLimit === null ? t('dashboard.unlimited') : profile?.plan?.recipesLimit)}
                     </p>
                     <button 
                       onClick={() => {
@@ -1658,7 +1757,7 @@ export default function ClientDashboard() {
                       }}
                       className="btn-primary"
                     >
-                      Pincha aquí para crear tu primera receta
+                      {t('dashboard.create_first_recipe')}
                     </button>
                   </div>
                 ) : (
@@ -1698,7 +1797,7 @@ export default function ClientDashboard() {
                         ))}
                         {recipe.ingredients.length > 5 && (
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
-                            +{recipe.ingredients.length - 5} más
+                            +{recipe.ingredients.length - 5} {t('dashboard.more')}
                           </span>
                         )}
                       </div>
@@ -1710,8 +1809,8 @@ export default function ClientDashboard() {
           ) : (
             <div>
               <header style={{ marginBottom: '3rem' }}>
-                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>Mis Elaboraciones</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Listado de elaboraciones registradas anteriormente.</p>
+                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('dashboard.my_elaborations')}</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.elaborations_list_desc')}</p>
               </header>
 
               <div 
@@ -1722,14 +1821,14 @@ export default function ClientDashboard() {
                 }}
               >
                 <div>
-                  <label className="label" style={{ fontSize: '0.7rem' }}>Buscador por Lote</label>
+                  <label className="label" style={{ fontSize: '0.7rem' }}>{t('dashboard.batch_search')}</label>
                   <div style={{ position: 'relative' }}>
                     <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
                       type="text" 
                       className="input-field" 
                       style={{ paddingLeft: '2.5rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }} 
-                      placeholder="Escribe un lote..."
+                      placeholder={t('dashboard.batch_placeholder')}
                       value={elabFilters.lote}
                       onChange={(e) => setElabFilters({...elabFilters, lote: e.target.value})}
                     />
@@ -1737,7 +1836,7 @@ export default function ClientDashboard() {
                 </div>
 
                 <div>
-                  <label className="label" style={{ fontSize: '0.7rem' }}>Desde</label>
+                  <label className="label" style={{ fontSize: '0.7rem' }}>{t('common.from')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1748,7 +1847,7 @@ export default function ClientDashboard() {
                 </div>
 
                 <div>
-                  <label className="label" style={{ fontSize: '0.7rem' }}>Hasta</label>
+                  <label className="label" style={{ fontSize: '0.7rem' }}>{t('common.to')}</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -1759,7 +1858,7 @@ export default function ClientDashboard() {
                 </div>
 
                 <div>
-                  <label className="label" style={{ fontSize: '0.7rem' }}>Mostrar</label>
+                  <label className="label" style={{ fontSize: '0.7rem' }}>{t('dashboard.show')}</label>
                   <select 
                     className="input-field" 
                     style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem', appearance: 'auto' }}
@@ -1769,10 +1868,10 @@ export default function ClientDashboard() {
                       setCurrentPage(1);
                     }}
                   >
-                    <option value={20}>20 por página</option>
-                    <option value={50}>50 por página</option>
-                    <option value={100}>100 por página</option>
-                    <option value={200}>200 por página</option>
+                    <option value={20}>{t('dashboard.per_page').replace('{count}', '20')}</option>
+                    <option value={50}>{t('dashboard.per_page').replace('{count}', '50')}</option>
+                    <option value={100}>{t('dashboard.per_page').replace('{count}', '100')}</option>
+                    <option value={200}>{t('dashboard.per_page').replace('{count}', '200')}</option>
                   </select>
                 </div>
 
@@ -1784,7 +1883,7 @@ export default function ClientDashboard() {
                     }}
                     style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem' }}
                   >
-                    <Trash2 size={14} /> Limpiar filtros
+                    <Trash2 size={14} /> {t('dashboard.clear_filters')}
                   </button>
                 </div>
               </div>
@@ -1794,15 +1893,15 @@ export default function ClientDashboard() {
                   <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                     <tr>
                       <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Nombre Elaboración {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {t('dashboard.elaboration_name_header')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th onClick={() => handleSort('date')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Fecha {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {t('dashboard.elaboration_date_header')} {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Receta {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acciones</th>
+                      <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1810,7 +1909,7 @@ export default function ClientDashboard() {
                       <tr key={elab.id} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600' }}>{elab.name}</td>
                         <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
-                          {new Date(elab.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </td>
                         <td style={{ padding: '1.25rem 1.5rem' }}>
                           <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
@@ -1822,7 +1921,7 @@ export default function ClientDashboard() {
                             onClick={() => handleEditElaboration(elab)}
                             style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
                           >
-                            Modificar
+                            {t('dashboard.modify')}
                           </button>
                         </td>
                       </tr>
@@ -1830,7 +1929,7 @@ export default function ClientDashboard() {
                     {sortedElaborations.length === 0 && (
                       <tr>
                         <td colSpan="4" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                          No hay elaboraciones registradas todavía.
+                          {t('dashboard.no_elaborations_recorded')}
                         </td>
                       </tr>
                     )}
@@ -1841,7 +1940,10 @@ export default function ClientDashboard() {
                 {totalElabs > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 2rem', borderTop: '1px solid var(--border)', background: '#f8fafc' }}>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalElabs)} de {totalElabs} elaboraciones
+                      {t('dashboard.showing_info')
+                        .replace('{start}', ((currentPage - 1) * itemsPerPage) + 1)
+                        .replace('{end}', Math.min(currentPage * itemsPerPage, totalElabs))
+                        .replace('{total}', totalElabs)}
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <button 
@@ -1849,7 +1951,7 @@ export default function ClientDashboard() {
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, fontSize: '0.85rem', fontWeight: '700' }}
                       >
-                        Anterior
+                        {t('common.previous')}
                       </button>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         {[...Array(Math.ceil(totalElabs / itemsPerPage))].map((_, i) => {
@@ -1879,7 +1981,7 @@ export default function ClientDashboard() {
                         onClick={() => setCurrentPage(prev => prev + 1)}
                         style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', cursor: currentPage >= Math.ceil(totalElabs / itemsPerPage) ? 'not-allowed' : 'pointer', opacity: currentPage >= Math.ceil(totalElabs / itemsPerPage) ? 0.5 : 1, fontSize: '0.85rem', fontWeight: '700' }}
                       >
-                        Siguiente
+                        {t('common.next')}
                       </button>
                     </div>
                   </div>
@@ -2115,6 +2217,7 @@ export default function ClientDashboard() {
 }
 
 function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+  const { t } = useI18n();
   const toggleZone = (zoneId) => {
     setFormData(prev => ({
       ...prev,
@@ -2130,10 +2233,10 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-              {isEditing ? "Editar Registro" : "Registrar Limpieza"}
+              {isEditing ? t('common.edit') : t('modals.cleaning_header')}
             </h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              {isEditing ? "Modifica los detalles del registro de limpieza." : "Crea un nuevo registro detallando la limpieza realizada."}
+              {t('modals.date_time')}
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}><X size={24} /></button>
@@ -2142,18 +2245,18 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div>
-              <label className="label">Responsable</label>
+              <label className="label">{t('modals.person_name')}</label>
               <input 
                 type="text" 
                 className="input-field" 
                 value={formData.personName} 
                 onChange={(e) => setFormData({...formData, personName: e.target.value})} 
                 required 
-                placeholder="Nombre de la persona"
+                placeholder={t('dashboard.person')}
               />
             </div>
             <div>
-              <label className="label">Fecha y Hora</label>
+              <label className="label">{t('modals.date_time')}</label>
               <input 
                 type="datetime-local" 
                 className="input-field" 
@@ -2165,10 +2268,10 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
           </div>
 
           <div>
-            <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>Zonas Limpiadas</label>
+            <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>{t('modals.select_zones')}</label>
             {zones.length === 0 ? (
               <p style={{ padding: '2rem', background: '#f8fafc', borderRadius: '1rem', textAlign: 'center', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-                No hay zonas de limpieza configuradas por el administrador.
+                {t('modals.no_zones_config')}
               </p>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
@@ -2188,9 +2291,9 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1, padding: '1rem', background: '#f1f5f9', border: 'none', color: '#64748b', fontWeight: '800' }}>CANCELAR</button>
+            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1, padding: '1rem', background: '#f1f5f9', border: 'none', color: '#64748b', fontWeight: '800' }}>{t('common.cancel')}</button>
             <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, padding: '1rem' }}>
-              {loading ? <Loader2 className="animate-spin" size={20} /> : "GUARDAR REGISTRO"}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : t('common.save')}
             </button>
           </div>
         </form>
@@ -2200,15 +2303,16 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
 }
 
 function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange }) {
+  const { t } = useI18n();
   return (
     <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '750px' }}>
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-              {isEditing ? "Editar Entrada" : "Nueva Entrada de Mercancía"}
+              {isEditing ? t('common.edit') : t('modals.goods_header')}
             </h2>
-            <p style={{ color: 'var(--text-muted)' }}>Completa los datos del producto recibido.</p>
+            <p style={{ color: 'var(--text-muted)' }}>{t('common.save')}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}><X size={24} /></button>
         </header>
@@ -2216,7 +2320,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="form-group">
-              <label className="label">Producto <span style={{color:'#ef4444'}}>*</span></label>
+              <label className="label">{t('modals.ing_name')} <span style={{color:'#ef4444'}}>*</span></label>
               <div style={{ position: 'relative' }}>
                 <Package size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
                 <input 
@@ -2225,13 +2329,13 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   value={formData.productName} 
                   onChange={(e) => setFormData({...formData, productName: e.target.value})} 
                   required 
-                  placeholder="Nombre del producto"
+                  placeholder={t('dashboard.recipe_name')}
                   style={{ paddingLeft: '3rem' }}
                 />
               </div>
             </div>
             <div className="form-group">
-              <label className="label">Proveedor</label>
+              <label className="label">{t('dashboard.person')}</label>
               <div style={{ position: 'relative' }}>
                 <Truck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
                 <input 
@@ -2239,13 +2343,13 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   className="input-field" 
                   value={formData.providerName} 
                   onChange={(e) => setFormData({...formData, providerName: e.target.value})} 
-                  placeholder="Nombre del proveedor"
+                  placeholder={t('dashboard.person')}
                   style={{ paddingLeft: '3rem' }}
                 />
               </div>
             </div>
             <div className="form-group">
-              <label className="label">Lote</label>
+              <label className="label">{t('dashboard.lote')}</label>
               <div style={{ position: 'relative' }}>
                 <FileCheck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
                 <input 
@@ -2253,33 +2357,33 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   className="input-field" 
                   value={formData.lote} 
                   onChange={(e) => setFormData({...formData, lote: e.target.value})} 
-                  placeholder="Número de lote"
+                  placeholder={t('dashboard.lote')}
                   style={{ paddingLeft: '3rem' }}
                 />
               </div>
             </div>
             <div className="form-group">
-              <label className="label">Cantidad</label>
+              <label className="label">{t('modals.ing_amount')}</label>
               <input 
                 type="text" 
                 className="input-field" 
                 value={formData.quantity} 
                 onChange={(e) => setFormData({...formData, quantity: e.target.value})} 
-                placeholder="Ej. 10 kg, 5 cajas..."
+                placeholder={t('modals.ing_amount')}
               />
             </div>
             <div className="form-group">
-              <label className="label">Número de Factura / Albarán</label>
+              <label className="label">{t('dashboard.actions')}</label>
               <input 
                 type="text" 
                 className="input-field" 
                 value={formData.invoiceNumber} 
                 onChange={(e) => setFormData({...formData, invoiceNumber: e.target.value})} 
-                placeholder="Nº Factura"
+                placeholder={t('dashboard.invoice')}
               />
             </div>
             <div className="form-group">
-              <label className="label">Fecha <span style={{color:'#ef4444'}}>*</span></label>
+              <label className="label">{t('dashboard.datetime')} <span style={{color:'#ef4444'}}>*</span></label>
               <input 
                 type="datetime-local" 
                 className="input-field" 
@@ -2291,7 +2395,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
           </div>
 
           <div className="form-group">
-            <label className="label">Foto del Albarán</label>
+            <label className="label">{t('dashboard.delivery_note_photo')}</label>
             <div style={{ 
               border: '2px dashed var(--border)', 
               borderRadius: '1rem', 
@@ -2316,8 +2420,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               ) : (
                 <div onClick={() => document.getElementById('imageInput').click()}>
                   <Camera size={40} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-                  <p style={{ fontWeight: '700', color: 'var(--text-main)' }}>Haga clic para subir una foto</p>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Formato JPG, PNG o PDF (imagen)</p>
+                  <p style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('dashboard.upload_photo')}</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('dashboard.photo_format')}</p>
                 </div>
               )}
               <input 
@@ -2331,9 +2435,9 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1, padding: '1rem', background: '#f1f5f9', border: 'none', color: '#64748b', fontWeight: '800' }}>CANCELAR</button>
+            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1, padding: '1rem', background: '#f1f5f9', border: 'none', color: '#64748b', fontWeight: '800' }}>{t('dashboard.cancel')}</button>
             <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, padding: '1rem' }}>
-              {loading ? <Loader2 className="animate-spin" size={20} /> : "GUARDAR ENTRADA"}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : t('dashboard.save_entry')}
             </button>
           </div>
         </form>
@@ -2343,6 +2447,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
 }
 
 function PlanUsageIndicator({ label, current, limit }) {
+  const { t } = useI18n();
   const isCapped = limit !== null && current >= limit;
   const percentage = limit ? Math.min((current / limit) * 100, 100) : 0;
 
@@ -2375,7 +2480,7 @@ function PlanUsageIndicator({ label, current, limit }) {
         fontSize: '0.85rem', fontWeight: '800', textDecoration: 'none',
         transition: 'all 0.2s'
       }}>
-        <Crown size={14} /> AMPLIAR LÍMITE
+        <Crown size={14} /> {t('modals.upgrade_plan')}
       </Link>
     </div>
   );
@@ -2400,6 +2505,7 @@ function SidebarBtn({ icon, label, active, onClick }) {
 }
 
 function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+  const { t } = useI18n();
   const handleValueChange = (chamberId, value) => {
     setFormData(prev => ({
       ...prev,
@@ -2416,10 +2522,10 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-              {isEditing ? "Editar Temperaturas" : "Registrar Temperaturas"}
+              {isEditing ? t('common.edit') : t('modals.temp_header')}
             </h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Introduce la temperatura observada por cada cámara (ºC).
+              {t('modals.obs_temp')}
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}><X size={24} /></button>
@@ -2428,7 +2534,7 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="form-group">
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.75rem' }}>
-              <Calendar size={16} color="var(--corp-green)" /> FECHA Y HORA
+              <Calendar size={16} color="var(--corp-green)" /> {t('modals.date_time')}
             </label>
             <input 
               type="datetime-local" 
@@ -2441,7 +2547,7 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CÁMARAS</label>
+            <label style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('modals.chambers')}</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               {chambers.map(chamber => (
                 <div key={chamber.id} className="form-group" style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
@@ -2464,15 +2570,15 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
             </div>
             {chambers.length === 0 && (
               <p style={{ padding: '1rem', background: '#fff7ed', color: '#c2410c', borderRadius: '0.5rem', fontSize: '0.85rem', border: '1px solid #ffedd5' }}>
-                No hay cámaras configuradas por el administrador.
+                {t('modals.no_chambers_config')}
               </p>
             )}
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <button type="button" onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>CANCELAR</button>
+            <button type="button" onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>{t('common.cancel')}</button>
             <button type="submit" disabled={loading || chambers.length === 0} className="btn-primary" style={{ flex: 2 }}>
-              {loading ? <Loader2 className="animate-spin" size={20} /> : (isEditing ? "GUARDAR CAMBIOS" : "GUARDAR REGISTRO")}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : (isEditing ? t('common.save') : t('dashboard.save_record'))}
             </button>
           </div>
         </form>
@@ -2482,6 +2588,7 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
 }
 
 function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange }) {
+  const { t } = useI18n();
 
   return (
     <div className="modal-overlay">
@@ -2489,55 +2596,55 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-              {isEditing ? "Editar Receta" : "Nueva Receta Personalizada"}
+              {isEditing ? t('modals.edit_recipe') : t('modals.recipe_header')}
             </h2>
-            <p style={{ color: 'var(--text-muted)' }}>Configura los ingredientes y parámetros de tu receta.</p>
+            <p style={{ color: 'var(--text-muted)' }}>{t('modals.recipe_manage_desc')}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}><X size={24} /></button>
         </header>
 
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div>
-            <label className="label">Nombre de la Receta</label>
+            <label className="label">{t('modals.recipe_name')}</label>
             <input 
               type="text" 
               className="input-field" 
               value={formData.name} 
               onChange={(e) => setFormData({...formData, name: e.target.value})} 
               required 
-              placeholder="Ej. Tarta de Queso, Salsa Brava..."
+              placeholder={t('modals.recipe_name')}
               style={{ fontSize: '1.1rem', padding: '1rem' }}
             />
           </div>
 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>INGREDIENTES</h3>
+              <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>{t('modals.ingredients')}</h3>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {formData.ingredients.map((ing, idx) => (
                 <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 2fr auto', gap: '1rem', alignItems: 'center', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
                   <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>NOMBRE</label>
-                    <input type="text" className="input-field" value={ing.name} onChange={(e) => onIngredientChange(idx, 'name', e.target.value)} required placeholder="Harina..." />
+                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_name')}</label>
+                    <input type="text" className="input-field" value={ing.name} onChange={(e) => onIngredientChange(idx, 'name', e.target.value)} required placeholder={t('modals.ing_name')} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>CANT.</label>
+                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_amount')}</label>
                     <input type="text" className="input-field" value={ing.amount} onChange={(e) => onIngredientChange(idx, 'amount', e.target.value)} required placeholder="500" />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>UNIDAD</label>
+                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_unit')}</label>
                     <input type="text" className="input-field" value={ing.unit} onChange={(e) => onIngredientChange(idx, 'unit', e.target.value)} required placeholder="g, kg, L..." />
                   </div>
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}>
                       <input type="checkbox" checked={ing.loteMandatory} onChange={(e) => onIngredientChange(idx, 'loteMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
-                      Lote Oblig.
+                      {t('modals.lote_obligatory')}
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}>
                       <input type="checkbox" checked={ing.quantityMandatory} onChange={(e) => onIngredientChange(idx, 'quantityMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
-                      Cant. Real Oblig.
+                      {t('modals.real_qty_obligatory')}
                     </label>
                   </div>
                   {formData.ingredients.length > 1 && (
@@ -2553,15 +2660,15 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                 onClick={onAddIngredient}
                 style={{ alignSelf: 'center', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}
               >
-                <Plus size={16} /> Añadir Ingrediente
+                <Plus size={16} /> {t('modals.add_ingredient')}
               </button>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1, padding: '1rem' }}>CANCELAR</button>
+            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1, padding: '1rem' }}>{t('common.cancel')}</button>
             <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, padding: '1rem' }}>
-              {loading ? <Loader2 className="animate-spin" size={20} /> : (isEditing ? "GUARDAR CAMBIOS" : "CREAR RECETA")}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : (isEditing ? t('common.save') : t('modals.create_recipe'))}
             </button>
           </div>
         </form>
@@ -2571,6 +2678,7 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
 }
 
 function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) {
+  const { t } = useI18n();
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
@@ -2594,8 +2702,8 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
       <div className="modal-content" style={{ maxWidth: '600px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Gestionar Cámaras</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Crea, modifica o elimina tus cámaras de temperatura.</p>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('modals.chambers_header')}</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('modals.manage_chambers_desc')}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={24} />
@@ -2603,17 +2711,17 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
         </header>
 
         <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>NUEVA CÁMARA</label>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_chamber')}</label>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Nombre de la cámara..." 
+              placeholder={t('modals.chamber_placeholder')} 
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               required
             />
-            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>AÑADIR</button>
+            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>{t('modals.add_btn')}</button>
           </div>
         </form>
 
@@ -2655,7 +2763,7 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
           ))}
           {chambers.length === 0 && (
             <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
-              No hay cámaras registradas.
+              {t('modals.no_chambers_config')}
             </div>
           )}
         </div>
@@ -2665,6 +2773,7 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
 }
 
 function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }) {
+  const { t } = useI18n();
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
@@ -2688,8 +2797,8 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
       <div className="modal-content" style={{ maxWidth: '600px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Gestionar Zonas</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Crea, modifica o elimina tus zonas de limpieza.</p>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('modals.zones_header')}</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('modals.manage_zones_desc')}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={24} />
@@ -2697,17 +2806,17 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
         </header>
 
         <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>NUEVA ZONA</label>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_zone')}</label>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Nombre de la zona..." 
+              placeholder={t('modals.zone_placeholder')}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               required
             />
-            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>AÑADIR</button>
+            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>{t('modals.add_btn')}</button>
           </div>
         </form>
 
@@ -2749,7 +2858,7 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
           ))}
           {zones.length === 0 && (
             <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
-              No hay zonas registradas.
+              {t('modals.no_zones_config')}
             </div>
           )}
         </div>
@@ -2757,3 +2866,4 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
     </div>
   );
 }
+

@@ -4,8 +4,11 @@ import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Lock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/I18nContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function ResetPasswordContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -19,15 +22,15 @@ function ResetPasswordContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token) {
-      setError("Token de recuperación no válido");
+      setError(t('reset_password.error_invalid_token'));
       return;
     }
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      setError(t('reset_password.error_mismatch'));
       return;
     }
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+      setError(t('reset_password.error_length'));
       return;
     }
 
@@ -45,10 +48,10 @@ function ResetPasswordContent() {
       if (data.success) {
         setSuccess(true);
       } else {
-        setError(data.error || "Error al restablecer la contraseña");
+        setError(data.error || t('reset_password.error_resetting'));
       }
     } catch (err) {
-      setError("Error de conexión");
+      setError(t('common.error_connection') || "Error de conexión");
     } finally {
       setLoading(false);
     }
@@ -60,10 +63,10 @@ function ResetPasswordContent() {
         <div style={{ width: '80px', height: '80px', background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem' }}>
           <CheckCircle2 size={40} color="#166534" />
         </div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '1rem' }}>Contraseña Restablecida</h2>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Ya puedes iniciar sesión con tu nueva contraseña.</p>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '1rem' }}>{t('reset_password.success_title')}</h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>{t('reset_password.success_desc')}</p>
         <button onClick={() => router.push("/login")} className="btn-primary" style={{ width: '100%' }}>
-          Ir al Login
+          {t('reset_password.back_to_login')}
         </button>
       </div>
     );
@@ -72,8 +75,8 @@ function ResetPasswordContent() {
   return (
     <div>
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Nueva Contraseña</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Elige una contraseña segura y fácil de recordar</p>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{t('reset_password.title')}</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('reset_password.subtitle')}</p>
       </div>
 
       {error && (
@@ -84,7 +87,7 @@ function ResetPasswordContent() {
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div>
-          <label className="label">Nueva Contraseña</label>
+          <label className="label">{t('reset_password.new_password_label')}</label>
           <div style={{ position: 'relative' }}>
             <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
             <input 
@@ -94,7 +97,7 @@ function ResetPasswordContent() {
         </div>
 
         <div>
-          <label className="label">Confirmar Contraseña</label>
+          <label className="label">{t('reset_password.confirm_password_label')}</label>
           <div style={{ position: 'relative' }}>
             <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
             <input 
@@ -104,7 +107,7 @@ function ResetPasswordContent() {
         </div>
 
         <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem', fontSize: '1rem', padding: '1rem' }}>
-          {loading ? <Loader2 className="animate-spin" size={20} /> : "Establecer nueva contraseña"}
+          {loading ? <Loader2 className="animate-spin" size={20} /> : t('reset_password.submit')}
         </button>
       </form>
     </div>
@@ -114,9 +117,13 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <div style={{ 
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       background: '#f8fafc', padding: '1.5rem'
     }}>
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+        <LanguageSwitcher />
+      </div>
+
       <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '3rem', background: 'white' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
            <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto' }}>
