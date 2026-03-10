@@ -11,9 +11,18 @@ export async function POST(req) {
   console.log("--- Stripe Checkout Request Start ---");
   
   const stripeKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeKey) {
-    console.error("Missing STRIPE_SECRET_KEY");
-    return NextResponse.json({ error: "Configuración incompleta: STRIPE_SECRET_KEY no está definida en el servidor." }, { status: 500 });
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+  const missingVars = [];
+  if (!stripeKey) missingVars.push("STRIPE_SECRET_KEY");
+  if (!webhookSecret) missingVars.push("STRIPE_WEBHOOK_SECRET");
+  
+  if (missingVars.length > 0) {
+    console.error("Missing Env Vars:", missingVars);
+    return NextResponse.json({ 
+      error: `Configuración incompleta en Vercel. Faltan las siguientes variables de entorno: ${missingVars.join(", ")}.`,
+      howToFix: "Añádalas en el panel de Vercel > Settings > Environment Variables."
+    }, { status: 500 });
   }
 
   const stripe = new Stripe(stripeKey);
