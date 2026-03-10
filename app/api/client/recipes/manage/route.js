@@ -18,24 +18,27 @@ export async function POST(req) {
     // Get client profile and check privilege
     const profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) },
-      include: { _count: { select: { recipes: true } } }
+      include: { 
+        plan: true,
+        _count: { select: { recipes: true } } 
+      }
     });
 
     if (!profile) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
-    if (!profile.canManageRecipes) {
-      return NextResponse.json({ error: "No tienes permiso para gestionar tus propias recetas. Contacta con soporte." }, { status: 403 });
+    if (!profile.plan) {
+      return NextResponse.json({ error: "No tienes un plan asignado. Contacta con soporte." }, { status: 403 });
     }
 
     // Check limits
     const currentCount = profile._count.recipes;
-    const limit = profile.accountType.toUpperCase() === "DEMO" ? 3 : profile.recetasContratadas;
+    const limit = profile.plan.recipesLimit;
 
-    if (currentCount >= limit) {
+    if (limit !== null && currentCount >= limit) {
       return NextResponse.json({ 
-        error: `Límite alcanzado. Tienes contratadas ${limit} recetas y ya has creado ${currentCount}.` 
+        error: `Límite alcanzado. Tu plan '${profile.plan.name}' permite ${limit} recetas y ya has creado ${currentCount}.` 
       }, { status: 403 });
     }
 

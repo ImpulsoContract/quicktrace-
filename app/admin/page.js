@@ -15,10 +15,12 @@ import { signOut } from "next-auth/react";
 import Image from "next/image";
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("create"); // "create" or "list"
+  const [activeTab, setActiveTab] = useState("create"); // "create", "list", or "plans"
   const [clients, setClients] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
+  const [plansLoading, setPlansLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   // Modals state
@@ -35,8 +37,7 @@ export default function AdminDashboard() {
   const [formData, setFormData] = useState({
     email: "", password: "", name: "", razonSocial: "", nif: "", phone: "",
     urlClientify: "",
-    accountType: "cliente", recetasContratadas: 0,
-    canManageRecipes: false
+    planId: ""
   });
 
   const fetchClients = async () => {
@@ -52,8 +53,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchPlans = async () => {
+    setPlansLoading(true);
+    try {
+      const res = await fetch("/api/admin/plans");
+      const data = await res.json();
+      if (!data.error) setPlans(data);
+    } catch (error) {
+      console.error("Error loading plans:", error);
+    } finally {
+      setPlansLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "list") fetchClients();
+    if (activeTab === "plans" || activeTab === "create") fetchPlans();
   }, [activeTab]);
 
   const handleChange = (e) => {
@@ -177,6 +192,16 @@ export default function AdminDashboard() {
             Ver Clientes
             {activeTab === 'list' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
           </button>
+          <button
+            onClick={() => setActiveTab("plans")}
+            style={{
+              background: 'none', border: 'none', color: activeTab === 'plans' ? 'var(--corp-green)' : 'var(--text-muted)',
+              fontWeight: activeTab === 'plans' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
+            }}
+          >
+            Planes de Precios
+            {activeTab === 'plans' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
+          </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -255,27 +280,17 @@ export default function AdminDashboard() {
                     </div>
 
                     <div>
-                      <h3 className="section-title">Configuración de Cuenta</h3>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem' }}>
+                      <h3 className="section-title">Plan de Precios</h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                         <div>
-                          <label className="label">Tipo de Cuenta</label>
-                          <select name="accountType" value={formData.accountType} onChange={handleChange} className="input-field">
-                            <option value="demo">Demo</option>
-                            <option value="cliente">Cliente</option>
+                          <label className="label">Seleccionar Plan</label>
+                          <select name="planId" value={formData.planId} onChange={handleChange} className="input-field" required>
+                            <option value="">Selecciona un plan...</option>
+                            {plans.map(plan => (
+                              <option key={plan.id} value={plan.id}>{plan.name}</option>
+                            ))}
                           </select>
                         </div>
-                        <div>
-                          <label className="label">Recetas Contratadas</label>
-                          <input type="number" name="recetasContratadas" value={formData.recetasContratadas} onChange={handleChange} className="input-field" min="0" />
-                        </div>
-                      </div>
-                      <div style={{ marginTop: '1.5rem' }}>
-                        <Checkbox 
-                          label="Permitir que el cliente gestione sus recetas" 
-                          name="canManageRecipes" 
-                          checked={formData.canManageRecipes} 
-                          onChange={(e) => setFormData({...formData, canManageRecipes: e.target.checked})} 
-                        />
                       </div>
                     </div>
 
@@ -296,7 +311,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : activeTab === "list" ? (
             <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1.5rem', marginBottom: '2.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -318,13 +333,13 @@ export default function AdminDashboard() {
                       <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cliente / Responsable</th>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>NIF / CIF</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan</th>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recetas (Uso)</th>
                         <th style={{ padding: '1rem', textAlign: 'right' }}></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {clients.map((client, index) => (
+                      {clients.map((client) => (
                         <tr key={client.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
                           <td style={{ padding: '1.25rem 1rem' }}>
                             <div style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || 'Sin Razón Social'}</div>
@@ -334,15 +349,15 @@ export default function AdminDashboard() {
                           <td style={{ padding: '1.25rem 1rem' }}>
                             <span style={{
                               padding: '0.35rem 0.85rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: '700',
-                              background: client.clientProfile?.accountType === 'demo' ? '#fef3c7' : '#dcfce7',
-                              color: client.clientProfile?.accountType === 'demo' ? '#b45309' : '#15803d',
+                              background: '#dcfce7',
+                              color: '#15803d',
                               textTransform: 'uppercase'
                             }}>
-                              {client.clientProfile?.accountType}
+                              {client.clientProfile?.plan?.name || "SIN PLAN"}
                             </span>
                           </td>
                           <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '600' }}>
-                            {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.accountType === 'demo' ? 3 : client.clientProfile?.recetasContratadas}
+                            {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}
                           </td>
                           <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
                             <button
@@ -356,7 +371,6 @@ export default function AdminDashboard() {
                               <MoreVertical size={18} />
                             </button>
                           </td>
-
                         </tr>
                       ))}
                     </tbody>
@@ -364,6 +378,8 @@ export default function AdminDashboard() {
                 </div>
               )}
             </section>
+          ) : (
+            <PlansTab plans={plans} loading={plansLoading} onRefresh={fetchPlans} />
           )}
         </div>
       </main>
@@ -448,27 +464,21 @@ export default function AdminDashboard() {
             </div>
 
             <div>
-              <h3 className="section-title">Configuración de Cuenta</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem' }}>
+              <h3 className="section-title">Configuración de Plan</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                 <div>
-                  <label className="label">Tipo de Cuenta</label>
-                  <select className="input-field" value={editClientModal.form.accountType} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, accountType: e.target.value}})}>
-                    <option value="demo">Demo</option>
-                    <option value="cliente">Cliente</option>
+                  <label className="label">Plan asignado</label>
+                  <select 
+                    className="input-field" 
+                    value={editClientModal.form.planId || ""} 
+                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, planId: parseInt(e.target.value)}})}
+                  >
+                    <option value="">Selecciona un plan...</option>
+                    {plans.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
                   </select>
                 </div>
-                <div>
-                  <label className="label">Recetas Contratadas</label>
-                  <input type="number" className="input-field" value={editClientModal.form.recetasContratadas} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, recetasContratadas: parseInt(e.target.value) || 0}})} />
-                </div>
-              </div>
-              <div style={{ marginTop: '1.5rem' }}>
-                <Checkbox 
-                  label="Permitir que el cliente gestione sus recetas" 
-                  name="canManageRecipes" 
-                  checked={editClientModal.form.canManageRecipes || false} 
-                  onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, canManageRecipes: e.target.checked}})} 
-                />
               </div>
             </div>
 
@@ -593,9 +603,188 @@ function InstructionsCard() {
       <ul style={{ padding: 0, margin: 0, listStyle: 'none', fontSize: '0.85rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <li>• La contraseña debe ser segura pero fácil de recordar para el cliente.</li>
         <li>• El NIF se utilizará para la facturación automática.</li>
-        <li>• El tipo de cuenta define el acceso a módulos premium.</li>
+        <li>• Los planes definen los límites y módulos activos.</li>
       </ul>
     </div>
+  );
+}
+
+function PlansTab({ plans, loading, onRefresh }) {
+  const [showPlanModal, setShowPlanModal] = useState(null); // { mode: 'create' | 'edit', plan?: any }
+
+  const handleDeletePlan = async (id) => {
+    if (!confirm("¿Seguro que quieres eliminar este plan? Solo podrás hacerlo si no hay clientes usándolo.")) return;
+    try {
+      const res = await fetch(`/api/admin/plans/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        onRefresh();
+      } else {
+        alert(data.error);
+      }
+    } catch (e) { alert("Error al eliminar plan"); }
+  };
+
+  return (
+    <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <FileText size={24} color="var(--corp-green)" />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Planes de Precios</h2>
+        </div>
+        <button 
+          onClick={() => setShowPlanModal({ mode: 'create' })}
+          className="btn-primary" 
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Plus size={18} /> Nuevo Plan
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '5rem' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {plans.map(plan => (
+            <div key={plan.id} className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid var(--border)', position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)' }}>{plan.name}</h3>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => setShowPlanModal({ mode: 'edit', plan })} style={{ padding: '0.4rem', borderRadius: '0.4rem', border: '1px solid #e2e8f0', background: 'white', color: 'var(--corp-green)', cursor: 'pointer' }}><Edit size={14}/></button>
+                  {plan.name !== 'DEMO' && (
+                    <button onClick={() => handleDeletePlan(plan.id)} style={{ padding: '0.4rem', borderRadius: '0.4rem', border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={14}/></button>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Recetas:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.recipesLimit || "Ilimitadas"}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Elaboraciones:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.elaborationsLimit || "Ilimitadas"}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasCleaning ? 1 : 0.5 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Limpieza:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasCleaning ? (plan.cleaningLimit || "Ilimitado") : "No disponible"}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasGoods ? 1 : 0.5 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Mercancías:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasGoods ? (plan.goodsLimit || "Ilimitado") : "No disponible"}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasTemperatures ? 1 : 0.5 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Temperaturas:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasTemperatures ? (plan.temperaturesLimit || "Ilimitado") : "No disponible"}</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px dashed #e2e8f0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {plan._count?.clients || 0} clientes activos
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showPlanModal && (
+        <PlanModal 
+          mode={showPlanModal.mode} 
+          plan={showPlanModal.plan} 
+          onClose={() => setShowPlanModal(null)} 
+          onRefresh={onRefresh} 
+        />
+      )}
+    </section>
+  );
+}
+
+function PlanModal({ mode, plan, onClose, onRefresh }) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: plan?.name || "",
+    recipesLimit: plan?.recipesLimit === null ? "" : (plan?.recipesLimit || ""),
+    elaborationsLimit: plan?.elaborationsLimit === null ? "" : (plan?.elaborationsLimit || ""),
+    hasCleaning: plan?.hasCleaning || false,
+    cleaningLimit: plan?.cleaningLimit === null ? "" : (plan?.cleaningLimit || ""),
+    hasGoods: plan?.hasGoods || false,
+    goodsLimit: plan?.goodsLimit === null ? "" : (plan?.goodsLimit || ""),
+    hasTemperatures: plan?.hasTemperatures || false,
+    temperaturesLimit: plan?.temperaturesLimit === null ? "" : (plan?.temperaturesLimit || "")
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const url = mode === 'create' ? '/api/admin/plans' : `/api/admin/plans/${plan.id}`;
+      const method = mode === 'create' ? 'POST' : 'PATCH';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (!data.error) {
+        onRefresh();
+        onClose();
+      } else {
+        alert(data.error);
+      }
+    } catch (e) { alert("Error al guardar plan"); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <Modal title={mode === 'create' ? "Nuevo Plan de Precios" : `Editar Plan: ${plan.name}`} onClose={onClose}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div>
+          <label className="label">Nombre del Plan</label>
+          <input type="text" className="input-field" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required placeholder="Ej: Premium, Básico..." />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div>
+            <label className="label">Límite Recetas (vacío = ∞)</label>
+            <input type="number" className="input-field" value={formData.recipesLimit} onChange={(e) => setFormData({...formData, recipesLimit: e.target.value})} />
+          </div>
+          <div>
+            <label className="label">Límite Elaboraciones (vacío = ∞)</label>
+            <input type="number" className="input-field" value={formData.elaborationsLimit} onChange={(e) => setFormData({...formData, elaborationsLimit: e.target.value})} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
+          <h4 style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)' }}>MÓDULOS DE HIGIENE</h4>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center' }}>
+            <Checkbox label="Registros de Limpieza" checked={formData.hasCleaning} onChange={(e) => setFormData({...formData, hasCleaning: e.target.checked})} heavy />
+            {formData.hasCleaning && (
+              <input type="number" className="input-field" value={formData.cleaningLimit} onChange={(e) => setFormData({...formData, cleaningLimit: e.target.value})} placeholder="Límite registros..." />
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center' }}>
+            <Checkbox label="Entradas de Mercancías" checked={formData.hasGoods} onChange={(e) => setFormData({...formData, hasGoods: e.target.checked})} heavy />
+            {formData.hasGoods && (
+              <input type="number" className="input-field" value={formData.goodsLimit} onChange={(e) => setFormData({...formData, goodsLimit: e.target.value})} placeholder="Límite registros..." />
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center' }}>
+            <Checkbox label="Control de Temperatura" checked={formData.hasTemperatures} onChange={(e) => setFormData({...formData, hasTemperatures: e.target.checked})} heavy />
+            {formData.hasTemperatures && (
+              <input type="number" className="input-field" value={formData.temperaturesLimit} onChange={(e) => setFormData({...formData, temperaturesLimit: e.target.value})} placeholder="Límite registros..." />
+            )}
+          </div>
+        </div>
+
+        <button type="submit" className="btn-primary" disabled={loading}>
+          {loading ? "Guardando..." : "Guardar Plan"}
+        </button>
+      </form>
+    </Modal>
   );
 }
 

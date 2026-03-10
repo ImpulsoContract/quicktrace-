@@ -885,24 +885,30 @@ export default function ClientDashboard() {
               active={activeTab === "historial"} 
               onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); }} 
             />
-            <SidebarBtn 
-              icon={<Brush size={20} />} 
-              label="Registros de limpieza" 
-              active={activeTab === "limpieza"} 
-              onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); }} 
-            />
-            <SidebarBtn 
-              icon={<Thermometer size={20} />} 
-              label="Temperaturas cámaras" 
-              active={activeTab === "temperaturas"} 
-              onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); }} 
-            />
-            <SidebarBtn 
-              icon={<Truck size={20} />} 
-              label="Entradas de mercancía" 
-              active={activeTab === "entradas"} 
-              onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); }} 
-            />
+            {profile?.plan?.hasCleaning && (
+              <SidebarBtn 
+                icon={<Brush size={20} />} 
+                label="Registros de limpieza" 
+                active={activeTab === "limpieza"} 
+                onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); }} 
+              />
+            )}
+            {profile?.plan?.hasTemperatures && (
+              <SidebarBtn 
+                icon={<Thermometer size={20} />} 
+                label="Temperaturas cámaras" 
+                active={activeTab === "temperaturas"} 
+                onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); }} 
+              />
+            )}
+            {profile?.plan?.hasGoods && (
+              <SidebarBtn 
+                icon={<Truck size={20} />} 
+                label="Entradas de mercancía" 
+                active={activeTab === "entradas"} 
+                onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); }} 
+              />
+            )}
             {session?.user?.role === "CLIENT" && (
               <SidebarBtn 
                 icon={<ChefHat size={20} />} 
@@ -920,7 +926,7 @@ export default function ClientDashboard() {
               </div>
               <div style={{ overflow: 'hidden' }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user?.name}</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Panel Cliente</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800' }}>Plan {profile?.plan?.name || 'Cargando...'}</div>
               </div>
             </div>
             <button 
@@ -1606,7 +1612,7 @@ export default function ClientDashboard() {
                     <ChefHat size={48} color="var(--border)" style={{ marginBottom: '1.5rem' }} />
                     <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>No tienes recetas propias</h3>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                      Según tu plan, puedes crear hasta {profile?.accountType?.toUpperCase() === 'DEMO' ? 3 : (profile?.recetasContratadas || "-")} recetas.
+                      Según tu plan <strong>{profile?.plan?.name}</strong>, puedes crear hasta {profile?.plan?.recipesLimit === null ? 'ilimitadas' : profile?.plan?.recipesLimit} recetas.
                     </p>
                     <button 
                       onClick={() => {

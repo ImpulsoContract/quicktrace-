@@ -36,8 +36,14 @@ model ClientProfile {
   phone                  String?
   urlClientify           String?
   
-  accountType           String   @default("DEMO") // DEMO, CLIENTE
+  // New Plan System
+  planId                Int?
+  plan                  PricingPlan? @relation(fields: [planId], references: [id])
+  
+  // Old fields (to be deprecated after migration)
+  accountType           String   @default("DEMO") 
   recetasContratadas     Int      @default(3)
+  
   canManageRecipes      Boolean  @default(true)
 
   createdAt             DateTime @default(now())
@@ -49,6 +55,28 @@ model ClientProfile {
   chambers              Chamber[]
   temperatureRecords    TemperatureRecord[]
   goodsReceipts         GoodsReceipt[]
+}
+
+model PricingPlan {
+  id                Int      @id @default(autoincrement())
+  name              String   @unique
+  
+  recipesLimit      Int?     // null = unlimited
+  elaborationsLimit Int?     // null = unlimited
+  
+  hasCleaning       Boolean  @default(false)
+  cleaningLimit     Int?     
+  
+  hasGoods          Boolean  @default(false)
+  goodsLimit        Int?     
+  
+  hasTemperatures   Boolean  @default(false)
+  temperaturesLimit Int?     
+
+  clients           ClientProfile[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Recipe {

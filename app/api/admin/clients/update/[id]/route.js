@@ -17,7 +17,7 @@ export async function PATCH(req, { params }) {
     const body = await req.json();
     const { 
       email, name, razonSocial, nif, phone, urlClientify,
-      accountType, recetasContratadas, canManageRecipes
+      planId
     } = body;
 
     const userId = parseInt(id);
@@ -36,9 +36,7 @@ export async function PATCH(req, { params }) {
         nif,
         phone,
         urlClientify,
-        accountType: (accountType || "CLIENTE").toUpperCase(),
-        recetasContratadas: parseInt(recetasContratadas) || 0,
-        canManageRecipes: !!canManageRecipes
+        planId: parseInt(planId) || null
       };
 
       await tx.clientProfile.update({

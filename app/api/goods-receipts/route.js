@@ -37,11 +37,23 @@ export async function POST(req) {
 
   try {
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
+      where: { userId: parseInt(session.user.id) },
+      include: { 
+        plan: true,
+        _count: { select: { goodsReceipts: true } }
+      }
     });
 
     if (!profile) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    if (!profile.plan || !profile.plan.hasGoods) {
+      return NextResponse.json({ error: "El módulo de recepción de mercancías no está incluido en tu plan." }, { status: 403 });
+    }
+
+    if (profile.plan.goodsLimit !== null && profile._count.goodsReceipts >= profile.plan.goodsLimit) {
+      return NextResponse.json({ error: "Has alcanzado el límite de registros de mercancías de tu plan." }, { status: 403 });
     }
 
     const body = await req.json();

@@ -15,7 +15,7 @@ export async function POST(req) {
     const body = await req.json();
     const { 
       email, password, name, razonSocial, nif, phone, urlClientify,
-      accountType, recetasContratadas, canManageRecipes
+      planId
     } = body;
 
     // Check if user already exists
@@ -47,9 +47,8 @@ export async function POST(req) {
           nif,
           phone,
           urlClientify,
-          accountType: (accountType || "DEMO").toUpperCase(),
-          recetasContratadas: parseInt(recetasContratadas) || 3,
-          canManageRecipes: canManageRecipes !== undefined ? !!canManageRecipes : true
+          planId: parseInt(planId) || null,
+          canManageRecipes: true // Default for now, can be adjusted
         }
       });
 

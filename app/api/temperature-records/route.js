@@ -45,11 +45,23 @@ export async function POST(req) {
 
   try {
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
+      where: { userId: parseInt(session.user.id) },
+      include: { 
+        plan: true,
+        _count: { select: { temperatureRecords: true } }
+      }
     });
 
     if (!profile) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    if (!profile.plan || !profile.plan.hasTemperatures) {
+      return NextResponse.json({ error: "El módulo de temperaturas no está incluido en tu plan." }, { status: 403 });
+    }
+
+    if (profile.plan.temperaturesLimit !== null && profile._count.temperatureRecords >= profile.plan.temperaturesLimit) {
+      return NextResponse.json({ error: "Has alcanzado el límite de registros de temperatura de tu plan." }, { status: 403 });
     }
 
     const { date, values } = await req.json(); // values: { [chamberId]: temperature }

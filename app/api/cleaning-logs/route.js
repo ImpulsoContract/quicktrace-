@@ -47,11 +47,23 @@ export async function POST(req) {
 
   try {
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
+      where: { userId: parseInt(session.user.id) },
+      include: { 
+        plan: true,
+        _count: { select: { cleaningLogs: true } }
+      }
     });
 
     if (!profile) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    if (!profile.plan || !profile.plan.hasCleaning) {
+      return NextResponse.json({ error: "El módulo de limpieza no está incluido en tu plan." }, { status: 403 });
+    }
+
+    if (profile.plan.cleaningLimit !== null && profile._count.cleaningLogs >= profile.plan.cleaningLimit) {
+      return NextResponse.json({ error: "Has alcanzado el límite de registros de limpieza de tu plan." }, { status: 403 });
     }
 
     const body = await req.json();

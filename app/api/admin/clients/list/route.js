@@ -16,6 +16,7 @@ export async function GET() {
       include: {
         clientProfile: {
           include: {
+            plan: true,
             _count: {
               select: { recipes: true }
             }

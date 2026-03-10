@@ -103,11 +103,29 @@ export async function POST(req) {
 
     // Buscar el perfil del cliente
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
+      where: { userId: parseInt(session.user.id) },
+      include: { 
+        plan: true,
+        _count: { select: { elaborations: true } }
+      }
     });
 
     if (!profile) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
+    }
+
+    if (!profile.plan) {
+      return NextResponse.json({ error: "No tienes un plan asignado. Contacta con soporte." }, { status: 403 });
+    }
+
+    // Check limits
+    const currentCount = profile._count.elaborations;
+    const limit = profile.plan.elaborationsLimit;
+
+    if (limit !== null && currentCount >= limit) {
+      return NextResponse.json({ 
+        error: `Límite alcanzado. Tu plan '${profile.plan.name}' permite ${limit} elaboraciones y ya has creado ${currentCount}.` 
+      }, { status: 403 });
     }
 
     // Verificar que la receta pertenece al cliente

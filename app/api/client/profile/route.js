@@ -12,7 +12,8 @@ export async function GET() {
 
   try {
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
+      where: { userId: parseInt(session.user.id) },
+      include: { plan: true }
     });
 
     if (!profile) {
