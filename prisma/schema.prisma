@@ -60,6 +60,7 @@ model ClientProfile {
 model PricingPlan {
   id                Int      @id @default(autoincrement())
   name              String   @unique
+  priceYearly       Float    @default(0)
   
   recipesLimit      Int?     // null = unlimited
   elaborationsLimit Int?     // null = unlimited

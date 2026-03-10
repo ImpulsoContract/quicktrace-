@@ -2438,13 +2438,6 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>INGREDIENTES</h3>
-              <button 
-                type="button" 
-                onClick={onAddIngredient}
-                style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                <Plus size={16} /> Añadir Ingrediente
-              </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -2479,6 +2472,14 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                   )}
                 </div>
               ))}
+
+              <button 
+                type="button" 
+                onClick={onAddIngredient}
+                style={{ alignSelf: 'center', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}
+              >
+                <Plus size={16} /> Añadir Ingrediente
+              </button>
             </div>
           </div>
 

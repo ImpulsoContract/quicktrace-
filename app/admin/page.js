@@ -657,6 +657,11 @@ function PlansTab({ plans, loading, onRefresh }) {
                 </div>
               </div>
 
+              <div style={{ marginBottom: '1rem' }}>
+                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--corp-green)' }}>{plan.priceYearly}€</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>/ año</span>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Recetas:</span>
@@ -704,6 +709,7 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: plan?.name || "",
+    priceYearly: plan?.priceYearly || 0,
     recipesLimit: plan?.recipesLimit === null ? "" : (plan?.recipesLimit || ""),
     elaborationsLimit: plan?.elaborationsLimit === null ? "" : (plan?.elaborationsLimit || ""),
     hasCleaning: plan?.hasCleaning || false,
@@ -739,9 +745,15 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
   return (
     <Modal title={mode === 'create' ? "Nuevo Plan de Precios" : `Editar Plan: ${plan.name}`} onClose={onClose}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div>
-          <label className="label">Nombre del Plan</label>
-          <input type="text" className="input-field" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required placeholder="Ej: Premium, Básico..." />
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+          <div>
+            <label className="label">Nombre del Plan</label>
+            <input type="text" className="input-field" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required placeholder="Ej: Premium, Básico..." />
+          </div>
+          <div>
+            <label className="label">Precio Anual (€)</label>
+            <input type="number" step="0.01" className="input-field" value={formData.priceYearly} onChange={(e) => setFormData({...formData, priceYearly: e.target.value})} required />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -903,86 +915,89 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label className="label" style={{ margin: 0 }}>Ingredientes</label>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {recipeForm.ingredients.map((ing, idx) => (
+                <div key={idx} className="glass-card" style={{ padding: '1rem', background: '#f8fafc', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>NOMBRE</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={ing.name} 
+                        onChange={(e) => handleIngredientChange(idx, 'name', e.target.value)}
+                        placeholder="Ej. Pollo"
+                        required
+                        style={{ margin: 0, padding: '0.5rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>CANT. DEFECTO</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={ing.amount} 
+                        onChange={(e) => handleIngredientChange(idx, 'amount', e.target.value)}
+                        placeholder="100"
+                        style={{ margin: 0, padding: '0.5rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>UNIDAD</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={ing.unit} 
+                        onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
+                        placeholder="gr"
+                        style={{ margin: 0, padding: '0.5rem' }}
+                      />
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveIngredient(idx)}
+                      style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', height: '38px' }}
+                      disabled={recipeForm.ingredients.length === 1}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1.5rem', borderTop: '1px dashed #e2e8f0', paddingTop: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={ing.loteMandatory} 
+                        onChange={(e) => handleIngredientChange(idx, 'loteMandatory', e.target.checked)} 
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--corp-green)' }}
+                      />
+                      <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Lote obligatorio</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={ing.quantityMandatory} 
+                        onChange={(e) => handleIngredientChange(idx, 'quantityMandatory', e.target.checked)} 
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--corp-green)' }}
+                      />
+                      <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Cantidad obligatoria</span>
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <button 
               type="button" 
               onClick={handleAddIngredient}
               className="btn-secondary"
-              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              style={{ alignSelf: 'center', padding: '0.5rem 1.25rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' }}
             >
               <Plus size={14} /> AÑADIR OTRO
             </button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
-            {recipeForm.ingredients.map((ing, idx) => (
-              <div key={idx} className="glass-card" style={{ padding: '1rem', background: '#f8fafc', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>NOMBRE</label>
-                    <input 
-                      type="text" 
-                      className="input-field" 
-                      value={ing.name} 
-                      onChange={(e) => handleIngredientChange(idx, 'name', e.target.value)}
-                      placeholder="Ej. Pollo"
-                      required
-                      style={{ margin: 0, padding: '0.5rem' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>CANT. DEFECTO</label>
-                    <input 
-                      type="text" 
-                      className="input-field" 
-                      value={ing.amount} 
-                      onChange={(e) => handleIngredientChange(idx, 'amount', e.target.value)}
-                      placeholder="100"
-                      style={{ margin: 0, padding: '0.5rem' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>UNIDAD</label>
-                    <input 
-                      type="text" 
-                      className="input-field" 
-                      value={ing.unit} 
-                      onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
-                      placeholder="gr"
-                      style={{ margin: 0, padding: '0.5rem' }}
-                    />
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveIngredient(idx)}
-                    style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', height: '38px' }}
-                    disabled={recipeForm.ingredients.length === 1}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1.5rem', borderTop: '1px dashed #e2e8f0', paddingTop: '0.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={ing.loteMandatory} 
-                      onChange={(e) => handleIngredientChange(idx, 'loteMandatory', e.target.checked)} 
-                      style={{ width: '16px', height: '16px', accentColor: 'var(--corp-green)' }}
-                    />
-                    <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Lote obligatorio</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={ing.quantityMandatory} 
-                      onChange={(e) => handleIngredientChange(idx, 'quantityMandatory', e.target.checked)} 
-                      style={{ width: '16px', height: '16px', accentColor: 'var(--corp-green)' }}
-                    />
-                    <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Cantidad obligatoria</span>
-                  </label>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 

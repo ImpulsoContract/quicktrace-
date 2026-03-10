@@ -50,6 +50,7 @@ export async function POST(req) {
     const plan = await prisma.pricingPlan.create({
       data: {
         name: data.name,
+        priceYearly: parseFloat(data.priceYearly) || 0,
         recipesLimit: data.recipesLimit === "" ? null : parseInt(data.recipesLimit),
         elaborationsLimit: data.elaborationsLimit === "" ? null : parseInt(data.elaborationsLimit),
         hasCleaning: data.hasCleaning || false,
