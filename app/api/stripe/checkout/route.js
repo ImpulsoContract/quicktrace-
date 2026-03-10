@@ -57,7 +57,7 @@ export async function POST(req) {
       customer_email: clientProfile.stripeCustomerId ? undefined : session.user.email,
       line_items: [
         {
-          price: plan.stripePriceId,
+          price: priceId,
           quantity: 1,
         },
       ],
