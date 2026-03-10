@@ -104,10 +104,7 @@ export async function POST(req) {
     // Buscar el perfil del cliente
     const profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) },
-      include: { 
-        plan: true,
-        _count: { select: { elaborations: true } }
-      }
+      include: { plan: true }
     });
 
     if (!profile) {
@@ -119,7 +116,14 @@ export async function POST(req) {
     }
 
     // Check limits
-    const currentCount = profile._count.elaborations;
+    const currentCount = await prisma.elaboration.count({
+      where: {
+        recipe: {
+          clientProfileId: profile.id
+        }
+      }
+    });
+    
     const limit = profile.plan.elaborationsLimit;
 
     if (limit !== null && currentCount >= limit) {

@@ -26,8 +26,17 @@ export async function POST(req) {
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create user and profile in a transaction
-    // Password will be set later during verification
     await prisma.$transaction(async (tx) => {
+      // Find the "Demo" plan
+      const demoPlan = await tx.pricingPlan.findFirst({
+        where: {
+          name: {
+            contains: 'Demo',
+            mode: 'insensitive'
+          }
+        }
+      });
+
       const user = await tx.user.create({
         data: {
           email: normalizedEmail,
@@ -45,9 +54,11 @@ export async function POST(req) {
           userId: user.id,
           razonSocial,
           phone,
-          nif: "", // Will be completed later by admin or user in settings
-          accountType: "DEMO",
-          recetasContratadas: 3,
+          nif: "", 
+          planId: demoPlan ? demoPlan.id : undefined,
+          // Legacy fields for compatibility
+          accountType: demoPlan ? demoPlan.name : "DEMO",
+          recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
           canManageRecipes: true
         }
       });
