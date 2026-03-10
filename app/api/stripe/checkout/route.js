@@ -10,12 +10,16 @@ import Stripe from "stripe";
 export async function POST(req) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   try {
+    console.log("Stripe Checkout started...");
     const session = await getServerSession(authOptions);
     if (!session) {
+      console.log("No session found");
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
+    console.log("User session verified:", session.user.email);
 
     const { planId } = await req.json();
+    console.log("Requested planId:", planId);
 
     const plan = await prisma.pricingPlan.findUnique({
       where: { id: planId }
@@ -40,17 +44,21 @@ export async function POST(req) {
     }
 
     if (!priceId) {
+      console.log("Error: No priceId found for plan", plan.name);
       return NextResponse.json({ error: "Este plan aún no está configurado para pagos (falta Stripe Price ID)" }, { status: 400 });
     }
+    console.log("Using priceId:", priceId);
 
     const clientProfile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) }
     });
 
     if (!clientProfile) {
+      console.log("Error: Client profile not found for userId:", session.user.id);
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
+    console.log("Creating checkout session for customer:", clientProfile.stripeCustomerId || "New Customer");
     // Si ya existe un stripeCustomerId, lo usamos. Si no, Stripe creará uno nuevo.
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: clientProfile.stripeCustomerId || undefined,
