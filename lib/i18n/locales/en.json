@@ -31,14 +31,22 @@
     "usage": "Usage"
   },
   "auth": {
+    "welcome": "Welcome Back",
+    "login_platform": "Access your traceability platform",
     "login": "Login",
     "email": "Email Address",
+    "email_placeholder": "you@email.com",
     "password": "Password",
+    "password_placeholder": "••••••••",
     "forgot_password": "Forgot your password?",
+    "login_submit": "Sign in now",
     "no_account": "Don't have an account?",
+    "register_free": "Register for free",
     "register": "Register",
     "logging_in": "Logging in...",
     "error_login": "Login failed. Please check your credentials.",
+    "error_invalid": "Invalid credentials. Please try again.",
+    "error_generic": "An error occurred while trying to log in.",
     "logout": "Logout"
   },
   "sidebar": {

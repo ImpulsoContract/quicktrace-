@@ -31,14 +31,22 @@
     "usage": "Uso"
   },
   "auth": {
+    "welcome": "Bienvenido de nuevo",
+    "login_platform": "Accede a tu plataforma de trazabilidad",
     "login": "Iniciar Sesión",
     "email": "Correo Electrónico",
+    "email_placeholder": "tu@email.com",
     "password": "Contraseña",
+    "password_placeholder": "••••••••",
     "forgot_password": "¿Has olvidado tu contraseña?",
+    "login_submit": "Entrar ahora",
     "no_account": "¿No tienes una cuenta?",
+    "register_free": "Regístrate gratis",
     "register": "Regístrate",
     "logging_in": "Iniciando sesión...",
     "error_login": "Error al iniciar sesión. Compruebe sus credenciales.",
+    "error_invalid": "Credenciales inválidas. Por favor, inténtalo de nuevo.",
+    "error_generic": "Ha ocurrido un error al intentar iniciar sesión.",
     "logout": "Cerrar Sesión"
   },
   "sidebar": {
