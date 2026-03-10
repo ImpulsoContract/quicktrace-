@@ -98,7 +98,7 @@
     "no_records_range": "No records in this range",
     "no_temp_found": "No temperature records found for the selected dates.",
     "no_own_recipes": "You don't have your own recipes",
-    "recipe_limit_info": "According to your <strong>{plan}</strong> plan, you can create up to {limit} recipes.",
+    "recipe_limit_info": "According to your {plan} plan, you can create up to {limit} recipes.",
     "unlimited": "unlimited",
     "create_first_recipe": "Click here to create your first recipe",
     "more": "more",
@@ -114,6 +114,8 @@
     "elaboration_recipe_header": "Recipe",
     "modify": "Modify",
     "no_elaborations_recorded": "No productions recorded yet.",
+    "recipe_manage_desc": "Manage your recipes.",
+    "new_record": "New Cleaning Record.",
     "showing_info": "Showing {start} - {end} of {total} productions"
   },
   "modals": {

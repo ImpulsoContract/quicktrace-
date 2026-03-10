@@ -98,7 +98,7 @@
     "no_records_range": "No hay registros en este rango",
     "no_temp_found": "No se encontraron registros de temperatura para las fechas seleccionadas.",
     "no_own_recipes": "No tienes recetas propias",
-    "recipe_limit_info": "Según tu plan <strong>{plan}</strong>, puedes crear hasta {limit} recetas.",
+    "recipe_limit_info": "Según tu plan {plan}, puedes crear hasta {limit} recetas.",
     "unlimited": "ilimitadas",
     "create_first_recipe": "Pincha aquí para crear tu primera receta",
     "more": "más",
@@ -114,6 +114,8 @@
     "elaboration_recipe_header": "Receta",
     "modify": "Modificar",
     "no_elaborations_recorded": "No hay elaboraciones registradas todavía.",
+    "recipe_manage_desc": "Configura tus recetas.",
+    "new_record": "Nuevo Registro de Limpieza.",
     "showing_info": "Mostrando {start} - {end} de {total} elaboraciones"
   },
   "modals": {
