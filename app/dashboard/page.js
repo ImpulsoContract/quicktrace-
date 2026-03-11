@@ -1812,18 +1812,13 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                       
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        {recipe.ingredients.slice(0, 5).map((ing, idx) => (
-                          <span key={idx} style={{ padding: '0.25rem 0.6rem', background: '#f1f5f9', borderRadius: '0.5rem', fontSize: '0.75rem', color: '#64748b', fontWeight: '700' }}>
-                            {ing.name}
-                          </span>
-                        ))}
-                        {recipe.ingredients.length > 5 && (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
-                            +{recipe.ingredients.length - 5} {t('dashboard.more')}
-                          </span>
-                        )}
-                      </div>
+                      <button 
+                        onClick={() => handleOpenRecipe(recipe)}
+                        className="btn-primary"
+                        style={{ width: '100%', marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', fontSize: '0.85rem', fontWeight: '800' }}
+                      >
+                        <Plus size={18} /> {t('dashboard.register_elaboration')}
+                      </button>
                     </div>
                   ))
                 )}

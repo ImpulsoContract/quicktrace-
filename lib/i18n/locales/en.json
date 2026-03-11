@@ -28,7 +28,9 @@
     "temperatures": "Temperatures",
     "manage_recipes": "Manage Recipes",
     "plan": "Plan",
-    "usage": "Usage"
+    "usage": "Usage",
+    "from": "Date from",
+    "to": "to"
   },
   "auth": {
     "welcome": "Welcome Back",
@@ -116,6 +118,7 @@
     "no_elaborations_recorded": "No productions recorded yet.",
     "recipe_manage_desc": "Manage your recipes.",
     "new_record": "New Cleaning Record.",
+    "manage_recipes": "Recipes",
     "showing_info": "Showing {start} - {end} of {total} productions"
   },
   "modals": {

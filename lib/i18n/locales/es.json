@@ -28,7 +28,9 @@
     "temperatures": "Temperaturas",
     "manage_recipes": "Gestionar Recetas",
     "plan": "Plan",
-    "usage": "Uso"
+    "usage": "Uso",
+    "from": "Fecha desde",
+    "to": "hasta"
   },
   "auth": {
     "welcome": "Bienvenido de nuevo",
@@ -116,6 +118,7 @@
     "no_elaborations_recorded": "No hay elaboraciones registradas todavía.",
     "recipe_manage_desc": "Configura tus recetas.",
     "new_record": "Nuevo Registro de Limpieza.",
+    "manage_recipes": "Recetas contratadas",
     "showing_info": "Mostrando {start} - {end} de {total} elaboraciones"
   },
   "modals": {
