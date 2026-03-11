@@ -2646,9 +2646,9 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-              {t('common.profile')}
+              {t('profile.title')}
             </h2>
-            <p style={{ color: 'var(--text-muted)' }}>Gestiona la información de tu cuenta y suscripción</p>
+            <p style={{ color: 'var(--text-muted)' }}>{t('profile.manage_info')}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}><X size={24} /></button>
         </header>
@@ -2656,46 +2656,46 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
           <section>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)' }}>
-              <User size={20} /> Datos del Negocio
+              <User size={20} /> {t('profile.business_data')}
             </h3>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div className="form-group">
-                <label className="label">Nombre del Responsable</label>
+                <label className="label">{t('profile.person_name')}</label>
                 <input type="text" className="input-field" value={formData.personName} onChange={e => setFormData({...formData, personName: e.target.value})} required />
               </div>
               <div className="form-group">
-                <label className="label">Razón Social</label>
+                <label className="label">{t('profile.business_name')}</label>
                 <input type="text" className="input-field" value={formData.razonSocial} onChange={e => setFormData({...formData, razonSocial: e.target.value})} required />
               </div>
               <div className="form-group">
-                <label className="label">VAT / NIF</label>
+                <label className="label">{t('profile.vat_nif')}</label>
                 <input type="text" className="input-field" value={formData.nif} onChange={e => setFormData({...formData, nif: e.target.value})} required />
               </div>
               <div className="form-group">
-                <label className="label">Teléfono</label>
+                <label className="label">{t('profile.phone')}</label>
                 <input type="text" className="input-field" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
               </div>
               <div className="form-group">
-                <label className="label">Dirección</label>
+                <label className="label">{t('profile.address')}</label>
                 <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="label">C.P.</label>
+                  <label className="label">{t('profile.postal_code')}</label>
                   <input type="text" className="input-field" value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label className="label">Ciudad</label>
+                  <label className="label">{t('profile.city')}</label>
                   <input type="text" className="input-field" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="label">Provincia</label>
+                  <label className="label">{t('profile.province')}</label>
                   <input type="text" className="input-field" value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label className="label">País</label>
+                  <label className="label">{t('profile.country')}</label>
                   <input type="text" className="input-field" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
                 </div>
               </div>
@@ -2707,10 +2707,10 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
 
           <section>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)' }}>
-              <CreditCard size={20} /> Suscripción Actual
+              <CreditCard size={20} /> {t('profile.current_subscription')}
             </h3>
             <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Plan Actual</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>{t('profile.current_plan_label')}</div>
               <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '1.5rem' }}>{profile?.plan?.name || "DEMO"}</div>
               
               {!isDemo && (
@@ -2718,7 +2718,7 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
                   background: 'white', borderRadius: '1rem', padding: '1rem', border: '1px solid var(--border)',
                   marginBottom: '2rem', fontSize: '0.9rem', color: 'var(--text-muted)'
                 }}>
-                  <div style={{ marginBottom: '0.5rem' }}>Próxima renovación:</div>
+                  <div style={{ marginBottom: '0.5rem' }}>{t('profile.next_renewal')}:</div>
                   <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
                     {profile?.stripeCurrentPeriodEnd ? new Date(profile.stripeCurrentPeriodEnd).toLocaleDateString() : 'N/A'}
                   </div>
@@ -2727,29 +2727,43 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <Link href="/dashboard/plans" className="btn-primary" style={{ textDecoration: 'none', width: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                  <ArrowUpCircle size={20} /> {isDemo ? "Contratar un Plan" : "Cambiar de Plan"}
+                  <Crown size={20} /> {isDemo ? t('profile.more_info_plans') : t('profile.change_plan')}
                 </Link>
                 
                 {!isDemo && profile?.stripeSubscriptionId && (
-                  <button 
-                    onClick={onCancelSubscription} 
-                    disabled={cancelLoading}
-                    style={{ 
-                      background: 'none', border: 'none', color: '#ef4444', 
-                      fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer',
-                      marginTop: '0.5rem', textDecoration: 'underline'
-                    }}
-                  >
-                    {cancelLoading ? "Procesando..." : "Cancelar renovación automática"}
-                  </button>
+                  <>
+                    <button 
+                      onClick={onCancelSubscription} 
+                      disabled={cancelLoading}
+                      className="btn-secondary"
+                      style={{ 
+                        width: '100%',
+                        padding: '0.75rem', 
+                        borderRadius: '0.75rem', 
+                        background: '#fef2f2', 
+                        border: '1px solid #fee2e2', 
+                        color: '#dc2626', 
+                        fontSize: '0.85rem', 
+                        fontWeight: '700', 
+                        cursor: 'pointer',
+                        marginTop: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <X size={16} /> {cancelLoading ? t('profile.canceling') : t('profile.cancel_subscription_btn')}
+                    </button>
+
+                    <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '1rem', border: '1px dashed #3b82f6', textAlign: 'left' }}>
+                      <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0, lineHeight: '1.5' }}>
+                        <strong>{t('profile.notice_label')}:</strong> {t('profile.cancellation_notice')}
+                      </p>
+                    </div>
+                  </>
                 )}
               </div>
-            </div>
-            
-            <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '1rem', border: '1px dashed #3b82f6' }}>
-              <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0, lineHeight: '1.5' }}>
-                <strong>Aviso:</strong> Al cancelar la suscripción, mantendrás tus beneficios hasta el final del periodo de facturación actual. Después, tu cuenta volverá al plan Demo.
-              </p>
             </div>
           </section>
         </div>
