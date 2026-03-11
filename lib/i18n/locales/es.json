@@ -145,7 +145,8 @@
     "showing_info": "Mostrando {start} - {end} de {total} elaboraciones",
     "delivery_note_photo": "Puedes adjuntar una foto del albarán",
     "save_entry": "Guardar",
-    "invoice": "Factura"
+    "invoice": "Factura",
+    "video_help": "Video ayuda"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",

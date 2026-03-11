@@ -145,7 +145,8 @@
     "showing_info": "Showing {start} - {end} of {total} productions",
     "delivery_note_photo": "You can attach a photo of the delivery note",
     "save_entry": "Save",
-    "invoice": "Invoice"
+    "invoice": "Invoice",
+    "video_help": "Video help"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",

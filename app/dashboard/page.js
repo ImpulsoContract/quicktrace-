@@ -9,7 +9,7 @@ import {
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
-  CreditCard, ArrowUpCircle
+  CreditCard, ArrowUpCircle, PlayCircle
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -42,6 +42,7 @@ export default function ClientDashboard() {
   const [viewingImage, setViewingImage] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
+  const [videoModal, setVideoModal] = useState({ isOpen: false, videoId: "" });
   const [elabFilters, setElabFilters] = useState({
     lote: "",
     startDate: "",
@@ -1163,11 +1164,11 @@ export default function ClientDashboard() {
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                     <button 
-                      onClick={() => window.open('https://www.youtube.com', '_blank')}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
                       className="btn-secondary" 
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
-                      {t('dashboard.video_tutorial')}
+                      <PlayCircle size={18} /> {t('dashboard.video_tutorial')}
                     </button>
                     <button 
                       onClick={() => setActiveTab('gestionar-recetas')}
@@ -1207,8 +1208,19 @@ export default function ClientDashboard() {
           ) : activeTab === 'historial' ? (
             <div>
               <header style={{ marginBottom: '3rem' }}>
-                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.history')}</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.history_info')}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.history')}</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.history_info')}</p>
+                  </div>
+                  <button 
+                    onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                  >
+                    <PlayCircle size={18} /> {t('dashboard.video_help')}
+                  </button>
+                </div>
               </header>
 
               <div 
@@ -1393,11 +1405,19 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.goods_info')}</p>
-                  <button 
-                    onClick={() => {
-                      setEditingGoodsReceipt(null);
-                      setGoodsForm({
-                        providerName: "",
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                      onClick={() => setVideoModal({ isOpen: true, videoId: "rzrGj1OouVo" })}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <PlayCircle size={18} /> {t('dashboard.video_help')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setEditingGoodsReceipt(null);
+                        setGoodsForm({
+                          providerName: "",
                         productName: "",
                         lote: "",
                         invoiceNumber: "",
@@ -1413,7 +1433,8 @@ export default function ClientDashboard() {
                     <Package size={18} /> {t('dashboard.new_goods_entry')}
                   </button>
                 </div>
-              </header>
+              </div>
+            </header>
 
               <div 
                 className="glass-card" 
@@ -1552,6 +1573,13 @@ export default function ClientDashboard() {
               </header>
 
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'flex-end' }}>
+                  <button 
+                    onClick={() => setVideoModal({ isOpen: true, videoId: "62WLwGwTvew" })}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                  >
+                    <PlayCircle size={18} /> {t('dashboard.video_help')}
+                  </button>
                   <button 
                     onClick={() => setIsManageZonesModalOpen(true)}
                     className="btn-secondary" 
@@ -1715,6 +1743,13 @@ export default function ClientDashboard() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.temperature_info')}</p>
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <button 
+                      onClick={() => setVideoModal({ isOpen: true, videoId: "TKl-sUpuDGg" })}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <PlayCircle size={18} /> {t('dashboard.video_help')}
+                    </button>
+                    <button 
                       onClick={() => setIsManageChambersModalOpen(true)}
                       className="btn-secondary" 
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
@@ -1877,17 +1912,26 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.recipe_manage_desc')}</p>
-                  <button 
-                    onClick={() => {
-                      setEditingRecipe(null);
-                      setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }] });
-                      setIsRecipeManageModalOpen(true);
-                    }}
-                    className="btn-primary" 
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
-                  >
-                    <Plus size={18} /> {t('modals.new_recipe_btn')}
-                  </button>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                      onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <PlayCircle size={18} /> {t('dashboard.video_help')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setEditingRecipe(null);
+                        setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }] });
+                        setIsRecipeManageModalOpen(true);
+                      }}
+                      className="btn-primary" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <Plus size={18} /> {t('modals.new_recipe_btn')}
+                    </button>
+                  </div>
                 </div>
               </header>
 
@@ -3189,6 +3233,38 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
           )}
         </div>
       </div>
+      {videoModal.isOpen && (
+        <div 
+          style={{ 
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            zIndex: 10000, padding: '2rem', backdropFilter: 'blur(8px)'
+          }}
+          onClick={() => setVideoModal({ isOpen: false, videoId: "" })}
+        >
+          <div 
+            style={{ width: '100%', maxWidth: '1000px', position: 'relative', background: 'black', borderRadius: '1.5rem', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setVideoModal({ isOpen: false, videoId: "" })}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <X size={24} />
+            </button>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+              <iframe 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                src={`https://www.youtube.com/embed/${videoModal.videoId}?autoplay=1`}
+                title="YouTube video player" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
