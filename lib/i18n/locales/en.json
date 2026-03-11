@@ -250,5 +250,20 @@
     "success_desc": "Your account has been successfully activated. You can now log in.",
     "error_no_token": "Verification token not found.",
     "error_verifying": "Error verifying account"
+  },
+  "traceability_form": {
+    "back_to_list": "Back to my list",
+    "modify_record": "Modifying Record",
+    "new_record": "New Traceability Record",
+    "elaboration_title": "Production name",
+    "elaboration_title_placeholder": "Production name...",
+    "ingredients_batches": "Ingredients and Batches",
+    "autofill_lotes": "Autofill batches with last entry",
+    "clear_lotes": "Clear batches",
+    "theoretical_amount": "Theoretical Qty",
+    "lot": "Batch",
+    "lot_mandatory_placeholder": "Batch mandatory...",
+    "lot_optional_placeholder": "Batch optional...",
+    "real_amount": "Real Qty"
   }
 }

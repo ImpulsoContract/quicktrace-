@@ -988,26 +988,26 @@ export default function ClientDashboard() {
                 onClick={() => setSelectedRecipe(null)}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', marginBottom: '1.5rem', fontSize: '0.9rem', fontWeight: '500' }}
               >
-                <ArrowLeft size={18} /> Volver a mi listado
+                <ArrowLeft size={18} /> {t('traceability_form.back_to_list')}
               </button>
 
               <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
                 <header style={{ marginBottom: '2.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
-                    {editingElaboration ? 'Modificando Registro' : 'Nuevo Registro de Trazabilidad'}
+                    {editingElaboration ? t('traceability_form.modify_record') : t('traceability_form.new_record')}
                   </div>
                   <h2 style={{ fontSize: '1.75rem', fontWeight: '800' }}>{selectedRecipe.name}</h2>
                 </header>
 
                 <form onSubmit={handleSubmitElaboracion} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>Título de la elaboración</label>
+                    <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.elaboration_title')}</label>
                     <input 
                       type="text" 
                       className="input-field" 
                       value={elaboracionForm.titulo} 
                       onChange={(e) => setElaboracionForm({...elaboracionForm, titulo: e.target.value})}
-                      placeholder="Título de la elaboración..."
+                      placeholder={t('traceability_form.elaboration_title_placeholder')}
                       required
                       style={{ fontSize: '1.1rem', fontWeight: '500', padding: '1rem' }}
                     />
@@ -1016,7 +1016,7 @@ export default function ClientDashboard() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                       <h3 style={{ fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)', margin: 0 }}>
-                        <Beaker size={20} /> Ingredientes y Lotes
+                        <Beaker size={20} /> {t('traceability_form.ingredients_batches')}
                       </h3>
                       <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <button 
@@ -1028,7 +1028,7 @@ export default function ClientDashboard() {
                             color: 'var(--corp-green)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
                           }}
                         >
-                          <History size={16} /> Rellenar lotes con el último introducido
+                          <History size={16} /> {t('traceability_form.autofill_lotes')}
                         </button>
                         <button 
                           type="button" 
@@ -1039,7 +1039,7 @@ export default function ClientDashboard() {
                             color: '#dc2626', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
                           }}
                         >
-                          <Trash2 size={16} /> Vaciar lotes
+                          <Trash2 size={16} /> {t('traceability_form.clear_lotes')}
                         </button>
                       </div>
                     </div>
@@ -1052,17 +1052,17 @@ export default function ClientDashboard() {
                         }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '1rem', fontWeight: '700' }}>{ing.name}</div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Cant. Teórica: {ing.amount} {ing.unit}</div>
+                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('traceability_form.theoretical_amount')}: {ing.amount} {ing.unit}</div>
                           </div>
                           <div>
                             <label className="label" style={{ fontSize: '0.75rem' }}>
-                              Lote {ing.loteMandatory && <span style={{ color: '#ef4444' }}>*</span>}
+                              {t('traceability_form.lot')} {ing.loteMandatory && <span style={{ color: '#ef4444' }}>*</span>}
                             </label>
                             <input 
                               type="text" 
                               className="input-field" 
                               style={{ padding: '0.75rem' }}
-                              placeholder={ing.loteMandatory ? "Lote obligatorio..." : "Lote opcional..."}
+                              placeholder={ing.loteMandatory ? t('traceability_form.lot_mandatory_placeholder') : t('traceability_form.lot_optional_placeholder')}
                               value={elaboracionForm.ingredientes[ing.id]?.lote}
                               onChange={(e) => handleIngredientChange(ing.id, 'lote', e.target.value)}
                               required={!!ing.loteMandatory} 
@@ -1070,7 +1070,7 @@ export default function ClientDashboard() {
                           </div>
                           <div>
                             <label className="label" style={{ fontSize: '0.75rem' }}>
-                              Cantidad Real ({ing.unit}) {ing.quantityMandatory && <span style={{ color: '#ef4444' }}>*</span>}
+                              {t('traceability_form.real_amount')} ({ing.unit}) {ing.quantityMandatory && <span style={{ color: '#ef4444' }}>*</span>}
                             </label>
                             <input 
                               type="text" 

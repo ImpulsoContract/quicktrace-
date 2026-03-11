@@ -250,5 +250,20 @@
     "success_desc": "Tu cuenta ha sido activada correctamente. Ya puedes iniciar sesión.",
     "error_no_token": "Token de verificación no encontrado.",
     "error_verifying": "Error al verificar la cuenta"
+  },
+  "traceability_form": {
+    "back_to_list": "Volver a mi listado",
+    "modify_record": "Modificando Registro",
+    "new_record": "Nuevo Registro de Trazabilidad",
+    "elaboration_title": "Título de la elaboración",
+    "elaboration_title_placeholder": "Título de la elaboración...",
+    "ingredients_batches": "Ingredientes y Lotes",
+    "autofill_lotes": "Rellenar lotes con el último introducido",
+    "clear_lotes": "Vaciar lotes",
+    "theoretical_amount": "Cant. Teórica",
+    "lot": "Lote",
+    "lot_mandatory_placeholder": "Lote obligatorio...",
+    "lot_optional_placeholder": "Lote opcional...",
+    "real_amount": "Cantidad Real"
   }
 }
