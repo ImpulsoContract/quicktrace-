@@ -13,7 +13,7 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const id = params.id;
     const data = await req.json();
 
     const plan = await prisma.pricingPlan.update({
@@ -48,7 +48,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const id = params.id;
 
     // Verificar si hay clientes usando este plan
     const clientsCount = await prisma.clientProfile.count({
