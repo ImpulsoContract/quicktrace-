@@ -7,11 +7,12 @@ import {
   ChefHat, Thermometer, Brush, Package, History, Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n/I18nContext";
 
 export default function PlansPage() {
+  const { t } = useI18n();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [submitting, setSubmitting] = useState(null);
 
   useEffect(() => {
@@ -45,14 +46,22 @@ export default function PlansPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error || "Error al iniciar el pago");
+        alert(data.error || t('plans.error_payment'));
       }
     } catch (e) {
       console.error("Fetch error:", e);
-      alert("Error de conexión al procesar el pago");
+      alert(t('plans.error_connection'));
     } finally {
       setSubmitting(null);
     }
+  };
+
+  const getPlanBadge = (planName) => {
+    const name = planName.toLowerCase();
+    if (name.includes('básico') || name.includes('basic')) return t('plans.badges.starting');
+    if (name.includes('premium')) return t('plans.badges.popular');
+    if (name.includes('gold')) return t('plans.badges.producers');
+    return null;
   };
 
   if (loading) {
@@ -76,11 +85,11 @@ export default function PlansPage() {
             borderRadius: '0.75rem', border: '1px solid var(--border)',
             transition: 'all 0.2s'
           }}>
-            <ArrowLeft size={18} /> Volver al Dashboard
+            <ArrowLeft size={18} /> {t('plans.back_to_dashboard')}
           </Link>
           <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>Planes de Precios</h1>
-            <p style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Elige el plan que mejor se adapte a tu negocio</p>
+            <h1 style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>{t('plans.title')}</h1>
+            <p style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{t('plans.subtitle')}</p>
           </div>
         </div>
 
@@ -93,6 +102,8 @@ export default function PlansPage() {
         }}>
           {plans.map((plan) => {
             const isDemo = plan.name.toLowerCase().includes('demo');
+            const badge = getPlanBadge(plan.name);
+            
             return (
               <div key={plan.id} className="glass-card plan-card" style={{ 
                 padding: '2.5rem', 
@@ -103,14 +114,15 @@ export default function PlansPage() {
                 flexDirection: 'column',
                 boxShadow: isDemo ? '0 10px 15px -3px rgba(0,0,0,0.1)' : '0 20px 25px -5px rgba(66, 98, 22, 0.1)'
               }}>
-                {!isDemo && (
+                {!isDemo && badge && (
                   <div style={{ 
-                    position: 'absolute', top: '-12px', right: '2rem',
+                    position: 'absolute', top: '-12px', right: '1rem', left: '1rem',
                     background: 'var(--corp-green)', color: 'white',
                     padding: '0.25rem 1rem', borderRadius: '1rem',
-                    fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase'
+                    fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase',
+                    textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                   }}>
-                    Popular
+                    {badge}
                   </div>
                 )}
                 
@@ -118,18 +130,18 @@ export default function PlansPage() {
                   <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{plan.name}</h2>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
                     <span style={{ fontSize: '2.5rem', fontWeight: '900', color: isDemo ? 'var(--text-main)' : 'var(--corp-green)' }}>
-                      {plan.priceYearly === 0 ? "Gratis" : `${plan.priceYearly}€`}
+                      {plan.priceYearly === 0 ? t('plans.free') : `${plan.priceYearly}€`}
                     </span>
-                    {plan.priceYearly > 0 && <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>/ año</span>}
+                    {plan.priceYearly > 0 && <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{t('plans.yearly')}</span>}
                   </div>
                 </div>
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2.5rem' }}>
-                  <FeatureItem icon={<ChefHat size={18}/>} label="Recetas" val={plan.recipesLimit} />
-                  <FeatureItem icon={<History size={18}/>} label="Elaboraciones" val={plan.elaborationsLimit} />
-                  <FeatureToggle icon={<Brush size={18}/>} label="Módulo Limpieza" active={plan.hasCleaning} limit={plan.cleaningLimit} />
-                  <FeatureToggle icon={<Package size={18}/>} label="Entradas Mercancías" active={plan.hasGoods} limit={plan.goodsLimit} />
-                  <FeatureToggle icon={<Thermometer size={18}/>} label="Control Temperatura" active={plan.hasTemperatures} limit={plan.temperaturesLimit} />
+                  <FeatureItem icon={<ChefHat size={18}/>} label={t('plans.recipes')} val={plan.recipesLimit} t={t} />
+                  <FeatureItem icon={<History size={18}/>} label={t('plans.elaborations')} val={plan.elaborationsLimit} t={t} />
+                  <FeatureToggle icon={<Brush size={18}/>} label={t('plans.cleaning')} active={plan.hasCleaning} limit={plan.cleaningLimit} t={t} />
+                  <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={plan.goodsLimit} t={t} />
+                  <FeatureToggle icon={<Thermometer size={18}/>} label={t('plans.temperatures')} active={plan.hasTemperatures} limit={plan.temperaturesLimit} t={t} />
                 </div>
 
                 <button 
@@ -145,7 +157,7 @@ export default function PlansPage() {
                     opacity: (isDemo || submitting === plan.id) ? 0.7 : 1
                   }}
                 >
-                  {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isDemo ? "Plan Actual" : "Contratar Plan")}
+                  {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isDemo ? t('plans.current_plan') : t('plans.subscribe'))}
                 </button>
               </div>
             );
@@ -154,11 +166,11 @@ export default function PlansPage() {
 
         {/* Contact info */}
         <div style={{ marginTop: '4rem', textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '2rem', border: '1px solid var(--border)' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '1rem' }}>¿Necesitas un plan personalizado?</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '1rem' }}>{t('plans.custom_plan_title')}</h3>
           <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto 2rem' }}>
-            Si tu negocio tiene necesidades específicas o requieres un volumen mayor de registros, contacta con nosotros para diseñar un plan a tu medida.
+            {t('plans.custom_plan_desc')}
           </p>
-          <a href="mailto:soporte@quicktrace.es" className="btn-secondary" style={{ display: 'inline-block', padding: '0.75rem 2rem', textDecoration: 'none' }}> Contactar con Ventas </a>
+          <a href="mailto:soporte@quicktrace.es" className="btn-secondary" style={{ display: 'inline-block', padding: '0.75rem 2rem', textDecoration: 'none' }}> {t('plans.contact_sales')} </a>
         </div>
       </div>
 
@@ -176,23 +188,23 @@ export default function PlansPage() {
   );
 }
 
-function FeatureItem({ icon, label, val }) {
+function FeatureItem({ icon, label, val, t }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
       <div style={{ color: 'var(--corp-green)' }}>{icon}</div>
       <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: '500', color: 'var(--text-main)' }}>{label}</div>
-      <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>{val || "Ilimitadas"}</div>
+      <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>{val || t('plans.unlimited')}</div>
     </div>
   );
 }
 
-function FeatureToggle({ icon, label, active, limit }) {
+function FeatureToggle({ icon, label, active, limit, t }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', opacity: active ? 1 : 0.4 }}>
       <div style={{ color: active ? 'var(--corp-green)' : 'var(--text-muted)' }}>{icon}</div>
       <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: '500', color: active ? 'var(--text-main)' : 'var(--text-muted)' }}>{label}</div>
       {active ? (
-        <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>{limit || "Ilimitado"}</div>
+        <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>{limit || t('plans.unlimited_feature')}</div>
       ) : (
         <X size={18} color="#ef4444" />
       )}

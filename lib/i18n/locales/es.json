@@ -121,7 +121,8 @@
     "manage_recipes": "Recetas contratadas",
     "showing_info": "Mostrando {start} - {end} de {total} elaboraciones",
     "delivery_note_photo": "Puedes adjuntar una foto del albarán",
-    "save_entry": "Guardar"
+    "save_entry": "Guardar",
+    "invoice": "Factura"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -271,5 +272,31 @@
     "product": "Producto",
     "provider": "Proveedor",
     "invoice_number": "Número de factura"
+  },
+  "plans": {
+    "title": "Planes de Precios",
+    "subtitle": "Elige el plan que mejor se adapte a tu negocio",
+    "back_to_dashboard": "Volver al Dashboard",
+    "yearly": "/ año",
+    "free": "Gratis",
+    "recipes": "Recetas",
+    "elaborations": "Elaboraciones",
+    "cleaning": "Módulo Limpieza",
+    "goods": "Entradas Mercancías",
+    "temperatures": "Control Temperatura",
+    "unlimited": "Ilimitadas",
+    "unlimited_feature": "Ilimitado",
+    "current_plan": "Plan Actual",
+    "subscribe": "Contratar Plan",
+    "error_payment": "Error al iniciar el pago",
+    "error_connection": "Error de conexión al procesar el pago",
+    "custom_plan_title": "¿Necesitas un plan personalizado?",
+    "custom_plan_desc": "Si tu negocio tiene necesidades específicas o requieres un volumen mayor de registros, contacta con nosotros para diseñar un plan a tu medida.",
+    "contact_sales": "Contactar con Ventas",
+    "badges": {
+      "starting": "Para el que está empezando",
+      "popular": "El más popular",
+      "producers": "Para los más productores"
+    }
   }
 }

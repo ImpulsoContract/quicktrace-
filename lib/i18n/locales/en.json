@@ -121,7 +121,8 @@
     "manage_recipes": "Recipes",
     "showing_info": "Showing {start} - {end} of {total} productions",
     "delivery_note_photo": "You can attach a photo of the delivery note",
-    "save_entry": "Save"
+    "save_entry": "Save",
+    "invoice": "Invoice"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -271,5 +272,31 @@
     "product": "Product",
     "provider": "Provider",
     "invoice_number": "Invoice number"
+  },
+  "plans": {
+    "title": "Pricing Plans",
+    "subtitle": "Choose the plan that best fits your business",
+    "back_to_dashboard": "Back to Dashboard",
+    "yearly": "/ year",
+    "free": "Free",
+    "recipes": "Recipes",
+    "elaborations": "Productions",
+    "cleaning": "Cleaning Module",
+    "goods": "Goods Receipt",
+    "temperatures": "Temperature Control",
+    "unlimited": "Unlimited",
+    "unlimited_feature": "Unlimited",
+    "current_plan": "Current Plan",
+    "subscribe": "Subscribe Now",
+    "error_payment": "Error starting payment",
+    "error_connection": "Connection error while processing payment",
+    "custom_plan_title": "Need a custom plan?",
+    "custom_plan_desc": "If your business has specific needs or requires a higher volume of records, contact us to design a tailored plan.",
+    "contact_sales": "Contact Sales",
+    "badges": {
+      "starting": "For those starting out",
+      "popular": "Most popular",
+      "producers": "For top producers"
+    }
   }
 }

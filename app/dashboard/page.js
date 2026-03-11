@@ -62,6 +62,7 @@ export default function ClientDashboard() {
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
   const [isManageZonesModalOpen, setIsManageZonesModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   // Trazabilidad Form State
   const [elaboracionForm, setElaboracionForm] = useState({
@@ -130,6 +131,24 @@ export default function ClientDashboard() {
       console.error("Error fetching recipes:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm("¿Seguro que quieres cancelar la renovación automática? Mantendrás el plan hasta el final del periodo.")) return;
+    
+    try {
+      const res = await fetch("/api/stripe/cancel", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        alert("Suscripción cancelada correctamente.");
+        fetchProfile();
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      alert("Error al procesar la cancelación.");
     }
   };
 
@@ -960,22 +979,33 @@ export default function ClientDashboard() {
             <LanguageSwitcher />
           </div>
 
-          <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--corp-sand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                {session?.user?.name?.[0] || 'U'}
+          <div 
+            onClick={() => setIsProfileOpen(true)}
+            style={{ 
+              padding: '1.5rem', borderTop: '1px solid var(--border)', 
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(66, 98, 22, 0.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--corp-green)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                {profile?.personName?.[0] || session?.user?.name?.[0] || 'U'}
               </div>
               <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user?.name}</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile?.personName || session?.user?.name}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800' }}>{t('sidebar.plan')} {profile?.plan?.name || '...'}</div>
               </div>
             </div>
-            <button 
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '0.5rem', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
-            >
-              <LogOut size={16} /> {t('auth.logout')}
-            </button>
+            
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                onClick={(e) => { e.stopPropagation(); signOut({ callbackUrl: '/login' }); }}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.6rem', borderRadius: '0.5rem', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+              >
+                <LogOut size={14} /> {t('auth.logout')}
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -2201,6 +2231,15 @@ export default function ClientDashboard() {
         />
       )}
 
+      {isProfileOpen && (
+        <ProfileModal 
+          onClose={() => setIsProfileOpen(false)} 
+          profile={profile}
+          onUpdate={fetchProfile}
+          onCancelSubscription={handleCancelSubscription}
+        />
+      )}
+
       <style jsx global>{`
         :root {
           --corp-green: #3f6212;
@@ -2557,6 +2596,162 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
+  const { t } = useI18n();
+  const [formData, setFormData] = useState({
+    personName: profile?.personName || "",
+    razonSocial: profile?.razonSocial || "",
+    nif: profile?.nif || "",
+    phone: profile?.phone || "",
+    address: profile?.address || "",
+    postalCode: profile?.postalCode || "",
+    city: profile?.city || "",
+    province: profile?.province || "",
+    country: profile?.country || "España"
+  });
+  const [loading, setLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/client/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        onUpdate();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isDemo = !profile?.planId || profile?.plan?.name?.toUpperCase() === "DEMO";
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '800px' }}>
+        <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+              {t('common.profile')}
+            </h2>
+            <p style={{ color: 'var(--text-muted)' }}>Gestiona la información de tu cuenta y suscripción</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}><X size={24} /></button>
+        </header>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <section>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)' }}>
+              <User size={20} /> Datos del Negocio
+            </h3>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label className="label">Nombre del Responsable</label>
+                <input type="text" className="input-field" value={formData.personName} onChange={e => setFormData({...formData, personName: e.target.value})} required />
+              </div>
+              <div className="form-group">
+                <label className="label">Razón Social</label>
+                <input type="text" className="input-field" value={formData.razonSocial} onChange={e => setFormData({...formData, razonSocial: e.target.value})} required />
+              </div>
+              <div className="form-group">
+                <label className="label">VAT / NIF</label>
+                <input type="text" className="input-field" value={formData.nif} onChange={e => setFormData({...formData, nif: e.target.value})} required />
+              </div>
+              <div className="form-group">
+                <label className="label">Teléfono</label>
+                <input type="text" className="input-field" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="label">Dirección</label>
+                <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="label">C.P.</label>
+                  <input type="text" className="input-field" value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="label">Ciudad</label>
+                  <input type="text" className="input-field" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="label">Provincia</label>
+                  <input type="text" className="input-field" value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="label">País</label>
+                  <input type="text" className="input-field" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
+                </div>
+              </div>
+              <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem' }}>
+                {loading ? <Loader2 className="animate-spin" size={20} /> : t('common.save')}
+              </button>
+            </form>
+          </section>
+
+          <section>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)' }}>
+              <CreditCard size={20} /> Suscripción Actual
+            </h3>
+            <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Plan Actual</div>
+              <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '1.5rem' }}>{profile?.plan?.name || "DEMO"}</div>
+              
+              {!isDemo && (
+                <div style={{ 
+                  background: 'white', borderRadius: '1rem', padding: '1rem', border: '1px solid var(--border)',
+                  marginBottom: '2rem', fontSize: '0.9rem', color: 'var(--text-muted)'
+                }}>
+                  <div style={{ marginBottom: '0.5rem' }}>Próxima renovación:</div>
+                  <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                    {profile?.stripeCurrentPeriodEnd ? new Date(profile.stripeCurrentPeriodEnd).toLocaleDateString() : 'N/A'}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <Link href="/dashboard/plans" className="btn-primary" style={{ textDecoration: 'none', width: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <ArrowUpCircle size={20} /> {isDemo ? "Contratar un Plan" : "Cambiar de Plan"}
+                </Link>
+                
+                {!isDemo && profile?.stripeSubscriptionId && (
+                  <button 
+                    onClick={onCancelSubscription} 
+                    disabled={cancelLoading}
+                    style={{ 
+                      background: 'none', border: 'none', color: '#ef4444', 
+                      fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer',
+                      marginTop: '0.5rem', textDecoration: 'underline'
+                    }}
+                  >
+                    {cancelLoading ? "Procesando..." : "Cancelar renovación automática"}
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '1rem', border: '1px dashed #3b82f6' }}>
+              <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0, lineHeight: '1.5' }}>
+                <strong>Aviso:</strong> Al cancelar la suscripción, mantendrás tus beneficios hasta el final del periodo de facturación actual. Después, tu cuenta volverá al plan Demo.
+              </p>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

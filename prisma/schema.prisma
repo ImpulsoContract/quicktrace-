@@ -37,6 +37,13 @@ model ClientProfile {
   urlClientify           String?
   personName             String?
   
+  // Invoice/Profile Info
+  address                String?
+  postalCode             String?
+  city                   String?
+  province               String?
+  country                String? @default("España")
+  
   // New Plan System
   planId                String?
   plan                  PricingPlan? @relation(fields: [planId], references: [id])
