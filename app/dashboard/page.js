@@ -1532,7 +1532,7 @@ export default function ClientDashboard() {
                     onClick={() => {
                       setEditingCleaningLog(null);
                       setCleaningForm({
-                        personName: session?.user?.name || "",
+                        personName: "",
                         date: new Date().toISOString().slice(0, 16),
                         selectedZones: []
                       });
