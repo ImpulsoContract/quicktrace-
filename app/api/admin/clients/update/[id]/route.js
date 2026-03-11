@@ -17,7 +17,7 @@ export async function PATCH(req, { params }) {
     const body = await req.json();
     const { 
       email, name, razonSocial, nif, phone, urlClientify,
-      planId
+      planId, personName, address, postalCode, city, province, country
     } = body;
 
     const userId = parseInt(id);
@@ -36,7 +36,13 @@ export async function PATCH(req, { params }) {
         nif,
         phone,
         urlClientify,
-        planId: parseInt(planId) || null
+        personName,
+        address,
+        postalCode,
+        city,
+        province,
+        country,
+        planId: planId || null
       };
 
       await tx.clientProfile.update({

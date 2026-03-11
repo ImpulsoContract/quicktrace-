@@ -37,7 +37,8 @@ export default function AdminDashboard() {
   const [formData, setFormData] = useState({
     email: "", password: "", name: "", razonSocial: "", nif: "", phone: "",
     urlClientify: "",
-    planId: ""
+    planId: "",
+    personName: "", address: "", postalCode: "", city: "", province: "", country: "España"
   });
 
   const fetchClients = async () => {
@@ -99,8 +100,8 @@ export default function AdminDashboard() {
         setFormData({
           email: "", password: "", name: "", razonSocial: "", nif: "", phone: "",
           urlClientify: "",
-          accountType: "cliente", recetasContratadas: 0,
-          canManageRecipes: false
+          planId: "",
+          personName: "", address: "", postalCode: "", city: "", province: "", country: "España"
         });
         if (activeTab === "list") fetchClients();
       }
@@ -277,6 +278,16 @@ export default function AdminDashboard() {
                       <div><label className="label">NIF / CIF</label><input type="text" name="nif" value={formData.nif} onChange={handleChange} className="input-field" required /></div>
                       <div><label className="label">Teléfono</label><input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" /></div>
                       <div><label className="label">URL Clientify</label><input type="url" name="urlClientify" value={formData.urlClientify} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">Nombre Persona</label><input type="text" name="personName" value={formData.personName} onChange={handleChange} className="input-field" /></div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                      <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Dirección y Localización</h3></div>
+                      <div style={{ gridColumn: '1 / -1' }}><label className="label">Dirección</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">Código Postal</label><input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">Ciudad</label><input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">Provincia</label><input type="text" name="province" value={formData.province} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">País</label><input type="text" name="country" value={formData.country} onChange={handleChange} className="input-field" /></div>
                     </div>
 
                     <div>
@@ -461,6 +472,34 @@ export default function AdminDashboard() {
                 <label className="label">URL Clientify</label>
                 <input type="url" className="input-field" value={editClientModal.form.urlClientify || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, urlClientify: e.target.value}})} />
               </div>
+              <div>
+                <label className="label">Nombre Persona</label>
+                <input type="text" className="input-field" value={editClientModal.form.personName || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, personName: e.target.value}})} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Dirección y Localización</h3></div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label className="label">Dirección</label>
+                <input type="text" className="input-field" value={editClientModal.form.address || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, address: e.target.value}})} />
+              </div>
+              <div>
+                <label className="label">Código Postal</label>
+                <input type="text" className="input-field" value={editClientModal.form.postalCode || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, postalCode: e.target.value}})} />
+              </div>
+              <div>
+                <label className="label">Ciudad</label>
+                <input type="text" className="input-field" value={editClientModal.form.city || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, city: e.target.value}})} />
+              </div>
+              <div>
+                <label className="label">Provincia</label>
+                <input type="text" className="input-field" value={editClientModal.form.province || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, province: e.target.value}})} />
+              </div>
+              <div>
+                <label className="label">País</label>
+                <input type="text" className="input-field" value={editClientModal.form.country || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, country: e.target.value}})} />
+              </div>
             </div>
 
             <div>
@@ -471,7 +510,7 @@ export default function AdminDashboard() {
                   <select 
                     className="input-field" 
                     value={editClientModal.form.planId || ""} 
-                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, planId: parseInt(e.target.value)}})}
+                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, planId: e.target.value}})}
                   >
                     <option value="">Selecciona un plan...</option>
                     {plans.map(p => (
