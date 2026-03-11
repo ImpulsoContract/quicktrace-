@@ -8,7 +8,8 @@ import {
   ArrowLeft, Save, Beaker,
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
-  Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings
+  Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
+  CreditCard, ArrowUpCircle
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
