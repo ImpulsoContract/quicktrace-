@@ -2412,6 +2412,38 @@ export default function ClientDashboard() {
           max-height: 90vh;
         }
       `}</style>
+      {videoModal.isOpen && (
+        <div 
+          style={{ 
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            zIndex: 10000, padding: '2rem', backdropFilter: 'blur(8px)'
+          }}
+          onClick={() => setVideoModal({ isOpen: false, videoId: "" })}
+        >
+          <div 
+            style={{ width: '100%', maxWidth: '1000px', position: 'relative', background: 'black', borderRadius: '1.5rem', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setVideoModal({ isOpen: false, videoId: "" })}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <X size={24} />
+            </button>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+              <iframe 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                src={`https://www.youtube.com/embed/${videoModal.videoId}?autoplay=1`}
+                title="YouTube video player" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -3233,38 +3265,6 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
           )}
         </div>
       </div>
-      {videoModal.isOpen && (
-        <div 
-          style={{ 
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-            background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            zIndex: 10000, padding: '2rem', backdropFilter: 'blur(8px)'
-          }}
-          onClick={() => setVideoModal({ isOpen: false, videoId: "" })}
-        >
-          <div 
-            style={{ width: '100%', maxWidth: '1000px', position: 'relative', background: 'black', borderRadius: '1.5rem', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button 
-              onClick={() => setVideoModal({ isOpen: false, videoId: "" })}
-              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <X size={24} />
-            </button>
-            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-              <iframe 
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                src={`https://www.youtube.com/embed/${videoModal.videoId}?autoplay=1`}
-                title="YouTube video player" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-              ></iframe>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
