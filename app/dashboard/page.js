@@ -2436,7 +2436,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="form-group">
-              <label className="label">{t('modals.ing_name')} <span style={{color:'#ef4444'}}>*</span></label>
+              <label className="label">{t('goods_receipt_form.product')} <span style={{color:'#ef4444'}}>*</span></label>
               <div style={{ position: 'relative' }}>
                 <Package size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
                 <input 
@@ -2445,13 +2445,13 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   value={formData.productName} 
                   onChange={(e) => setFormData({...formData, productName: e.target.value})} 
                   required 
-                  placeholder={t('dashboard.recipe_name')}
+                  placeholder=""
                   style={{ paddingLeft: '3rem' }}
                 />
               </div>
             </div>
             <div className="form-group">
-              <label className="label">{t('dashboard.person')}</label>
+              <label className="label">{t('goods_receipt_form.provider')}</label>
               <div style={{ position: 'relative' }}>
                 <Truck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
                 <input 
@@ -2459,7 +2459,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   className="input-field" 
                   value={formData.providerName} 
                   onChange={(e) => setFormData({...formData, providerName: e.target.value})} 
-                  placeholder={t('dashboard.person')}
+                  placeholder=""
                   style={{ paddingLeft: '3rem' }}
                 />
               </div>
@@ -2489,7 +2489,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               />
             </div>
             <div className="form-group">
-              <label className="label">{t('dashboard.actions')}</label>
+              <label className="label">{t('goods_receipt_form.invoice_number')}</label>
               <input 
                 type="text" 
                 className="input-field" 

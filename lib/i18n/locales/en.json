@@ -29,7 +29,7 @@
     "manage_recipes": "Manage Recipes",
     "plan": "Plan",
     "usage": "Usage",
-    "from": "From Date",
+    "from": "Date from",
     "to": "to"
   },
   "auth": {
@@ -111,8 +111,6 @@
     "show": "Show",
     "per_page": "{count} per page",
     "clear_filters": "Clear filters",
-    "recipe_filter": "Filter by recipe",
-    "all_recipes": "All recipes",
     "elaboration_name_header": "Production Name",
     "elaboration_date_header": "Date",
     "elaboration_recipe_header": "Recipe",
@@ -121,7 +119,9 @@
     "recipe_manage_desc": "Manage your recipes.",
     "new_record": "New Cleaning Record.",
     "manage_recipes": "Recipes",
-    "showing_info": "Showing {start} - {end} of {total} productions"
+    "showing_info": "Showing {start} - {end} of {total} productions",
+    "delivery_note_photo": "You can attach a photo of the delivery note",
+    "save_entry": "Save"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -194,7 +194,8 @@
     "delete_confirm_chamber": "Are you sure you want to delete this chamber?",
     "zone_created": "Zone created successfully",
     "zone_updated": "Zone updated successfully",
-    "delete_confirm_zone": "Are you sure you want to delete this zone?"
+    "delete_confirm_zone": "Are you sure you want to delete this zone?",
+    "delete_confirm_elaboration": "Are you sure you want to permanently remove this preparation?"
   },
   "register": {
     "title": "Start Today",
@@ -265,5 +266,10 @@
     "lot_mandatory_placeholder": "Batch mandatory...",
     "lot_optional_placeholder": "Batch optional...",
     "real_amount": "Real Qty"
+  },
+  "goods_receipt_form": {
+    "product": "Product",
+    "provider": "Provider",
+    "invoice_number": "Invoice number"
   }
 }

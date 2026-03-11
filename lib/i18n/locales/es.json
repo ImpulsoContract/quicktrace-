@@ -111,8 +111,6 @@
     "show": "Mostrar",
     "per_page": "{count} por página",
     "clear_filters": "Limpiar filtros",
-    "recipe_filter": "Filtrar por receta",
-    "all_recipes": "Todas las recetas",
     "elaboration_name_header": "Nombre Elaboración",
     "elaboration_date_header": "Fecha",
     "elaboration_recipe_header": "Receta",
@@ -121,7 +119,9 @@
     "recipe_manage_desc": "Configura tus recetas.",
     "new_record": "Nuevo Registro de Limpieza.",
     "manage_recipes": "Recetas contratadas",
-    "showing_info": "Mostrando {start} - {end} de {total} elaboraciones"
+    "showing_info": "Mostrando {start} - {end} de {total} elaboraciones",
+    "delivery_note_photo": "Puedes adjuntar una foto del albarán",
+    "save_entry": "Guardar"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -194,7 +194,8 @@
     "delete_confirm_chamber": "¿Seguro que quieres eliminar esta cámara?",
     "zone_created": "Zona creada correctamente",
     "zone_updated": "Zona actualizada correctamente",
-    "delete_confirm_zone": "¿Seguro que quieres eliminar esta zona?"
+    "delete_confirm_zone": "¿Seguro que quieres eliminar esta zona?",
+    "delete_confirm_elaboration": "¿Seguro que quieres eliminar esta elaboración de forma permanente?"
   },
   "register": {
     "title": "Empieza Hoy",
@@ -265,5 +266,10 @@
     "lot_mandatory_placeholder": "Lote obligatorio...",
     "lot_optional_placeholder": "Lote opcional...",
     "real_amount": "Cantidad Real"
+  },
+  "goods_receipt_form": {
+    "product": "Producto",
+    "provider": "Proveedor",
+    "invoice_number": "Número de factura"
   }
 }
