@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Lock, CheckCircle2, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Lock, CheckCircle2, Loader2, AlertCircle, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -19,6 +19,8 @@ function VerifyEmailContent() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -104,10 +106,32 @@ function VerifyEmailContent() {
           <div style={{ position: 'relative' }}>
             <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
             <input 
-              type="password" className="input-field" style={{ paddingLeft: '2.75rem' }} required minLength={6}
+              type={showPassword ? "text" : "password"} 
+              className="input-field" 
+              style={{ paddingLeft: '2.75rem', paddingRight: '3rem' }} 
+              required minLength={6}
               value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0.25rem'
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
         </div>
 
@@ -116,10 +140,32 @@ function VerifyEmailContent() {
           <div style={{ position: 'relative' }}>
             <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
             <input 
-              type="password" className="input-field" style={{ paddingLeft: '2.75rem' }} required minLength={6}
+              type={showConfirmPassword ? "text" : "password"} 
+              className="input-field" 
+              style={{ paddingLeft: '2.75rem', paddingRight: '3rem' }} 
+              required minLength={6}
               value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{
+                position: 'absolute',
+                right: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0.25rem'
+              }}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
         </div>
 
