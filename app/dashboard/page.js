@@ -1109,16 +1109,16 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'trazabilidad' ? (
             <div>
-              <header style={{ marginBottom: '3rem' }}>
-                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.traceability')}</h2>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.traceability_desc')}</p>
+              <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.traceability')}</h2>
                   <PlanUsageIndicator 
                     label={t('dashboard.elaborations')} 
                     current={totalElabs} 
                     limit={profile?.plan?.elaborationsLimit} 
                   />
                 </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '0.25rem' }}>{t('dashboard.traceability_desc')}</p>
               </header>
 
               {recipes.length === 0 ? (
@@ -1153,19 +1153,20 @@ export default function ClientDashboard() {
                       key={recipe.id} 
                       className="glass-card" 
                       onClick={() => handleOpenRecipe(recipe)}
-                      style={{ padding: '2rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', background: 'white' }}
+                      style={{ 
+                        padding: '1.5rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+                        background: 'white', display: 'flex', flexDirection: 'column', gap: '1.5rem'
+                      }}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
-                      <div style={{ width: '48px', height: '48px', borderRadius: '1rem', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
-                        <ChefHat size={24} color="var(--corp-green)" />
-                      </div>
-                      <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '0.75rem', color: 'var(--text-main)' }}>{recipe.name}</h3>
-                      <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                        <Beaker size={16} /> {recipe.ingredients.length} {t('dashboard.ingredients_detected')}
-                      </div>
-                      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--corp-green)', fontWeight: '800' }}>
-                        {t('dashboard.register_elaboration')} <ChevronRight size={18} />
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>{recipe.name}</h3>
+                      
+                      <div 
+                        className="btn-primary"
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', fontSize: '0.85rem', fontWeight: '800' }}
+                      >
+                        <Plus size={18} /> {t('dashboard.register_elaboration')}
                       </div>
                     </div>
                   ))}
