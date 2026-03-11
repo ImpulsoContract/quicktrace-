@@ -53,7 +53,7 @@ export default function ClientDashboard() {
   const [totalElabs, setTotalElabs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [elaborationsSearch, setElaborationsSearch] = useState("");
+
 
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
@@ -1183,20 +1183,99 @@ export default function ClientDashboard() {
                 className="glass-card" 
                 style={{ 
                   background: 'white', padding: '1.5rem', marginBottom: '3rem', 
-                  display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap-reverse'
+                  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignItems: 'end'
                 }}
               >
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <div>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.batch_search')}</label>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input 
+                      type="text" 
+                      placeholder={t('dashboard.batch_placeholder')}
+                      className="input-field"
+                      style={{ paddingLeft: '2.5rem', margin: 0 }}
+                      value={elabFilters.lote}
+                      onChange={(e) => {
+                        setElabFilters({...elabFilters, lote: e.target.value});
+                        setCurrentPage(1);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.recipe_filter')}</label>
+                  <select 
+                    className="input-field" 
+                    value={elabFilters.recipeId}
+                    onChange={(e) => {
+                      setElabFilters({...elabFilters, recipeId: e.target.value});
+                      setCurrentPage(1);
+                    }}
+                    style={{ margin: 0 }}
+                  >
+                    <option value="all">{t('dashboard.all_recipes')}</option>
+                    {recipes.map(r => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.from')}</label>
                   <input 
-                    type="text" 
-                    placeholder={t('dashboard.search')}
-                    className="input-field"
-                    style={{ paddingLeft: '2.75rem', margin: 0 }}
-                    value={elaborationsSearch}
-                    onChange={(e) => setElaborationsSearch(e.target.value)}
+                    type="date" 
+                    className="input-field" 
+                    value={elabFilters.startDate}
+                    onChange={(e) => {
+                      setElabFilters({...elabFilters, startDate: e.target.value});
+                      setCurrentPage(1);
+                    }}
+                    style={{ margin: 0 }}
                   />
                 </div>
+
+                <div>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('common.to')}</label>
+                  <input 
+                    type="date" 
+                    className="input-field" 
+                    value={elabFilters.endDate}
+                    onChange={(e) => {
+                      setElabFilters({...elabFilters, endDate: e.target.value});
+                      setCurrentPage(1);
+                    }}
+                    style={{ margin: 0 }}
+                  />
+                </div>
+
+                <div>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.show')}</label>
+                  <select 
+                    className="input-field" 
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(parseInt(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    style={{ margin: 0 }}
+                  >
+                    <option value={20}>{t('dashboard.per_page').replace('{count}', '20')}</option>
+                    <option value={50}>{t('dashboard.per_page').replace('{count}', '50')}</option>
+                    <option value={100}>{t('dashboard.per_page').replace('{count}', '100')}</option>
+                  </select>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setElabFilters({ lote: "", startDate: "", endDate: "", recipeId: "all" });
+                    setCurrentPage(1);
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
+                >
+                  {t('dashboard.clear_filters')}
+                </button>
               </div>
 
               {elaborations.length === 0 ? (
@@ -1210,25 +1289,14 @@ export default function ClientDashboard() {
                       <tr>
                         <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                         <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>Lote Salida</th>
                         <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                       </tr>
                     </thead>
                     <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
-                      {elaborations
-                        .filter(el => 
-                          (el.name?.toLowerCase().includes(elaborationsSearch.toLowerCase())) || 
-                          (el.recipe?.name?.toLowerCase().includes(elaborationsSearch.toLowerCase()))
-                        )
-                        .map(el => (
-                        <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: 'white' }}>
+                      {elaborations.map(el => (
+                        <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: 'white', transition: 'background 0.2s' }} className="hover-row">
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
-                          <td style={{ padding: '1.5rem 2rem' }}>
-                            <span style={{ padding: '0.3rem 0.8rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '0.5rem', fontSize: '0.85rem', fontWeight: '700' }}>
-                              {el.loteSalida || '-'}
-                            </span>
-                          </td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                               <button 
@@ -1249,6 +1317,34 @@ export default function ClientDashboard() {
                       ))}
                     </tbody>
                   </table>
+
+                  {/* Pagination Controls */}
+                  <div style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                      {t('dashboard.showing_info')
+                        .replace('{start}', ((currentPage - 1) * itemsPerPage + 1).toString())
+                        .replace('{end}', Math.min(currentPage * itemsPerPage, totalElabs).toString())
+                        .replace('{total}', totalElabs.toString())}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        className="btn-secondary"
+                        style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem', opacity: currentPage === 1 ? 0.5 : 1 }}
+                      >
+                        <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} /> {t('common.previous')}
+                      </button>
+                      <button 
+                        disabled={currentPage * itemsPerPage >= totalElabs}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        className="btn-secondary"
+                        style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem', opacity: currentPage * itemsPerPage >= totalElabs ? 0.5 : 1 }}
+                      >
+                        {t('common.next')} <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
