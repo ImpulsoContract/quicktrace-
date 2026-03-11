@@ -1351,37 +1351,37 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'entradas' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
-              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>{t('sidebar.goods')}</h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.goods_info')}</p>
-                    <PlanUsageIndicator 
-                      label={t('dashboard.goods')} 
-                      current={goodsReceipts.length} 
-                      limit={profile?.plan?.goodsLimit} 
-                    />
-                  </div>
+              <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.goods')}</h2>
+                  <PlanUsageIndicator 
+                    label={t('dashboard.goods')} 
+                    current={goodsReceipts.length} 
+                    limit={profile?.plan?.goodsLimit} 
+                  />
                 </div>
-                <button 
-                  onClick={() => {
-                    setEditingGoodsReceipt(null);
-                    setGoodsForm({
-                      providerName: "",
-                      productName: "",
-                      lote: "",
-                      invoiceNumber: "",
-                      quantity: "",
-                      date: new Date().toISOString().slice(0, 16),
-                      deliveryNoteImage: ""
-                    });
-                    setIsGoodsModalOpen(true);
-                  }}
-                  className="btn-primary" 
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
-                >
-                  <Package size={20} /> {t('dashboard.new_goods_entry')}
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.goods_info')}</p>
+                  <button 
+                    onClick={() => {
+                      setEditingGoodsReceipt(null);
+                      setGoodsForm({
+                        providerName: "",
+                        productName: "",
+                        lote: "",
+                        invoiceNumber: "",
+                        quantity: "",
+                        date: new Date().toISOString().slice(0, 16),
+                        deliveryNoteImage: ""
+                      });
+                      setIsGoodsModalOpen(true);
+                    }}
+                    className="btn-primary" 
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                  >
+                    <Package size={18} /> {t('dashboard.new_goods_entry')}
+                  </button>
+                </div>
               </header>
 
               <div 
@@ -1506,25 +1506,27 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'limpieza' ? (
             <div>
-              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>{t('sidebar.cleaning')}</h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.cleaning_info')}</p>
-                    <PlanUsageIndicator 
-                      label={t('dashboard.cleaning')}
-                      current={cleaningLogs.length} 
-                      limit={profile?.plan?.cleaningRecordsLimit} 
-                    />
-                  </div>
+              <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.cleaning')}</h2>
+                  <PlanUsageIndicator 
+                    label={t('dashboard.cleaning')}
+                    current={cleaningLogs.length} 
+                    limit={profile?.plan?.cleaningLimit} 
+                  />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.cleaning_info')}</p>
+                </div>
+              </header>
+
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'flex-end' }}>
                   <button 
                     onClick={() => setIsManageZonesModalOpen(true)}
                     className="btn-secondary" 
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
                   >
-                    <Settings size={20} /> {t('dashboard.manage_zones')}
+                    <Settings size={18} /> {t('dashboard.manage_zones')}
                   </button>
                   <button 
                     onClick={() => {
@@ -1537,12 +1539,11 @@ export default function ClientDashboard() {
                       setIsCleaningModalOpen(true);
                     }}
                     className="btn-primary" 
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
                   >
-                    <Plus size={20} /> {t('dashboard.new_record')}
+                    <Plus size={18} /> {t('dashboard.new_record')}
                   </button>
-                </div>
-              </header>
+              </div>
 
               <div 
                 className="glass-card" 
@@ -1670,40 +1671,40 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'temperaturas' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '2rem', borderRadius: '1.5rem', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}>
-                <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.temperatures')}</h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.temperature_info')}</p>
-                    <PlanUsageIndicator 
-                      label={t('dashboard.cleaning')} 
-                      current={tempRecords.length} 
-                      limit={profile?.plan?.temperaturesLimit} 
-                    />
-                  </div>
+              <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.temperatures')}</h2>
+                  <PlanUsageIndicator 
+                    label={t('sidebar.temperatures')} 
+                    current={tempRecords.length} 
+                    limit={profile?.plan?.temperaturesLimit} 
+                  />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button 
-                    onClick={() => setIsManageChambersModalOpen(true)}
-                    className="btn-secondary" 
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
-                  >
-                    <Settings size={20} /> {t('dashboard.manage_chambers')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setEditingTempRecord(null);
-                      setTempForm({
-                        date: new Date().toISOString().slice(0, 16),
-                        values: {}
-                      });
-                      setIsTempModalOpen(true);
-                    }}
-                    className="btn-primary" 
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
-                  >
-                    <Thermometer size={20} /> {t('dashboard.new_temp_record')}
-                  </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.temperature_info')}</p>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                      onClick={() => setIsManageChambersModalOpen(true)}
+                      className="btn-secondary" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <Settings size={18} /> {t('dashboard.manage_chambers')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setEditingTempRecord(null);
+                        setTempForm({
+                          date: new Date().toISOString().slice(0, 16),
+                          values: {}
+                        });
+                        setIsTempModalOpen(true);
+                      }}
+                      className="btn-primary" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <Plus size={18} /> {t('dashboard.new_temp_record')}
+                    </button>
+                  </div>
                 </div>
               </header>
 
@@ -1834,29 +1835,29 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'gestionar-recetas' ? (
             <div>
-              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>{t('sidebar.manage_recipes')}</h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.recipe_manage_desc')}</p>
-                    <PlanUsageIndicator 
-                      label={t('dashboard.manage_recipes')} 
-                      current={recipes.length} 
-                      limit={profile?.plan?.recipesLimit} 
-                    />
-                  </div>
+              <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.manage_recipes')}</h2>
+                  <PlanUsageIndicator 
+                    label={t('dashboard.manage_recipes')} 
+                    current={recipes.length} 
+                    limit={profile?.plan?.recipesLimit} 
+                  />
                 </div>
-                <button 
-                  onClick={() => {
-                    setEditingRecipe(null);
-                    setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }] });
-                    setIsRecipeManageModalOpen(true);
-                  }}
-                  className="btn-primary" 
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2rem' }}
-                >
-                  <Plus size={20} /> {t('modals.new_recipe_btn')}
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.recipe_manage_desc')}</p>
+                  <button 
+                    onClick={() => {
+                      setEditingRecipe(null);
+                      setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }] });
+                      setIsRecipeManageModalOpen(true);
+                    }}
+                    className="btn-primary" 
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                  >
+                    <Plus size={18} /> {t('modals.new_recipe_btn')}
+                  </button>
+                </div>
               </header>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
