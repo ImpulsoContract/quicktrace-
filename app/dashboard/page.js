@@ -800,7 +800,7 @@ export default function ClientDashboard() {
 
         doc.setFontSize(20);
         doc.setFont("helvetica", "bold");
-        doc.text(t('sidebar.goods_receipt'), 105, 20, { align: 'center' });
+        doc.text(t('dashboard.goods_report'), 105, 20, { align: 'center' });
         
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
