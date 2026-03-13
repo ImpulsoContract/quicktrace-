@@ -1882,7 +1882,7 @@ export default function ClientDashboard() {
                                 onChange={() => toggleSelectRecord(el.id)}
                               />
                             </td>
- Broadway                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
+                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
