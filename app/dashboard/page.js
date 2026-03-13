@@ -773,17 +773,22 @@ export default function ClientDashboard() {
   const generateTraceabilityReportPDF = async (startDate, endDate) => {
     setLoading(true);
     try {
-      // Filtrar elaboraciones por fecha
-      const filtered = elaborations.filter(el => {
-        const elDate = new Date(el.createdAt).toISOString().slice(0, 10);
-        return elDate >= startDate && elDate <= endDate;
+      // Fetch all elaborations in the date range (limit 1000 to cover most cases)
+      const query = new URLSearchParams({
+        page: "1",
+        limit: "1000",
+        startDate,
+        endDate
       });
+      const res = await fetch(`/api/elaborations?${query}`);
+      const data = await res.json();
 
-      if (filtered.length === 0) {
+      if (!data.data || data.data.length === 0) {
         alert(t('dashboard.no_records'));
         return;
       }
 
+      const filtered = data.data;
       const doc = new jsPDF();
       
       filtered.forEach((el, index) => {
@@ -844,12 +849,11 @@ export default function ClientDashboard() {
           head: [[t('modals.ingredient_name'), t('traceability_form.lot'), t('traceability_form.real_amount')]],
           body: tableBody,
           theme: 'grid',
-          headStyles: { fillStyle: 'var(--corp-green)', textColor: [255, 255, 255] },
+          headStyles: { fillStyle: '#3f6212', textColor: [255, 255, 255] },
           margin: { left: 20, right: 20 }
         });
 
         // Pie de página
-        const pageCount = doc.internal.getNumberOfPages();
         doc.setFontSize(10);
         doc.text(`${index + 1} / ${filtered.length}`, 190, 285, { align: 'right' });
       });
