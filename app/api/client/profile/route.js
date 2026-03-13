@@ -63,6 +63,7 @@ export async function PATCH(request) {
         country: country !== undefined ? country : undefined,
         labelConfig: labelConfig !== undefined ? labelConfig : undefined,
       },
+      include: { plan: true }
     });
 
     return NextResponse.json(updatedProfile);
