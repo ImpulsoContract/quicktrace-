@@ -1844,10 +1844,6 @@ export default function ClientDashboard() {
                 </div>
               )}
 
-              <style jsx global>{`
-                @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-                .selected-row { background-color: #f0fdf4 !important; }
-              `}</style>
 
               {elaborations.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
@@ -2961,6 +2957,9 @@ export default function ClientDashboard() {
           color: var(--text-main);
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
+
+        @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .selected-row { background-color: #f0fdf4 !important; }
 
         .glass-card {
           background: rgba(255, 255, 255, 0.8);
