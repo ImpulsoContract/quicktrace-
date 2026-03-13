@@ -52,7 +52,7 @@ model ClientProfile {
   stripeCustomerId       String?   @unique
   stripeSubscriptionId   String?   @unique
   stripePriceId          String?
-  stripeCurrentPeriodEnd DateTime?
+  stripeCurrentPeriodEnd String?
   
   // Old fields (to be deprecated after migration)
   accountType           String   @default("DEMO") 
@@ -74,8 +74,13 @@ model ClientProfile {
 model PricingPlan {
   id                String          @id @default(cuid())
   name              String          @unique
+  priceMonthly      Float           @default(0)
   priceYearly       Float           @default(0)
-  stripePriceId     String?         // ID del precio en Stripe (price_...)
+  stripePriceIdMonthly String?
+  stripePriceIdYearly  String?
+  
+  // Legacy field
+  stripePriceId     String?         // Will be migrated to stripePriceIdYearly
   
   recipesLimit      Int?            // null = ilimitadas
   elaborationsLimit Int?
@@ -105,6 +110,7 @@ model Recipe {
   
   lotesMandatory      Boolean  @default(false)
   quantitiesMandatory   Boolean  @default(false)
+  expiryDays            Int?     @default(0)
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -132,6 +138,9 @@ model Elaboration {
   
   recipeId  Int
   recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  
+  personName      String?
+  expirationDate  DateTime?
   
   ingredients ElaborationIngredient[]
   

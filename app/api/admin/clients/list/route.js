@@ -26,6 +26,15 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
 
+    // Logging only first client to check structure in Vercel logs
+    if (clients.length > 0) {
+      console.log(`[AdminList] First client profile sample:`, {
+        email: clients[0].email,
+        hasProfile: !!clients[0].clientProfile,
+        renewalDate: clients[0].clientProfile?.stripeCurrentPeriodEnd
+      });
+    }
+
     return NextResponse.json(clients);
   } catch (error) {
     console.error("Error fetching clients:", error);

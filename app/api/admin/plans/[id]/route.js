@@ -20,8 +20,11 @@ export async function PATCH(req, { params }) {
       where: { id },
       data: {
         name: data.name,
+        priceMonthly: parseFloat(data.priceMonthly) || 0,
         priceYearly: parseFloat(data.priceYearly) || 0,
-        stripePriceId: data.stripePriceId || null,
+        stripePriceIdMonthly: data.stripePriceIdMonthly?.trim() || null,
+        stripePriceIdYearly: data.stripePriceIdYearly?.trim() || data.stripePriceId?.trim() || null,
+        stripePriceId: data.stripePriceIdYearly?.trim() || data.stripePriceId?.trim() || null,
         recipesLimit: data.recipesLimit === "" || data.recipesLimit === null ? null : parseInt(data.recipesLimit),
         elaborationsLimit: data.elaborationsLimit === "" || data.elaborationsLimit === null ? null : parseInt(data.elaborationsLimit),
         hasCleaning: data.hasCleaning,

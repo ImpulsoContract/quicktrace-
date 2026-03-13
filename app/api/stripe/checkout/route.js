@@ -26,10 +26,11 @@ export async function POST(req) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    let planId;
+    let planId, billingCycle;
     try {
       const body = await req.json();
       planId = body.planId;
+      billingCycle = body.billingCycle || "yearly"; // Default to yearly
     } catch (e) {
       return NextResponse.json({ error: "Cuerpo de solicitud no válido" }, { status: 400 });
     }
@@ -46,7 +47,9 @@ export async function POST(req) {
       return NextResponse.json({ error: "Plan no encontrado" }, { status: 404 });
     }
 
-    let priceId = plan.stripePriceId;
+    let priceId = billingCycle === "monthly" ? plan.stripePriceIdMonthly : (plan.stripePriceIdYearly || plan.stripePriceId);
+    
+    // Fallback logic for legacy environment variables if no price ID is set in the plan
     if (!priceId) {
       const planName = plan.name.toLowerCase();
       if (planName.includes('gold') || planName.includes('oro')) {

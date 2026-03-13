@@ -50,8 +50,11 @@ export async function POST(req) {
     const plan = await prisma.pricingPlan.create({
       data: {
         name: data.name,
+        priceMonthly: parseFloat(data.priceMonthly) || 0,
         priceYearly: parseFloat(data.priceYearly) || 0,
-        stripePriceId: data.stripePriceId || null,
+        stripePriceIdMonthly: data.stripePriceIdMonthly?.trim() || null,
+        stripePriceIdYearly: data.stripePriceIdYearly?.trim() || data.stripePriceId?.trim() || null,
+        stripePriceId: data.stripePriceIdYearly?.trim() || data.stripePriceId?.trim() || null, // Keeping legacy for now
         recipesLimit: data.recipesLimit === "" ? null : parseInt(data.recipesLimit),
         elaborationsLimit: data.elaborationsLimit === "" ? null : parseInt(data.elaborationsLimit),
         hasCleaning: data.hasCleaning || false,

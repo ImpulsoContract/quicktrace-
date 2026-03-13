@@ -36,6 +36,10 @@ export default function RegisterPage() {
 
       if (data.success) {
         setSuccess(true);
+        // Meta Pixel Tracking
+        if (typeof window !== 'undefined' && window.fbq) {
+          window.fbq('track', 'CompleteRegistration');
+        }
       } else {
         setError(data.error || t('register.error_processing'));
       }

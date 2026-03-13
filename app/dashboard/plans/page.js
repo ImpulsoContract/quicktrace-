@@ -14,6 +14,7 @@ export default function PlansPage() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(null);
+  const [billingCycle, setBillingCycle] = useState("yearly"); // "monthly" or "yearly"
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -38,7 +39,7 @@ export default function PlansPage() {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, billingCycle }),
       });
       
       const data = await res.json();
@@ -93,6 +94,39 @@ export default function PlansPage() {
           </div>
         </div>
 
+        {/* Billing Toggle */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
+          <div style={{ 
+            background: 'white', padding: '0.4rem', borderRadius: '1rem', 
+            border: '1px solid var(--border)', display: 'flex', gap: '0.25rem' 
+          }}>
+            <button 
+              onClick={() => setBillingCycle("monthly")}
+              style={{
+                padding: '0.6rem 1.5rem', borderRadius: '0.75rem', border: 'none',
+                fontSize: '0.9rem', fontWeight: '800', cursor: 'pointer',
+                background: billingCycle === "monthly" ? 'var(--corp-green)' : 'transparent',
+                color: billingCycle === "monthly" ? 'white' : 'var(--text-muted)',
+                transition: 'all 0.2s'
+              }}
+            >
+              {t('plans.monthly_label').toUpperCase()}
+            </button>
+            <button 
+              onClick={() => setBillingCycle("yearly")}
+              style={{
+                padding: '0.6rem 1.5rem', borderRadius: '0.75rem', border: 'none',
+                fontSize: '0.9rem', fontWeight: '800', cursor: 'pointer',
+                background: billingCycle === "yearly" ? 'var(--corp-green)' : 'transparent',
+                color: billingCycle === "yearly" ? 'white' : 'var(--text-muted)',
+                transition: 'all 0.2s'
+              }}
+            >
+              {t('plans.yearly_label').toUpperCase()}
+            </button>
+          </div>
+        </div>
+
         {/* Plans Grid */}
         <div style={{ 
           display: 'grid', 
@@ -130,9 +164,14 @@ export default function PlansPage() {
                   <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{plan.name}</h2>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
                     <span style={{ fontSize: '2.5rem', fontWeight: '900', color: isDemo ? 'var(--text-main)' : 'var(--corp-green)' }}>
-                      {plan.priceYearly === 0 ? t('plans.free') : `${plan.priceYearly}€`}
+                      {billingCycle === "monthly" 
+                        ? (plan.priceMonthly === 0 ? t('plans.free') : `${plan.priceMonthly}€`)
+                        : (plan.priceYearly === 0 ? t('plans.free') : `${plan.priceYearly}€`)
+                      }
                     </span>
-                    {plan.priceYearly > 0 && <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{t('plans.yearly')}</span>}
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
+                      {billingCycle === "monthly" ? t('plans.monthly') : t('plans.yearly')}
+                    </span>
                   </div>
                 </div>
 

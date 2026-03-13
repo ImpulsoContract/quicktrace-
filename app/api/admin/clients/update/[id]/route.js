@@ -17,7 +17,8 @@ export async function PATCH(req, { params }) {
     const body = await req.json();
     const { 
       email, name, razonSocial, nif, phone, urlClientify,
-      planId, personName, address, postalCode, city, province, country
+      planId, personName, address, postalCode, city, province, country,
+      stripeSubscriptionId, stripeCustomerId, stripeCurrentPeriodEnd
     } = body;
 
     const userId = parseInt(id);
@@ -42,7 +43,10 @@ export async function PATCH(req, { params }) {
         city,
         province,
         country,
-        planId: planId || null
+        planId: planId || null,
+        stripeSubscriptionId: stripeSubscriptionId || null,
+        stripeCustomerId: stripeCustomerId || null,
+        stripeCurrentPeriodEnd: stripeCurrentPeriodEnd || null
       };
 
       await tx.clientProfile.update({

@@ -8,7 +8,7 @@ import {
   Search, ShieldCheck, ChevronRight,
   MoreVertical, Edit, Plus, Trash2,
   X, AlertCircle, Loader2, LogOut,
-  Thermometer, Brush, Save, ArrowLeft
+  Thermometer, Brush, Save, ArrowLeft, RefreshCw
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -156,6 +156,29 @@ export default function AdminDashboard() {
       setActiveMenu(null);
     }
   };
+  
+  const handleResyncStripe = async (clientId) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/clients/resync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: 'success', text: `Sincronización: Plan ${data.data.planName}, Renovación: ${data.data.renewalDate}` });
+        fetchClients();
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      alert("Error al sincronizar con Stripe");
+    } finally {
+      setLoading(false);
+      setActiveMenu(null);
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)' }}>
@@ -190,7 +213,7 @@ export default function AdminDashboard() {
               fontWeight: activeTab === 'list' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
             }}
           >
-            Ver Clientes
+            Ver Clientes <span style={{ fontSize: '0.6rem', background: '#e2e8f0', padding: '1px 4px', borderRadius: '4px', verticalAlign: 'middle' }}>v2.1</span>
             {activeTab === 'list' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
           </button>
           <button
@@ -325,9 +348,24 @@ export default function AdminDashboard() {
           ) : activeTab === "list" ? (
             <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <Users size={24} color="var(--corp-green)" />
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Gestión de Clientes</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Users size={24} color="var(--corp-green)" />
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Gestión de Clientes</h2>
+                  </div>
+                  <button 
+                    onClick={fetchClients}
+                    disabled={listLoading}
+                    style={{ 
+                      padding: '0.4rem 0.8rem', background: 'white', border: '1px solid var(--border)', 
+                      borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', 
+                      gap: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-main)',
+                      opacity: listLoading ? 0.7 : 1
+                    }}
+                  >
+                    <RefreshCw size={16} style={{ animation: listLoading ? 'spin 1s linear infinite' : 'none' }} />
+                    Refrescar
+                  </button>
                 </div>
                 <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
                   <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
@@ -346,6 +384,7 @@ export default function AdminDashboard() {
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>NIF / CIF</th>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan</th>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recetas (Uso)</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Próxima Renovación</th>
                         <th style={{ padding: '1rem', textAlign: 'right' }}></th>
                       </tr>
                     </thead>
@@ -369,6 +408,24 @@ export default function AdminDashboard() {
                           </td>
                           <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '600' }}>
                             {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}
+                          </td>
+                          <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
+                            {client.clientProfile?.stripeCurrentPeriodEnd ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Globe size={14} color="var(--corp-green)" />
+                                {(() => {
+                                  const raw = client.clientProfile.stripeCurrentPeriodEnd;
+                                  try {
+                                    const d = new Date(raw);
+                                    return isNaN(d.getTime()) ? raw : d.toLocaleDateString();
+                                  } catch (e) {
+                                    return raw;
+                                  }
+                                })()}
+                              </div>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>-</span>
+                            )}
                           </td>
                           <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
                             <button
@@ -426,6 +483,7 @@ export default function AdminDashboard() {
             <MenuBtn icon={<ChefHat size={16} />} text="Gestionar Recetas" onClick={() => { setManageRecipesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<CheckSquare size={16} />} text="Zonas de limpieza" onClick={() => { setManageCleaningZonesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<Thermometer size={16} />} text="Temperatura de cámaras" onClick={() => { setManageChambersModal(activeMenu.clientProfile); setActiveMenu(null); }} />
+            <MenuBtn icon={<RefreshCw size={16} />} text="Sincronizar con Stripe" onClick={() => handleResyncStripe(activeMenu.id)} />
             <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
               <MenuBtn 
                 icon={<Trash2 size={16} />} 
@@ -503,7 +561,7 @@ export default function AdminDashboard() {
             </div>
 
             <div>
-              <h3 className="section-title">Configuración de Plan</h3>
+              <h3 className="section-title">Configuración de suscripción (Stripe)</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                 <div>
                   <label className="label">Plan asignado</label>
@@ -517,6 +575,48 @@ export default function AdminDashboard() {
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="label">Próxima Renovación</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={editClientModal.form.stripeCurrentPeriodEnd || ""} 
+                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, stripeCurrentPeriodEnd: e.target.value}})} 
+                    placeholder="YYYY-MM-DD o formato texto..."
+                  />
+                  {editClientModal.form.stripeCurrentPeriodEnd && (
+                    <div style={{ fontSize: '0.75rem', color: '#166534', marginTop: '0.25rem', fontWeight: '600' }}>
+                      {(() => {
+                        try {
+                          const d = new Date(editClientModal.form.stripeCurrentPeriodEnd);
+                          return !isNaN(d.getTime()) ? `Vista local: ${d.toLocaleDateString()}` : "Formato de texto libre";
+                        } catch (e) {
+                          return "Texto libre";
+                        }
+                      })()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="label">ID Cliente Stripe</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={editClientModal.form.stripeCustomerId || ""} 
+                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, stripeCustomerId: e.target.value}})} 
+                    placeholder="cus_..."
+                  />
+                </div>
+                <div>
+                  <label className="label">ID Suscripción Stripe</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={editClientModal.form.stripeSubscriptionId || ""} 
+                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, stripeSubscriptionId: e.target.value}})} 
+                    placeholder="sub_..."
+                  />
                 </div>
               </div>
             </div>
@@ -748,8 +848,10 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: plan?.name || "",
+    priceMonthly: plan?.priceMonthly || 0,
     priceYearly: plan?.priceYearly || 0,
-    stripePriceId: plan?.stripePriceId || "",
+    stripePriceIdMonthly: plan?.stripePriceIdMonthly || "",
+    stripePriceIdYearly: plan?.stripePriceIdYearly || plan?.stripePriceId || "",
     recipesLimit: plan?.recipesLimit === null ? "" : (plan?.recipesLimit || ""),
     elaborationsLimit: plan?.elaborationsLimit === null ? "" : (plan?.elaborationsLimit || ""),
     hasCleaning: plan?.hasCleaning || false,
@@ -785,10 +887,14 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
   return (
     <Modal title={mode === 'create' ? "Nuevo Plan de Precios" : `Editar Plan: ${plan.name}`} onClose={onClose}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
           <div>
             <label className="label">Nombre del Plan</label>
             <input type="text" className="input-field" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required placeholder="Ej: Premium, Básico..." />
+          </div>
+          <div>
+            <label className="label">Precio Mensual (€)</label>
+            <input type="number" step="0.01" className="input-field" value={formData.priceMonthly} onChange={(e) => setFormData({...formData, priceMonthly: e.target.value})} required />
           </div>
           <div>
             <label className="label">Precio Anual (€)</label>
@@ -796,10 +902,15 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
           </div>
         </div>
 
-        <div>
-          <label className="label">Stripe Price ID (price_...)</label>
-          <input type="text" className="input-field" value={formData.stripePriceId} onChange={(e) => setFormData({...formData, stripePriceId: e.target.value})} placeholder="Ej: price_1P..." />
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Indispensable para habilitar la suscripción automática.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div>
+            <label className="label">Stripe Price ID Mensual</label>
+            <input type="text" className="input-field" value={formData.stripePriceIdMonthly} onChange={(e) => setFormData({...formData, stripePriceIdMonthly: e.target.value})} placeholder="price_..." />
+          </div>
+          <div>
+            <label className="label">Stripe Price ID Anual</label>
+            <input type="text" className="input-field" value={formData.stripePriceIdYearly} onChange={(e) => setFormData({...formData, stripePriceIdYearly: e.target.value})} placeholder="price_..." />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/mail";
+import { sendMetaConversionEvent } from "@/lib/meta";
+import { createClientifyContact } from "@/lib/clientify";
+import { headers } from "next/headers";
 
 export async function POST(req) {
   try {
     const { name, email, razonSocial, phone } = await req.json();
+    const headersList = headers();
 
     if (!name || !email || !razonSocial || !phone) {
       return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 });
@@ -56,7 +60,6 @@ export async function POST(req) {
           phone,
           nif: "", 
           planId: demoPlan ? demoPlan.id : undefined,
-          // Legacy fields for compatibility
           accountType: demoPlan ? demoPlan.name : "DEMO",
           recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
           canManageRecipes: true
@@ -86,6 +89,34 @@ export async function POST(req) {
         </div>
       `
     });
+
+    // Report to Meta Conversions API (CAPI)
+    try {
+      sendMetaConversionEvent({
+        eventName: 'CompleteRegistration',
+        email: normalizedEmail,
+        phone: phone,
+        firstName: name.split(' ')[0],
+        lastName: name.split(' ').slice(1).join(' '),
+        url: `${process.env.NEXTAUTH_URL}/register`,
+        clientIpAddress: headersList.get('x-forwarded-for') || headersList.get('x-real-ip'),
+        clientUserAgent: headersList.get('user-agent')
+      });
+    } catch (metaErr) {
+      console.error('[Meta CAPI] Error:', metaErr);
+    }
+
+    // Report to Clientify CRM
+    try {
+      createClientifyContact({
+        email: normalizedEmail,
+        name: name,
+        phone: phone,
+        razonSocial: razonSocial
+      });
+    } catch (crmErr) {
+      console.error('[Clientify Sync] Error:', crmErr);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

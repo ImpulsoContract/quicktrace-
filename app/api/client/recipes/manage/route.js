@@ -13,7 +13,7 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { name, ingredients } = body;
+    const { name, ingredients, expiryDays } = body;
 
     // Get client profile and check privilege
     const profile = await prisma.clientProfile.findUnique({
@@ -49,6 +49,7 @@ export async function POST(req) {
     const recipe = await prisma.recipe.create({
       data: {
         name,
+        expiryDays: expiryDays ? parseInt(expiryDays) : 0,
         clientProfileId: profile.id,
         ingredients: {
           create: ingredients.map((ing) => ({

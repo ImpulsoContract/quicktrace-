@@ -60,7 +60,7 @@ export default function ClientDashboard() {
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
-  const [recipeForm, setRecipeForm] = useState({ name: "", ingredients: [] });
+  const [recipeForm, setRecipeForm] = useState({ name: "", ingredients: [], expiryDays: 0 });
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
   const [isManageZonesModalOpen, setIsManageZonesModalOpen] = useState(false);
@@ -69,6 +69,9 @@ export default function ClientDashboard() {
   // Trazabilidad Form State
   const [elaboracionForm, setElaboracionForm] = useState({
     titulo: "",
+    personName: "",
+    date: "",
+    expirationDate: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
   });
 
@@ -165,7 +168,8 @@ export default function ClientDashboard() {
         unit: ing.unit,
         loteMandatory: !!ing.loteMandatory,
         quantityMandatory: !!ing.quantityMandatory
-      }))
+      })),
+      expiryDays: recipe.expiryDays || 0
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -525,8 +529,32 @@ export default function ClientDashboard() {
 
   const handleOpenRecipe = (recipe) => {
     const now = new Date();
-    const dateFormatted = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const timeFormatted = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}${hours}${minutes}`;
+    
+    // YYYY-MM-DDTHH:mm for datetime-local input
+    const currentDateTime = now.toISOString().slice(0, 16);
+    
+    // Calculate expiration date
+    let expirationDate = "";
+    if (recipe.expiryDays && recipe.expiryDays > 0) {
+      const expDate = new Date(now);
+      expDate.setDate(expDate.getDate() + recipe.expiryDays);
+      expirationDate = expDate.toISOString().slice(0, 10); // YYYY-MM-DD
+    }
+    
+    // Get last person name from history
+    const lastPerson = elaborations.length > 0 ? (elaborations[0].personName || "") : "";
+    
+    const initials = recipe.name
+      .split(/\s+/)
+      .filter(word => word.length > 0)
+      .map(word => word[0].toUpperCase())
+      .join('');
     
     setSelectedRecipe(recipe);
     setEditingElaboration(null);
@@ -539,7 +567,10 @@ export default function ClientDashboard() {
     });
 
     setElaboracionForm({
-      titulo: `${recipe.name} ${dateFormatted} ${timeFormatted}`,
+      titulo: `${dateStr}${initials}`,
+      personName: lastPerson,
+      date: currentDateTime,
+      expirationDate: expirationDate,
       ingredientes: initialIngredientes
     });
   };
@@ -561,6 +592,9 @@ export default function ClientDashboard() {
 
     setElaboracionForm({
       titulo: elab.name,
+      personName: elab.personName || "",
+      date: elab.date ? new Date(elab.date).toISOString().slice(0, 16) : "",
+      expirationDate: elab.expirationDate ? new Date(elab.expirationDate).toISOString().slice(0, 10) : "",
       ingredientes: initialIngredientes
     });
   };
@@ -681,6 +715,9 @@ export default function ClientDashboard() {
         body: JSON.stringify({
           name: elaboracionForm.titulo,
           recipeId: selectedRecipe.id,
+          personName: elaboracionForm.personName,
+          date: elaboracionForm.date,
+          expirationDate: elaboracionForm.expirationDate,
           ingredients: ingredientsData
         })
       });
@@ -1043,6 +1080,37 @@ export default function ClientDashboard() {
                       required
                       style={{ fontSize: '1.1rem', fontWeight: '500', padding: '1rem' }}
                     />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.made_by')}</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.personName} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, personName: e.target.value})} 
+                        placeholder={t('modals.person_name')}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.elaboration_date')}</label>
+                      <input 
+                        type="datetime-local" 
+                        className="input-field" 
+                        value={elaboracionForm.date} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, date: e.target.value})} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.expiration_date')}</label>
+                      <input 
+                        type="date" 
+                        className="input-field" 
+                        value={elaboracionForm.expirationDate} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, expirationDate: e.target.value})} 
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -1528,7 +1596,6 @@ export default function ClientDashboard() {
                           </button>
                         </div>
                       </div>
-                      
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', fontSize: '0.9rem', border: '1px solid var(--border)' }}>
                         <div>
                           <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('dashboard.lote')}</span>
@@ -3017,6 +3084,21 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               placeholder={t('modals.recipe_name')}
               style={{ fontSize: '1.1rem', padding: '1rem' }}
             />
+          </div>
+
+          <div>
+            <label className="label">{t('modals.expiry_days')}</label>
+            <input 
+              type="number" 
+              className="input-field" 
+              value={formData.expiryDays} 
+              onChange={(e) => setFormData({...formData, expiryDays: parseInt(e.target.value) || 0})} 
+              placeholder="7"
+              style={{ fontSize: '1.1rem', padding: '1rem' }}
+            />
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+              {t('modals.expiry_days_help')}
+            </p>
           </div>
 
           <div>
