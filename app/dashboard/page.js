@@ -2017,13 +2017,34 @@ export default function ClientDashboard() {
                     onChange={(e) => setGoodsFilters({...goodsFilters, endDate: e.target.value})}
                   />
                 </div>
-                <button 
-                  onClick={() => setGoodsFilters({ startDate: "", endDate: "" })}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
-                >
-                  {t('dashboard.cancel')}
-                </button>
-              </div>
+                  <button 
+                    onClick={() => setGoodsFilters({ startDate: "", endDate: "" })}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
+                  >
+                    {t('dashboard.cancel')}
+                  </button>
+                  {goodsReceipts.length > 0 && goodsFilters.startDate && goodsFilters.endDate && (
+                    <button 
+                      onClick={() => toggleSelectAll(goodsReceipts.filter(r => {
+                        const date = new Date(r.date);
+                        const start = new Date(goodsFilters.startDate);
+                        const end = new Date(goodsFilters.endDate);
+                        end.setHours(23, 59, 59, 999);
+                        return date >= start && date <= end;
+                      }))}
+                      className="btn-secondary"
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                    >
+                      {goodsReceipts.filter(r => {
+                        const date = new Date(r.date);
+                        const start = new Date(goodsFilters.startDate);
+                        const end = new Date(goodsFilters.endDate);
+                        end.setHours(23, 59, 59, 999);
+                        return date >= start && date <= end;
+                      }).every(r => selectedRecords.includes(r.id)) ? t('bulk_actions.deselect_all') || "Deseleccionar todos" : t('bulk_actions.select_all') || "Seleccionar todos"}
+                    </button>
+                  )}
+                </div>
 
               {(!goodsFilters.startDate || !goodsFilters.endDate) ? (
                 <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
@@ -2232,6 +2253,26 @@ export default function ClientDashboard() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                       <tr>
+                        <th style={{ padding: '1.25rem 2rem', width: '40px' }}>
+                          <input 
+                            type="checkbox" 
+                            style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem' }}
+                            checked={cleaningLogs.length > 0 && cleaningLogs.filter(log => {
+                              const date = new Date(log.date);
+                              const start = new Date(cleaningFilters.startDate);
+                              const end = new Date(cleaningFilters.endDate);
+                              end.setHours(23, 59, 59, 999);
+                              return date >= start && date <= end;
+                            }).every(log => selectedRecords.includes(log.id))}
+                            onChange={() => toggleSelectAll(cleaningLogs.filter(log => {
+                              const date = new Date(log.date);
+                              const start = new Date(cleaningFilters.startDate);
+                              const end = new Date(cleaningFilters.endDate);
+                              end.setHours(23, 59, 59, 999);
+                              return date >= start && date <= end;
+                            }))}
+                          />
+                        </th>
                         <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><User size={16} /> Persona</div>
                         </th>
