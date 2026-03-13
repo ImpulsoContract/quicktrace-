@@ -1858,13 +1858,16 @@ export default function ClientDashboard() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                       <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                         <tr>
-                          <th style={{ padding: '1.25rem 2rem', width: '40px' }}>
-                            <input 
-                              type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.25rem' }}
-                              checked={elaborations.length > 0 && elaborations.every(el => selectedRecords.includes(el.id))}
-                              onChange={() => toggleSelectAll(elaborations)}
-                            />
+                          <th style={{ padding: '0.75rem 1rem', width: '60px', textAlign: 'center', borderRight: '1px solid var(--border)', background: '#f1f5f9' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '800' }}>SEL.</span>
+                              <input 
+                                type="checkbox" 
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
+                                checked={elaborations.length > 0 && elaborations.every(el => selectedRecords.includes(el.id))}
+                                onChange={() => toggleSelectAll(elaborations)}
+                              />
+                            </div>
                           </th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
@@ -1874,10 +1877,10 @@ export default function ClientDashboard() {
                       <tbody>
                         {elaborations.map(el => (
                           <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(el.id) ? '#f0fdf4' : 'white', transition: 'background 0.2s' }} className="hover-row">
-                            <td style={{ padding: '1.5rem 2rem' }}>
+                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', borderRight: '1px solid var(--border)', background: selectedRecords.includes(el.id) ? '#f0fdf4' : '#f8fafc' }}>
                               <input 
                                 type="checkbox" 
-                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.2rem' }}
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem', display: 'block', margin: '0 auto' }}
                                 checked={selectedRecords.includes(el.id)}
                                 onChange={() => toggleSelectRecord(el.id)}
                               />
@@ -2298,15 +2301,15 @@ export default function ClientDashboard() {
                         })
                         .map(log => (
                         <tr key={log.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : 'white' }}>
-                          <td style={{ padding: '1.5rem 2rem' }}>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center', borderRight: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : '#f8fafc' }}>
                             <input 
                               type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.25rem' }}
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem', display: 'block', margin: '0 auto' }}
                               checked={selectedRecords.includes(log.id)}
                               onChange={() => toggleSelectRecord(log.id)}
                             />
                           </td>
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{log.personName}</td>
+ Broadway                          <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{log.personName}</td>
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>
                             {new Date(log.date).toLocaleString('es-ES', { 
                               day: '2-digit', month: '2-digit', year: 'numeric',
