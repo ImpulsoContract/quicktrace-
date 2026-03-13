@@ -12,7 +12,7 @@ import {
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText
 } from "lucide-react";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 
@@ -781,6 +781,11 @@ export default function ClientDashboard() {
         endDate
       });
       const res = await fetch(`/api/elaborations?${query}`);
+      
+      if (!res.ok) {
+        throw new Error(`Error API: ${res.status}`);
+      }
+      
       const data = await res.json();
 
       if (!data.data || data.data.length === 0) {
@@ -844,9 +849,9 @@ export default function ClientDashboard() {
           `${ing.realAmount} ${ing.unit}`
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
           startY: 115,
-          head: [[t('modals.ingredient_name'), t('traceability_form.lot'), t('traceability_form.real_amount')]],
+          head: [[t('modals.ing_name'), t('traceability_form.lot'), t('traceability_form.real_amount')]],
           body: tableBody,
           theme: 'grid',
           headStyles: { fillStyle: '#3f6212', textColor: [255, 255, 255] },
@@ -862,7 +867,7 @@ export default function ClientDashboard() {
       setIsTraceabilityReportModalOpen(false);
     } catch (error) {
       console.error("Error generating traceability report:", error);
-      alert(t('alerts.connection_error'));
+      alert(`${t('alerts.connection_error')} (${error.message})`);
     } finally {
       setLoading(false);
     }
