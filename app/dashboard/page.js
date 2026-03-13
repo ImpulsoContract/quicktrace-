@@ -1877,12 +1877,12 @@ export default function ClientDashboard() {
                             <td style={{ padding: '1.5rem 2rem' }}>
                               <input 
                                 type="checkbox" 
-                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.2rem' }}
                                 checked={selectedRecords.includes(el.id)}
                                 onChange={() => toggleSelectRecord(el.id)}
                               />
                             </td>
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
+ Broadway                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -2454,7 +2454,7 @@ export default function ClientDashboard() {
                         <th style={{ padding: '1.25rem 2rem', width: '40px' }}>
                           <input 
                             type="checkbox" 
-                            style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                            style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.2rem' }}
                             checked={tempRecords.length > 0 && tempRecords.filter(r => {
                               const date = new Date(r.date);
                               const start = new Date(tempFilters.startDate);
@@ -2492,7 +2492,7 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem' }}>
                             <input 
                               type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.2rem' }}
                               checked={selectedRecords.includes(record.id)}
                               onChange={() => toggleSelectRecord(record.id)}
                             />
