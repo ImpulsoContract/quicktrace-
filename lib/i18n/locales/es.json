@@ -363,5 +363,15 @@
       "producers": "Para los más productores"
     },
     "disclaimer": "* Podrás exportar tu registros y eliminarlos cuando llegues al límite para ponerlo a cero cuando quieras. Así no tendrás ninguna limitación."
+  },
+  "bulk_actions": {
+    "title": "Acciones masivas",
+    "selected": "{{count}} seleccionados",
+    "delete_selected": "Eliminar seleccionados",
+    "confirm_delete_title": "¿Eliminar registros permanentemente?",
+    "confirm_delete_text": "Vas a eliminar {{count}} registros de forma permanente. Esta acción no se puede deshacer.",
+    "confirm_delete_warning": "Te recomendamos asegurarte de haber exportado bien la información antes de borrarla.",
+    "double_confirm_button": "Sí, eliminar permanentemente",
+    "cancel_button": "No, cancelar"
   }
 }

@@ -169,3 +169,51 @@ export async function POST(req) {
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
+export async function DELETE(req) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    
+    // Support both single ID and multiple IDs in body
+    let idsToDelete = [];
+    if (id) {
+      idsToDelete = [parseInt(id)];
+    } else {
+      const body = await req.json();
+      if (body.ids && Array.isArray(body.ids)) {
+        idsToDelete = body.ids.map(id => parseInt(id));
+      }
+    }
+
+    if (idsToDelete.length === 0) {
+      return NextResponse.json({ error: "IDs requeridos" }, { status: 400 });
+    }
+
+    // Buscar el perfil del cliente
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: parseInt(session.user.id) }
+    });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    // Delete records that belong to the client
+    const deleteResult = await prisma.elaboration.deleteMany({
+      where: {
+        id: { in: idsToDelete },
+        recipe: {
+          clientProfileId: profile.id
+        }
+      }
+    });
+
+    return NextResponse.json({ success: true, count: deleteResult.count });
+  } catch (error) {
+    console.error("Error DELETE /api/elaborations:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}

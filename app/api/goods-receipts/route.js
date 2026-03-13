@@ -172,8 +172,20 @@ export async function DELETE(req) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 
-  if (!id) {
-    return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+  let idsToDelete = [];
+  try {
+    if (id) {
+      idsToDelete = [parseInt(id)];
+    } else {
+      const body = await req.json();
+      if (body.ids && Array.isArray(body.ids)) {
+        idsToDelete = body.ids.map(id => parseInt(id));
+      }
+    }
+  } catch (e) {}
+
+  if (idsToDelete.length === 0) {
+    return NextResponse.json({ error: "IDs requeridos" }, { status: 400 });
   }
 
   try {
@@ -185,15 +197,15 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
-    await prisma.goodsReceipt.delete({
+    const deleteResult = await prisma.goodsReceipt.deleteMany({
       where: { 
-        id: parseInt(id),
+        id: { in: idsToDelete },
         clientProfileId: profile.id
       }
     });
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, count: deleteResult.count });
   } catch (error) {
-    console.error("Error deleting goods receipt:", error);
+    console.error("Error deleting goods receipts:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

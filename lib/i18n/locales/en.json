@@ -363,5 +363,15 @@
       "producers": "For top producers"
     },
     "disclaimer": "* You can export your records and delete them when you reach the limit to reset it to zero whenever you want. This way you won't have any limitations."
+  },
+  "bulk_actions": {
+    "title": "Bulk actions",
+    "selected": "{{count}} selected",
+    "delete_selected": "Delete selected",
+    "confirm_delete_title": "Permanently delete records?",
+    "confirm_delete_text": "You are about to permanently delete {{count}} records. This action cannot be undone.",
+    "confirm_delete_warning": "We recommend making sure you have exported the information correctly before deleting it.",
+    "double_confirm_button": "Yes, delete permanently",
+    "cancel_button": "No, cancel"
   }
 }

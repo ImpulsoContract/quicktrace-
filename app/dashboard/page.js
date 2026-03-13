@@ -137,6 +137,11 @@ export default function ClientDashboard() {
     deliveryNoteImage: ""
   });
 
+  // Bulk Selection State
+  const [selectedRecords, setSelectedRecords] = useState([]); // Array of IDs
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [bulkDeletePhase, setBulkDeletePhase] = useState(1); // 1 or 2 (double confirm)
+
   useEffect(() => {
     if (status === "authenticated") {
       fetchRecipes();
@@ -148,6 +153,12 @@ export default function ClientDashboard() {
       fetchProfile();
     }
   }, [status]);
+
+  useEffect(() => {
+    // Clear selection when changing tabs
+    setSelectedRecords([]);
+    setBulkDeletePhase(1);
+  }, [activeTab]);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -1137,6 +1148,62 @@ export default function ClientDashboard() {
     }));
   };
 
+  const handleBulkDelete = async () => {
+    setLoading(true);
+    try {
+      let endpoint = "";
+      if (activeTab === "historial") endpoint = "/api/elaborations";
+      else if (activeTab === "limpieza") endpoint = "/api/cleaning-logs";
+      else if (activeTab === "temperaturas") endpoint = "/api/temperature-records";
+      else if (activeTab === "entradas") endpoint = "/api/goods-receipts";
+
+      const res = await fetch(endpoint, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedRecords })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Delete failed");
+      }
+
+      // Refresh data
+      if (activeTab === "historial") fetchElaborations();
+      else if (activeTab === "limpieza") fetchCleaningLogs();
+      else if (activeTab === "temperaturas") fetchTempRecords();
+      else if (activeTab === "entradas") fetchGoodsReceipts();
+      
+      fetchProfile(); // Update usage limits
+      setSelectedRecords([]);
+      setIsBulkDeleteModalOpen(false);
+      setBulkDeletePhase(1);
+      alert(t('alerts.deleted_successfully') || "Registros eliminados correctamente");
+    } catch (error) {
+      console.error("Bulk delete error:", error);
+      alert(error.message || t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSelectAll = (currentRecords) => {
+    const recordIds = currentRecords.map(r => r.id);
+    const allSelected = recordIds.every(id => selectedRecords.includes(id));
+
+    if (allSelected) {
+      setSelectedRecords(prev => prev.filter(id => !recordIds.includes(id)));
+    } else {
+      setSelectedRecords(prev => [...new Set([...prev, ...recordIds])]);
+    }
+  };
+
+  const toggleSelectRecord = (id) => {
+    setSelectedRecords(prev => 
+      prev.includes(id) ? prev.filter(rid => rid !== id) : [...prev, id]
+    );
+  };
+
   const handleSubmitCleaning = async (e) => {
     e.preventDefault();
     if (cleaningForm.selectedZones.length === 0) {
@@ -1748,23 +1815,73 @@ export default function ClientDashboard() {
                 </button>
               </div>
 
+              {/* Floating Bulk Actions Bar */}
+              {selectedRecords.length > 0 && (
+                <div style={{ 
+                  position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+                  padding: '1rem 2rem', background: 'var(--text-main)', color: 'white',
+                  borderRadius: '1.5rem', display: 'flex', alignItems: 'center', gap: '2rem',
+                  zIndex: 2000, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)', border: 'none',
+                  animation: 'slideUp 0.3s ease-out'
+                }}>
+                  <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
+                    {t('bulk_actions.selected').replace('{{count}}', selectedRecords.length.toString())}
+                  </div>
+                  <div style={{ height: '1.5rem', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
+                  <button 
+                    onClick={() => setIsBulkDeleteModalOpen(true)}
+                    className="btn-primary" 
+                    style={{ background: '#ef4444', height: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.9rem', border: 'none' }}
+                  >
+                    <Trash2 size={18} /> {t('bulk_actions.delete_selected')}
+                  </button>
+                  <button 
+                    onClick={() => setSelectedRecords([])}
+                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '0.85rem' }}
+                  >
+                    {t('dashboard.cancel')}
+                  </button>
+                </div>
+              )}
+
+              <style jsx global>{`
+                @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+                .selected-row { background-color: #f0fdf4 !important; }
+              `}</style>
+
               {elaborations.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
                   <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_records')}</p>
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                      <tr>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
-                      </tr>
-                    </thead>
-                    <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
-                      {elaborations.map(el => (
-                        <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: 'white', transition: 'background 0.2s' }} className="hover-row">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                        <tr>
+                          <th style={{ padding: '1.25rem 2rem', width: '40px' }}>
+                            <input 
+                              type="checkbox" 
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                              checked={elaborations.length > 0 && elaborations.every(el => selectedRecords.includes(el.id))}
+                              onChange={() => toggleSelectAll(elaborations)}
+                            />
+                          </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
+                        {elaborations.map(el => (
+                          <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(el.id) ? '#f0fdf4' : 'white', transition: 'background 0.2s' }} className="hover-row">
+                            <td style={{ padding: '1.5rem 2rem' }}>
+                              <input 
+                                type="checkbox" 
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                                checked={selectedRecords.includes(el.id)}
+                                onChange={() => toggleSelectRecord(el.id)}
+                              />
+                            </td>
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
@@ -1941,7 +2058,20 @@ export default function ClientDashboard() {
                       return date >= start && date <= end;
                     })
                     .map(receipt => (
-                    <div key={receipt.id} className="glass-card" style={{ background: 'white', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div key={receipt.id} className="glass-card" style={{ 
+                      background: selectedRecords.includes(receipt.id) ? '#f0fdf4' : 'white', 
+                      padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem',
+                      border: selectedRecords.includes(receipt.id) ? '2px solid var(--corp-green)' : '1px solid var(--border)',
+                      position: 'relative'
+                    }}>
+                      <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 10 }}>
+                        <input 
+                          type="checkbox" 
+                          style={{ width: '1.5rem', height: '1.5rem', cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                          checked={selectedRecords.includes(receipt.id)}
+                          onChange={() => toggleSelectRecord(receipt.id)}
+                        />
+                      </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                         <div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--corp-green)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
@@ -2126,7 +2256,15 @@ export default function ClientDashboard() {
                           return date >= start && date <= end;
                         })
                         .map(log => (
-                        <tr key={log.id} style={{ borderBottom: '1px solid var(--border)', background: 'white' }}>
+                        <tr key={log.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : 'white' }}>
+                          <td style={{ padding: '1.5rem 2rem' }}>
+                            <input 
+                              type="checkbox" 
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                              checked={selectedRecords.includes(log.id)}
+                              onChange={() => toggleSelectRecord(log.id)}
+                            />
+                          </td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{log.personName}</td>
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>
                             {new Date(log.date).toLocaleString('es-ES', { 
@@ -2272,6 +2410,26 @@ export default function ClientDashboard() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                       <tr>
+                        <th style={{ padding: '1.25rem 2rem', width: '40px' }}>
+                          <input 
+                            type="checkbox" 
+                            style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                            checked={tempRecords.length > 0 && tempRecords.filter(r => {
+                              const date = new Date(r.date);
+                              const start = new Date(tempFilters.startDate);
+                              const end = new Date(tempFilters.endDate);
+                              end.setHours(23, 59, 59, 999);
+                              return date >= start && date <= end;
+                            }).every(r => selectedRecords.includes(r.id))}
+                            onChange={() => toggleSelectAll(tempRecords.filter(r => {
+                              const date = new Date(r.date);
+                              const start = new Date(tempFilters.startDate);
+                              const end = new Date(tempFilters.endDate);
+                              end.setHours(23, 59, 59, 999);
+                              return date >= start && date <= end;
+                            }))}
+                          />
+                        </th>
                         <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha y Hora</th>
                         {chambers.map(chamber => (
                           <th key={chamber.id} style={{ padding: '1.25rem 2rem', textAlign: 'center', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{chamber.name}</th>
@@ -2289,7 +2447,15 @@ export default function ClientDashboard() {
                           return date >= start && date <= end;
                         })
                         .map(record => (
-                        <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', background: 'white' }}>
+                        <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(record.id) ? '#f0fdf4' : 'white' }}>
+                          <td style={{ padding: '1.5rem 2rem' }}>
+                            <input 
+                              type="checkbox" 
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                              checked={selectedRecords.includes(record.id)}
+                              onChange={() => toggleSelectRecord(record.id)}
+                            />
+                          </td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
                             {new Date(record.date).toLocaleString('es-ES', { 
                               day: '2-digit', month: '2-digit', year: 'numeric',
@@ -2857,6 +3023,74 @@ export default function ClientDashboard() {
           max-height: 90vh;
         }
       `}</style>
+      {isBulkDeleteModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', textAlign: 'center' }}>
+            <div style={{ background: '#fef2f2', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Trash2 size={32} color="#ef4444" />
+            </div>
+            
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '1rem' }}>
+              {bulkDeletePhase === 1 ? t('bulk_actions.confirm_delete_title') : t('bulk_actions.confirm_delete_title_final')}
+            </h2>
+            
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+              {bulkDeletePhase === 1 
+                ? t('bulk_actions.confirm_delete_warning').replace('{{count}}', selectedRecords.length.toString())
+                : t('bulk_actions.confirm_delete_warning_final')}
+            </p>
+
+            {bulkDeletePhase === 1 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <button 
+                  onClick={() => setBulkDeletePhase(2)}
+                  className="btn-primary"
+                  style={{ background: '#ef4444', border: 'none', padding: '1rem', fontSize: '1rem' }}
+                >
+                  {t('bulk_actions.continue_delete')}
+                </button>
+                <button 
+                  onClick={() => setIsBulkDeleteModalOpen(false)}
+                  className="btn-secondary"
+                  style={{ padding: '1rem' }}
+                >
+                  {t('dashboard.cancel')}
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ padding: '1rem', background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '0.75rem', marginBottom: '1rem' }}>
+                  <p style={{ color: '#9a3412', fontWeight: '700', fontSize: '0.9rem' }}>
+                    <AlertTriangle size={16} inline="true" style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                    {t('bulk_actions.permanent_warning')}
+                  </p>
+                </div>
+                <button 
+                  onClick={handleBulkDelete}
+                  disabled={loading}
+                  className="btn-primary"
+                  style={{ background: '#ef4444', border: 'none', padding: '1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+                >
+                  {loading ? <Loader2 className="animate-spin" /> : <Trash2 size={20} />}
+                  {t('bulk_actions.confirm_permanent')}
+                </button>
+                <button 
+                  onClick={() => {
+                    setIsBulkDeleteModalOpen(false);
+                    setBulkDeletePhase(1);
+                  }}
+                  className="btn-secondary"
+                  disabled={loading}
+                  style={{ padding: '1rem' }}
+                >
+                  {t('dashboard.cancel')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {videoModal.isOpen && (
         <div 
           style={{ 
@@ -3007,6 +3241,60 @@ export default function ClientDashboard() {
                   {loading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('dashboard.generate_report')}</>}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Double Confirmation Modal */}
+      {isBulkDeleteModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <div style={{ 
+                background: bulkDeletePhase === 1 ? 'rgba(239, 68, 68, 0.1)' : 'var(--corp-green)', 
+                color: bulkDeletePhase === 1 ? '#ef4444' : 'white',
+                width: '64px', height: '64px', borderRadius: '50%', margin: '0 auto 1.5rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.3s'
+              }}>
+                <Trash2 size={32} />
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem' }}>
+                {bulkDeletePhase === 1 ? t('bulk_actions.confirm_delete_title') : "CORRECTO: POR FAVOR CONFIRME"}
+              </h2>
+              <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                {t('bulk_actions.confirm_delete_text', { count: selectedRecords.length })}
+                <br />
+                <strong style={{ color: '#ef4444' }}>{t('bulk_actions.confirm_delete_warning')}</strong>
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                className="btn-secondary" 
+                onClick={() => {
+                  setIsBulkDeleteModalOpen(false);
+                  setBulkDeletePhase(1);
+                }}
+                style={{ flex: 1 }}
+              >
+                {t('bulk_actions.cancel_button')}
+              </button>
+              <button 
+                className="btn-primary" 
+                style={{ flex: 1, background: '#ef4444', border: 'none' }}
+                onClick={() => {
+                  if (bulkDeletePhase === 1) {
+                    setBulkDeletePhase(2);
+                  } else {
+                    handleBulkDelete();
+                  }
+                }}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="animate-spin" size={20} /> : (bulkDeletePhase === 1 ? t('common.confirm') : t('bulk_actions.double_confirm_button'))}
+              </button>
             </div>
           </div>
         </div>

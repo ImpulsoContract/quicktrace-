@@ -135,17 +135,43 @@ export async function DELETE(req) {
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
-  if (!id) {
-    return NextResponse.json({ error: "ID de registro requerido" }, { status: 400 });
+  
+  let idsToDelete = [];
+  try {
+    if (id) {
+      idsToDelete = [parseInt(id)];
+    } else {
+      const body = await req.json();
+      if (body.ids && Array.isArray(body.ids)) {
+        idsToDelete = body.ids.map(id => parseInt(id));
+      }
+    }
+  } catch (e) {
+    // Body might be empty
+  }
+
+  if (idsToDelete.length === 0) {
+    return NextResponse.json({ error: "IDs requeridos" }, { status: 400 });
   }
 
   try {
-    await prisma.cleaningLog.delete({
-      where: { id: parseInt(id) }
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: parseInt(session.user.id) }
     });
-    return NextResponse.json({ success: true });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    const deleteResult = await prisma.cleaningLog.deleteMany({
+      where: { 
+        id: { in: idsToDelete },
+        clientProfileId: profile.id
+      }
+    });
+    return NextResponse.json({ success: true, count: deleteResult.count });
   } catch (error) {
-    console.error("Error deleting cleaning log:", error);
+    console.error("Error deleting cleaning logs:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
