@@ -31,6 +31,7 @@
     "manage_recipes": "Manage Recipes",
     "plan": "Plan",
     "usage": "Usage",
+    "all_plans": "All plans",
     "from": "Date from",
     "to": "to"
   },
@@ -139,6 +140,8 @@
     "elaboration_name_header": "Production Name",
     "elaboration_date_header": "Date",
     "elaboration_recipe_header": "Recipe",
+    "recipe_filter": "Filter by Recipe",
+    "all_recipes": "All recipes",
     "modify": "Modify",
     "no_elaborations_recorded": "No productions recorded yet.",
     "recipe_manage_desc": "Manage your recipes.",

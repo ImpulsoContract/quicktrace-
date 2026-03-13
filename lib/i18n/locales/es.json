@@ -31,6 +31,7 @@
     "manage_recipes": "Gestionar Recetas",
     "plan": "Plan",
     "usage": "Uso",
+    "all_plans": "Todos los planes",
     "from": "Fecha desde",
     "to": "hasta"
   },
@@ -139,6 +140,8 @@
     "elaboration_name_header": "Nombre Elaboración",
     "elaboration_date_header": "Fecha",
     "elaboration_recipe_header": "Receta",
+    "recipe_filter": "Filtrar por Receta",
+    "all_recipes": "Todas las recetas",
     "modify": "Modificar",
     "no_elaborations_recorded": "No hay elaboraciones registradas todavía.",
     "recipe_manage_desc": "Configura tus recetas.",
