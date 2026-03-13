@@ -696,24 +696,34 @@ export default function ClientDashboard() {
       doc.setFontSize(fontSize); 
 
       if (config.showFields?.lote) {
-        doc.text(`${t('dashboard.lote')}: ${elaboration.name}`, startX, currentY);
+        doc.text(`${t('dashboard.lote')}:`, startX, currentY);
+        currentY += lineHeightMM;
+        doc.text(elaboration.name, startX, currentY);
         currentY += lineHeightMM;
       }
       if (config.showFields?.person && elaboration.personName) {
-        doc.text(`${t('traceability_form.label_made_by')} ${elaboration.personName}`, startX, currentY);
+        let personLabel = t('traceability_form.label_made_by');
+        if (!personLabel.endsWith(':')) personLabel += ':';
+        doc.text(personLabel, startX, currentY);
+        currentY += lineHeightMM;
+        doc.text(elaboration.personName, startX, currentY);
         currentY += lineHeightMM;
       }
       if (config.showFields?.date) {
+        doc.text(`${t('traceability_form.label_date')}:`, startX, currentY);
+        currentY += lineHeightMM;
         const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
-        doc.text(`${t('traceability_form.label_date')}: ${dateStr}`, startX, currentY);
+        doc.text(dateStr, startX, currentY);
         currentY += lineHeightMM;
       }
       if (config.showFields?.expiration && elaboration.expirationDate) {
-        const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
         const expLabel = elaboration.recipe.expiryType === "BEST_BEFORE" 
           ? t('traceability_form.label_best_before') 
           : t('traceability_form.label_expiration');
-        doc.text(`${expLabel}: ${expStr}`, startX, currentY);
+        doc.text(`${expLabel}:`, startX, currentY);
+        currentY += lineHeightMM;
+        const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
+        doc.text(expStr, startX, currentY);
         currentY += lineHeightMM;
       }
       return currentY;
