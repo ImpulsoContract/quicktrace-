@@ -1861,7 +1861,7 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', width: '40px' }}>
                             <input 
                               type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.25rem' }}
                               checked={elaborations.length > 0 && elaborations.every(el => selectedRecords.includes(el.id))}
                               onChange={() => toggleSelectAll(elaborations)}
                             />
@@ -1871,7 +1871,7 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
-                      <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
+                      <tbody>
                         {elaborations.map(el => (
                           <tr key={el.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(el.id) ? '#f0fdf4' : 'white', transition: 'background 0.2s' }} className="hover-row">
                             <td style={{ padding: '1.5rem 2rem' }}>
@@ -2287,7 +2287,7 @@ export default function ClientDashboard() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody style={{ divide: 'y', divideColor: 'var(--border)' }}>
+                    <tbody>
                       {cleaningLogs
                         .filter(log => {
                           const date = new Date(log.date);
@@ -2301,7 +2301,7 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem' }}>
                             <input 
                               type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.2rem', height: '1.2rem', border: '1px solid var(--border)', borderRadius: '0.25rem' }}
                               checked={selectedRecords.includes(log.id)}
                               onChange={() => toggleSelectRecord(log.id)}
                             />
@@ -2478,7 +2478,7 @@ export default function ClientDashboard() {
                         <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acciones</th>
                       </tr>
                     </thead>
-                    <tbody style={{ divideY: '1px', divideColor: 'var(--border)' }}>
+                    <tbody>
                       {tempRecords
                         .filter(record => {
                           const date = new Date(record.date);
