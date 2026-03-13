@@ -171,6 +171,9 @@
     "recipe_name": "Nombre de la Receta",
     "expiry_days": "Días hasta la fecha de caducidad",
     "expiry_days_help": "Escribe el número de días que tarda en caducar cada elaboración para poder ponerlo en la etiqueta",
+    "expiry_type": "Tipo de caducidad",
+    "expiry_type_expiration": "PRODUCTO CADUCADO",
+    "expiry_type_best_before": "FECHA DE CONSUMO PREFERENTE",
     "ingredients": "INGREDIENTES",
     "ing_name": "NOMBRE",
     "ing_amount": "CANTIDAD",
@@ -311,7 +314,11 @@
     "lot_mandatory_placeholder": "Lote obligatorio...",
     "lot_optional_placeholder": "Lote opcional...",
     "real_amount": "Cantidad Real",
-    "label_btn": "Etiqueta"
+    "label_btn": "Etiqueta",
+    "label_made_by": "Elaborado por:",
+    "label_date": "F. Elaboración",
+    "label_expiration": "Caducidad",
+    "label_best_before": "Consumo preferente"
   },
   "goods_receipt_form": {
     "product": "Producto",

@@ -112,6 +112,7 @@ model Recipe {
   lotesMandatory      Boolean  @default(false)
   quantitiesMandatory   Boolean  @default(false)
   expiryDays            Int?     @default(0)
+  expiryType            String?  @default("EXPIRATION") // EXPIRATION, BEST_BEFORE
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

@@ -197,7 +197,8 @@ export default function ClientDashboard() {
         loteMandatory: !!ing.loteMandatory,
         quantityMandatory: !!ing.quantityMandatory
       })),
-      expiryDays: recipe.expiryDays || 0
+      expiryDays: recipe.expiryDays || 0,
+      expiryType: recipe.expiryType || "EXPIRATION"
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -685,29 +686,33 @@ export default function ClientDashboard() {
     const drawElabData = (startX, startY) => {
       let currentY = startY;
       doc.setFont("helvetica", "bold");
+      doc.setFontSize(20); // Fixed larger size for recipe name
       doc.text(elaboration.recipe.name, startX, currentY);
-      currentY += fontSize * 0.5;
+      currentY += 10;
       
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(fontSize * 0.8);
+      doc.setFontSize(fontSize); // Configurable font size for metadata
 
       if (config.showFields?.lote) {
         doc.text(`${t('dashboard.lote')}: ${elaboration.name}`, startX, currentY);
-        currentY += fontSize * 0.4;
+        currentY += fontSize * 0.6;
       }
       if (config.showFields?.person && elaboration.personName) {
-        doc.text(`${t('traceability_form.made_by')}: ${elaboration.personName}`, startX, currentY);
-        currentY += fontSize * 0.4;
+        doc.text(`${t('traceability_form.label_made_by')} ${elaboration.personName}`, startX, currentY);
+        currentY += fontSize * 0.6;
       }
       if (config.showFields?.date) {
         const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
-        doc.text(`${t('dashboard.date')}: ${dateStr}`, startX, currentY);
-        currentY += fontSize * 0.4;
+        doc.text(`${t('traceability_form.label_date')}: ${dateStr}`, startX, currentY);
+        currentY += fontSize * 0.6;
       }
       if (config.showFields?.expiration && elaboration.expirationDate) {
         const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
-        doc.text(`${t('traceability_form.expiration_date')}: ${expStr}`, startX, currentY);
-        currentY += fontSize * 0.4;
+        const expLabel = elaboration.recipe.expiryType === "BEST_BEFORE" 
+          ? t('traceability_form.label_best_before') 
+          : t('traceability_form.label_expiration');
+        doc.text(`${expLabel}: ${expStr}`, startX, currentY);
+        currentY += fontSize * 0.6;
       }
       return currentY;
     };
@@ -3251,6 +3256,19 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
               {t('modals.expiry_days_help')}
             </p>
+          </div>
+
+          <div>
+            <label className="label">{t('modals.expiry_type')}</label>
+            <select 
+              className="input-field" 
+              value={formData.expiryType || "EXPIRATION"} 
+              onChange={(e) => setFormData({...formData, expiryType: e.target.value})}
+              style={{ fontSize: '1.1rem', padding: '1rem' }}
+            >
+              <option value="EXPIRATION">{t('modals.expiry_type_expiration')}</option>
+              <option value="BEST_BEFORE">{t('modals.expiry_type_best_before')}</option>
+            </select>
           </div>
 
           <div>
