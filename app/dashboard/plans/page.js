@@ -184,7 +184,7 @@ export default function PlansPage() {
                 </div>
 
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.25rem', lineHeight: '1.4' }}>
-                  * Podrás exportar tu registros y eliminarlos cuando llegues al límite para ponerlo a cero cuando quieras. Así no tendrás ninguna limitación.
+                  {t('plans.disclaimer')}
                 </div>
 
                 <button 
