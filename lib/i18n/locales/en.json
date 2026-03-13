@@ -146,6 +146,8 @@
     "generate_report": "Generate Report",
     "modify": "Modify",
     "no_elaborations_recorded": "No productions recorded yet.",
+    "goods_report": "Goods receipt report",
+    "generate_goods_report": "Get a report",
     "recipe_manage_desc": "Manage your recipes.",
     "new_record": "New Cleaning Record.",
     "manage_recipes": "Recipes",

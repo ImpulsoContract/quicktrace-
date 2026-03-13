@@ -94,7 +94,12 @@ export default function ClientDashboard() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
   const [isTraceabilityReportModalOpen, setIsTraceabilityReportModalOpen] = useState(false);
+  const [isGoodsReportModalOpen, setIsGoodsReportModalOpen] = useState(false);
   const [reportDates, setReportDates] = useState({ 
+    from: new Date().toISOString().slice(0, 10), 
+    to: new Date().toISOString().slice(0, 10) 
+  });
+  const [goodsReportDates, setGoodsReportDates] = useState({ 
     from: new Date().toISOString().slice(0, 10), 
     to: new Date().toISOString().slice(0, 10) 
   });
@@ -768,6 +773,88 @@ export default function ClientDashboard() {
     }
 
     doc.save(`Etiqueta_${elaboration.name}.pdf`);
+  };
+
+  const generateGoodsReportPDF = async (startDate, endDate) => {
+    setLoading(true);
+    try {
+      const query = new URLSearchParams({ startDate, endDate });
+      const res = await fetch(`/api/goods-receipts?${query}`);
+      
+      if (!res.ok) {
+        throw new Error(`Error API: ${res.status}`);
+      }
+      
+      const data = await res.json();
+
+      if (!data || data.length === 0) {
+        alert(t('dashboard.no_records'));
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      for (let i = 0; i < data.length; i++) {
+        const receipt = data[i];
+        if (i > 0) doc.addPage();
+
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.text(t('sidebar.goods_receipt'), 105, 20, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${t('common.from')}: ${startDate} ${t('common.to')}: ${endDate}`, 105, 30, { align: 'center' });
+        
+        doc.setLineWidth(0.5);
+        doc.line(20, 35, 190, 35);
+
+        // Datos del recibo
+        const details = [
+          [t('goods_receipt_form.product') + ":", receipt.productName || "N/A"],
+          [t('goods_receipt_form.provider') + ":", receipt.providerName || "N/A"],
+          [t('dashboard.lote') + ":", receipt.lote || "N/A"],
+          [t('modals.ing_amount') + ":", receipt.quantity || "N/A"],
+          [t('goods_receipt_form.invoice_number') + ":", receipt.invoiceNumber || "N/A"],
+          [t('dashboard.datetime') + ":", new Date(receipt.date).toLocaleString()]
+        ];
+
+        let currentY = 50;
+        details.forEach(([label, value]) => {
+          doc.setFont("helvetica", "bold");
+          doc.text(label, 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(String(value), 70, currentY);
+          currentY += 10;
+        });
+
+        // Imagen del albarán
+        if (receipt.deliveryNoteImage) {
+          try {
+            // we assume its base64 as seen in handleSubmitGoods
+            doc.addImage(receipt.deliveryNoteImage, 'JPEG', 20, currentY + 10, 170, 120, undefined, 'FAST');
+          } catch (e) {
+            console.error("Error adding image to PDF:", e);
+            doc.setFontSize(10);
+            doc.setTextColor(255, 0, 0);
+            doc.text("Error al cargar la imagen del albarán", 20, currentY + 15);
+            doc.setTextColor(0, 0, 0);
+          }
+        }
+
+        // Pie de página
+        doc.setFontSize(10);
+        doc.text(`${i + 1} / ${data.length}`, 190, 285, { align: 'right' });
+      }
+
+      doc.save(`Informe_Mercancias_${startDate}_${endDate}.pdf`);
+      setIsGoodsReportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating goods report:", error);
+      alert(`${t('alerts.connection_error')} (${error.message})`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const generateTraceabilityReportPDF = async (startDate, endDate) => {
@@ -1751,6 +1838,13 @@ export default function ClientDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.goods_info')}</p>
                   <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                      onClick={() => setIsGoodsReportModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <FileText size={18} /> {t('dashboard.generate_goods_report')}
+                    </button>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: "rzrGj1OouVo" })}
                       className="btn-secondary"
@@ -2846,6 +2940,67 @@ export default function ClientDashboard() {
                 <button 
                   className="btn-primary" 
                   onClick={() => generateTraceabilityReportPDF(reportDates.from, reportDates.to)}
+                  disabled={loading}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('dashboard.generate_report')}</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isGoodsReportModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                  <FileText color="var(--corp-green)" />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('dashboard.goods_report')}</h2>
+              </div>
+              <button 
+                onClick={() => setIsGoodsReportModalOpen(false)}
+                className="btn-icon"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label className="label">{t('common.from')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={goodsReportDates.from}
+                  onChange={(e) => setGoodsReportDates({...goodsReportDates, from: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="label">{t('common.to')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={goodsReportDates.to}
+                  onChange={(e) => setGoodsReportDates({...goodsReportDates, to: e.target.value})}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn-secondary" 
+                  onClick={() => setIsGoodsReportModalOpen(false)}
+                  style={{ flex: 1 }}
+                >
+                  {t('dashboard.cancel')}
+                </button>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => generateGoodsReportPDF(goodsReportDates.from, goodsReportDates.to)}
                   disabled={loading}
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >

@@ -18,8 +18,26 @@ export async function GET(req) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    const where = { clientProfileId: profile.id };
+    
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) {
+        where.date.gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.date.lte = end;
+      }
+    }
+
     const receipts = await prisma.goodsReceipt.findMany({
-      where: { clientProfileId: profile.id },
+      where,
       orderBy: { date: 'desc' }
     });
     return NextResponse.json(receipts);

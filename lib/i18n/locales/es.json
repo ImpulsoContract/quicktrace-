@@ -146,6 +146,8 @@
     "generate_report": "Generar Informe",
     "modify": "Modificar",
     "no_elaborations_recorded": "No hay elaboraciones registradas todavía.",
+    "goods_report": "Informe de entradas de mercancía",
+    "generate_goods_report": "Sacar un informe",
     "recipe_manage_desc": "Configura tus recetas.",
     "new_record": "Nuevo Registro de Limpieza.",
     "manage_recipes": "Recetas contratadas",
