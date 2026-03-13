@@ -35,6 +35,16 @@ const DEFAULT_LABEL_CONFIG = {
   fontSize: 14
 };
 
+const mergeLabelConfig = (config) => {
+  if (!config || Object.keys(config).length === 0) return DEFAULT_LABEL_CONFIG;
+  return {
+    ...DEFAULT_LABEL_CONFIG,
+    ...config,
+    showFields: { ...DEFAULT_LABEL_CONFIG.showFields, ...(config.showFields || {}) },
+    ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) }
+  };
+};
+
 export default function ClientDashboard() {
   const { t } = useI18n();
   const { data: session, status } = useSession();
@@ -656,7 +666,7 @@ export default function ClientDashboard() {
   };
 
   const generateLabelPDF = (elaboration) => {
-    const config = profile?.labelConfig || DEFAULT_LABEL_CONFIG;
+    const config = mergeLabelConfig(profile?.labelConfig);
     const doc = new jsPDF({
       orientation: config.layout === 'vertical' ? 'p' : 'l',
       unit: 'mm',
@@ -3495,7 +3505,7 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
 
 function LabelConfigModal({ config, onClose, onSave }) {
   const { t } = useI18n();
-  const [localConfig, setLocalConfig] = useState(config || DEFAULT_LABEL_CONFIG);
+  const [localConfig, setLocalConfig] = useState(mergeLabelConfig(config));
 
   const handleSubmit = (e) => {
     e.preventDefault();
