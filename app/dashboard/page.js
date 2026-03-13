@@ -671,40 +671,42 @@ export default function ClientDashboard() {
     const doc = new jsPDF({
       orientation: config.layout === 'vertical' ? 'p' : 'l',
       unit: 'mm',
-      format: [80, 60]
+      format: [100, 80] // Increased size
     });
 
     const fontSize = config.fontSize || 14;
+    const mmFactor = 0.3528; // Constant to convert points to mm
+    const lineHeightMM = (fontSize + 2) * mmFactor;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(fontSize);
     doc.setTextColor(0, 0, 0);
 
     let y = 10;
     const x = 5;
-    const columnWidth = config.layout === 'vertical' ? 70 : 35;
+    const columnWidth = config.layout === 'vertical' ? 90 : 45; // Adjusted for wider label
 
     const drawElabData = (startX, startY) => {
       let currentY = startY;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(fontSize); 
       doc.text(elaboration.recipe.name, startX, currentY);
-      currentY += fontSize * 0.8;
+      currentY += lineHeightMM;
       
       doc.setFont("helvetica", "normal");
       doc.setFontSize(fontSize); 
 
       if (config.showFields?.lote) {
         doc.text(`${t('dashboard.lote')}: ${elaboration.name}`, startX, currentY);
-        currentY += fontSize * 0.8;
+        currentY += lineHeightMM;
       }
       if (config.showFields?.person && elaboration.personName) {
         doc.text(`${t('traceability_form.label_made_by')} ${elaboration.personName}`, startX, currentY);
-        currentY += fontSize * 0.8;
+        currentY += lineHeightMM;
       }
       if (config.showFields?.date) {
         const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
         doc.text(`${t('traceability_form.label_date')}: ${dateStr}`, startX, currentY);
-        currentY += fontSize * 0.8;
+        currentY += lineHeightMM;
       }
       if (config.showFields?.expiration && elaboration.expirationDate) {
         const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
@@ -712,7 +714,7 @@ export default function ClientDashboard() {
           ? t('traceability_form.label_best_before') 
           : t('traceability_form.label_expiration');
         doc.text(`${expLabel}: ${expStr}`, startX, currentY);
-        currentY += fontSize * 0.8;
+        currentY += lineHeightMM;
       }
       return currentY;
     };
@@ -722,7 +724,7 @@ export default function ClientDashboard() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(fontSize);
       doc.text(t('modals.ingredients'), startX, currentY);
-      currentY += fontSize * 0.8;
+      currentY += lineHeightMM;
       
       doc.setFont("helvetica", "normal");
       doc.setFontSize(fontSize);
@@ -734,7 +736,7 @@ export default function ClientDashboard() {
         
         const splitText = doc.splitTextToSize(ingText, columnWidth);
         doc.text(splitText, startX, currentY);
-        currentY += (splitText.length * fontSize * 0.8);
+        currentY += (splitText.length * lineHeightMM);
       });
     };
 
@@ -744,10 +746,10 @@ export default function ClientDashboard() {
       drawIngredients(x, y);
     } else if (config.layout === 'horizontal_left') {
       drawElabData(x, y);
-      drawIngredients(x + 40, y);
+      drawIngredients(x + 50, y); // Adjusted for wider label
     } else {
       drawIngredients(x, y);
-      drawElabData(x + 40, y);
+      drawElabData(x + 50, y); // Adjusted for wider label
     }
 
     doc.save(`Etiqueta_${elaboration.name}.pdf`);
@@ -3641,7 +3643,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
               onChange={(e) => setLocalConfig({...localConfig, fontSize: parseInt(e.target.value)})}
               style={{ padding: '0.75rem' }}
             >
-              {[12, 14, 16, 18, 20].map(size => (
+              {[8, 10, 12, 14, 16, 18, 20].map(size => (
                 <option key={size} value={size}>{size}px</option>
               ))}
             </select>
