@@ -1381,20 +1381,20 @@ export default function ClientDashboard() {
               icon={<ClipboardList size={20} />} 
               label={t('sidebar.traceability')} 
               active={activeTab === 'trazabilidad'} 
-              onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); }} 
+              onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); }} 
             />
             <SidebarBtn 
               icon={<History size={20} />} 
               label={t('sidebar.history')} 
               active={activeTab === "historial"} 
-              onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); }} 
+              onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); }} 
             />
             {profile?.plan?.hasCleaning && (
               <SidebarBtn 
                 icon={<Brush size={20} />} 
                 label={t('sidebar.cleaning')} 
                 active={activeTab === "limpieza"} 
-                onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); }} 
+                onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); setSelectedRecords([]); }} 
               />
             )}
             {profile?.plan?.hasTemperatures && (
@@ -1402,7 +1402,7 @@ export default function ClientDashboard() {
                 icon={<Thermometer size={20} />} 
                 label={t('sidebar.temperatures')} 
                 active={activeTab === "temperaturas"} 
-                onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); }} 
+                onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); setSelectedRecords([]); }} 
               />
             )}
             {profile?.plan?.hasGoods && (
@@ -1410,7 +1410,7 @@ export default function ClientDashboard() {
                 icon={<Truck size={20} />} 
                 label={t('sidebar.goods')} 
                 active={activeTab === "entradas"} 
-                onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); }} 
+                onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); }} 
               />
             )}
             {session?.user?.role === "CLIENT" && (
@@ -1418,7 +1418,7 @@ export default function ClientDashboard() {
                 icon={<ChefHat size={20} />} 
                 label={t('sidebar.manage_recipes')} 
                 active={activeTab === "gestionar-recetas"} 
-                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); }} 
+                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); }} 
               />
             )}
           </nav>
@@ -1815,34 +1815,6 @@ export default function ClientDashboard() {
                 </button>
               </div>
 
-              {/* Floating Bulk Actions Bar */}
-              {selectedRecords.length > 0 && (
-                <div style={{ 
-                  position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
-                  padding: '1rem 2rem', background: 'var(--text-main)', color: 'white',
-                  borderRadius: '1.5rem', display: 'flex', alignItems: 'center', gap: '2rem',
-                  zIndex: 2000, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)', border: 'none',
-                  animation: 'slideUp 0.3s ease-out'
-                }}>
-                  <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
-                    {t('bulk_actions.selected').replace('{count}', selectedRecords.length.toString())}
-                  </div>
-                  <div style={{ height: '1.5rem', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
-                  <button 
-                    onClick={() => setIsBulkDeleteModalOpen(true)}
-                    className="btn-primary" 
-                    style={{ background: '#ef4444', height: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.9rem', border: 'none' }}
-                  >
-                    <Trash2 size={18} /> {t('bulk_actions.delete_selected')}
-                  </button>
-                  <button 
-                    onClick={() => setSelectedRecords([])}
-                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '0.85rem' }}
-                  >
-                    {t('dashboard.cancel')}
-                  </button>
-                </div>
-              )}
 
 
               {elaborations.length === 0 ? (
@@ -3138,6 +3110,35 @@ export default function ClientDashboard() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedRecords.length > 0 && (
+        <div style={{ 
+          position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+          padding: '1rem 2rem', background: 'var(--text-main)', color: 'white',
+          borderRadius: '1.5rem', display: 'flex', alignItems: 'center', gap: '2rem',
+          zIndex: 2000, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)', border: 'none',
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
+            {t('bulk_actions.selected').replace('{count}', selectedRecords.length.toString())}
+          </div>
+          <div style={{ height: '1.5rem', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
+          <button 
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="btn-primary" 
+            style={{ background: '#ef4444', height: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.9rem', border: 'none' }}
+          >
+            <Trash2 size={18} /> {t('bulk_actions.delete_selected')}
+          </button>
+          <button 
+            onClick={() => setSelectedRecords([])}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '0.85rem' }}
+          >
+            {t('dashboard.cancel')}
+          </button>
         </div>
       )}
 

@@ -249,7 +249,8 @@
     "zone_created": "Zone created successfully",
     "zone_updated": "Zone updated successfully",
     "delete_confirm_zone": "Are you sure you want to delete this zone?",
-    "delete_confirm_elaboration": "Are you sure you want to permanently remove this preparation?"
+    "delete_confirm_elaboration": "Are you sure you want to permanently remove this preparation?",
+    "deleted_successfully": "Records deleted successfully"
   },
   "register": {
     "title": "Start Today",

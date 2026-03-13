@@ -249,7 +249,8 @@
     "zone_created": "Zona creada correctamente",
     "zone_updated": "Zona actualizada correctamente",
     "delete_confirm_zone": "¿Seguro que quieres eliminar esta zona?",
-    "delete_confirm_elaboration": "¿Seguro que quieres eliminar esta elaboración de forma permanente?"
+    "delete_confirm_elaboration": "¿Seguro que quieres eliminar esta elaboración de forma permanente?",
+    "deleted_successfully": "Registros eliminados correctamente"
   },
   "register": {
     "title": "Empieza Hoy",
