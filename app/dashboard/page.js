@@ -686,7 +686,7 @@ export default function ClientDashboard() {
     const drawElabData = (startX, startY) => {
       let currentY = startY;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(fontSize * 1.2); // Slightly larger than base for recipe name but relative
+      doc.setFontSize(fontSize); 
       doc.text(elaboration.recipe.name, startX, currentY);
       currentY += fontSize * 0.8;
       
@@ -695,16 +695,16 @@ export default function ClientDashboard() {
 
       if (config.showFields?.lote) {
         doc.text(`${t('dashboard.lote')}: ${elaboration.name}`, startX, currentY);
-        currentY += fontSize * 0.6;
+        currentY += fontSize * 0.8;
       }
       if (config.showFields?.person && elaboration.personName) {
         doc.text(`${t('traceability_form.label_made_by')} ${elaboration.personName}`, startX, currentY);
-        currentY += fontSize * 0.6;
+        currentY += fontSize * 0.8;
       }
       if (config.showFields?.date) {
         const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
         doc.text(`${t('traceability_form.label_date')}: ${dateStr}`, startX, currentY);
-        currentY += fontSize * 0.6;
+        currentY += fontSize * 0.8;
       }
       if (config.showFields?.expiration && elaboration.expirationDate) {
         const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
@@ -712,7 +712,7 @@ export default function ClientDashboard() {
           ? t('traceability_form.label_best_before') 
           : t('traceability_form.label_expiration');
         doc.text(`${expLabel}: ${expStr}`, startX, currentY);
-        currentY += fontSize * 0.6;
+        currentY += fontSize * 0.8;
       }
       return currentY;
     };
@@ -720,12 +720,12 @@ export default function ClientDashboard() {
     const drawIngredients = (startX, startY) => {
       let currentY = startY;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(fontSize * 0.8);
+      doc.setFontSize(fontSize);
       doc.text(t('modals.ingredients'), startX, currentY);
-      currentY += fontSize * 0.5;
+      currentY += fontSize * 0.8;
       
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(fontSize * 0.7);
+      doc.setFontSize(fontSize);
       
       elaboration.ingredients.forEach(ing => {
         let ingText = `- ${ing.name}`;
@@ -734,7 +734,7 @@ export default function ClientDashboard() {
         
         const splitText = doc.splitTextToSize(ingText, columnWidth);
         doc.text(splitText, startX, currentY);
-        currentY += (splitText.length * fontSize * 0.4);
+        currentY += (splitText.length * fontSize * 0.8);
       });
     };
 
