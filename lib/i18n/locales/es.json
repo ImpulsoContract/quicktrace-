@@ -146,7 +146,8 @@
     "delivery_note_photo": "Puedes adjuntar una foto del albarán",
     "save_entry": "Guardar",
     "invoice": "Factura",
-    "video_help": "Video ayuda"
+    "video_help": "Video ayuda",
+    "configure_labels": "Configurar etiquetas"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -189,7 +190,21 @@
     "new_zone": "Nueva Zona de Limpieza",
     "zone_placeholder": "Ej: Cocina, Aseos, Cámara...",
     "new_recipe_btn": "NUEVA RECETA",
-    "upgrade_plan": "AMPLIAR LÍMITE"
+    "upgrade_plan": "AMPLIAR LÍMITE",
+    "labels_header": "Configurar Etiquetas",
+    "labels_show_fields": "Mostrar campos en la etiqueta",
+    "labels_batch_num": "Número de lote",
+    "labels_made_by": "Persona que elabora",
+    "labels_date": "Fecha y hora de elaboración",
+    "labels_expiration": "Fecha de caducidad",
+    "labels_ingredients_options": "Opciones de ingredientes",
+    "labels_show_ing_batch": "Quiero que aparezca el número de lote de cada ingrediente en la etiqueta",
+    "labels_show_ing_amount": "Quiero que aparezca la cantidad de cada ingrediente en la etiqueta",
+    "labels_layout_options": "Formatos de etiqueta",
+    "labels_layout_vertical": "Vertical (Una cosa debajo de otra)",
+    "labels_layout_horizontal_left": "Horizontal (Datos izquierda, ingredientes derecha)",
+    "labels_layout_horizontal_right": "Horizontal (Datos derecha, ingredientes izquierda)",
+    "labels_font_size": "Tamaño de letra"
   },
   "alerts": {
     "missing_data": "Faltan datos obligatorios:",
@@ -295,7 +310,8 @@
     "lot": "Lote",
     "lot_mandatory_placeholder": "Lote obligatorio...",
     "lot_optional_placeholder": "Lote opcional...",
-    "real_amount": "Cantidad Real"
+    "real_amount": "Cantidad Real",
+    "label_btn": "Etiqueta"
   },
   "goods_receipt_form": {
     "product": "Producto",

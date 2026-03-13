@@ -9,14 +9,31 @@ import {
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
-  CreditCard, ArrowUpCircle, PlayCircle
+  CreditCard, ArrowUpCircle, PlayCircle, Printer
 } from "lucide-react";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+const DEFAULT_LABEL_CONFIG = {
+  showFields: {
+    lote: true,
+    person: false,
+    date: true,
+    expiration: true
+  },
+  ingredientOptions: {
+    showLote: false,
+    showAmount: false
+  },
+  layout: 'vertical',
+  fontSize: 14
+};
 
 export default function ClientDashboard() {
   const { t } = useI18n();
@@ -65,6 +82,7 @@ export default function ClientDashboard() {
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
   const [isManageZonesModalOpen, setIsManageZonesModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
   
   // Trazabilidad Form State
   const [elaboracionForm, setElaboracionForm] = useState({
@@ -616,6 +634,108 @@ export default function ClientDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateLabelConfig = async (newConfig) => {
+    try {
+      const res = await fetch("/api/client/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ labelConfig: newConfig })
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setProfile(data);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error updating label config:", error);
+      return false;
+    }
+  };
+
+  const generateLabelPDF = (elaboration) => {
+    const config = profile?.labelConfig || DEFAULT_LABEL_CONFIG;
+    const doc = new jsPDF({
+      orientation: config.layout === 'vertical' ? 'p' : 'l',
+      unit: 'mm',
+      format: [80, 60]
+    });
+
+    const fontSize = config.fontSize || 14;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(fontSize);
+    doc.setTextColor(0, 0, 0);
+
+    let y = 10;
+    const x = 5;
+    const columnWidth = config.layout === 'vertical' ? 70 : 35;
+
+    const drawElabData = (startX, startY) => {
+      let currentY = startY;
+      doc.setFont("helvetica", "bold");
+      doc.text(elaboration.recipe.name, startX, currentY);
+      currentY += fontSize * 0.5;
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(fontSize * 0.8);
+
+      if (config.showFields?.lote) {
+        doc.text(`${t('dashboard.lote')}: ${elaboration.name}`, startX, currentY);
+        currentY += fontSize * 0.4;
+      }
+      if (config.showFields?.person && elaboration.personName) {
+        doc.text(`${t('traceability_form.made_by')}: ${elaboration.personName}`, startX, currentY);
+        currentY += fontSize * 0.4;
+      }
+      if (config.showFields?.date) {
+        const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
+        doc.text(`${t('dashboard.date')}: ${dateStr}`, startX, currentY);
+        currentY += fontSize * 0.4;
+      }
+      if (config.showFields?.expiration && elaboration.expirationDate) {
+        const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
+        doc.text(`${t('traceability_form.expiration_date')}: ${expStr}`, startX, currentY);
+        currentY += fontSize * 0.4;
+      }
+      return currentY;
+    };
+
+    const drawIngredients = (startX, startY) => {
+      let currentY = startY;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(fontSize * 0.7);
+      doc.text(t('modals.ingredients'), startX, currentY);
+      currentY += fontSize * 0.3;
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(fontSize * 0.6);
+      
+      elaboration.ingredients.forEach(ing => {
+        let ingText = `- ${ing.name}`;
+        if (config.ingredientOptions?.showLote && ing.lote) ingText += ` (${ing.lote})`;
+        if (config.ingredientOptions?.showAmount) ingText += `: ${ing.realAmount} ${ing.unit}`;
+        
+        const splitText = doc.splitTextToSize(ingText, columnWidth);
+        doc.text(splitText, startX, currentY);
+        currentY += (splitText.length * fontSize * 0.3);
+      });
+    };
+
+    if (config.layout === 'vertical') {
+      y = drawElabData(x, y);
+      y += 5;
+      drawIngredients(x, y);
+    } else if (config.layout === 'horizontal_left') {
+      drawElabData(x, y);
+      drawIngredients(x + 40, y);
+    } else {
+      drawIngredients(x, y);
+      drawElabData(x + 40, y);
+    }
+
+    doc.save(`Etiqueta_${elaboration.name}.pdf`);
   };
 
   const handleIngredientChange = (ingId, field, value) => {
@@ -1281,13 +1401,22 @@ export default function ClientDashboard() {
                     <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.history')}</h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.history_info')}</p>
                   </div>
-                  <button 
-                    onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
-                    className="btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                  >
-                    <PlayCircle size={18} /> {t('dashboard.video_help')}
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button 
+                      onClick={() => setIsLabelModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <Settings size={18} /> {t('dashboard.configure_labels')}
+                    </button>
+                    <button 
+                      onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <PlayCircle size={18} /> {t('dashboard.video_help')}
+                    </button>
+                  </div>
                 </div>
               </header>
 
@@ -1411,6 +1540,12 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                              <button 
+                                onClick={() => generateLabelPDF(el)}
+                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+                              >
+                                <Printer size={16} /> {t('traceability_form.label_btn')}
+                              </button>
                               <button 
                                 onClick={() => handleEditElaboration(el)}
                                 style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
@@ -2342,13 +2477,20 @@ export default function ClientDashboard() {
           onDelete={handleDeleteZone}
         />
       )}
-
       {isProfileOpen && (
         <ProfileModal 
           onClose={() => setIsProfileOpen(false)} 
           profile={profile}
           onUpdate={fetchProfile}
           onCancelSubscription={handleCancelSubscription}
+        />
+      )}
+
+      {isLabelModalOpen && (
+        <LabelConfigModal 
+          config={profile?.labelConfig}
+          onClose={() => setIsLabelModalOpen(false)}
+          onSave={handleUpdateLabelConfig}
         />
       )}
 
@@ -3346,6 +3488,142 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LabelConfigModal({ config, onClose, onSave }) {
+  const { t } = useI18n();
+  const [localConfig, setLocalConfig] = useState(config || DEFAULT_LABEL_CONFIG);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(localConfig);
+    onClose();
+  };
+
+  const updateField = (section, field, value) => {
+    setLocalConfig({
+      ...localConfig,
+      [section]: {
+        ...localConfig[section],
+        [field]: value
+      }
+    });
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '600px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('modals.labels_header')}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <X size={24} />
+          </button>
+        </header>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Show/Hide Fields */}
+          <section>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_show_fields')}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              {[
+                { id: 'lote', label: t('modals.labels_batch_num') },
+                { id: 'person', label: t('modals.labels_made_by') },
+                { id: 'date', label: t('modals.labels_date') },
+                { id: 'expiration', label: t('modals.labels_expiration') }
+              ].map(field => (
+                <div key={field.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{field.label}</span>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <input 
+                        type="radio" 
+                        name={`show-${field.id}`} 
+                        checked={localConfig.showFields[field.id] === true} 
+                        onChange={() => updateField('showFields', field.id, true)}
+                      /> {t('dashboard.show')}
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <input 
+                        type="radio" 
+                        name={`show-${field.id}`} 
+                        checked={localConfig.showFields[field.id] === false} 
+                        onChange={() => updateField('showFields', field.id, false)}
+                      /> {t('common.no')}
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Ingredient Options */}
+          <section>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_ingredients_options')}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.ingredientOptions.showLote} 
+                  onChange={(e) => updateField('ingredientOptions', 'showLote', e.target.checked)}
+                />
+                <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_ing_batch')}</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.ingredientOptions.showAmount} 
+                  onChange={(e) => updateField('ingredientOptions', 'showAmount', e.target.checked)}
+                />
+                <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_ing_amount')}</span>
+              </label>
+            </div>
+          </section>
+
+          {/* Layout Options */}
+          <section>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_layout_options')}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {[
+                { id: 'vertical', label: t('modals.labels_layout_vertical') },
+                { id: 'horizontal_left', label: t('modals.labels_layout_horizontal_left') },
+                { id: 'horizontal_right', label: t('modals.labels_layout_horizontal_right') }
+              ].map(opt => (
+                <label key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: localConfig.layout === opt.id ? '#f0fdf4' : '#f8fafc', border: `1px solid ${localConfig.layout === opt.id ? 'var(--corp-green)' : 'transparent'}`, borderRadius: '0.75rem', cursor: 'pointer' }}>
+                  <input 
+                    type="radio" 
+                    name="layout" 
+                    checked={localConfig.layout === opt.id} 
+                    onChange={() => setLocalConfig({...localConfig, layout: opt.id})}
+                  />
+                  <span style={{ fontSize: '0.9rem', fontWeight: localConfig.layout === opt.id ? '700' : '500' }}>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          {/* Font Size */}
+          <section>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_font_size')}</h3>
+            <select 
+              className="input-field" 
+              value={localConfig.fontSize} 
+              onChange={(e) => setLocalConfig({...localConfig, fontSize: parseInt(e.target.value)})}
+              style={{ padding: '0.75rem' }}
+            >
+              {[12, 14, 16, 18, 20].map(size => (
+                <option key={size} value={size}>{size}px</option>
+              ))}
+            </select>
+          </section>
+
+          <footer style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+            <button type="button" onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
+            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 2rem' }}>{t('common.save')}</button>
+          </footer>
+        </form>
       </div>
     </div>
   );

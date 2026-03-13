@@ -59,6 +59,7 @@ model ClientProfile {
   recetasContratadas     Int      @default(3)
   
   canManageRecipes      Boolean  @default(true)
+  labelConfig           Json?    @default("{}")
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

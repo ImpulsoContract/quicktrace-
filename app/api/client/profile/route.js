@@ -45,7 +45,8 @@ export async function PATCH(request) {
       postalCode,
       city,
       province,
-      country
+      country,
+      labelConfig
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -60,6 +61,7 @@ export async function PATCH(request) {
         city: city !== undefined ? city : undefined,
         province: province !== undefined ? province : undefined,
         country: country !== undefined ? country : undefined,
+        labelConfig: labelConfig !== undefined ? labelConfig : undefined,
       },
     });
 
