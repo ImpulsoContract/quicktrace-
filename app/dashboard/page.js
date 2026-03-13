@@ -686,12 +686,12 @@ export default function ClientDashboard() {
     const drawElabData = (startX, startY) => {
       let currentY = startY;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(20); // Fixed larger size for recipe name
+      doc.setFontSize(fontSize * 1.2); // Slightly larger than base for recipe name but relative
       doc.text(elaboration.recipe.name, startX, currentY);
-      currentY += 10;
+      currentY += fontSize * 0.8;
       
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(fontSize); // Configurable font size for metadata
+      doc.setFontSize(fontSize); 
 
       if (config.showFields?.lote) {
         doc.text(`${t('dashboard.lote')}: ${elaboration.name}`, startX, currentY);
@@ -720,12 +720,12 @@ export default function ClientDashboard() {
     const drawIngredients = (startX, startY) => {
       let currentY = startY;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(fontSize * 0.7);
+      doc.setFontSize(fontSize * 0.8);
       doc.text(t('modals.ingredients'), startX, currentY);
-      currentY += fontSize * 0.3;
+      currentY += fontSize * 0.5;
       
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(fontSize * 0.6);
+      doc.setFontSize(fontSize * 0.7);
       
       elaboration.ingredients.forEach(ing => {
         let ingText = `- ${ing.name}`;
@@ -734,7 +734,7 @@ export default function ClientDashboard() {
         
         const splitText = doc.splitTextToSize(ingText, columnWidth);
         doc.text(splitText, startX, currentY);
-        currentY += (splitText.length * fontSize * 0.3);
+        currentY += (splitText.length * fontSize * 0.4);
       });
     };
 
