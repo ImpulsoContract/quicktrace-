@@ -9,7 +9,7 @@ import {
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
-  CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText
+  CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -1825,7 +1825,7 @@ export default function ClientDashboard() {
                   animation: 'slideUp 0.3s ease-out'
                 }}>
                   <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
-                    {t('bulk_actions.selected').replace('{{count}}', selectedRecords.length.toString())}
+                    {t('bulk_actions.selected').replace('{count}', selectedRecords.length.toString())}
                   </div>
                   <div style={{ height: '1.5rem', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
                   <button 
@@ -3086,7 +3086,7 @@ export default function ClientDashboard() {
             
             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
               {bulkDeletePhase === 1 
-                ? t('bulk_actions.confirm_delete_warning').replace('{{count}}', selectedRecords.length.toString())
+                ? t('bulk_actions.confirm_delete_text').replace('{count}', selectedRecords.length.toString())
                 : t('bulk_actions.confirm_delete_warning_final')}
             </p>
 
@@ -3296,59 +3296,6 @@ export default function ClientDashboard() {
         </div>
       )}
 
-      {/* Bulk Delete Double Confirmation Modal */}
-      {isBulkDeleteModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem' }}>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <div style={{ 
-                background: bulkDeletePhase === 1 ? 'rgba(239, 68, 68, 0.1)' : 'var(--corp-green)', 
-                color: bulkDeletePhase === 1 ? '#ef4444' : 'white',
-                width: '64px', height: '64px', borderRadius: '50%', margin: '0 auto 1.5rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.3s'
-              }}>
-                <Trash2 size={32} />
-              </div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem' }}>
-                {bulkDeletePhase === 1 ? t('bulk_actions.confirm_delete_title') : "CORRECTO: POR FAVOR CONFIRME"}
-              </h2>
-              <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                {t('bulk_actions.confirm_delete_text', { count: selectedRecords.length })}
-                <br />
-                <strong style={{ color: '#ef4444' }}>{t('bulk_actions.confirm_delete_warning')}</strong>
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
-                className="btn-secondary" 
-                onClick={() => {
-                  setIsBulkDeleteModalOpen(false);
-                  setBulkDeletePhase(1);
-                }}
-                style={{ flex: 1 }}
-              >
-                {t('bulk_actions.cancel_button')}
-              </button>
-              <button 
-                className="btn-primary" 
-                style={{ flex: 1, background: '#ef4444', border: 'none' }}
-                onClick={() => {
-                  if (bulkDeletePhase === 1) {
-                    setBulkDeletePhase(2);
-                  } else {
-                    handleBulkDelete();
-                  }
-                }}
-                disabled={loading}
-              >
-                {loading ? <Loader2 className="animate-spin" size={20} /> : (bulkDeletePhase === 1 ? t('common.confirm') : t('bulk_actions.double_confirm_button'))}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
