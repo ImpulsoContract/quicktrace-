@@ -2097,7 +2097,7 @@ export default function ClientDashboard() {
                           onChange={() => toggleSelectRecord(receipt.id)}
                         />
                       </div>
- Broadway                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                         <div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--corp-green)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
                             {new Date(receipt.date).toLocaleDateString()}

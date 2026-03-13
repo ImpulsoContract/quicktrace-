@@ -370,8 +370,13 @@
     "delete_selected": "Eliminar seleccionados",
     "confirm_delete_title": "¿Eliminar registros permanentemente?",
     "confirm_delete_text": "Vas a eliminar {{count}} registros de forma permanente. Esta acción no se puede deshacer.",
-    "confirm_delete_warning": "Te recomendamos asegurarte de haber exportado bien la información antes de borrarla.",
-    "double_confirm_button": "Sí, eliminar permanentemente",
-    "cancel_button": "No, cancelar"
+    "confirm_delete_warning": "Esta acción borrará permanentemente los {{count}} registros seleccionados. No se podrá revertir.",
+    "confirm_delete_title_final": "¡Última confirmación!",
+    "confirm_delete_warning_final": "Estás a punto de borrar los datos de forma permanente. ¿Estás seguro de que quieres continuar?",
+    "permanent_warning": "ADVERTENCIA: Esta operación es irreversible y los datos no se podrán recuperar.",
+    "confirm_permanent": "Confirmar eliminación permanente",
+    "continue_delete": "Continuar con la eliminación",
+    "select_all": "Seleccionar todos",
+    "deselect_all": "Deseleccionar todos"
   }
 }

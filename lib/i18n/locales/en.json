@@ -370,8 +370,13 @@
     "delete_selected": "Delete selected",
     "confirm_delete_title": "Permanently delete records?",
     "confirm_delete_text": "You are about to permanently delete {{count}} records. This action cannot be undone.",
-    "confirm_delete_warning": "We recommend making sure you have exported the information correctly before deleting it.",
-    "double_confirm_button": "Yes, delete permanently",
-    "cancel_button": "No, cancel"
+    "confirm_delete_warning": "This action will permanently delete the {{count}} selected records. This cannot be undone.",
+    "confirm_delete_title_final": "One last confirmation!",
+    "confirm_delete_warning_final": "You are about to delete data permanently. Are you sure you want to proceed?",
+    "permanent_warning": "WARNING: This operation is irreversible and data cannot be recovered.",
+    "confirm_permanent": "Confirm permanent deletion",
+    "continue_delete": "Continue with deletion",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all"
   }
 }
