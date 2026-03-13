@@ -33,7 +33,7 @@
     "usage": "Uso",
     "all_plans": "Todos los planes",
     "from": "Fecha desde",
-    "to": "hasta"
+    "to": "Fecha hasta"
   },
   "profile": {
     "title": "Perfil",
@@ -142,6 +142,8 @@
     "elaboration_recipe_header": "Receta",
     "recipe_filter": "Filtrar por Receta",
     "all_recipes": "Todas las recetas",
+    "traceability_report": "Informe de trazabilidad",
+    "generate_report": "Generar Informe",
     "modify": "Modificar",
     "no_elaborations_recorded": "No hay elaboraciones registradas todavía.",
     "recipe_manage_desc": "Configura tus recetas.",

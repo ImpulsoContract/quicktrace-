@@ -9,7 +9,7 @@ import {
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
-  CreditCard, ArrowUpCircle, PlayCircle, Printer
+  CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText
 } from "lucide-react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -93,6 +93,11 @@ export default function ClientDashboard() {
   const [isManageZonesModalOpen, setIsManageZonesModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
+  const [isTraceabilityReportModalOpen, setIsTraceabilityReportModalOpen] = useState(false);
+  const [reportDates, setReportDates] = useState({ 
+    from: new Date().toISOString().slice(0, 10), 
+    to: new Date().toISOString().slice(0, 10) 
+  });
   
   // Trazabilidad Form State
   const [elaboracionForm, setElaboracionForm] = useState({
@@ -765,6 +770,100 @@ export default function ClientDashboard() {
     doc.save(`Etiqueta_${elaboration.name}.pdf`);
   };
 
+  const generateTraceabilityReportPDF = async (startDate, endDate) => {
+    setLoading(true);
+    try {
+      // Filtrar elaboraciones por fecha
+      const filtered = elaborations.filter(el => {
+        const elDate = new Date(el.createdAt).toISOString().slice(0, 10);
+        return elDate >= startDate && elDate <= endDate;
+      });
+
+      if (filtered.length === 0) {
+        alert(t('dashboard.no_records'));
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      filtered.forEach((el, index) => {
+        if (index > 0) doc.addPage();
+
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.text(t('dashboard.traceability_report'), 105, 20, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${t('common.from')}: ${startDate} ${t('common.to')}: ${endDate}`, 105, 30, { align: 'center' });
+        
+        doc.setLineWidth(0.5);
+        doc.line(20, 35, 190, 35);
+
+        // Datos de la elaboración
+        doc.setFont("helvetica", "bold");
+        doc.text(t('dashboard.elaboration_recipe_header') + ":", 20, 50);
+        doc.setFont("helvetica", "normal");
+        doc.text(el.recipe?.name || "N/A", 70, 50);
+
+        doc.setFont("helvetica", "bold");
+        doc.text(t('dashboard.lote') + ":", 20, 60);
+        doc.setFont("helvetica", "normal");
+        doc.text(el.name || "N/A", 70, 60);
+
+        doc.setFont("helvetica", "bold");
+        doc.text(t('traceability_form.label_made_by'), 20, 70);
+        doc.setFont("helvetica", "normal");
+        doc.text(el.personName || "N/A", 70, 70);
+
+        doc.setFont("helvetica", "bold");
+        doc.text(t('traceability_form.label_date') + ":", 20, 80);
+        doc.setFont("helvetica", "normal");
+        doc.text(new Date(el.date).toLocaleString(), 70, 80);
+
+        const expLabel = el.recipe?.expiryType === "BEST_BEFORE" 
+          ? t('traceability_form.label_best_before') 
+          : t('traceability_form.label_expiration');
+        doc.setFont("helvetica", "bold");
+        doc.text(expLabel + ":", 20, 90);
+        doc.setFont("helvetica", "normal");
+        doc.text(new Date(el.expirationDate).toLocaleDateString(), 70, 90);
+
+        // Tabla de ingredientes
+        doc.setFont("helvetica", "bold");
+        doc.text(t('modals.ingredients') + ":", 20, 110);
+        
+        const tableBody = el.ingredients.map(ing => [
+          ing.name,
+          ing.lote || "N/A",
+          `${ing.realAmount} ${ing.unit}`
+        ]);
+
+        doc.autoTable({
+          startY: 115,
+          head: [[t('modals.ingredient_name'), t('traceability_form.lot'), t('traceability_form.real_amount')]],
+          body: tableBody,
+          theme: 'grid',
+          headStyles: { fillStyle: 'var(--corp-green)', textColor: [255, 255, 255] },
+          margin: { left: 20, right: 20 }
+        });
+
+        // Pie de página
+        const pageCount = doc.internal.getNumberOfPages();
+        doc.setFontSize(10);
+        doc.text(`${index + 1} / ${filtered.length}`, 190, 285, { align: 'right' });
+      });
+
+      doc.save(`Informe_Trazabilidad_${startDate}_${endDate}.pdf`);
+      setIsTraceabilityReportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating traceability report:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleIngredientChange = (ingId, field, value) => {
     if (field === 'cantidad' && ingId === proportionMasterId) {
       const oldValue = parseFloat(elaboracionForm.ingredientes[ingId].cantidad);
@@ -1429,6 +1528,13 @@ export default function ClientDashboard() {
                     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.history_info')}</p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button 
+                      onClick={() => setIsTraceabilityReportModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <FileText size={18} /> {t('dashboard.traceability_report')}
+                    </button>
                     <button 
                       onClick={() => setIsLabelModalOpen(true)}
                       className="btn-secondary"
@@ -2676,6 +2782,67 @@ export default function ClientDashboard() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowFullScreen
               ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {isTraceabilityReportModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                  <FileText color="var(--corp-green)" />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('dashboard.traceability_report')}</h2>
+              </div>
+              <button 
+                onClick={() => setIsTraceabilityReportModalOpen(false)}
+                className="btn-icon"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label className="label">{t('common.from')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={reportDates.from}
+                  onChange={(e) => setReportDates({...reportDates, from: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="label">{t('common.to')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={reportDates.to}
+                  onChange={(e) => setReportDates({...reportDates, to: e.target.value})}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn-secondary" 
+                  onClick={() => setIsTraceabilityReportModalOpen(false)}
+                  style={{ flex: 1 }}
+                >
+                  {t('dashboard.cancel')}
+                </button>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => generateTraceabilityReportPDF(reportDates.from, reportDates.to)}
+                  disabled={loading}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('dashboard.generate_report')}</>}
+                </button>
+              </div>
             </div>
           </div>
         </div>

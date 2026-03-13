@@ -33,7 +33,7 @@
     "usage": "Usage",
     "all_plans": "All plans",
     "from": "Date from",
-    "to": "to"
+    "to": "Date to"
   },
   "profile": {
     "title": "Profile",
@@ -142,6 +142,8 @@
     "elaboration_recipe_header": "Recipe",
     "recipe_filter": "Filter by Recipe",
     "all_recipes": "All recipes",
+    "traceability_report": "Traceability Report",
+    "generate_report": "Generate Report",
     "modify": "Modify",
     "no_elaborations_recorded": "No productions recorded yet.",
     "recipe_manage_desc": "Manage your recipes.",
