@@ -86,6 +86,12 @@ export async function POST(req) {
         userId: String(session.user.id),
         planId: plan.id,
       },
+      subscription_data: {
+        metadata: {
+          userId: String(session.user.id),
+          planId: plan.id,
+        }
+      }
     });
 
     return NextResponse.json({ url: checkoutSession.url });
