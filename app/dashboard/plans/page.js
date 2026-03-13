@@ -177,10 +177,14 @@ export default function PlansPage() {
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2.5rem' }}>
                   <FeatureItem icon={<ChefHat size={18}/>} label={t('plans.recipes')} val={plan.recipesLimit} t={t} />
-                  <FeatureItem icon={<History size={18}/>} label={t('plans.elaborations')} val={plan.elaborationsLimit} t={t} />
-                  <FeatureToggle icon={<Brush size={18}/>} label={t('plans.cleaning')} active={plan.hasCleaning} limit={plan.cleaningLimit} t={t} />
-                  <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={plan.goodsLimit} t={t} />
-                  <FeatureToggle icon={<Thermometer size={18}/>} label={t('plans.temperatures')} active={plan.hasTemperatures} limit={plan.temperaturesLimit} t={t} />
+                  <FeatureItem icon={<History size={18}/>} label={t('plans.elaborations')} val={plan.elaborationsLimit} t={t} showAsterisk={true} />
+                  <FeatureToggle icon={<Brush size={18}/>} label={t('plans.cleaning')} active={plan.hasCleaning} limit={plan.cleaningLimit} t={t} showAsterisk={true} />
+                  <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={plan.goodsLimit} t={t} showAsterisk={true} />
+                  <FeatureToggle icon={<Thermometer size={18}/>} label={t('plans.temperatures')} active={plan.hasTemperatures} limit={plan.temperaturesLimit} t={t} showAsterisk={true} />
+                </div>
+
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.25rem', lineHeight: '1.4' }}>
+                  * Podrás exportar tu registros y eliminarlos cuando llegues al límite para ponerlo a cero cuando quieras. Así no tendrás ninguna limitación.
                 </div>
 
                 <button 
@@ -227,23 +231,29 @@ export default function PlansPage() {
   );
 }
 
-function FeatureItem({ icon, label, val, t }) {
+function FeatureItem({ icon, label, val, t, showAsterisk }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
       <div style={{ color: 'var(--corp-green)' }}>{icon}</div>
       <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: '500', color: 'var(--text-main)' }}>{label}</div>
-      <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>{val || t('plans.unlimited')}</div>
+      <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>
+        {val || t('plans.unlimited')}
+        {showAsterisk && val && "*"}
+      </div>
     </div>
   );
 }
 
-function FeatureToggle({ icon, label, active, limit, t }) {
+function FeatureToggle({ icon, label, active, limit, t, showAsterisk }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', opacity: active ? 1 : 0.4 }}>
       <div style={{ color: active ? 'var(--corp-green)' : 'var(--text-muted)' }}>{icon}</div>
       <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: '500', color: active ? 'var(--text-main)' : 'var(--text-muted)' }}>{label}</div>
       {active ? (
-        <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>{limit || t('plans.unlimited_feature')}</div>
+        <div style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.9rem' }}>
+          {limit || t('plans.unlimited_feature')}
+          {showAsterisk && limit && "*"}
+        </div>
       ) : (
         <X size={18} color="#ef4444" />
       )}
