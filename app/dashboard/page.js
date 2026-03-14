@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { 
   ChefHat, History, LogOut, 
   Search, ClipboardList, Clock,
-  ArrowLeft, Save, Beaker,
+  ArrowLeft, Save, Beaker, Menu,
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
@@ -70,6 +70,7 @@ export default function ClientDashboard() {
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
   const [videoModal, setVideoModal] = useState({ isOpen: false, videoId: "" });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [elabFilters, setElabFilters] = useState({
     lote: "",
     startDate: "",
@@ -1360,13 +1361,31 @@ export default function ClientDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
+      {/* Mobile Top Header */}
+      <div className="mobile-header" style={{ padding: '1rem 1.5rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ position: 'relative', width: '28px', height: '28px' }}>
+            <img src="/images/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
+            QuickTrace
+          </h1>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          style={{ background: 'transparent', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--text-main)' }}
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
       {/* Sidebar / Topbar combined for responsive */}
       <div style={{ display: 'flex', minHeight: '100vh' }} className="flex-responsive">
         <aside style={{ 
           width: '280px', borderRight: '1px solid var(--border)', background: 'white', 
           display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh'
-        }} className="sidebar-responsive">
-          <div style={{ padding: '2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        }} className={`sidebar-responsive ${isMobileMenuOpen ? 'open' : ''}`}>
+          <div className="desktop-logo" style={{ padding: '2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ position: 'relative', width: '32px', height: '32px' }}>
               <Image src="/images/logo.jpg"
  alt="Logo" fill style={{ objectFit: 'contain' }} />
@@ -1381,20 +1400,20 @@ export default function ClientDashboard() {
               icon={<ClipboardList size={20} />} 
               label={t('sidebar.traceability')} 
               active={activeTab === 'trazabilidad'} 
-              onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); }} 
+              onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
             />
             <SidebarBtn 
               icon={<History size={20} />} 
               label={t('sidebar.history')} 
               active={activeTab === "historial"} 
-              onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); }} 
+              onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
             />
             {profile?.plan?.hasCleaning && (
               <SidebarBtn 
                 icon={<Brush size={20} />} 
                 label={t('sidebar.cleaning')} 
                 active={activeTab === "limpieza"} 
-                onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); setSelectedRecords([]); }} 
+                onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
               />
             )}
             {profile?.plan?.hasTemperatures && (
@@ -1402,7 +1421,7 @@ export default function ClientDashboard() {
                 icon={<Thermometer size={20} />} 
                 label={t('sidebar.temperatures')} 
                 active={activeTab === "temperaturas"} 
-                onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); setSelectedRecords([]); }} 
+                onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
               />
             )}
             {profile?.plan?.hasGoods && (
@@ -1410,7 +1429,7 @@ export default function ClientDashboard() {
                 icon={<Truck size={20} />} 
                 label={t('sidebar.goods')} 
                 active={activeTab === "entradas"} 
-                onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); }} 
+                onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
               />
             )}
             {session?.user?.role === "CLIENT" && (
@@ -1418,7 +1437,7 @@ export default function ClientDashboard() {
                 icon={<ChefHat size={20} />} 
                 label={t('sidebar.manage_recipes')} 
                 active={activeTab === "gestionar-recetas"} 
-                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); }} 
+                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
               />
             )}
           </nav>
@@ -1619,7 +1638,7 @@ export default function ClientDashboard() {
           ) : activeTab === 'trazabilidad' ? (
             <div>
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.traceability')}</h2>
                   <PlanUsageIndicator 
                     label={t('dashboard.elaborations')} 
@@ -1685,12 +1704,12 @@ export default function ClientDashboard() {
           ) : activeTab === 'historial' ? (
             <div>
               <header style={{ marginBottom: '3rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.history')}</h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.history_info')}</p>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '0.75rem' }}>
                     <button 
                       onClick={() => setIsTraceabilityReportModalOpen(true)}
                       className="btn-secondary"
@@ -1915,7 +1934,7 @@ export default function ClientDashboard() {
           ) : activeTab === 'entradas' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.goods')}</h2>
                   <PlanUsageIndicator 
                     label={t('dashboard.goods')} 
@@ -1925,7 +1944,7 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.goods_info')}</p>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
                       onClick={() => setIsGoodsReportModalOpen(true)}
                       className="btn-secondary"
@@ -2120,7 +2139,7 @@ export default function ClientDashboard() {
           ) : activeTab === 'limpieza' ? (
             <div>
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.cleaning')}</h2>
                   <PlanUsageIndicator 
                     label={t('dashboard.cleaning')}
@@ -2133,7 +2152,7 @@ export default function ClientDashboard() {
                 </div>
               </header>
 
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'flex-end' }}>
+              <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'flex-end' }}>
                   <button 
                     onClick={() => setVideoModal({ isOpen: true, videoId: "62WLwGwTvew" })}
                     className="btn-secondary"
@@ -2323,7 +2342,7 @@ export default function ClientDashboard() {
           ) : activeTab === 'temperaturas' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.temperatures')}</h2>
                   <PlanUsageIndicator 
                     label={t('sidebar.temperatures')} 
@@ -2333,7 +2352,7 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.temperature_info')}</p>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: "TKl-sUpuDGg" })}
                       className="btn-secondary"
@@ -2525,7 +2544,7 @@ export default function ClientDashboard() {
           ) : activeTab === 'gestionar-recetas' ? (
             <div>
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.manage_recipes')}</h2>
                   <PlanUsageIndicator 
                     label={t('dashboard.manage_recipes')} 
@@ -2535,7 +2554,7 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.recipe_manage_desc')}</p>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
                       className="btn-secondary"
@@ -3013,12 +3032,35 @@ export default function ClientDashboard() {
 
         @media (max-width: 1024px) {
           .flex-responsive { flex-direction: column !important; }
+          .mobile-header { display: flex !important; }
+          .desktop-logo { display: none !important; }
           .sidebar-responsive { 
+            display: none !important; 
             width: 100% !important; 
             height: auto !important; 
             position: relative !important;
             border-right: none !important;
             border-bottom: 1px solid var(--border) !important;
+          }
+          .sidebar-responsive.open {
+            display: flex !important;
+          }
+          main { padding: 1.5rem !important; }
+          .content-wrapper { margin: 0 !important; }
+
+          .header-content-mobile {
+            flex-direction: column !important;
+            gap: 1rem !important;
+            align-items: flex-start !important;
+          }
+
+          .action-buttons-mobile {
+            flex-direction: column !important;
+            width: 100% !important;
+          }
+          
+          .action-buttons-mobile > * {
+            width: 100% !important;
           }
         }
 
