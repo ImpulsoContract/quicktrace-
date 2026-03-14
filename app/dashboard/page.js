@@ -3044,6 +3044,13 @@ export default function ClientDashboard() {
           }
           .sidebar-responsive.open {
             display: flex !important;
+            position: fixed !important;
+            top: 61px !important;
+            left: 0 !important;
+            z-index: 90 !important;
+            background: white !important;
+            height: calc(100vh - 61px) !important;
+            overflow-y: auto !important;
           }
           main { padding: 1.5rem !important; }
           .content-wrapper { margin: 0 !important; }
