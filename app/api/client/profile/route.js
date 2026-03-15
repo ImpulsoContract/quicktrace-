@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import Stripe from "stripe";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -11,13 +12,49 @@ export async function GET() {
   }
 
   try {
-    const profile = await prisma.clientProfile.findUnique({
+    let profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) },
       include: { plan: true }
     });
 
     if (!profile) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
+    }
+
+    // Comprobación en vivo con Stripe
+    if (profile.stripeSubscriptionId && process.env.STRIPE_SECRET_KEY) {
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        const subscription = await stripe.subscriptions.retrieve(profile.stripeSubscriptionId);
+        
+        let stripeDate = subscription.current_period_end;
+        if (!stripeDate && subscription.items?.data?.[0]?.current_period_end) {
+          stripeDate = subscription.items.data[0].current_period_end;
+        }
+        const nextRenewalStr = stripeDate ? new Date(stripeDate * 1000).toISOString() : null;
+        
+        // Comprobar si está cancelada y al final del periodo o cancelada directamente
+        const isCanceled = subscription.cancel_at_period_end || subscription.status === 'canceled';
+
+        const dateChanged = profile.stripeCurrentPeriodEnd !== nextRenewalStr;
+        const cancelStatusChanged = profile.stripeCancelAtPeriodEnd !== isCanceled;
+
+        // Si los datos de Stripe están más actualizados que la base de datos local, sincronizamos de inmediato
+        if (dateChanged || cancelStatusChanged) {
+          profile = await prisma.clientProfile.update({
+            where: { id: profile.id },
+            include: { plan: true },
+            data: {
+              stripeCancelAtPeriodEnd: isCanceled,
+              stripeCurrentPeriodEnd: nextRenewalStr
+            }
+          });
+          console.log(`[Profile Live Sync] Sincronizado estado de cancelación para el usuario ${session.user.email}.`);
+        }
+      } catch (stripeErr) {
+        console.error("Error comprobando estado en vivo Stripe:", stripeErr);
+        // Si hay una caída de red o error de Stripe, permitimos continuar y mostramos el perfil de la BD local antigua por seguridad.
+      }
     }
 
     return NextResponse.json(profile);
