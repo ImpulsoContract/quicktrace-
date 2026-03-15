@@ -14,7 +14,8 @@ export default function RegisterPage() {
     name: "",
     email: "",
     razonSocial: "",
-    phone: ""
+    phone: "",
+    termsAccepted: false
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -144,6 +145,21 @@ export default function RegisterPage() {
                 placeholder={t('register.phone_placeholder')}
               />
             </div>
+          </div>
+
+          <div style={{ padding: '0.5rem 0' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                required
+                checked={formData.termsAccepted}
+                onChange={(e) => setFormData({...formData, termsAccepted: e.target.checked})}
+                style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', marginTop: '0.2rem' }}
+              />
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                He leído y acepto las <a href="https://quicktrace.es/condiciones-de-uso/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '600', textDecoration: 'none' }}>Condiciones de Uso</a> y la <a href="https://quicktrace.es/politica-privacidad/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '600', textDecoration: 'none' }}>Política de Privacidad</a>.
+              </span>
+            </label>
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '0.5rem', fontSize: '1rem', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>

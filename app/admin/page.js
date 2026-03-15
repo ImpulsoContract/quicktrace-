@@ -29,6 +29,7 @@ export default function AdminDashboard() {
   const [manageRecipesModal, setManageRecipesModal] = useState(null);
   const [manageCleaningZonesModal, setManageCleaningZonesModal] = useState(null);
   const [manageChambersModal, setManageChambersModal] = useState(null);
+  const [termsModal, setTermsModal] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -485,6 +486,13 @@ export default function AdminDashboard() {
             <MenuBtn icon={<Thermometer size={16} />} text="Temperatura de cámaras" onClick={() => { setManageChambersModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<RefreshCw size={16} />} text="Sincronizar con Stripe" onClick={() => handleResyncStripe(activeMenu.id)} />
             <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
+               <MenuBtn 
+                icon={<FileText size={16} />} 
+                text="Ver aceptación de condiciones" 
+                onClick={() => { setTermsModal(activeMenu); setActiveMenu(null); }} 
+              />
+            </div>
+            <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
               <MenuBtn 
                 icon={<Trash2 size={16} />} 
                 text="ELIMINAR CLIENTE" 
@@ -643,6 +651,65 @@ export default function AdminDashboard() {
           profile={manageChambersModal} 
           onClose={() => setManageChambersModal(null)} 
         />
+      )}
+
+      {termsModal && (
+        <Modal title="Aceptación de Términos" onClose={() => setTermsModal(null)}>
+          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileText size={24} color="var(--corp-green)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
+                  {termsModal.clientProfile?.razonSocial || termsModal.name || 'Cliente'}
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>{termsModal.email}</p>
+              </div>
+            </div>
+
+            <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>
+              <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '700' }}>
+                Status de Aceptación
+              </h4>
+              
+              {termsModal.termsAcceptedAt ? (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+                    <CheckSquare size={18} /> Aceptado
+                  </div>
+                  <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                    El usuario ha leído y aceptado las Condiciones de Uso y la Política de Privacidad de QuickTrace.
+                  </p>
+                  <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Fecha y hora de registro:</span>
+                    <strong style={{ color: 'var(--text-main)' }}>
+                      {new Date(termsModal.termsAcceptedAt).toLocaleString('es-ES', { 
+                        weekday: 'long', year: 'numeric', month: 'long', 
+                        day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                      })}
+                    </strong>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ca8a04', fontWeight: '700', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+                    <AlertCircle size={18} /> Usuario Anterior (Legado)
+                  </div>
+                  <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                    No existe un registro técnico de la fecha de aceptación para esta cuenta, probablemente porque fue creada antes de implementar este sistema de tracking.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem' }}>
+              <button onClick={() => setTermsModal(null)} className="btn-primary" style={{ padding: '0.75rem 2rem' }}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {showMasterPass && (

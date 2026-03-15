@@ -8,11 +8,15 @@ import { headers } from "next/headers";
 
 export async function POST(req) {
   try {
-    const { name, email, razonSocial, phone } = await req.json();
+    const { name, email, razonSocial, phone, termsAccepted } = await req.json();
     const headersList = headers();
 
     if (!name || !email || !razonSocial || !phone) {
       return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 });
+    }
+
+    if (!termsAccepted) {
+      return NextResponse.json({ error: "Debes aceptar las Condiciones de Uso" }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -49,7 +53,8 @@ export async function POST(req) {
           role: "CLIENT",
           verificationToken,
           verificationTokenExpires,
-          emailVerified: false
+          emailVerified: false,
+          termsAcceptedAt: termsAccepted ? new Date() : null
         }
       });
 
