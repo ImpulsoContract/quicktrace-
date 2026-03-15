@@ -95,6 +95,27 @@ export async function POST(req) {
       `
     });
 
+    // Notify Support about new registration
+    try {
+      await sendEmail({
+        to: "soporte@quicktrace.es",
+        subject: `Nuevo Registro: ${razonSocial}`,
+        html: `
+          <h2>Nuevo Usuario Registrado</h2>
+          <p>Un nuevo cliente se ha registrado en QuickTrace:</p>
+          <ul>
+            <li><strong>Empresa / Razón Social:</strong> ${razonSocial}</li>
+            <li><strong>Contacto:</strong> ${name}</li>
+            <li><strong>Email:</strong> ${normalizedEmail}</li>
+            <li><strong>Teléfono:</strong> ${phone}</li>
+            <li><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</li>
+          </ul>
+        `
+      });
+    } catch (supportEmailErr) {
+      console.error('[Support Email] Error:', supportEmailErr);
+    }
+
     // Report to Meta Conversions API (CAPI)
     try {
       sendMetaConversionEvent({
