@@ -227,6 +227,16 @@ export default function AdminDashboard() {
             Planes de Precios
             {activeTab === 'plans' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
           </button>
+          <button
+            onClick={() => setActiveTab("terms")}
+            style={{
+              background: 'none', border: 'none', color: activeTab === 'terms' ? 'var(--corp-green)' : 'var(--text-muted)',
+              fontWeight: activeTab === 'terms' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
+            }}
+          >
+            Cambio Condiciones
+            {activeTab === 'terms' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
+          </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -447,6 +457,8 @@ export default function AdminDashboard() {
                 </div>
               )}
             </section>
+          ) : activeTab === "terms" ? (
+            <AdminTermsTab onUpdateSuccess={() => setMessage({ type: 'success', text: 'Se ha forzado la aceptación de condiciones para todos los clientes.' })} />
           ) : (
             <PlansTab plans={plans} loading={plansLoading} onRefresh={fetchPlans} />
           )}
@@ -1640,5 +1652,83 @@ function ManageChambersModal({ profile, onClose }) {
         </div>
       )}
     </Modal>
+  );
+}
+
+function AdminTermsTab({ onUpdateSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleForceUpdate = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/terms/update-all', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        onUpdateSuccess();
+        setShowConfirm(false);
+      } else {
+        alert(data.error);
+      }
+    } catch (e) {
+      alert("Error al forzar actualización de condiciones.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
+        <FileText size={24} color="var(--corp-green)" />
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Gestión de Condiciones Legales</h2>
+      </div>
+
+      <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '1rem', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>
+          Forzar Actualización de Condiciones Generales
+        </h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem', maxWidth: '800px' }}>
+          Utiliza esta herramienta únicamente cuando hayas modificado las Condiciones de Uso o la Política de Privacidad de QuickTrace. Al activar esta opción, <strong>todos los clientes activos</strong> recibirán un aviso bloqueante la próxima vez que inicien sesión y no podrán continuar usando la plataforma hasta que confirmen haber leído y aceptado las nuevas condiciones.
+        </p>
+        
+        {!showConfirm ? (
+          <button 
+            onClick={() => setShowConfirm(true)}
+            className="btn-primary" 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ea580c' }}
+          >
+            <AlertCircle size={18} /> Informar de cambio de condiciones
+          </button>
+        ) : (
+          <div style={{ background: '#fff7ed', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #fdba74', animation: 'fadeIn 0.3s ease' }}>
+            <h4 style={{ color: '#c2410c', fontWeight: '800', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertCircle size={18} /> ¿Estás completamente seguro?
+            </h4>
+            <p style={{ color: '#9a3412', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '800px' }}>
+              Esta acción interrumpirá el flujo normal de trabajo de todos tus clientes la próxima vez que entren a la aplicación. Asegúrate de que los textos legales en quicktrace.es ya están actualizados antes de proceder.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                onClick={() => setShowConfirm(false)}
+                className="btn-secondary" 
+                style={{ background: 'white', color: '#64748b' }}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleForceUpdate}
+                className="btn-primary" 
+                style={{ background: '#ea580c' }}
+                disabled={loading}
+              >
+                {loading ? "Procesando a todos los usuarios..." : "Sí, Forzar Actualización Ahora"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
