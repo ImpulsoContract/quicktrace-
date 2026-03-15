@@ -35,6 +35,12 @@ export async function POST(req) {
       cancel_at_period_end: true,
     });
 
+    // Reflejar localmente este estado
+    await prisma.clientProfile.update({
+      where: { userId: Number(session.user.id) },
+      data: { stripeCancelAtPeriodEnd: true }
+    });
+
     // Enviar email a Fernando
     try {
       await sendEmail({

@@ -51,6 +51,7 @@ export async function POST(req) {
               stripePriceId: priceId,
               stripeCurrentPeriodEnd: nextRenewalStr,
               planId: planId,
+              stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
             },
           });
           console.log(`[Webhook] Updated profile for userId ${userId} via checkout metadata`);
@@ -114,7 +115,8 @@ export async function POST(req) {
             data: {
               stripeCurrentPeriodEnd: nextRenewalStr,
               stripePriceId: priceId,
-              planId: plan?.id || subPlanId || undefined
+              planId: plan?.id || subPlanId || undefined,
+              stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
             },
           });
           console.log(`[Webhook] Updated profile by stripeSubscriptionId`);
@@ -138,7 +140,8 @@ export async function POST(req) {
                 stripeCustomerId: invoice.customer,
                 stripeCurrentPeriodEnd: nextRenewalStr,
                 stripePriceId: priceId,
-                planId: plan?.id || subPlanId || undefined
+                planId: plan?.id || subPlanId || undefined,
+                stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
               }
             });
             console.log(`[Webhook] Updated profile by stripeCustomerId/userId fallback`);
@@ -190,7 +193,8 @@ export async function POST(req) {
           data: {
             planId: newPlan?.id || updatedSub.metadata?.planId || undefined,
             stripeCurrentPeriodEnd: nextRenewalStr,
-            stripePriceId: priceId
+            stripePriceId: priceId,
+            stripeCancelAtPeriodEnd: updatedSub.cancel_at_period_end || false,
           },
         });
         console.log(`[Webhook] Updated profile on sub.updated by subscription ID`);
@@ -212,7 +216,8 @@ export async function POST(req) {
               stripeSubscriptionId: updatedSub.id,
               planId: newPlan?.id || updatedSub.metadata?.planId || undefined,
               stripeCurrentPeriodEnd: nextRenewalStr,
-              stripePriceId: priceId
+              stripePriceId: priceId,
+              stripeCancelAtPeriodEnd: updatedSub.cancel_at_period_end || false,
             }
           });
           console.log(`[Webhook] Updated profile on sub.updated by customer/userId fallback`);
@@ -240,7 +245,8 @@ export async function POST(req) {
           planId: fallbackPlan?.id || null,
           stripeSubscriptionId: null,
           stripeCurrentPeriodEnd: null,
-          stripePriceId: null
+          stripePriceId: null,
+          stripeCancelAtPeriodEnd: false
         },
       });
 

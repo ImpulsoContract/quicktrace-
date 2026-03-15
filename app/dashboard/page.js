@@ -3709,37 +3709,48 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
                 </Link>
                 
                 {!isDemo && profile?.stripeSubscriptionId && (
-                  <>
-                    <button 
-                      onClick={onCancelSubscription} 
-                      disabled={cancelLoading}
-                      className="btn-secondary"
-                      style={{ 
-                        width: '100%',
-                        padding: '0.75rem', 
-                        borderRadius: '0.75rem', 
-                        background: '#fef2f2', 
-                        border: '1px solid #fee2e2', 
-                        color: '#dc2626', 
-                        fontSize: '0.85rem', 
-                        fontWeight: '700', 
-                        cursor: 'pointer',
-                        marginTop: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                      }}
-                    >
-                      <X size={16} /> {cancelLoading ? t('profile.canceling') : t('profile.cancel_subscription_btn')}
-                    </button>
-
-                    <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '1rem', border: '1px dashed #3b82f6', textAlign: 'left' }}>
-                      <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0, lineHeight: '1.5' }}>
-                        <strong>{t('profile.notice_label')}:</strong> {t('profile.cancellation_notice')}
+                  profile?.stripeCancelAtPeriodEnd ? (
+                    <div style={{ marginTop: '1rem', padding: '1rem', background: '#fff7ed', borderRadius: '1rem', border: '1px solid #fdba74', textAlign: 'left' }}>
+                      <p style={{ fontSize: '0.9rem', color: '#c2410c', margin: 0, lineHeight: '1.5', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                        <X size={18} /> Suscripción Cancelada
+                      </p>
+                      <p style={{ fontSize: '0.85rem', color: '#9a3412', margin: 0, lineHeight: '1.5' }}>
+                        Tienes pagado tu plan hasta la fecha <strong>{profile?.stripeCurrentPeriodEnd ? new Date(profile.stripeCurrentPeriodEnd).toLocaleDateString() : 'N/A'}</strong>. Después pasarás al plan demo y podrás volver a suscribirte a un plan de pago cuando lo desees.
                       </p>
                     </div>
-                  </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={onCancelSubscription} 
+                        disabled={cancelLoading}
+                        className="btn-secondary"
+                        style={{ 
+                          width: '100%',
+                          padding: '0.75rem', 
+                          borderRadius: '0.75rem', 
+                          background: '#fef2f2', 
+                          border: '1px solid #fee2e2', 
+                          color: '#dc2626', 
+                          fontSize: '0.85rem', 
+                          fontWeight: '700', 
+                          cursor: 'pointer',
+                          marginTop: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        <X size={16} /> {cancelLoading ? t('profile.canceling') : t('profile.cancel_subscription_btn')}
+                      </button>
+
+                      <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '1rem', border: '1px dashed #3b82f6', textAlign: 'left' }}>
+                        <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0, lineHeight: '1.5' }}>
+                          <strong>{t('profile.notice_label')}:</strong> {t('profile.cancellation_notice')}
+                        </p>
+                      </div>
+                    </>
+                  )
                 )}
               </div>
             </div>

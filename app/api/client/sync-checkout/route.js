@@ -64,7 +64,8 @@ export async function POST(req) {
         stripePriceId: stripePriceId,
         planId: plan?.id || undefined,
         stripeCustomerId: customerId,
-        stripeSubscriptionId: subscription.id
+        stripeSubscriptionId: subscription.id,
+        stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false
       }
     });
 

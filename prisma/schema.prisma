@@ -55,6 +55,7 @@ model ClientProfile {
   stripeSubscriptionId   String?   @unique
   stripePriceId          String?
   stripeCurrentPeriodEnd String?
+  stripeCancelAtPeriodEnd Boolean @default(false)
   
   // Old fields (to be deprecated after migration)
   accountType           String   @default("DEMO") 
