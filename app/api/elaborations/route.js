@@ -99,7 +99,7 @@ export async function POST(req) {
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const data = await req.json();
-    const { name, recipeId, ingredients, personName, date, expirationDate } = data;
+    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut } = data;
 
     // Buscar el perfil del cliente
     const profile = await prisma.clientProfile.findUnique({
@@ -148,6 +148,8 @@ export async function POST(req) {
         personName,
         date: date ? new Date(date) : new Date(),
         expirationDate: expirationDate ? new Date(expirationDate) : null,
+        dryingRoomIn,
+        dryingRoomOut,
         ingredients: {
           create: ingredients.map(ing => ({
             name: toTitleCase(ing.name),

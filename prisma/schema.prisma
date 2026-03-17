@@ -116,6 +116,7 @@ model Recipe {
   quantitiesMandatory   Boolean  @default(false)
   expiryDays            Int?     @default(0)
   expiryType            String?  @default("EXPIRATION") // EXPIRATION, BEST_BEFORE
+  hasDryingRoom         Boolean  @default(false)
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -146,6 +147,8 @@ model Elaboration {
   
   personName      String?
   expirationDate  DateTime?
+  dryingRoomIn    String?
+  dryingRoomOut   String?
   
   ingredients ElaborationIngredient[]
   

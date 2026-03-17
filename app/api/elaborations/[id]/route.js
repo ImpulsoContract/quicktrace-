@@ -40,6 +40,8 @@ export async function PATCH(req, { params }) {
         personName,
         date: date ? new Date(date) : undefined,
         expirationDate: expirationDate ? new Date(expirationDate) : null,
+        dryingRoomIn: dryingRoomIn !== undefined ? dryingRoomIn : null,
+        dryingRoomOut: dryingRoomOut !== undefined ? dryingRoomOut : null,
         ingredients: {
           deleteMany: {},
           create: ingredients.map(ing => ({

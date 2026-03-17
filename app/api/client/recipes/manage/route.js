@@ -51,6 +51,7 @@ export async function POST(req) {
         name,
         expiryDays: expiryDays ? parseInt(expiryDays) : 0,
         expiryType: expiryType || "EXPIRATION",
+        hasDryingRoom: !!body.hasDryingRoom,
         clientProfileId: profile.id,
         ingredients: {
           create: ingredients.map((ing) => ({

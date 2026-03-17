@@ -88,7 +88,13 @@ export default function ClientDashboard() {
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
-  const [recipeForm, setRecipeForm] = useState({ name: "", ingredients: [], expiryDays: 0 });
+  const [recipeForm, setRecipeForm] = useState({ 
+    name: "", 
+    ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }],
+    expiryDays: 0,
+    expiryType: "EXPIRATION",
+    hasDryingRoom: false
+  });
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
   const [isManageZonesModalOpen, setIsManageZonesModalOpen] = useState(false);
@@ -111,6 +117,8 @@ export default function ClientDashboard() {
     personName: "",
     date: "",
     expirationDate: "",
+    dryingRoomIn: "",
+    dryingRoomOut: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
   });
 
@@ -220,7 +228,8 @@ export default function ClientDashboard() {
         quantityMandatory: !!ing.quantityMandatory
       })),
       expiryDays: recipe.expiryDays || 0,
-      expiryType: recipe.expiryType || "EXPIRATION"
+      expiryType: recipe.expiryType || "EXPIRATION",
+      hasDryingRoom: !!recipe.hasDryingRoom
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -646,6 +655,8 @@ export default function ClientDashboard() {
       personName: elab.personName || "",
       date: elab.date ? new Date(elab.date).toISOString().slice(0, 16) : "",
       expirationDate: elab.expirationDate ? new Date(elab.expirationDate).toISOString().slice(0, 10) : "",
+      dryingRoomIn: elab.dryingRoomIn || "",
+      dryingRoomOut: elab.dryingRoomOut || "",
       ingredientes: initialIngredientes
     });
   };
@@ -1072,6 +1083,8 @@ export default function ClientDashboard() {
           personName: elaboracionForm.personName,
           date: elaboracionForm.date,
           expirationDate: elaboracionForm.expirationDate,
+          dryingRoomIn: elaboracionForm.dryingRoomIn,
+          dryingRoomOut: elaboracionForm.dryingRoomOut,
           ingredients: ingredientsData
         })
       });
@@ -1539,6 +1552,30 @@ export default function ClientDashboard() {
                         onChange={(e) => setElaboracionForm({...elaboracionForm, expirationDate: e.target.value})} 
                       />
                     </div>
+                    {selectedRecipe?.hasDryingRoom && (
+                      <>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>Fecha Entrada Secadero</label>
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            placeholder="Ej: 01/12/2023"
+                            value={elaboracionForm.dryingRoomIn} 
+                            onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomIn: e.target.value})} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>Fecha Salida Secadero</label>
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            placeholder="Ej: 15/01/2024"
+                            value={elaboracionForm.dryingRoomOut} 
+                            onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomOut: e.target.value})} 
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div>
@@ -2734,6 +2771,7 @@ export default function ClientDashboard() {
                       <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
+                      <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Secadero</th>
                       <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
                     </tr>
                   </thead>
@@ -2748,6 +2786,16 @@ export default function ClientDashboard() {
                           <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
                             {elab.recipe.name}
                           </span>
+                        </td>
+                        <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          {(elab.dryingRoomIn || elab.dryingRoomOut) ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <span><strong style={{ color: 'var(--text-main)' }}>ENT:</strong> {elab.dryingRoomIn || '-'}</span>
+                              <span><strong style={{ color: 'var(--text-main)' }}>SAL:</strong> {elab.dryingRoomOut || '-'}</span>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#cbd5e1' }}>-</span>
+                          )}
                         </td>
                         <td style={{ padding: '1.25rem 1.5rem' }}>
                           <button 
@@ -4031,6 +4079,25 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               >
                 <Plus size={16} /> {t('modals.add_ingredient')}
               </button>
+            </div>
+            
+            <div style={{ marginTop: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(66, 98, 22, 0.15)' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={formData.hasDryingRoom}
+                  onChange={(e) => setFormData({...formData, hasDryingRoom: e.target.checked})}
+                  style={{ accentColor: 'var(--corp-green)', width: '1.1rem', height: '1.1rem', marginTop: '0.1rem' }} 
+                />
+                <div>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', display: 'block', marginBottom: '0.1rem' }}>
+                    Secadero
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Marca esta casilla si quieres poder registrar la fecha de entrada y fecha de salida del secadero en las elaboraciones de esta receta
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
 

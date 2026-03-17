@@ -79,6 +79,7 @@ export async function PATCH(req, { params }) {
           name,
           expiryDays: expiryDays ? parseInt(expiryDays) : 0,
           expiryType: expiryType || "EXPIRATION",
+          hasDryingRoom: !!body.hasDryingRoom,
           ingredients: {
             create: ingredients.map((ing) => ({
               name: toTitleCase(ing.name),
