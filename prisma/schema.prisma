@@ -119,6 +119,8 @@ model Recipe {
   hasDryingRoom         Boolean  @default(false)
   elaborationInstructions String?
   conservationInstructions String?
+  hasBarcode            Boolean  @default(false)
+  barcode               String?
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

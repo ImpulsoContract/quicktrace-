@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import JsBarcode from "jsbarcode";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 
@@ -33,7 +34,8 @@ const DEFAULT_LABEL_CONFIG = {
   },
   complementaryOptions: {
     showElaborationText: false,
-    showConservationText: false
+    showConservationText: false,
+    showBarcode: true
   },
   dimensions: {
     width: 10,
@@ -836,6 +838,33 @@ export default function ClientDashboard() {
     } else {
       drawIngredients(x, y);
       drawElabData(horizontalMidpoint, y);
+    }
+
+    if (config.complementaryOptions?.showBarcode !== false && elaboration.recipe.hasBarcode && elaboration.recipe.barcode) {
+      try {
+        const canvas = document.createElement('canvas');
+        JsBarcode(canvas, elaboration.recipe.barcode, {
+          format: "EAN13",
+          displayValue: true,
+          fontSize: 14,
+          margin: 0,
+          height: 40
+        });
+        
+        const barcodeDataUrl = canvas.toDataURL("image/jpeg");
+        
+        // Dimensions for the barcode on the PDF
+        const barcodeWidthMM = 35;
+        const barcodeHeightMM = 15;
+        
+        // Center the barcode horizontally at the bottom
+        const startX = (docWidthMM - barcodeWidthMM) / 2;
+        const startY = docHeightMM - barcodeHeightMM - 5; // 5mm from bottom edge
+        
+        doc.addImage(barcodeDataUrl, 'JPEG', startX, startY, barcodeWidthMM, barcodeHeightMM);
+      } catch (err) {
+        console.error("Failed to generate label barcode:", err);
+      }
     }
 
     doc.save(`Etiqueta_${elaboration.name}.pdf`);
@@ -4174,6 +4203,49 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                 </p>
               </div>
             </div>
+
+            <div style={{ marginTop: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(66, 98, 22, 0.15)' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={formData.hasBarcode}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    let newBarcode = formData.barcode;
+                    if (checked && !newBarcode) {
+                      // Generate random EAN-13
+                      let data = '20';
+                      for (let i = 0; i < 10; i++) data += Math.floor(Math.random() * 10).toString();
+                      let sum = 0;
+                      for (let i = 0; i < 12; i++) sum += parseInt(data[i]) * (i % 2 === 0 ? 1 : 3);
+                      const expectedCheck = (10 - (sum % 10)) % 10;
+                      newBarcode = data + expectedCheck.toString();
+                    }
+                    setFormData({...formData, hasBarcode: checked, barcode: newBarcode});
+                  }}
+                  style={{ accentColor: 'var(--corp-green)', width: '1.1rem', height: '1.1rem', marginTop: '0.1rem' }} 
+                />
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', display: 'block', marginBottom: '0.1rem' }}>
+                    Usar código de barras en la etiqueta de las elaboraciones de esta receta
+                  </span>
+                  {formData.hasBarcode && (
+                    <div style={{ marginTop: '1rem' }} onClick={e => e.preventDefault()}>
+                      <label className="label" style={{ fontSize: '0.8rem' }}>Código EAN-13</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        maxLength={13}
+                        value={formData.barcode || ""} 
+                        onChange={(e) => setFormData({...formData, barcode: e.target.value.replace(/\D/g, '')})}
+                        placeholder="Ej: 2012345678901"
+                        style={{ padding: '0.75rem', fontSize: '1rem', letterSpacing: '2px', fontFamily: 'monospace' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </label>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
@@ -4520,6 +4592,14 @@ function LabelConfigModal({ config, onClose, onSave }) {
                   onChange={(e) => updateField('complementaryOptions', 'showConservationText', e.target.checked)}
                 />
                 <span style={{ fontSize: '0.9rem' }}>Incluye el modo de conservación en la etiqueta</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.complementaryOptions.showBarcode !== false} 
+                  onChange={(e) => updateField('complementaryOptions', 'showBarcode', e.target.checked)}
+                />
+                <span style={{ fontSize: '0.9rem' }}>Mostrar código de barras</span>
               </label>
             </div>
           </section>

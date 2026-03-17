@@ -13,7 +13,7 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions } = body;
+    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode } = body;
 
     // Get client profile and check privilege
     const profile = await prisma.clientProfile.findUnique({
@@ -46,6 +46,13 @@ export async function POST(req) {
       return NextResponse.json({ error: "Se requiere al menos un ingrediente." }, { status: 400 });
     }
 
+    if (hasBarcode) {
+      const { isValidEAN13 } = require('@/lib/barcode');
+      if (!isValidEAN13(barcode)) {
+        return NextResponse.json({ error: "El código de barras introducido no es un EAN-13 válido." }, { status: 400 });
+      }
+    }
+
     const recipe = await prisma.recipe.create({
       data: {
         name,
@@ -54,6 +61,8 @@ export async function POST(req) {
         hasDryingRoom: !!body.hasDryingRoom,
         elaborationInstructions,
         conservationInstructions,
+        hasBarcode: !!hasBarcode,
+        barcode: hasBarcode ? barcode : null,
         clientProfileId: profile.id,
         ingredients: {
           create: ingredients.map((ing) => ({

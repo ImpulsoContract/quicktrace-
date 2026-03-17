@@ -14,7 +14,7 @@ export async function PATCH(req, { params }) {
 
   try {
     const body = await req.json();
-    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions } = body;
+    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode } = body;
 
     const profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) }
@@ -67,6 +67,13 @@ export async function PATCH(req, { params }) {
       }
     }
 
+    if (hasBarcode) {
+      const { isValidEAN13 } = require('@/lib/barcode');
+      if (!isValidEAN13(barcode)) {
+        return NextResponse.json({ error: "El código de barras introducido no es un EAN-13 válido." }, { status: 400 });
+      }
+    }
+
     // Update recipe in a transaction
     await prisma.$transaction(async (tx) => {
       // Delete old ingredients
@@ -82,6 +89,8 @@ export async function PATCH(req, { params }) {
           hasDryingRoom: !!body.hasDryingRoom,
           elaborationInstructions,
           conservationInstructions,
+          hasBarcode: !!hasBarcode,
+          barcode: hasBarcode ? barcode : null,
           ingredients: {
             create: ingredients.map((ing) => ({
               name: toTitleCase(ing.name),
