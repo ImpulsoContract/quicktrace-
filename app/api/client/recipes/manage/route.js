@@ -13,7 +13,7 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { name, ingredients, expiryDays, expiryType } = body;
+    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions } = body;
 
     // Get client profile and check privilege
     const profile = await prisma.clientProfile.findUnique({
@@ -52,6 +52,8 @@ export async function POST(req) {
         expiryDays: expiryDays ? parseInt(expiryDays) : 0,
         expiryType: expiryType || "EXPIRATION",
         hasDryingRoom: !!body.hasDryingRoom,
+        elaborationInstructions,
+        conservationInstructions,
         clientProfileId: profile.id,
         ingredients: {
           create: ingredients.map((ing) => ({

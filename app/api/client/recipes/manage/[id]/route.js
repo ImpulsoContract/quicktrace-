@@ -14,7 +14,7 @@ export async function PATCH(req, { params }) {
 
   try {
     const body = await req.json();
-    const { name, ingredients, expiryDays, expiryType } = body;
+    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions } = body;
 
     const profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) }
@@ -80,6 +80,8 @@ export async function PATCH(req, { params }) {
           expiryDays: expiryDays ? parseInt(expiryDays) : 0,
           expiryType: expiryType || "EXPIRATION",
           hasDryingRoom: !!body.hasDryingRoom,
+          elaborationInstructions,
+          conservationInstructions,
           ingredients: {
             create: ingredients.map((ing) => ({
               name: toTitleCase(ing.name),

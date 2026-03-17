@@ -31,6 +31,10 @@ const DEFAULT_LABEL_CONFIG = {
     showLote: false,
     showAmount: false
   },
+  complementaryOptions: {
+    showElaborationText: false,
+    showConservationText: false
+  },
   layout: 'vertical',
   fontSize: 14
 };
@@ -41,7 +45,8 @@ const mergeLabelConfig = (config) => {
     ...DEFAULT_LABEL_CONFIG,
     ...config,
     showFields: { ...DEFAULT_LABEL_CONFIG.showFields, ...(config.showFields || {}) },
-    ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) }
+    ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) },
+    complementaryOptions: { ...DEFAULT_LABEL_CONFIG.complementaryOptions, ...(config.complementaryOptions || {}) }
   };
 };
 
@@ -93,7 +98,9 @@ export default function ClientDashboard() {
     ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }],
     expiryDays: 0,
     expiryType: "EXPIRATION",
-    hasDryingRoom: false
+    hasDryingRoom: false,
+    elaborationInstructions: "",
+    conservationInstructions: ""
   });
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
@@ -229,7 +236,9 @@ export default function ClientDashboard() {
       })),
       expiryDays: recipe.expiryDays || 0,
       expiryType: recipe.expiryType || "EXPIRATION",
-      hasDryingRoom: !!recipe.hasDryingRoom
+      hasDryingRoom: !!recipe.hasDryingRoom,
+      elaborationInstructions: recipe.elaborationInstructions || "",
+      conservationInstructions: recipe.conservationInstructions || ""
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -759,6 +768,23 @@ export default function ClientDashboard() {
         doc.text(expStr, startX, currentY);
         currentY += lineHeightMM;
       }
+      
+      if (config.complementaryOptions?.showElaborationText && elaboration.recipe.elaborationInstructions) {
+        doc.text("Elaboración:", startX, currentY);
+        currentY += lineHeightMM;
+        const splitText = doc.splitTextToSize(elaboration.recipe.elaborationInstructions, columnWidth);
+        doc.text(splitText, startX, currentY);
+        currentY += (splitText.length * lineHeightMM);
+      }
+
+      if (config.complementaryOptions?.showConservationText && elaboration.recipe.conservationInstructions) {
+        doc.text("Conservación:", startX, currentY);
+        currentY += lineHeightMM;
+        const splitText = doc.splitTextToSize(elaboration.recipe.conservationInstructions, columnWidth);
+        doc.text(splitText, startX, currentY);
+        currentY += (splitText.length * lineHeightMM);
+      }
+
       return currentY;
     };
 
@@ -4099,6 +4125,38 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                 </div>
               </label>
             </div>
+
+            <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="label">Elaboración</label>
+                <textarea 
+                  className="input-field" 
+                  rows="3"
+                  placeholder="Describe la elaboración..."
+                  value={formData.elaborationInstructions} 
+                  onChange={(e) => setFormData({...formData, elaborationInstructions: e.target.value})}
+                  style={{ fontSize: '1rem', padding: '1rem', resize: 'vertical' }}
+                />
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                  El contenido de este campo podrá aparecer en la etiqueta
+                </p>
+              </div>
+              
+              <div>
+                <label className="label">Conservación</label>
+                <textarea 
+                  className="input-field" 
+                  rows="2"
+                  placeholder="Conservar entre 0 y 4 grados..."
+                  value={formData.conservationInstructions} 
+                  onChange={(e) => setFormData({...formData, conservationInstructions: e.target.value})}
+                  style={{ fontSize: '1rem', padding: '1rem', resize: 'vertical' }}
+                />
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                  El contenido de este campo podrá aparecer en la etiqueta
+                </p>
+              </div>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
@@ -4388,6 +4446,29 @@ function LabelConfigModal({ config, onClose, onSave }) {
                   onChange={(e) => updateField('ingredientOptions', 'showAmount', e.target.checked)}
                 />
                 <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_ing_amount')}</span>
+              </label>
+            </div>
+          </section>
+
+          {/* Complementary Content Options */}
+          <section>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>Contenido complementario</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.complementaryOptions.showElaborationText} 
+                  onChange={(e) => updateField('complementaryOptions', 'showElaborationText', e.target.checked)}
+                />
+                <span style={{ fontSize: '0.9rem' }}>Incluye el modo de elaboración en la etiqueta</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.complementaryOptions.showConservationText} 
+                  onChange={(e) => updateField('complementaryOptions', 'showConservationText', e.target.checked)}
+                />
+                <span style={{ fontSize: '0.9rem' }}>Incluye el modo de conservación en la etiqueta</span>
               </label>
             </div>
           </section>
