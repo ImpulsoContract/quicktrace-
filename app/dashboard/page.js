@@ -35,6 +35,10 @@ const DEFAULT_LABEL_CONFIG = {
     showElaborationText: false,
     showConservationText: false
   },
+  dimensions: {
+    width: 10,
+    height: 8
+  },
   layout: 'vertical',
   fontSize: 14
 };
@@ -46,7 +50,8 @@ const mergeLabelConfig = (config) => {
     ...config,
     showFields: { ...DEFAULT_LABEL_CONFIG.showFields, ...(config.showFields || {}) },
     ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) },
-    complementaryOptions: { ...DEFAULT_LABEL_CONFIG.complementaryOptions, ...(config.complementaryOptions || {}) }
+    complementaryOptions: { ...DEFAULT_LABEL_CONFIG.complementaryOptions, ...(config.complementaryOptions || {}) },
+    dimensions: { ...DEFAULT_LABEL_CONFIG.dimensions, ...(config.dimensions || {}) }
   };
 };
 
@@ -710,10 +715,15 @@ export default function ClientDashboard() {
 
   const generateLabelPDF = (elaboration) => {
     const config = mergeLabelConfig(profile?.labelConfig);
+    
+    // Default to 100x80mm if not specified
+    const docWidthMM = (config.dimensions?.width || 10) * 10;
+    const docHeightMM = (config.dimensions?.height || 8) * 10;
+
     const doc = new jsPDF({
       orientation: config.layout === 'vertical' ? 'p' : 'l',
       unit: 'mm',
-      format: [100, 80] // Increased size
+      format: [docWidthMM, docHeightMM]
     });
 
     const fontSize = config.fontSize || 14;
@@ -725,7 +735,14 @@ export default function ClientDashboard() {
 
     let y = 10;
     const x = 5;
-    const columnWidth = config.layout === 'vertical' ? 90 : 45; // Adjusted for wider label
+    
+    // Dynamic column widths based on total width
+    const columnWidth = config.layout === 'vertical' 
+      ? docWidthMM - (x * 2) 
+      : (docWidthMM / 2) - x - 5; 
+
+    // Calculate midpoint for horizontal layouts
+    const horizontalMidpoint = docWidthMM / 2;
 
     const drawElabData = (startX, startY) => {
       let currentY = startY;
@@ -815,10 +832,10 @@ export default function ClientDashboard() {
       drawIngredients(x, y);
     } else if (config.layout === 'horizontal_left') {
       drawElabData(x, y);
-      drawIngredients(x + 50, y); // Adjusted for wider label
+      drawIngredients(horizontalMidpoint, y);
     } else {
       drawIngredients(x, y);
-      drawElabData(x + 50, y); // Adjusted for wider label
+      drawElabData(horizontalMidpoint, y);
     }
 
     doc.save(`Etiqueta_${elaboration.name}.pdf`);
@@ -4425,6 +4442,40 @@ function LabelConfigModal({ config, onClose, onSave }) {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/* Dimensions */}
+          <section>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>Dimensiones de etiqueta (cm)</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label className="label" style={{ fontSize: '0.85rem' }}>Ancho (cm)</label>
+                <input 
+                  type="number" 
+                  step="0.1"
+                  min="3"
+                  className="input-field" 
+                  value={localConfig.dimensions?.width || 10} 
+                  onChange={(e) => updateField('dimensions', 'width', parseFloat(e.target.value) || 10)}
+                  style={{ padding: '0.75rem' }}
+                />
+              </div>
+              <div>
+                <label className="label" style={{ fontSize: '0.85rem' }}>Alto (cm)</label>
+                <input 
+                  type="number" 
+                  step="0.1"
+                  min="3"
+                  className="input-field" 
+                  value={localConfig.dimensions?.height || 8} 
+                  onChange={(e) => updateField('dimensions', 'height', parseFloat(e.target.value) || 8)}
+                  style={{ padding: '0.75rem' }}
+                />
+              </div>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+              Define el tamaño físico de la etiqueta para la impresora, en centímetros (ej: 10 x 8).
+            </p>
           </section>
 
           {/* Ingredient Options */}
