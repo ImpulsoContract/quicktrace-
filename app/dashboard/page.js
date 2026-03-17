@@ -245,7 +245,9 @@ export default function ClientDashboard() {
       expiryType: recipe.expiryType || "EXPIRATION",
       hasDryingRoom: !!recipe.hasDryingRoom,
       elaborationInstructions: recipe.elaborationInstructions || "",
-      conservationInstructions: recipe.conservationInstructions || ""
+      conservationInstructions: recipe.conservationInstructions || "",
+      hasBarcode: !!recipe.hasBarcode,
+      barcode: recipe.barcode || ""
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -2674,7 +2676,7 @@ export default function ClientDashboard() {
                     <button 
                       onClick={() => {
                         setEditingRecipe(null);
-                        setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }] });
+                        setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }], hasBarcode: false, barcode: "" });
                         setIsRecipeManageModalOpen(true);
                       }}
                       className="btn-primary" 
@@ -2699,7 +2701,7 @@ export default function ClientDashboard() {
                     <button 
                       onClick={() => {
                         setEditingRecipe(null);
-                        setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }] });
+                        setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }], hasBarcode: false, barcode: "" });
                         setIsRecipeManageModalOpen(true);
                       }}
                       className="btn-primary"
