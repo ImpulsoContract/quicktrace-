@@ -2852,6 +2852,7 @@ export default function ClientDashboard() {
           setFormData={setTempForm}
           loading={loading}
           isEditing={!!editingTempRecord}
+          lastRecord={tempRecords.length > 0 ? tempRecords[0] : null}
         />
       )}
 
@@ -3819,7 +3820,7 @@ function SidebarBtn({ icon, label, active, onClick }) {
   );
 }
 
-function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, setFormData, loading, isEditing, lastRecord }) {
   const { t } = useI18n();
   const handleValueChange = (chamberId, value) => {
     setFormData(prev => ({
@@ -3828,6 +3829,20 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
         ...prev.values,
         [chamberId]: value
       }
+    }));
+  };
+
+  const handleAutoFill = () => {
+    if (!lastRecord || !lastRecord.values) return;
+    
+    const newValues = { ...formData.values };
+    lastRecord.values.forEach(v => {
+      newValues[v.chamberId] = v.value;
+    });
+    
+    setFormData(prev => ({
+      ...prev,
+      values: newValues
     }));
   };
 
@@ -3862,7 +3877,18 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('modals.chambers')}</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{t('modals.chambers')}</label>
+              {!isEditing && lastRecord && (
+                <button
+                  type="button"
+                  onClick={handleAutoFill}
+                  style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  Autocompletar con los datos del último registro
+                </button>
+              )}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               {chambers.map(chamber => (
                 <div key={chamber.id} className="form-group" style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
