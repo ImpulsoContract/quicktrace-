@@ -22,6 +22,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const DEFAULT_LABEL_CONFIG = {
+  headerImage: null,
   showFields: {
     lote: true,
     person: false,
@@ -759,6 +760,21 @@ export default function ClientDashboard() {
 
     let y = 10;
     const x = 5;
+    
+    if (config.headerImage) {
+      try {
+        const imgProps = doc.getImageProperties(config.headerImage);
+        const imgHeightMM = (imgProps.height * docWidthMM) / imgProps.width;
+        let fileType = 'PNG';
+        if (config.headerImage.startsWith('data:image/jpeg') || config.headerImage.startsWith('data:image/jpg')) {
+          fileType = 'JPEG';
+        }
+        doc.addImage(config.headerImage, fileType, 0, 0, docWidthMM, imgHeightMM);
+        y = imgHeightMM + 5;
+      } catch (e) {
+        console.error("Error drawing header image", e);
+      }
+    }
     
     // Dynamic column widths based on total width
     const columnWidth = config.layout === 'vertical' 
@@ -4635,6 +4651,62 @@ function LabelConfigModal({ config, onClose, onSave }) {
         </header>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          {/* Header Image */}
+          <section style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>{t('modals.labels_header_image') || "Imagen encabezado"}</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              {t('modals.labels_header_image_desc') || "Introduce una imagen que aparecerá en la parte superior..."}
+            </p>
+            
+            {localConfig.headerImage ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{ maxWidth: '100%', maxHeight: '150px', overflow: 'hidden', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white' }}>
+                  <img src={localConfig.headerImage} alt="Header" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <label className="btn-secondary" style={{ cursor: 'pointer', padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center' }}>
+                    {t('modals.labels_header_image_change') || "Cambiar imagen"}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      style={{ display: 'none' }} 
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setLocalConfig({...localConfig, headerImage: reader.result});
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                  <button type="button" onClick={() => setLocalConfig({...localConfig, headerImage: null})} style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                    {t('modals.labels_header_image_remove') || "Eliminar imagen"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', border: '2px dashed var(--corp-green)', borderRadius: '0.75rem', cursor: 'pointer', background: 'rgba(66, 98, 22, 0.05)', color: 'var(--corp-green)' }}>
+                <Camera size={32} style={{ marginBottom: '0.5rem' }} />
+                <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{t('goods_receipt_form.upload_file') || "Subir imagen..."}</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setLocalConfig({...localConfig, headerImage: reader.result});
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            )}
+          </section>
+
           {/* Show/Hide Fields */}
           <section>
             <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_show_fields')}</h3>
