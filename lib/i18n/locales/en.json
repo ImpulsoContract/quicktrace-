@@ -75,7 +75,8 @@
     "error_login": "Login failed. Please check your credentials.",
     "error_invalid": "Invalid credentials. Please try again.",
     "error_generic": "An error occurred while trying to log in.",
-    "logout": "Logout"
+    "logout": "Logout",
+    "backtologin": "Back to login"
   },
   "sidebar": {
     "traceability": "Traceability",
@@ -108,7 +109,7 @@
     "goods_info": "Manage delivery notes and incoming goods from your suppliers.",
     "goods": "Goods",
     "view_note": "VIEW NOTE",
-    "lote": "LOTE",
+    "lote": "BATCH",
     "cleaning_info": "Manage and record area maintenance.",
     "cleaning": "Cleaning",
     "manage_zones": "MANAGE ZONES",
@@ -216,7 +217,16 @@
     "labels_layout_vertical": "Vertical (One item below another)",
     "labels_layout_horizontal_left": "Horizontal (Data left, ingredients right)",
     "labels_layout_horizontal_right": "Horizontal (Data right, ingredients left)",
-    "labels_font_size": "Font size"
+    "labels_font_size": "Font size",
+    "nutritional_info": "Nutritional Information (per 100g)",
+    "energy_value": "Energy Value",
+    "fats": "Fats",
+    "saturated_fats": "of which saturates",
+    "carbohydrates": "Carbohydrates",
+    "sugars": "of which sugars",
+    "proteins": "Proteins",
+    "salt": "Salt",
+    "labels_show_nutritional": "Show nutritional value table"
   },
   "alerts": {
     "missing_data": "Missing mandatory data:",
@@ -328,7 +338,13 @@
     "label_made_by": "Prepared by:",
     "label_date": "Prep. Date",
     "label_expiration": "Expiration",
-    "label_best_before": "Best before"
+    "label_best_before": "Best before",
+    "label_nutritional_title": "Nutritional information\n(Average values per 100g)",
+    "label_energy": "Energy\nvalue",
+    "label_fats": "Fat\nof which saturates",
+    "label_carbs": "Carbohydrates\nof which sugars",
+    "label_proteins": "Proteins",
+    "label_salt": "Salt"
   },
   "goods_receipt_form": {
     "product": "Product",

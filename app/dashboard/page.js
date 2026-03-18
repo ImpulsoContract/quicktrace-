@@ -35,7 +35,8 @@ const DEFAULT_LABEL_CONFIG = {
   complementaryOptions: {
     showElaborationText: false,
     showConservationText: false,
-    showBarcode: true
+    showBarcode: true,
+    showNutritionalTable: false
   },
   dimensions: {
     width: 10,
@@ -107,7 +108,14 @@ export default function ClientDashboard() {
     expiryType: "EXPIRATION",
     hasDryingRoom: false,
     elaborationInstructions: "",
-    conservationInstructions: ""
+    conservationInstructions: "",
+    energyValue: "",
+    fats: "",
+    saturatedFats: "",
+    carbohydrates: "",
+    sugars: "",
+    proteins: "",
+    salt: ""
   });
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
@@ -247,7 +255,14 @@ export default function ClientDashboard() {
       elaborationInstructions: recipe.elaborationInstructions || "",
       conservationInstructions: recipe.conservationInstructions || "",
       hasBarcode: !!recipe.hasBarcode,
-      barcode: recipe.barcode || ""
+      barcode: recipe.barcode || "",
+      energyValue: recipe.energyValue || "",
+      fats: recipe.fats || "",
+      saturatedFats: recipe.saturatedFats || "",
+      carbohydrates: recipe.carbohydrates || "",
+      sugars: recipe.sugars || "",
+      proteins: recipe.proteins || "",
+      salt: recipe.salt || ""
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -806,6 +821,36 @@ export default function ClientDashboard() {
         const splitText = doc.splitTextToSize(elaboration.recipe.conservationInstructions, columnWidth);
         doc.text(splitText, startX, currentY);
         currentY += (splitText.length * lineHeightMM);
+      }
+
+      if (config.complementaryOptions?.showNutritionalTable) {
+        const nInfo = elaboration.recipe;
+        if (nInfo.energyValue || nInfo.fats || nInfo.carbohydrates || nInfo.proteins || nInfo.salt) {
+          currentY += 2;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(fontSize - 2);
+          
+          const titleTxt = doc.splitTextToSize(t('traceability_form.label_nutritional_title') || "Información nutricional\n(Valores medios por 100g)", columnWidth);
+          doc.text(titleTxt, startX, currentY);
+          currentY += (titleTxt.length * lineHeightMM) + 1;
+          
+          doc.setFont("helvetica", "normal");
+          
+          const drawRow = (left, right) => {
+            const linesLeft = doc.splitTextToSize(left, columnWidth * 0.55);
+            const linesRight = doc.splitTextToSize(right, columnWidth * 0.45);
+            const mh = Math.max(linesLeft.length, linesRight.length);
+            doc.text(linesLeft, startX, currentY);
+            doc.text(linesRight, startX + (columnWidth * 0.55), currentY);
+            currentY += (mh * lineHeightMM);
+          };
+
+          drawRow(t('traceability_form.label_energy') || "Valor\nenergético", nInfo.energyValue || "");
+          drawRow(t('traceability_form.label_fats') || "Grasas\nde las cuales saturadas", (nInfo.fats || "") + "\n" + (nInfo.saturatedFats || ""));
+          drawRow(t('traceability_form.label_carbs') || "Hidratos de carbono\nde los cuales azúcares", (nInfo.carbohydrates || "") + "\n" + (nInfo.sugars || ""));
+          drawRow(t('traceability_form.label_proteins') || "Proteínas", nInfo.proteins || "");
+          drawRow(t('traceability_form.label_salt') || "Sal", nInfo.salt || "");
+        }
       }
 
       return currentY;
@@ -4226,6 +4271,42 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               </div>
             </div>
 
+            <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>{t('modals.nutritional_info') || "Información Nutricional (por 100g)"}</h3>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.energy_value') || "Valor energético"}</label>
+                  <input type="text" className="input-field" value={formData.energyValue || ""} onChange={e => setFormData({...formData, energyValue: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.fats') || "Grasas"}</label>
+                  <input type="text" className="input-field" value={formData.fats || ""} onChange={e => setFormData({...formData, fats: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.saturated_fats') || "de las cuales saturadas"}</label>
+                  <input type="text" className="input-field" value={formData.saturatedFats || ""} onChange={e => setFormData({...formData, saturatedFats: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.carbohydrates') || "Hidratos de carbono"}</label>
+                  <input type="text" className="input-field" value={formData.carbohydrates || ""} onChange={e => setFormData({...formData, carbohydrates: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.sugars') || "de los cuales azúcares"}</label>
+                  <input type="text" className="input-field" value={formData.sugars || ""} onChange={e => setFormData({...formData, sugars: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.proteins') || "Proteínas"}</label>
+                  <input type="text" className="input-field" value={formData.proteins || ""} onChange={e => setFormData({...formData, proteins: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.salt') || "Sal"}</label>
+                  <input type="text" className="input-field" value={formData.salt || ""} onChange={e => setFormData({...formData, salt: e.target.value})} />
+                </div>
+              </div>
+            </div>
+
             <div style={{ marginTop: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(66, 98, 22, 0.15)' }}>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
                 <input 
@@ -4622,6 +4703,14 @@ function LabelConfigModal({ config, onClose, onSave }) {
                   onChange={(e) => updateField('complementaryOptions', 'showBarcode', e.target.checked)}
                 />
                 <span style={{ fontSize: '0.9rem' }}>Mostrar código de barras</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.complementaryOptions.showNutritionalTable} 
+                  onChange={(e) => updateField('complementaryOptions', 'showNutritionalTable', e.target.checked)}
+                />
+                <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_nutritional') || "Mostrar la tabla de valor nutricional"}</span>
               </label>
             </div>
           </section>

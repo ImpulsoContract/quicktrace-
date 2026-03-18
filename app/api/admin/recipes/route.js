@@ -18,7 +18,14 @@ export async function POST(req) {
       name, 
       ingredients, // Array of { name, amount, unit, loteMandatory, quantityMandatory }
       lotesMandatory, // Deprecated at recipe level, but keeping for compatibility if needed
-      quantitiesMandatory // Deprecated at recipe level
+      quantitiesMandatory, // Deprecated at recipe level
+      energyValue,
+      fats,
+      saturatedFats,
+      carbohydrates,
+      sugars,
+      proteins,
+      salt
     } = body;
 
     const profileId = parseInt(clientProfileId);
@@ -52,6 +59,13 @@ export async function POST(req) {
         clientProfileId: profileId,
         lotesMandatory: !!lotesMandatory,
         quantitiesMandatory: !!quantitiesMandatory,
+        energyValue,
+        fats,
+        saturatedFats,
+        carbohydrates,
+        sugars,
+        proteins,
+        salt,
         ingredients: {
           create: ingredients.map((ing) => ({
             name: toTitleCase(ing.name),

@@ -19,7 +19,14 @@ export async function PATCH(req, { params }) {
       name, 
       ingredients, // Array of { name, amount, unit, loteMandatory, quantityMandatory }
       lotesMandatory,
-      quantitiesMandatory
+      quantitiesMandatory,
+      energyValue,
+      fats,
+      saturatedFats,
+      carbohydrates,
+      sugars,
+      proteins,
+      salt
     } = body;
 
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
@@ -79,6 +86,13 @@ export async function PATCH(req, { params }) {
           name,
           lotesMandatory: !!lotesMandatory,
           quantitiesMandatory: !!quantitiesMandatory,
+          energyValue,
+          fats,
+          saturatedFats,
+          carbohydrates,
+          sugars,
+          proteins,
+          salt,
           ingredients: {
             create: ingredients.map((ing) => ({
               name: toTitleCase(ing.name),

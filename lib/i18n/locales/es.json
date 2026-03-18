@@ -75,7 +75,8 @@
     "error_login": "Error al iniciar sesión. Compruebe sus credenciales.",
     "error_invalid": "Credenciales inválidas. Por favor, inténtalo de nuevo.",
     "error_generic": "Ha ocurrido un error al intentar iniciar sesión.",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "backtologin": "Volver al login"
   },
   "sidebar": {
     "traceability": "Trazabilidad",
@@ -216,7 +217,16 @@
     "labels_layout_vertical": "Vertical (Una cosa debajo de otra)",
     "labels_layout_horizontal_left": "Horizontal (Datos izquierda, ingredientes derecha)",
     "labels_layout_horizontal_right": "Horizontal (Datos derecha, ingredientes izquierda)",
-    "labels_font_size": "Tamaño de letra"
+    "labels_font_size": "Tamaño de letra",
+    "nutritional_info": "Información Nutricional (por 100g)",
+    "energy_value": "Valor energético",
+    "fats": "Grasas",
+    "saturated_fats": "de las cuales saturadas",
+    "carbohydrates": "Hidratos de carbono",
+    "sugars": "de los cuales azúcares",
+    "proteins": "Proteínas",
+    "salt": "Sal",
+    "labels_show_nutritional": "Mostrar la tabla de valor nutricional"
   },
   "alerts": {
     "missing_data": "Faltan datos obligatorios:",
@@ -328,7 +338,13 @@
     "label_made_by": "Elaborado por:",
     "label_date": "F. Elaboración",
     "label_expiration": "Caducidad",
-    "label_best_before": "Consumo preferente"
+    "label_best_before": "Consumo preferente",
+    "label_nutritional_title": "Información nutricional\n(Valores medios por 100g)",
+    "label_energy": "Valor\nenergético",
+    "label_fats": "Grasas\nde las cuales saturadas",
+    "label_carbs": "Hidratos de carbono\nde los cuales azúcares",
+    "label_proteins": "Proteínas",
+    "label_salt": "Sal"
   },
   "goods_receipt_form": {
     "product": "Producto",

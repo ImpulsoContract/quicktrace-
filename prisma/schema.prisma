@@ -137,6 +137,15 @@ model Recipe {
   hasBarcode            Boolean  @default(false)
   barcode               String?
   
+  // Nutritional info
+  energyValue           String?
+  fats                  String?
+  saturatedFats         String?
+  carbohydrates         String?
+  sugars                String?
+  proteins              String?
+  salt                  String?
+  
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 }
