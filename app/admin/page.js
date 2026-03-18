@@ -1744,3 +1744,195 @@ function AdminTermsTab({ onUpdateSuccess }) {
     </section>
   );
 }
+
+function CouponsTab({ plans }) {
+  const [coupons, setCoupons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const fetchCoupons = async () => {
+    try {
+      const res = await fetch("/api/admin/coupons");
+      const data = await res.json();
+      if (data.success) setCoupons(data.coupons);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchCoupons(); }, []);
+
+  const toggleCouponStatus = async (id, currentStatus) => {
+    if (!confirm(`¿Seguro que quieres ${currentStatus ? 'desactivar' : 'activar'} este cupón en Stripe?`)) return;
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, active: !currentStatus })
+      });
+      const data = await res.json();
+      if (data.success) fetchCoupons();
+      else alert(data.error);
+    } catch (e) { alert("Error de conexión"); }
+  };
+
+  return (
+    <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Tag size={24} color="var(--corp-green)" />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Cupones de Descuento</h2>
+        </div>
+        <button 
+          onClick={() => setShowAddModal(true)}
+          className="btn-primary" 
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Plus size={18} /> Crear Cupón
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '5rem' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+      ) : coupons.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '4rem', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
+          <Tag size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.5rem' }}>No hay cupones creados</h3>
+          <p style={{ color: 'var(--text-muted)' }}>Crea un cupón para ofrecer descuentos a tus clientes durante la contratación en Stripe.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {coupons.map(coupon => (
+            <div key={coupon.id} className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid var(--border)', opacity: coupon.active ? 1 : 0.6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--corp-green)', letterSpacing: '1px' }}>{coupon.code}</span>
+                <span style={{ 
+                  fontSize: '0.75rem', fontWeight: '700', padding: '0.25rem 0.5rem', borderRadius: '1rem',
+                  background: coupon.active ? '#dcfce3' : '#fee2e2', 
+                  color: coupon.active ? '#166534' : '#991b1b' 
+                }}>
+                  {coupon.active ? 'ACTIVO' : 'INACTIVO'}
+                </span>
+              </div>
+              <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '1rem' }}>
+                -{coupon.percentage}%
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                <strong>Duración:</strong> {coupon.duration === 'ONCE' ? 'Primer cobro' : coupon.duration === 'FOREVER' ? 'Para siempre' : `Repetido (${coupon.durationInMonths} meses)`}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                <strong>Planes:</strong> {coupon.plans.length > 0 ? coupon.plans.map(p => p.name).join(', ') : 'Todos válidos'}
+              </div>
+              
+              <button 
+                onClick={() => toggleCouponStatus(coupon.id, coupon.active)}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', border: '1px solid',
+                  background: coupon.active ? '#fef2f2' : '#f0fdf4',
+                  borderColor: coupon.active ? '#fee2e2' : '#bbf7d0',
+                  color: coupon.active ? '#ef4444' : '#16a34a'
+                }}
+              >
+                {coupon.active ? 'Desactivar Cupón' : 'Reactivar Cupón'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showAddModal && <AddCouponModal plans={plans} onClose={() => setShowAddModal(false)} onRefresh={fetchCoupons} />}
+    </section>
+  );
+}
+
+function AddCouponModal({ plans, onClose, onRefresh }) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    code: "",
+    percentage: 10,
+    duration: "ONCE",
+    durationInMonths: 12,
+    planIds: []
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        onRefresh();
+        onClose();
+      } else {
+        alert(data.error);
+      }
+    } catch (e) { alert("Error al crear cupón. Verifica la consola."); console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const handlePlanToggle = (planId) => {
+    setFormData(prev => {
+      const isSelected = prev.planIds.includes(planId);
+      return {
+        ...prev,
+        planIds: isSelected ? prev.planIds.filter(id => id !== planId) : [...prev.planIds, planId]
+      };
+    });
+  };
+
+  return (
+    <Modal title="Crear Cupón de Descuento (Stripe Promo)" onClose={onClose}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div>
+            <label className="label">Código (Mayúsculas, ej: VERANO50)</label>
+            <input type="text" className="input-field" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase().trim()})} required placeholder="Ej: VERANO50" minLength="3" />
+          </div>
+          <div>
+            <label className="label">Porcentaje de Descuento (%)</label>
+            <input type="number" min="1" max="100" className="input-field" value={formData.percentage} onChange={(e) => setFormData({...formData, percentage: parseInt(e.target.value)})} required />
+          </div>
+        </div>
+
+        <div>
+          <label className="label">Duración del código</label>
+          <select className="input-field" value={formData.duration} onChange={(e) => setFormData({...formData, duration: e.target.value})}>
+            <option value="ONCE">Un solo uso (Solamente el primer cobro del plan)</option>
+            <option value="REPEATING">Múltiples meses (Específicamente el primer año / X meses)</option>
+            <option value="FOREVER">Para siempre (Mientras dure la suscripción)</option>
+          </select>
+        </div>
+
+        {formData.duration === "REPEATING" && (
+          <div>
+            <label className="label">Número de meses en los que aplica</label>
+            <input type="number" min="1" max="120" className="input-field" value={formData.durationInMonths} onChange={(e) => setFormData({...formData, durationInMonths: parseInt(e.target.value)})} required />
+          </div>
+        )}
+
+        <div>
+           <label className="label" style={{ marginBottom: '1rem' }}>Planes Aplicables (Si no marcas ninguno, aplicará a todos)</label>
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+             {plans.map(plan => (
+               <Checkbox 
+                 key={plan.id}
+                 label={plan.name}
+                 checked={formData.planIds.includes(plan.id)}
+                 onChange={() => handlePlanToggle(plan.id)}
+               />
+             ))}
+           </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? "Sincronizando con Stripe..." : "Crear y Activar Cupón"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
