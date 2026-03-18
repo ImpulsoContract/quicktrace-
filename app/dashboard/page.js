@@ -830,19 +830,31 @@ export default function ClientDashboard() {
           doc.setFont("helvetica", "bold");
           doc.setFontSize(fontSize - 2);
           
-          const titleTxt = doc.splitTextToSize(t('traceability_form.label_nutritional_title') || "Información nutricional\n(Valores medios por 100g)", columnWidth);
-          doc.text(titleTxt, startX, currentY);
-          currentY += (titleTxt.length * lineHeightMM) + 1;
+          const titleTxt = doc.splitTextToSize(t('traceability_form.label_nutritional_title') || "Información nutricional\n(Valores medios por 100g)", columnWidth - 2);
+          
+          doc.setDrawColor(0);
+          doc.setLineWidth(0.3);
+          const titleHeight = (titleTxt.length * lineHeightMM) + 2;
+          doc.rect(startX, currentY, columnWidth, titleHeight);
+          doc.text(titleTxt, startX + 1, currentY + lineHeightMM);
+          currentY += titleHeight;
           
           doc.setFont("helvetica", "normal");
           
           const drawRow = (left, right) => {
-            const linesLeft = doc.splitTextToSize(left, columnWidth * 0.55);
-            const linesRight = doc.splitTextToSize(right, columnWidth * 0.45);
+            const linesLeft = doc.splitTextToSize(left, (columnWidth * 0.55) - 2);
+            const linesRight = doc.splitTextToSize(right, (columnWidth * 0.45) - 2);
             const mh = Math.max(linesLeft.length, linesRight.length);
-            doc.text(linesLeft, startX, currentY);
-            doc.text(linesRight, startX + (columnWidth * 0.55), currentY);
-            currentY += (mh * lineHeightMM);
+            const rowHeight = (mh * lineHeightMM) + 2;
+            
+            doc.setDrawColor(0);
+            doc.setLineWidth(0.3);
+            doc.rect(startX, currentY, columnWidth * 0.55, rowHeight);
+            doc.rect(startX + (columnWidth * 0.55), currentY, columnWidth * 0.45, rowHeight);
+            
+            doc.text(linesLeft, startX + 1, currentY + lineHeightMM);
+            doc.text(linesRight, startX + (columnWidth * 0.55) + 1, currentY + lineHeightMM);
+            currentY += rowHeight;
           };
 
           drawRow(t('traceability_form.label_energy') || "Valor\nenergético", nInfo.energyValue || "");
