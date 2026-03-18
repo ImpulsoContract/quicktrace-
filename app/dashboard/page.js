@@ -63,7 +63,7 @@ const mergeLabelConfig = (config) => {
 };
 
 export default function ClientDashboard() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("trazabilidad");
   const [recipes, setRecipes] = useState([]);
