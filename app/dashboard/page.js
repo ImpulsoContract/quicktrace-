@@ -1878,7 +1878,7 @@ export default function ClientDashboard() {
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "eHdC-SSK5dA" })}
                       className="btn-secondary" 
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
@@ -1943,7 +1943,7 @@ export default function ClientDashboard() {
                       <Settings size={18} /> {t('dashboard.configure_labels')}
                     </button>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "eHdC-SSK5dA" })}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                     >
@@ -2171,7 +2171,7 @@ export default function ClientDashboard() {
                       <FileText size={18} /> {t('dashboard.generate_goods_report')}
                     </button>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: "rzrGj1OouVo" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "rzrGj1OouVo" })}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
                     >
@@ -2372,7 +2372,7 @@ export default function ClientDashboard() {
 
               <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'flex-end' }}>
                   <button 
-                    onClick={() => setVideoModal({ isOpen: true, videoId: "62WLwGwTvew" })}
+                    onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'WwEylvzD3rc' : "62WLwGwTvew" })}
                     className="btn-secondary"
                     style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
                   >
@@ -2572,7 +2572,7 @@ export default function ClientDashboard() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.temperature_info')}</p>
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: "TKl-sUpuDGg" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'BLOFFbJGTdw' : "TKl-sUpuDGg" })}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
                     >
@@ -2774,7 +2774,7 @@ export default function ClientDashboard() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.recipe_manage_desc')}</p>
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: "eHdC-SSK5dA" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "eHdC-SSK5dA" })}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
                     >
