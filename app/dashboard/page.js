@@ -33,29 +33,31 @@ const DEFAULT_LABEL_CONFIG = {
     showLote: false,
     showAmount: false
   },
-  complementaryOptions: {
-    showElaborationText: false,
-    showConservationText: false,
-    showBarcode: true,
-    showNutritionalTable: false,
-    showAllergens: false
+  ingredientOptions: {
+    showLote: false,
+    showAmount: false
   },
-  dimensions: {
-    width: 10,
-    height: 8
-  },
-  layout: 'vertical',
-  fontSize: 14
+  fontSize: 14,
+  columnsCount: 1,
+  columns: {
+    col1: ["recipeName", "lote", "elaborationDate", "expirationDate", "ingredientsList"],
+    col2: []
+  }
 };
 
 const mergeLabelConfig = (config) => {
   if (!config || Object.keys(config).length === 0) return DEFAULT_LABEL_CONFIG;
+  
+  let mergedCols = config.columns || DEFAULT_LABEL_CONFIG.columns;
+  if (!config.columns && config.showFields) {
+    mergedCols = DEFAULT_LABEL_CONFIG.columns;
+  }
+
   return {
     ...DEFAULT_LABEL_CONFIG,
     ...config,
-    showFields: { ...DEFAULT_LABEL_CONFIG.showFields, ...(config.showFields || {}) },
+    columns: mergedCols,
     ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) },
-    complementaryOptions: { ...DEFAULT_LABEL_CONFIG.complementaryOptions, ...(config.complementaryOptions || {}) },
     dimensions: { ...DEFAULT_LABEL_CONFIG.dimensions, ...(config.dimensions || {}) }
   };
 };
@@ -777,183 +779,197 @@ export default function ClientDashboard() {
     }
     
     // Dynamic column widths based on total width
-    const columnWidth = config.layout === 'vertical' 
-      ? docWidthMM - (x * 2) 
-      : (docWidthMM / 2) - x - 5; 
+    const columnWidth = config.columnsCount === 2 
+      ? (docWidthMM / 2) - x - 5 
+      : docWidthMM - (x * 2); 
 
     // Calculate midpoint for horizontal layouts
     const horizontalMidpoint = docWidthMM / 2;
 
-    const drawElabData = (startX, startY) => {
-      let currentY = startY;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(fontSize); 
-      doc.text(elaboration.recipe.name, startX, currentY);
-      currentY += lineHeightMM;
-      
+    const renderElement = (elKey, startX, currentY) => {
+      let initialY = currentY;
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(fontSize); 
+      doc.setFontSize(fontSize);
+      doc.setTextColor(0, 0, 0);
 
-      if (config.showFields?.lote) {
-        doc.text(`${t('dashboard.lote')}:`, startX, currentY);
-        currentY += lineHeightMM;
-        doc.text(elaboration.name, startX, currentY);
-        currentY += lineHeightMM;
-      }
-      if (config.showFields?.person && elaboration.personName) {
-        let personLabel = t('traceability_form.label_made_by');
-        if (!personLabel.endsWith(':')) personLabel += ':';
-        doc.text(personLabel, startX, currentY);
-        currentY += lineHeightMM;
-        doc.text(elaboration.personName, startX, currentY);
-        currentY += lineHeightMM;
-      }
-      if (config.showFields?.date) {
-        doc.text(`${t('traceability_form.label_date')}:`, startX, currentY);
-        currentY += lineHeightMM;
-        const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
-        doc.text(dateStr, startX, currentY);
-        currentY += lineHeightMM;
-      }
-      if (config.showFields?.expiration && elaboration.expirationDate) {
-        const expLabel = elaboration.recipe.expiryType === "BEST_BEFORE" 
-          ? t('traceability_form.label_best_before') 
-          : t('traceability_form.label_expiration');
-        doc.text(`${expLabel}:`, startX, currentY);
-        currentY += lineHeightMM;
-        const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
-        doc.text(expStr, startX, currentY);
-        currentY += lineHeightMM;
-      }
-      
-      if (config.complementaryOptions?.showElaborationText && elaboration.recipe.elaborationInstructions) {
-        doc.text("Elaboración:", startX, currentY);
-        currentY += lineHeightMM;
-        const splitText = doc.splitTextToSize(elaboration.recipe.elaborationInstructions, columnWidth);
-        doc.text(splitText, startX, currentY);
-        currentY += (splitText.length * lineHeightMM);
-      }
-
-      if (config.complementaryOptions?.showConservationText && elaboration.recipe.conservationInstructions) {
-        doc.text("Conservación:", startX, currentY);
-        currentY += lineHeightMM;
-        const splitText = doc.splitTextToSize(elaboration.recipe.conservationInstructions, columnWidth);
-        doc.text(splitText, startX, currentY);
-        currentY += (splitText.length * lineHeightMM);
-      }
-
-      if (config.complementaryOptions?.showAllergens && elaboration.recipe.allergens && elaboration.recipe.allergens.length > 0) {
-        const allergensList = elaboration.recipe.allergens.map(a => t(`allergens.list.${a}`)).join(', ');
-        const titleTxt = `${t('allergens.prefix_label') || "Alérgenos: "}${allergensList}`;
-        doc.setFont("helvetica", "bold");
-        const lines = doc.splitTextToSize(titleTxt, columnWidth);
-        doc.text(lines, startX, currentY);
-        currentY += (lines.length * lineHeightMM);
-      }
-
-      if (config.complementaryOptions?.showNutritionalTable) {
-        const nInfo = elaboration.recipe;
-        if (nInfo.energyValue || nInfo.fats || nInfo.carbohydrates || nInfo.proteins || nInfo.salt) {
-          currentY += 2;
+      switch (elKey) {
+        case 'recipeName':
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(fontSize - 2);
-          
-          const titleTxt = doc.splitTextToSize(t('traceability_form.label_nutritional_title') || "Información nutricional\n(Valores medios por 100g)", columnWidth - 2);
-          
-          doc.setDrawColor(0);
-          doc.setLineWidth(0.3);
-          const titleHeight = (titleTxt.length * lineHeightMM) + 2;
-          doc.rect(startX, currentY, columnWidth, titleHeight);
-          doc.text(titleTxt, startX + 1, currentY + lineHeightMM);
-          currentY += titleHeight;
-          
+          doc.setFontSize(fontSize + 2); 
+          const nameLines = doc.splitTextToSize(elaboration.recipe.name, columnWidth);
+          doc.text(nameLines, startX, currentY);
+          currentY += (nameLines.length * lineHeightMM);
+          break;
+        case 'lote':
+          doc.setFont("helvetica", "bold");
+          doc.text(`${t('dashboard.lote')}:`, startX, currentY);
+          currentY += lineHeightMM;
           doc.setFont("helvetica", "normal");
-          
-          const drawRow = (left, right) => {
-            const linesLeft = doc.splitTextToSize(left, (columnWidth * 0.55) - 2);
-            const linesRight = doc.splitTextToSize(right, (columnWidth * 0.45) - 2);
-            const mh = Math.max(linesLeft.length, linesRight.length);
-            const rowHeight = (mh * lineHeightMM) + 2;
-            
+          doc.text(elaboration.name, startX, currentY);
+          currentY += lineHeightMM;
+          break;
+        case 'madeBy':
+          if (elaboration.personName) {
+            let personLabel = t('traceability_form.label_made_by');
+            if (!personLabel.endsWith(':')) personLabel += ':';
+            doc.setFont("helvetica", "bold");
+            doc.text(personLabel, startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+            doc.text(elaboration.personName, startX, currentY);
+            currentY += lineHeightMM;
+          }
+          break;
+        case 'elaborationDate':
+          doc.setFont("helvetica", "bold");
+          doc.text(`${t('traceability_form.label_date')}:`, startX, currentY);
+          currentY += lineHeightMM;
+          doc.setFont("helvetica", "normal");
+          const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
+          doc.text(dateStr, startX, currentY);
+          currentY += lineHeightMM;
+          break;
+        case 'expirationDate':
+          if (elaboration.expirationDate) {
+            const expLabel = elaboration.recipe.expiryType === "BEST_BEFORE" 
+              ? t('traceability_form.label_best_before') 
+              : t('traceability_form.label_expiration');
+            doc.setFont("helvetica", "bold");
+            doc.text(`${expLabel}:`, startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+            const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
+            doc.text(expStr, startX, currentY);
+            currentY += lineHeightMM;
+          }
+          break;
+        case 'elaborationInstructions':
+          if (elaboration.recipe.elaborationInstructions) {
+            doc.setFont("helvetica", "bold");
+            doc.text("Elaboración:", startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+            const splitText = doc.splitTextToSize(elaboration.recipe.elaborationInstructions, columnWidth);
+            doc.text(splitText, startX, currentY);
+            currentY += (splitText.length * lineHeightMM);
+          }
+          break;
+        case 'conservationInstructions':
+          if (elaboration.recipe.conservationInstructions) {
+            doc.setFont("helvetica", "bold");
+            doc.text("Conservación:", startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+            const splitText = doc.splitTextToSize(elaboration.recipe.conservationInstructions, columnWidth);
+            doc.text(splitText, startX, currentY);
+            currentY += (splitText.length * lineHeightMM);
+          }
+          break;
+        case 'allergens':
+          if (elaboration.recipe.allergens && elaboration.recipe.allergens.length > 0) {
+            const allergensList = elaboration.recipe.allergens.map(a => t(`allergens.list.${a}`) || a).join(', ');
+            const titleTxt = `${t('allergens.prefix_label') || "Alérgenos: "}${allergensList}`;
+            doc.setFont("helvetica", "bold");
+            const lines = doc.splitTextToSize(titleTxt, columnWidth);
+            doc.text(lines, startX, currentY);
+            currentY += (lines.length * lineHeightMM);
+          }
+          break;
+        case 'nutritionalTable':
+          const nInfo = elaboration.recipe;
+          if (nInfo.energyValue || nInfo.fats || nInfo.carbohydrates || nInfo.proteins || nInfo.salt) {
+            currentY += 2;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(fontSize - 2);
+            const titleTxt = doc.splitTextToSize(t('traceability_form.label_nutritional_title') || "Información nutricional\n(Valores medios por 100g)", columnWidth - 2);
             doc.setDrawColor(0);
             doc.setLineWidth(0.3);
-            doc.rect(startX, currentY, columnWidth * 0.55, rowHeight);
-            doc.rect(startX + (columnWidth * 0.55), currentY, columnWidth * 0.45, rowHeight);
-            
-            doc.text(linesLeft, startX + 1, currentY + lineHeightMM);
-            doc.text(linesRight, startX + (columnWidth * 0.55) + 1, currentY + lineHeightMM);
-            currentY += rowHeight;
-          };
-
-          drawRow(t('traceability_form.label_energy') || "Valor\nenergético", nInfo.energyValue || "");
-          drawRow(t('traceability_form.label_fats') || "Grasas\nde las cuales saturadas", (nInfo.fats || "") + "\n" + (nInfo.saturatedFats || ""));
-          drawRow(t('traceability_form.label_carbs') || "Hidratos de carbono\nde los cuales azúcares", (nInfo.carbohydrates || "") + "\n" + (nInfo.sugars || ""));
-          drawRow(t('traceability_form.label_proteins') || "Proteínas", nInfo.proteins || "");
-          drawRow(t('traceability_form.label_salt') || "Sal", nInfo.salt || "");
-        }
+            const titleHeight = (titleTxt.length * lineHeightMM) + 2;
+            doc.rect(startX, currentY, columnWidth, titleHeight);
+            doc.text(titleTxt, startX + 1, currentY + lineHeightMM);
+            currentY += titleHeight;
+            doc.setFont("helvetica", "normal");
+            const drawRow = (left, right) => {
+              const linesLeft = doc.splitTextToSize(left, (columnWidth * 0.55) - 2);
+              const linesRight = doc.splitTextToSize(right, (columnWidth * 0.45) - 2);
+              const mh = Math.max(linesLeft.length, linesRight.length);
+              const rowHeight = (mh * lineHeightMM) + 2;
+              doc.setDrawColor(0);
+              doc.setLineWidth(0.3);
+              doc.rect(startX, currentY, columnWidth * 0.55, rowHeight);
+              doc.rect(startX + (columnWidth * 0.55), currentY, columnWidth * 0.45, rowHeight);
+              doc.text(linesLeft, startX + 1, currentY + lineHeightMM);
+              doc.text(linesRight, startX + (columnWidth * 0.55) + 1, currentY + lineHeightMM);
+              currentY += rowHeight;
+            };
+            drawRow(t('traceability_form.label_energy') || "Valor\nenergético", nInfo.energyValue || "");
+            drawRow(t('traceability_form.label_fats') || "Grasas\nde las cuales saturadas", (nInfo.fats || "") + "\n" + (nInfo.saturatedFats || ""));
+            drawRow(t('traceability_form.label_carbs') || "Hidratos de carbono\nde los cuales azúcares", (nInfo.carbohydrates || "") + "\n" + (nInfo.sugars || ""));
+            drawRow(t('traceability_form.label_proteins') || "Proteínas", nInfo.proteins || "");
+            drawRow(t('traceability_form.label_salt') || "Sal", nInfo.salt || "");
+            doc.setFontSize(fontSize);
+          }
+          break;
+        case 'ingredientsList':
+          if (elaboration.ingredients && elaboration.ingredients.length > 0) {
+            doc.setFont("helvetica", "bold");
+            doc.text(t('modals.ingredients'), startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+            elaboration.ingredients.forEach(ing => {
+              let ingText = `- ${ing.name}`;
+              if (config.ingredientOptions?.showLote && ing.lote) ingText += ` (${ing.lote})`;
+              if (config.ingredientOptions?.showAmount) ingText += `: ${ing.realAmount} ${ing.unit}`;
+              const splitText = doc.splitTextToSize(ingText, columnWidth);
+              doc.text(splitText, startX, currentY);
+              currentY += (splitText.length * lineHeightMM);
+            });
+          }
+          break;
+        case 'barcode':
+          if (elaboration.recipe.hasBarcode && elaboration.recipe.barcode) {
+            try {
+              const canvas = document.createElement('canvas');
+              JsBarcode(canvas, elaboration.recipe.barcode, {
+                format: "EAN13",
+                displayValue: true,
+                fontSize: 14,
+                margin: 0,
+                height: 40
+              });
+              const barcodeDataUrl = canvas.toDataURL("image/jpeg");
+              const barcodeWidthMM = 35;
+              const barcodeHeightMM = 15;
+              const bcrX = startX + (columnWidth - barcodeWidthMM) / 2;
+              doc.addImage(barcodeDataUrl, 'JPEG', bcrX, currentY, barcodeWidthMM, barcodeHeightMM);
+              currentY += barcodeHeightMM + 5;
+            } catch (err) {
+              console.error("Failed to generate label barcode:", err);
+            }
+          }
+          break;
       }
-
+      
+      if (currentY > initialY) {
+        currentY += 2;
+      }
       return currentY;
     };
 
-    const drawIngredients = (startX, startY) => {
-      let currentY = startY;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(fontSize);
-      doc.text(t('modals.ingredients'), startX, currentY);
-      currentY += lineHeightMM;
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(fontSize);
-      
-      elaboration.ingredients.forEach(ing => {
-        let ingText = `- ${ing.name}`;
-        if (config.ingredientOptions?.showLote && ing.lote) ingText += ` (${ing.lote})`;
-        if (config.ingredientOptions?.showAmount) ingText += `: ${ing.realAmount} ${ing.unit}`;
-        
-        const splitText = doc.splitTextToSize(ingText, columnWidth);
-        doc.text(splitText, startX, currentY);
-        currentY += (splitText.length * lineHeightMM);
+    const colDiff = config.columnsCount === 2 ? 5 : 0;
+    const renderColumnArray = (arr, startColX, startColY) => {
+      let currentY = startColY;
+      (arr || []).forEach(itemKey => {
+        currentY = renderElement(itemKey, startColX, currentY);
       });
+      return currentY;
     };
 
-    if (config.layout === 'vertical') {
-      y = drawElabData(x, y);
-      y += 5;
-      drawIngredients(x, y);
-    } else if (config.layout === 'horizontal_left') {
-      drawElabData(x, y);
-      drawIngredients(horizontalMidpoint, y);
+    if (config.columnsCount === 2) {
+      renderColumnArray(config.columns?.col1, x, y);
+      renderColumnArray(config.columns?.col2, horizontalMidpoint + colDiff, y);
     } else {
-      drawIngredients(x, y);
-      drawElabData(horizontalMidpoint, y);
-    }
-
-    if (config.complementaryOptions?.showBarcode !== false && elaboration.recipe.hasBarcode && elaboration.recipe.barcode) {
-      try {
-        const canvas = document.createElement('canvas');
-        JsBarcode(canvas, elaboration.recipe.barcode, {
-          format: "EAN13",
-          displayValue: true,
-          fontSize: 14,
-          margin: 0,
-          height: 40
-        });
-        
-        const barcodeDataUrl = canvas.toDataURL("image/jpeg");
-        
-        // Dimensions for the barcode on the PDF
-        const barcodeWidthMM = 35;
-        const barcodeHeightMM = 15;
-        
-        // Center the barcode horizontally at the bottom
-        const startX = (docWidthMM - barcodeWidthMM) / 2;
-        const startY = docHeightMM - barcodeHeightMM - 5; // 5mm from bottom edge
-        
-        doc.addImage(barcodeDataUrl, 'JPEG', startX, startY, barcodeWidthMM, barcodeHeightMM);
-      } catch (err) {
-        console.error("Failed to generate label barcode:", err);
-      }
+      renderColumnArray(config.columns?.col1, x, y);
     }
 
     doc.save(`Etiqueta_${elaboration.name}.pdf`);
@@ -4630,6 +4646,54 @@ function LabelConfigModal({ config, onClose, onSave }) {
     onClose();
   };
 
+  const ALL_ELEMENTS = [
+    'recipeName', 'lote', 'elaborationDate', 'expirationDate', 
+    'elaborationInstructions', 'conservationInstructions', 
+    'allergens', 'nutritionalTable', 'ingredientsList', 
+    'madeBy', 'barcode'
+  ];
+
+  const getAvailableElements = () => {
+    const used = [...(localConfig.columns?.col1 || []), ...(localConfig.columns?.col2 || [])];
+    return ALL_ELEMENTS.filter(el => !used.includes(el));
+  };
+
+  const handleDrop = (e, targetCol) => {
+    e.preventDefault();
+    const item = e.dataTransfer.getData('text/plain');
+    if (!item) return;
+
+    let newCol1 = [...(localConfig.columns?.col1 || [])].filter(i => i !== item);
+    let newCol2 = [...(localConfig.columns?.col2 || [])].filter(i => i !== item);
+
+    if (targetCol === 'col1') newCol1.push(item);
+    if (targetCol === 'col2') newCol2.push(item);
+
+    setLocalConfig({
+      ...localConfig,
+      columns: { col1: newCol1, col2: newCol2 }
+    });
+  };
+
+  const moveItem = (col, index, direction) => {
+    const newCol = [...(localConfig.columns[col] || [])];
+    if (direction === -1 && index > 0) {
+      const temp = newCol[index - 1];
+      newCol[index - 1] = newCol[index];
+      newCol[index] = temp;
+    } else if (direction === 1 && index < newCol.length - 1) {
+      const temp = newCol[index + 1];
+      newCol[index + 1] = newCol[index];
+      newCol[index] = temp;
+    }
+    setLocalConfig({ ...localConfig, columns: { ...localConfig.columns, [col]: newCol } });
+  };
+
+  const removeItem = (col, item) => {
+    const newCol = [...(localConfig.columns[col] || [])].filter(i => i !== item);
+    setLocalConfig({ ...localConfig, columns: { ...localConfig.columns, [col]: newCol } });
+  };
+
   const updateField = (section, field, value) => {
     setLocalConfig({
       ...localConfig,
@@ -4707,164 +4771,123 @@ function LabelConfigModal({ config, onClose, onSave }) {
             )}
           </section>
 
-          {/* Show/Hide Fields */}
+          {/* Label Columns UI */}
           <section>
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_show_fields')}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              {[
-                { id: 'lote', label: t('modals.labels_batch_num') },
-                { id: 'person', label: t('modals.labels_made_by') },
-                { id: 'date', label: t('modals.labels_date') },
-                { id: 'expiration', label: t('modals.labels_expiration') }
-              ].map(field => (
-                <div key={field.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{field.label}</span>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
-                      <input 
-                        type="radio" 
-                        name={`show-${field.id}`} 
-                        checked={localConfig.showFields[field.id] === true} 
-                        onChange={() => updateField('showFields', field.id, true)}
-                      /> {t('dashboard.show')}
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
-                      <input 
-                        type="radio" 
-                        name={`show-${field.id}`} 
-                        checked={localConfig.showFields[field.id] === false} 
-                        onChange={() => updateField('showFields', field.id, false)}
-                      /> {t('common.no')}
-                    </label>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>
+              {t('modals.labels_columns_count') || "Número de columnas disponibles"}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              {t('modals.labels_columns_count_desc') || "Selecciona si quieres mostrar la información de tu etiqueta en una o dos columnas."}
+            </p>
+            <select 
+              className="input-field" 
+              value={localConfig.columnsCount || 1} 
+              onChange={(e) => {
+                const count = parseInt(e.target.value);
+                let newLocalConfig = { ...localConfig, columnsCount: count };
+                if (count === 1) {
+                  // Merge col2 back to available if switching to 1
+                  newLocalConfig.columns = { ...newLocalConfig.columns, col2: [] };
+                }
+                setLocalConfig(newLocalConfig);
+              }}
+              style={{ padding: '0.75rem', marginBottom: '2rem' }}
+            >
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+            </select>
+
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', overflowX: 'auto', paddingBottom: '1rem' }}>
+              
+              {/* Available Elements */}
+              <div 
+                onDragOver={(e) => e.preventDefault()} 
+                onDrop={(e) => handleDrop(e, 'available')}
+                style={{ flex: 1, minWidth: '200px', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', minHeight: '300px' }}
+              >
+                <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  {t('modals.labels_col_available') || "Elementos disponibles"}
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {getAvailableElements().map(el => (
+                    <div 
+                      key={el}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData('text/plain', el)}
+                      style={{ padding: '0.75rem', background: 'white', border: '1px solid var(--border)', borderRadius: '0.5rem', fontSize: '0.85rem', cursor: 'grab', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                    >
+                      {t(`modals.labels_elements.${el}`) || el}
+                    </div>
+                  ))}
+                  {getAvailableElements().length === 0 && (
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>Ninguno</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Columna 1 */}
+              <div 
+                onDragOver={(e) => e.preventDefault()} 
+                onDrop={(e) => handleDrop(e, 'col1')}
+                style={{ flex: 1, minWidth: '220px', background: 'rgba(66, 98, 22, 0.05)', padding: '1rem', borderRadius: '0.75rem', border: '2px dashed var(--corp-green)', minHeight: '300px' }}
+              >
+                <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '1rem', textAlign: 'center', color: 'var(--corp-green)' }}>
+                  {t('modals.labels_col_1') || "Columna 1"}
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {(localConfig.columns?.col1 || []).map((el, idx, arr) => (
+                    <div 
+                      key={el}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData('text/plain', el)}
+                      style={{ padding: '0.5rem', background: 'white', border: '1px solid var(--corp-green)', borderRadius: '0.5rem', fontSize: '0.85rem', cursor: 'grab', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <span>{t(`modals.labels_elements.${el}`) || el}</span>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button type="button" onClick={() => moveItem('col1', idx, -1)} disabled={idx === 0} style={{ border: 'none', background: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#cbd5e1' : 'var(--text-main)' }}>↑</button>
+                        <button type="button" onClick={() => moveItem('col1', idx, 1)} disabled={idx === arr.length - 1} style={{ border: 'none', background: 'none', cursor: idx === arr.length - 1 ? 'default' : 'pointer', color: idx === arr.length - 1 ? '#cbd5e1' : 'var(--text-main)' }}>↓</button>
+                        <button type="button" onClick={() => removeItem('col1', el)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', marginLeft: '0.25rem' }}>×</button>
+                      </div>
+                    </div>
+                  ))}
+                  {(localConfig.columns?.col1 || []).length === 0 && (
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>Arrastra elementos aquí</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Columna 2 */}
+              {(localConfig.columnsCount === 2) && (
+                <div 
+                  onDragOver={(e) => e.preventDefault()} 
+                  onDrop={(e) => handleDrop(e, 'col2')}
+                  style={{ flex: 1, minWidth: '220px', background: 'rgba(66, 98, 22, 0.05)', padding: '1rem', borderRadius: '0.75rem', border: '2px dashed var(--corp-green)', minHeight: '300px' }}
+                >
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '1rem', textAlign: 'center', color: 'var(--corp-green)' }}>
+                    {t('modals.labels_col_2') || "Columna 2"}
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {(localConfig.columns?.col2 || []).map((el, idx, arr) => (
+                      <div 
+                        key={el}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', el)}
+                        style={{ padding: '0.5rem', background: 'white', border: '1px solid var(--corp-green)', borderRadius: '0.5rem', fontSize: '0.85rem', cursor: 'grab', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                      >
+                        <span>{t(`modals.labels_elements.${el}`) || el}</span>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button type="button" onClick={() => moveItem('col2', idx, -1)} disabled={idx === 0} style={{ border: 'none', background: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#cbd5e1' : 'var(--text-main)' }}>↑</button>
+                          <button type="button" onClick={() => moveItem('col2', idx, 1)} disabled={idx === arr.length - 1} style={{ border: 'none', background: 'none', cursor: idx === arr.length - 1 ? 'default' : 'pointer', color: idx === arr.length - 1 ? '#cbd5e1' : 'var(--text-main)' }}>↓</button>
+                          <button type="button" onClick={() => removeItem('col2', el)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', marginLeft: '0.25rem' }}>×</button>
+                        </div>
+                      </div>
+                    ))}
+                    {(localConfig.columns?.col2 || []).length === 0 && (
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>Arrastra elementos aquí</div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Dimensions */}
-          <section>
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>Dimensiones de etiqueta (cm)</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label className="label" style={{ fontSize: '0.85rem' }}>Ancho (cm)</label>
-                <input 
-                  type="number" 
-                  step="0.1"
-                  min="3"
-                  className="input-field" 
-                  value={localConfig.dimensions?.width || 10} 
-                  onChange={(e) => updateField('dimensions', 'width', parseFloat(e.target.value) || 10)}
-                  style={{ padding: '0.75rem' }}
-                />
-              </div>
-              <div>
-                <label className="label" style={{ fontSize: '0.85rem' }}>Alto (cm)</label>
-                <input 
-                  type="number" 
-                  step="0.1"
-                  min="3"
-                  className="input-field" 
-                  value={localConfig.dimensions?.height || 8} 
-                  onChange={(e) => updateField('dimensions', 'height', parseFloat(e.target.value) || 8)}
-                  style={{ padding: '0.75rem' }}
-                />
-              </div>
-            </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-              Define el tamaño físico de la etiqueta para la impresora, en centímetros (ej: 10 x 8).
-            </p>
-          </section>
-
-          {/* Ingredient Options */}
-          <section>
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_ingredients_options')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={localConfig.ingredientOptions.showLote} 
-                  onChange={(e) => updateField('ingredientOptions', 'showLote', e.target.checked)}
-                />
-                <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_ing_batch')}</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={localConfig.ingredientOptions.showAmount} 
-                  onChange={(e) => updateField('ingredientOptions', 'showAmount', e.target.checked)}
-                />
-                <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_ing_amount')}</span>
-              </label>
-            </div>
-          </section>
-
-          {/* Complementary Content Options */}
-          <section>
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>Contenido complementario</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={localConfig.complementaryOptions.showElaborationText} 
-                  onChange={(e) => updateField('complementaryOptions', 'showElaborationText', e.target.checked)}
-                />
-                <span style={{ fontSize: '0.9rem' }}>Incluye el modo de elaboración en la etiqueta</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={localConfig.complementaryOptions.showConservationText} 
-                  onChange={(e) => updateField('complementaryOptions', 'showConservationText', e.target.checked)}
-                />
-                <span style={{ fontSize: '0.9rem' }}>Incluye el modo de conservación en la etiqueta</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={localConfig.complementaryOptions.showBarcode !== false} 
-                  onChange={(e) => updateField('complementaryOptions', 'showBarcode', e.target.checked)}
-                />
-                <span style={{ fontSize: '0.9rem' }}>Mostrar código de barras</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={localConfig.complementaryOptions.showNutritionalTable} 
-                  onChange={(e) => updateField('complementaryOptions', 'showNutritionalTable', e.target.checked)}
-                />
-                <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_nutritional') || "Mostrar la tabla de valor nutricional"}</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={localConfig.complementaryOptions.showAllergens} 
-                  onChange={(e) => updateField('complementaryOptions', 'showAllergens', e.target.checked)}
-                />
-                <span style={{ fontSize: '0.9rem' }}>{t('allergens.show_allergens') || "Mostrar la información de alérgenos"}</span>
-              </label>
-            </div>
-          </section>
-
-          {/* Layout Options */}
-          <section>
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>{t('modals.labels_layout_options')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {[
-                { id: 'vertical', label: t('modals.labels_layout_vertical') },
-                { id: 'horizontal_left', label: t('modals.labels_layout_horizontal_left') },
-                { id: 'horizontal_right', label: t('modals.labels_layout_horizontal_right') }
-              ].map(opt => (
-                <label key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: localConfig.layout === opt.id ? '#f0fdf4' : '#f8fafc', border: `1px solid ${localConfig.layout === opt.id ? 'var(--corp-green)' : 'transparent'}`, borderRadius: '0.75rem', cursor: 'pointer' }}>
-                  <input 
-                    type="radio" 
-                    name="layout" 
-                    checked={localConfig.layout === opt.id} 
-                    onChange={() => setLocalConfig({...localConfig, layout: opt.id})}
-                  />
-                  <span style={{ fontSize: '0.9rem', fontWeight: localConfig.layout === opt.id ? '700' : '500' }}>{opt.label}</span>
-                </label>
-              ))}
+              )}
             </div>
           </section>
 

@@ -230,7 +230,25 @@
     "sugars": "de los cuales azúcares",
     "proteins": "Proteínas",
     "salt": "Sal",
-    "labels_show_nutritional": "Mostrar la tabla de valor nutricional"
+    "labels_show_nutritional": "Mostrar la tabla de valor nutricional",
+    "labels_columns_count": "Número de columnas disponibles",
+    "labels_columns_count_desc": "Selecciona si quieres mostrar la información de tu etiqueta en una o dos columnas.",
+    "labels_col_available": "Elementos disponibles",
+    "labels_col_1": "Columna 1",
+    "labels_col_2": "Columna 2",
+    "labels_elements": {
+      "recipeName": "Nombre de la receta",
+      "lote": "Número de lote",
+      "elaborationDate": "Fecha de elaboración",
+      "expirationDate": "Fecha de caducidad",
+      "elaborationInstructions": "Elaboración",
+      "conservationInstructions": "Conservación",
+      "allergens": "Alérgenos",
+      "nutritionalTable": "Valor nutricional",
+      "ingredientsList": "Listado de ingredientes",
+      "madeBy": "Persona que elabora",
+      "barcode": "Código de barras"
+    }
   },
   "alerts": {
     "missing_data": "Faltan datos obligatorios:",
