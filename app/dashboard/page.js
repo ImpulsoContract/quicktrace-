@@ -3323,6 +3323,16 @@ export default function ClientDashboard() {
           overflow-y: auto;
           max-height: 90vh;
         }
+
+        .modal-content > header {
+          position: sticky;
+          top: -2.5rem; /* Counteract padding */
+          background: white;
+          z-index: 50;
+          padding: 2.5rem 2.5rem 1.5rem 2.5rem;
+          margin: -2.5rem -2.5rem 2rem -2.5rem;
+          border-bottom: 1px solid var(--border);
+        }
       `}</style>
       {isBulkDeleteModalOpen && (
         <div className="modal-overlay">
@@ -4706,10 +4716,10 @@ function LabelConfigModal({ config, onClose, onSave }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '600px' }}>
+      <div className="modal-content" style={{ maxWidth: '750px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('modals.labels_header')}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>{t('modals.labels_header')}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <X size={24} />
           </button>
         </header>
