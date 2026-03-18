@@ -3626,7 +3626,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               </div>
             </div>
             <div className="form-group">
-              <label className="label">Temperatura de fabricación <span style={{fontSize:'0.8em', color:'var(--text-muted)'}}>(Opcional)</span></label>
+              <label className="label">Temperatura de fabricación</label>
               <div style={{ position: 'relative' }}>
                 <Thermometer size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
                 <input 
