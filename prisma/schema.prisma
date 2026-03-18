@@ -99,8 +99,23 @@ model PricingPlan {
   temperaturesLimit Int?
   
   clients           ClientProfile[]
+  discountCoupons   DiscountCoupon[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
+}
+
+model DiscountCoupon {
+  id                 String   @id @default(cuid())
+  code               String   @unique
+  percentage         Int
+  duration           String   // ONCE, REPEATING, FOREVER
+  durationInMonths   Int?
+  stripeCouponId     String?  @unique
+  stripePromoCodeId  String?  @unique
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  
+  plans              PricingPlan[]
 }
 
 model Recipe {

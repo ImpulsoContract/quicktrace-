@@ -8,7 +8,7 @@ import {
   Search, ShieldCheck, ChevronRight,
   MoreVertical, Edit, Plus, Trash2,
   X, AlertCircle, Loader2, LogOut,
-  Thermometer, Brush, Save, ArrowLeft, RefreshCw
+  Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -236,6 +236,16 @@ export default function AdminDashboard() {
           >
             Cambio Condiciones
             {activeTab === 'terms' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
+          </button>
+          <button
+            onClick={() => setActiveTab("coupons")}
+            style={{
+              background: 'none', border: 'none', color: activeTab === 'coupons' ? 'var(--corp-green)' : 'var(--text-muted)',
+              fontWeight: activeTab === 'coupons' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
+            }}
+          >
+            Cupones
+            {activeTab === 'coupons' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
           </button>
         </div>
 
@@ -750,6 +760,8 @@ export default function AdminDashboard() {
           </div>
         </Modal>
       )}
+
+      {activeTab === "coupons" && <CouponsTab plans={plans} />}
 
       <style jsx global>{`
         :root {

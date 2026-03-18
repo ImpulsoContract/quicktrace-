@@ -82,6 +82,7 @@ export async function POST(req) {
       mode: "subscription",
       success_url: `${baseUrl}/dashboard/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/dashboard/plans`,
+      allow_promotion_codes: true,
       metadata: {
         userId: String(session.user.id),
         planId: plan.id,
