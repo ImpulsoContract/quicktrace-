@@ -26,7 +26,8 @@ export async function PATCH(req, { params }) {
       carbohydrates,
       sugars,
       proteins,
-      salt
+      salt,
+      allergens
     } = body;
 
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
@@ -93,6 +94,7 @@ export async function PATCH(req, { params }) {
           sugars,
           proteins,
           salt,
+          allergens: allergens !== undefined ? allergens : undefined,
           ingredients: {
             create: ingredients.map((ing) => ({
               name: toTitleCase(ing.name),

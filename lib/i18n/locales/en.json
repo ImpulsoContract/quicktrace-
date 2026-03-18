@@ -381,6 +381,28 @@
     },
     "disclaimer": "* You can export your records and delete them when you reach the limit to reset it to zero whenever you want. This way you won't have any limitations."
   },
+  "allergens": {
+    "title": "Allergens",
+    "help_text": "Select the allergens you want to appear on the labels of productions with this recipe",
+    "show_allergens": "Show allergens information",
+    "prefix_label": "Allergens: ",
+    "list": {
+      "gluten": "Cereals containing gluten",
+      "crustaceans": "Crustaceans",
+      "eggs": "Eggs",
+      "fish": "Fish",
+      "peanuts": "Peanuts",
+      "soy": "Soybeans",
+      "milk": "Milk",
+      "nuts": "Nuts",
+      "celery": "Celery",
+      "mustard": "Mustard",
+      "sesame": "Sesame seeds",
+      "sulphites": "Sulphur dioxide and sulphites",
+      "lupins": "Lupins",
+      "molluscs": "Molluscs"
+    }
+  },
   "bulk_actions": {
     "title": "Bulk actions",
     "selected": "{count} selected",

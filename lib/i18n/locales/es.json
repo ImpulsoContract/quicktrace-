@@ -381,6 +381,28 @@
     },
     "disclaimer": "* Podrás exportar tu registros y eliminarlos cuando llegues al límite para ponerlo a cero cuando quieras. Así no tendrás ninguna limitación."
   },
+  "allergens": {
+    "title": "Alérgenos",
+    "help_text": "Selecciona los alérgenos que quieras que aparezcan en las etiquetas de las elaboraciones con esta receta",
+    "show_allergens": "Mostrar la información de alérgenos",
+    "prefix_label": "Alérgenos: ",
+    "list": {
+      "gluten": "Cereales que contengan gluten",
+      "crustaceans": "Crustáceos",
+      "eggs": "Huevos",
+      "fish": "Pescado",
+      "peanuts": "Cacahuetes",
+      "soy": "Soja",
+      "milk": "Leche",
+      "nuts": "Frutos de cáscara",
+      "celery": "Apio",
+      "mustard": "Mostaza",
+      "sesame": "Granos de sésamo",
+      "sulphites": "Dióxido de azufre y sulfitos",
+      "lupins": "Altramuces",
+      "molluscs": "Moluscos"
+    }
+  },
   "bulk_actions": {
     "title": "Acciones masivas",
     "selected": "{count} seleccionados",

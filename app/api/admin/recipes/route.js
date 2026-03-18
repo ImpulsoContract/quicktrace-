@@ -25,7 +25,8 @@ export async function POST(req) {
       carbohydrates,
       sugars,
       proteins,
-      salt
+      salt,
+      allergens
     } = body;
 
     const profileId = parseInt(clientProfileId);
@@ -66,6 +67,7 @@ export async function POST(req) {
         sugars,
         proteins,
         salt,
+        allergens: allergens || [],
         ingredients: {
           create: ingredients.map((ing) => ({
             name: toTitleCase(ing.name),

@@ -36,7 +36,8 @@ const DEFAULT_LABEL_CONFIG = {
     showElaborationText: false,
     showConservationText: false,
     showBarcode: true,
-    showNutritionalTable: false
+    showNutritionalTable: false,
+    showAllergens: false
   },
   dimensions: {
     width: 10,
@@ -115,7 +116,8 @@ export default function ClientDashboard() {
     carbohydrates: "",
     sugars: "",
     proteins: "",
-    salt: ""
+    salt: "",
+    allergens: []
   });
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
@@ -262,7 +264,8 @@ export default function ClientDashboard() {
       carbohydrates: recipe.carbohydrates || "",
       sugars: recipe.sugars || "",
       proteins: recipe.proteins || "",
-      salt: recipe.salt || ""
+      salt: recipe.salt || "",
+      allergens: recipe.allergens || []
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -821,6 +824,15 @@ export default function ClientDashboard() {
         const splitText = doc.splitTextToSize(elaboration.recipe.conservationInstructions, columnWidth);
         doc.text(splitText, startX, currentY);
         currentY += (splitText.length * lineHeightMM);
+      }
+
+      if (config.complementaryOptions?.showAllergens && elaboration.recipe.allergens && elaboration.recipe.allergens.length > 0) {
+        const allergensList = elaboration.recipe.allergens.map(a => t(`allergens.list.${a}`)).join(', ');
+        const titleTxt = `${t('allergens.prefix_label') || "Alérgenos: "}${allergensList}`;
+        doc.setFont("helvetica", "bold");
+        const lines = doc.splitTextToSize(titleTxt, columnWidth);
+        doc.text(lines, startX, currentY);
+        currentY += (lines.length * lineHeightMM);
       }
 
       if (config.complementaryOptions?.showNutritionalTable) {
@@ -4319,6 +4331,33 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               </div>
             </div>
 
+            <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>{t('allergens.title') || "Alérgenos"}</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                  {t('allergens.help_text') || "Selecciona los alérgenos que quieras que aparezcan en las etiquetas de las elaboraciones con esta receta"}
+                </p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                {['gluten', 'crustaceans', 'eggs', 'fish', 'peanuts', 'soy', 'milk', 'nuts', 'celery', 'mustard', 'sesame', 'sulphites', 'lupins', 'molluscs'].map(allergenKey => (
+                  <label key={allergenKey} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                    <input 
+                      type="checkbox" 
+                      style={{ accentColor: 'var(--corp-green)' }}
+                      checked={formData.allergens?.includes(allergenKey)}
+                      onChange={(e) => {
+                        const newAllergens = e.target.checked 
+                          ? [...(formData.allergens || []), allergenKey]
+                          : (formData.allergens || []).filter(a => a !== allergenKey);
+                        setFormData({...formData, allergens: newAllergens});
+                      }}
+                    />
+                    {t(`allergens.list.${allergenKey}`) || allergenKey}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div style={{ marginTop: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(66, 98, 22, 0.15)' }}>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
                 <input 
@@ -4723,6 +4762,14 @@ function LabelConfigModal({ config, onClose, onSave }) {
                   onChange={(e) => updateField('complementaryOptions', 'showNutritionalTable', e.target.checked)}
                 />
                 <span style={{ fontSize: '0.9rem' }}>{t('modals.labels_show_nutritional') || "Mostrar la tabla de valor nutricional"}</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.complementaryOptions.showAllergens} 
+                  onChange={(e) => updateField('complementaryOptions', 'showAllergens', e.target.checked)}
+                />
+                <span style={{ fontSize: '0.9rem' }}>{t('allergens.show_allergens') || "Mostrar la información de alérgenos"}</span>
               </label>
             </div>
           </section>

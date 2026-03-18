@@ -14,7 +14,7 @@ export async function PATCH(req, { params }) {
 
   try {
     const body = await req.json();
-    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode, energyValue, fats, saturatedFats, carbohydrates, sugars, proteins, salt } = body;
+    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode, energyValue, fats, saturatedFats, carbohydrates, sugars, proteins, salt, allergens } = body;
 
     const profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) }
@@ -98,6 +98,7 @@ export async function PATCH(req, { params }) {
           sugars,
           proteins,
           salt,
+          allergens: allergens !== undefined ? allergens : undefined,
           ingredients: {
             create: ingredients.map((ing) => ({
               name: toTitleCase(ing.name),
