@@ -1747,35 +1747,32 @@ export default function ClientDashboard() {
                       />
                     </div>
                     {selectedRecipe?.hasDryingRoom && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '0.5rem' }}>
+                      <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', background: 'var(--bg-main)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
                         <div>
-                          <label className="input-label" style={{ fontSize: '0.8rem' }}>{t('traceability_form.label_drying_in') || "ENTRADA SECADERO"} (Tª/Humedad)</label>
+                          <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.label_drying_in') || "ENTRADA SECADERO"}</label>
                           <input 
                             type="text" 
                             className="input-field" 
-                            placeholder="Ej: 15°C / 70%"
                             value={elaboracionForm.dryingRoomIn} 
                             onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomIn: e.target.value})} 
                           />
                         </div>
                         <div>
-                          <label className="input-label" style={{ fontSize: '0.8rem' }}>{t('traceability_form.label_drying_out') || "SALIDA SECADERO"} (Tª/Humedad)</label>
+                          <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.label_drying_out') || "SALIDA SECADERO"}</label>
                           <input 
                             type="text" 
                             className="input-field" 
-                            placeholder="Ej: 14°C / 65%"
                             value={elaboracionForm.dryingRoomOut} 
                             onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomOut: e.target.value})} 
                           />
                         </div>
                       </div>
                     )}
-                    <div style={{ marginTop: '1rem' }}>
-                      <label className="input-label" style={{ fontSize: '0.8rem' }}>{t('traceability_form.workshop_temp') || "Temperatura del obrador"} (Opcional)</label>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.workshop_temp') || "Temperatura del obrador"}</label>
                       <input 
                         type="text" 
                         className="input-field" 
-                        placeholder="Ej: 20°C"
                         value={elaboracionForm.workshopTemp} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, workshopTemp: e.target.value})} 
                       />
@@ -3788,22 +3785,20 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
             </div>
 
             <div>
-              <label className="input-label">{t('goods_receipt_form.temp')} (°C) - Opcional</label>
+              <label className="input-label">{t('goods_receipt_form.temp')} (°C)</label>
               <input 
                 type="text" 
                 className="input-field" 
-                placeholder="0"
                 value={formData.manufacturingTemp} 
                 onChange={(e) => setFormData({...formData, manufacturingTemp: e.target.value})} 
               />
             </div>
 
             <div>
-              <label className="input-label">{t('goods_receipt_form.end_date') || "Fecha de finalización"} - Opcional</label>
+              <label className="input-label">{t('goods_receipt_form.end_date') || "Fecha de finalización"}</label>
               <input 
                 type="text" 
                 className="input-field" 
-                placeholder="Texto libre para la fecha..."
                 value={formData.endDate} 
                 onChange={(e) => setFormData({...formData, endDate: e.target.value})} 
               />

@@ -369,12 +369,17 @@
     "label_fats": "Grasas\nde las cuales saturadas",
     "label_carbs": "Hidratos de carbono\nde los cuales azúcares",
     "label_proteins": "Proteínas",
-    "label_salt": "Sal"
+    "label_salt": "Sal",
+    "workshop_temp": "Temperatura del obrador",
+    "label_drying_in": "Entrada secadero",
+    "label_drying_out": "Salida secadero"
   },
   "goods_receipt_form": {
     "product": "Producto",
     "provider": "Proveedor",
-    "invoice_number": "Número de factura"
+    "invoice_number": "Número de factura",
+    "temp": "Temperatura Transporte / Fab.",
+    "end_date": "Fecha de finalización"
   },
   "plans": {
     "title": "Planes de Precios",

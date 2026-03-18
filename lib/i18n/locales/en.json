@@ -369,12 +369,17 @@
     "label_fats": "Fat\nof which saturates",
     "label_carbs": "Carbohydrates\nof which sugars",
     "label_proteins": "Proteins",
-    "label_salt": "Salt"
+    "label_salt": "Salt",
+    "workshop_temp": "Workshop temperature",
+    "label_drying_in": "Drying room inlet",
+    "label_drying_out": "Drying room outlet"
   },
   "goods_receipt_form": {
     "product": "Product",
     "provider": "Provider",
-    "invoice_number": "Invoice number"
+    "invoice_number": "Invoice number",
+    "temp": "Transport / Mfg. Temperature",
+    "end_date": "End Date"
   },
   "plans": {
     "title": "Pricing Plans",
