@@ -4716,7 +4716,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '750px' }}>
+      <div className="modal-content" style={{ maxWidth: '850px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>{t('modals.labels_header')}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
