@@ -3784,8 +3784,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               />
             </div>
 
-            <div>
-              <label className="input-label">{t('goods_receipt_form.temp')} (°C)</label>
+            <div className="form-group">
+              <label className="label">{t('goods_receipt_form.temp')} (°C)</label>
               <input 
                 type="text" 
                 className="input-field" 
@@ -3794,8 +3794,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               />
             </div>
 
-            <div>
-              <label className="input-label">{t('goods_receipt_form.end_date') || "Fecha de finalización"}</label>
+            <div className="form-group">
+              <label className="label">{t('goods_receipt_form.end_date') || "Fecha de finalización"}</label>
               <input 
                 type="text" 
                 className="input-field" 
