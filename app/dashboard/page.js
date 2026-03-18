@@ -1114,37 +1114,69 @@ export default function ClientDashboard() {
         doc.line(20, 35, 190, 35);
 
         // Datos de la elaboración
+        let currentY = 50;
         doc.setFont("helvetica", "bold");
-        doc.text(t('dashboard.elaboration_recipe_header') + ":", 20, 50);
+        doc.text(t('dashboard.elaboration_recipe_header') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(el.recipe?.name || "N/A", 70, 50);
+        doc.text(el.recipe?.name || "N/A", 70, currentY);
+        currentY += 10;
 
         doc.setFont("helvetica", "bold");
-        doc.text(t('dashboard.lote') + ":", 20, 60);
+        doc.text(t('dashboard.lote') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(el.name || "N/A", 70, 60);
+        doc.text(el.name || "N/A", 70, currentY);
+        currentY += 10;
 
         doc.setFont("helvetica", "bold");
-        doc.text(t('traceability_form.label_made_by'), 20, 70);
+        doc.text(t('traceability_form.label_made_by'), 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(el.personName || "N/A", 70, 70);
+        doc.text(el.personName || "N/A", 70, currentY);
+        currentY += 10;
 
         doc.setFont("helvetica", "bold");
-        doc.text(t('traceability_form.label_date') + ":", 20, 80);
+        doc.text(t('traceability_form.label_date') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(new Date(el.date).toLocaleString(), 70, 80);
+        doc.text(new Date(el.date).toLocaleString(), 70, currentY);
+        currentY += 10;
 
         const expLabel = el.recipe?.expiryType === "BEST_BEFORE" 
           ? t('traceability_form.label_best_before') 
           : t('traceability_form.label_expiration');
         doc.setFont("helvetica", "bold");
-        doc.text(expLabel + ":", 20, 90);
+        doc.text(expLabel + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(new Date(el.expirationDate).toLocaleDateString(), 70, 90);
+        doc.text(new Date(el.expirationDate).toLocaleDateString(), 70, currentY);
+        currentY += 10;
+
+        if (el.workshopTemp) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.workshopTemp, 70, currentY);
+          currentY += 10;
+        }
+
+        if (el.dryingRoomIn) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.dryingRoomIn, 70, currentY);
+          currentY += 10;
+        }
+
+        if (el.dryingRoomOut) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.label_drying_out') || "Salida secadero") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.dryingRoomOut, 70, currentY);
+          currentY += 10;
+        }
+
+        currentY += 10; // Extra spacing
 
         // Tabla de ingredientes
         doc.setFont("helvetica", "bold");
-        doc.text(t('modals.ingredients') + ":", 20, 110);
+        doc.text(t('modals.ingredients') + ":", 20, currentY);
         
         const tableBody = el.ingredients.map(ing => [
           ing.name,
@@ -1153,7 +1185,7 @@ export default function ClientDashboard() {
         ]);
 
         autoTable(doc, {
-          startY: 115,
+          startY: currentY + 5,
           head: [[t('modals.ing_name'), t('traceability_form.lot'), t('traceability_form.real_amount')]],
           body: tableBody,
           theme: 'grid',
