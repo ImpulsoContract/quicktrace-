@@ -58,7 +58,7 @@ const mergeLabelConfig = (config) => {
     ...config,
     columns: mergedCols,
     ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) },
-    dimensions: { ...DEFAULT_LABEL_CONFIG.dimensions, ...(config.dimensions || {}) }
+    dimensions: { width: 100, height: 50, ...(config.dimensions || {}) }
   };
 };
 
@@ -146,6 +146,7 @@ export default function ClientDashboard() {
     expirationDate: "",
     dryingRoomIn: "",
     dryingRoomOut: "",
+    workshopTemp: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
   });
 
@@ -170,7 +171,9 @@ export default function ClientDashboard() {
     invoiceNumber: "",
     quantity: "",
     date: new Date().toISOString().slice(0, 16),
-    deliveryNoteImage: ""
+    deliveryNoteImage: "",
+    manufacturingTemp: "",
+    endDate: ""
   });
 
   // Bulk Selection State
@@ -568,6 +571,8 @@ export default function ClientDashboard() {
           quantity: "",
           date: new Date().toISOString().slice(0, 16),
           deliveryNoteImage: "",
+          manufacturingTemp: "",
+          endDate: "",
           manufacturingTemp: ""
         });
         fetchGoodsReceipts();
@@ -593,6 +598,8 @@ export default function ClientDashboard() {
       quantity: receipt.quantity || "",
       date: new Date(receipt.date).toISOString().slice(0, 16),
       deliveryNoteImage: receipt.deliveryNoteImage || "",
+      manufacturingTemp: receipt.manufacturingTemp || "",
+      endDate: receipt.endDate || "",
       manufacturingTemp: receipt.manufacturingTemp || ""
     });
     setIsGoodsModalOpen(true);
@@ -743,9 +750,16 @@ export default function ClientDashboard() {
   const generateLabelPDF = (elaboration) => {
     const config = mergeLabelConfig(profile?.labelConfig);
     
-    // Default to 100x80mm if not specified
-    const docWidthMM = (config.dimensions?.width || 10) * 10;
-    const docHeightMM = (config.dimensions?.height || 8) * 10;
+    // Default to 100x50mm if not specified
+    let storedWidth = config.dimensions?.width;
+    let storedHeight = config.dimensions?.height;
+    
+    // Legacy conversion (if users had 10cm saved, convert to 100mm)
+    if (storedWidth && storedWidth < 30) storedWidth *= 10; 
+    if (storedHeight && storedHeight < 30) storedHeight *= 10;
+
+    const docWidthMM = storedWidth || 100;
+    const docHeightMM = storedHeight || 50;
 
     const doc = new jsPDF({
       orientation: config.layout === 'vertical' ? 'p' : 'l',
@@ -1014,14 +1028,12 @@ export default function ClientDashboard() {
           [t('goods_receipt_form.product') + ":", receipt.productName || "N/A"],
           [t('goods_receipt_form.provider') + ":", receipt.providerName || "N/A"],
           [t('dashboard.lote') + ":", receipt.lote || "N/A"],
-          [t('modals.ing_amount') + ":", receipt.quantity || "N/A"],
+          [t('goods_receipt_form.quantity') + ":", receipt.quantity || "N/A"],
           [t('goods_receipt_form.invoice_number') + ":", receipt.invoiceNumber || "N/A"],
+          [t('goods_receipt_form.temp') + " (°C):", receipt.manufacturingTemp || "N/A"],
+          [t('goods_receipt_form.end_date') + ":", receipt.endDate || "N/A"],
           [t('dashboard.datetime') + ":", new Date(receipt.date).toLocaleString()]
         ];
-
-        if (receipt.manufacturingTemp) {
-          details.push(["Temp. Fab.:", receipt.manufacturingTemp]);
-        }
 
         let currentY = 50;
         details.forEach(([label, value]) => {
@@ -1266,6 +1278,7 @@ export default function ClientDashboard() {
           expirationDate: elaboracionForm.expirationDate,
           dryingRoomIn: elaboracionForm.dryingRoomIn,
           dryingRoomOut: elaboracionForm.dryingRoomOut,
+          workshopTemp: elaboracionForm.workshopTemp,
           ingredients: ingredientsData
         })
       });
@@ -1734,29 +1747,39 @@ export default function ClientDashboard() {
                       />
                     </div>
                     {selectedRecipe?.hasDryingRoom && (
-                      <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '0.5rem' }}>
                         <div>
-                          <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>Fecha Entrada Secadero</label>
+                          <label className="input-label" style={{ fontSize: '0.8rem' }}>{t('traceability_form.label_drying_in') || "ENTRADA SECADERO"} (Tª/Humedad)</label>
                           <input 
                             type="text" 
                             className="input-field" 
-                            placeholder="Ej: 01/12/2023"
+                            placeholder="Ej: 15°C / 70%"
                             value={elaboracionForm.dryingRoomIn} 
                             onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomIn: e.target.value})} 
                           />
                         </div>
                         <div>
-                          <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>Fecha Salida Secadero</label>
+                          <label className="input-label" style={{ fontSize: '0.8rem' }}>{t('traceability_form.label_drying_out') || "SALIDA SECADERO"} (Tª/Humedad)</label>
                           <input 
                             type="text" 
                             className="input-field" 
-                            placeholder="Ej: 15/01/2024"
+                            placeholder="Ej: 14°C / 65%"
                             value={elaboracionForm.dryingRoomOut} 
                             onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomOut: e.target.value})} 
                           />
                         </div>
-                      </>
+                      </div>
                     )}
+                    <div style={{ marginTop: '1rem' }}>
+                      <label className="input-label" style={{ fontSize: '0.8rem' }}>{t('traceability_form.workshop_temp') || "Temperatura del obrador"} (Opcional)</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        placeholder="Ej: 20°C"
+                        value={elaboracionForm.workshopTemp} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, workshopTemp: e.target.value})} 
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -2336,10 +2359,17 @@ export default function ClientDashboard() {
                           <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>CANTIDAD</span>
                           <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.quantity || '-'}</span>
                         </div>
-                        <div>
-                          <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>FACTURA</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <span className="info-label">{t('goods_receipt_form.invoice_number')}</span>
                           <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.invoiceNumber || '-'}</span>
                         </div>
+                        {(receipt.manufacturingTemp || receipt.endDate) && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            {receipt.manufacturingTemp && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.temp')}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.manufacturingTemp}</span></div>}
+                            {receipt.endDate && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.end_date') || "Fecha finalización"}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.endDate}</span></div>}
+                          </div>
+                        )}
+                      </div>
                         {receipt.deliveryNoteImage && (
                           <div 
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--corp-green)', fontWeight: '800', marginTop: '0.5rem' }}
@@ -2349,8 +2379,7 @@ export default function ClientDashboard() {
                           </div>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>
@@ -2968,11 +2997,12 @@ export default function ClientDashboard() {
                             {elab.recipe.name}
                           </span>
                         </td>
-                        <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                          {(elab.dryingRoomIn || elab.dryingRoomOut) ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span><strong style={{ color: 'var(--text-main)' }}>ENT:</strong> {elab.dryingRoomIn || '-'}</span>
-                              <span><strong style={{ color: 'var(--text-main)' }}>SAL:</strong> {elab.dryingRoomOut || '-'}</span>
+                        <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem' }}>
+                          {(elab.dryingRoomIn || elab.dryingRoomOut || elab.workshopTemp) ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', background: 'var(--bg-main)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem' }}>
+                              {elab.dryingRoomIn && <span><strong style={{ color: 'var(--text-main)' }}>ENT:</strong> {elab.dryingRoomIn || '-'}</span>}
+                              {elab.dryingRoomOut && <span><strong style={{ color: 'var(--text-main)' }}>SAL:</strong> {elab.dryingRoomOut || '-'}</span>}
+                              {elab.workshopTemp && <span><strong style={{ color: 'var(--text-main)' }}>Tª OBR:</strong> {elab.workshopTemp}</span>}
                             </div>
                           ) : (
                             <span style={{ color: '#cbd5e1' }}>-</span>
@@ -3737,20 +3767,6 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               </div>
             </div>
             <div className="form-group">
-              <label className="label">Temperatura de fabricación</label>
-              <div style={{ position: 'relative' }}>
-                <Thermometer size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  value={formData.manufacturingTemp || ""} 
-                  onChange={(e) => setFormData({...formData, manufacturingTemp: e.target.value})} 
-                  placeholder="Ej: -18ºC"
-                  style={{ paddingLeft: '3rem' }}
-                />
-              </div>
-            </div>
-            <div className="form-group">
               <label className="label">{t('modals.ing_amount')}</label>
               <input 
                 type="text" 
@@ -3768,6 +3784,28 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                 value={formData.invoiceNumber} 
                 onChange={(e) => setFormData({...formData, invoiceNumber: e.target.value})} 
                 placeholder={t('dashboard.invoice')}
+              />
+            </div>
+
+            <div>
+              <label className="input-label">{t('goods_receipt_form.temp')} (°C) - Opcional</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="0"
+                value={formData.manufacturingTemp} 
+                onChange={(e) => setFormData({...formData, manufacturingTemp: e.target.value})} 
+              />
+            </div>
+
+            <div>
+              <label className="input-label">{t('goods_receipt_form.end_date') || "Fecha de finalización"} - Opcional</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="Texto libre para la fecha..."
+                value={formData.endDate} 
+                onChange={(e) => setFormData({...formData, endDate: e.target.value})} 
               />
             </div>
             <div className="form-group">
@@ -4779,6 +4817,33 @@ function LabelConfigModal({ config, onClose, onSave }) {
                 />
               </label>
             )}
+          </section>
+
+          {/* Label Dimensions UI */}
+          <section style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>
+              {t('modals.labels_dimensions') || "Dimensiones de la etiqueta"}
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label className="input-label">{t('modals.label_width') || "Ancho de la etiqueta (mm)"}</label>
+                <input 
+                  type="number" 
+                  className="input-field" 
+                  value={localConfig.dimensions?.width || 100}
+                  onChange={(e) => setLocalConfig({...localConfig, dimensions: {...(localConfig.dimensions || {}), width: parseInt(e.target.value) || 100}})}
+                />
+              </div>
+              <div>
+                <label className="input-label">{t('modals.label_height') || "Alto de la etiqueta (mm)"}</label>
+                <input 
+                  type="number" 
+                  className="input-field" 
+                  value={localConfig.dimensions?.height || 50}
+                  onChange={(e) => setLocalConfig({...localConfig, dimensions: {...(localConfig.dimensions || {}), height: parseInt(e.target.value) || 50}})}
+                />
+              </div>
+            </div>
           </section>
 
           {/* Label Columns UI */}

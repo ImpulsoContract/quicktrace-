@@ -179,6 +179,7 @@ model Elaboration {
   expirationDate  DateTime?
   dryingRoomIn    String?
   dryingRoomOut   String?
+  workshopTemp    String?
   
   ingredients ElaborationIngredient[]
   
@@ -276,6 +277,7 @@ model GoodsReceipt {
   date              DateTime      @default(now())
   deliveryNoteImage String?       // Base64 or URL
   manufacturingTemp String?       // Optional manufacturing temperature
+  endDate           String?       // Optional end date text field
   
   clientProfileId   Int
   clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)

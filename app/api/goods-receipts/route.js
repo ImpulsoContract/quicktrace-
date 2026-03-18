@@ -83,7 +83,8 @@ export async function POST(req) {
       quantity, 
       date, 
       deliveryNoteImage,
-      manufacturingTemp 
+      manufacturingTemp,
+      endDate
     } = body;
 
     if (!productName || !date) {
@@ -100,6 +101,7 @@ export async function POST(req) {
         date: new Date(date),
         deliveryNoteImage,
         manufacturingTemp,
+        endDate,
         clientProfileId: profile.id
       }
     });
@@ -136,7 +138,8 @@ export async function PATCH(req) {
       quantity, 
       date, 
       deliveryNoteImage,
-      manufacturingTemp
+      manufacturingTemp,
+      endDate
     } = body;
 
     if (!id || !productName || !date) {
@@ -156,7 +159,8 @@ export async function PATCH(req) {
         quantity,
         date: new Date(date),
         deliveryNoteImage,
-        manufacturingTemp
+        manufacturingTemp,
+        endDate
       }
     });
 

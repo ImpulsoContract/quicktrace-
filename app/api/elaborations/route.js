@@ -145,11 +145,12 @@ export async function POST(req) {
       data: {
         name,
         recipeId: parseInt(recipeId),
-        personName,
-        date: date ? new Date(date) : new Date(),
-        expirationDate: expirationDate ? new Date(expirationDate) : null,
-        dryingRoomIn,
-        dryingRoomOut,
+        personName: data.personName,
+        date: data.date ? new Date(data.date) : new Date(),
+        expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
+        dryingRoomIn: data.dryingRoomIn,
+        dryingRoomOut: data.dryingRoomOut,
+        workshopTemp: data.workshopTemp,
         ingredients: {
           create: ingredients.map(ing => ({
             name: toTitleCase(ing.name),
