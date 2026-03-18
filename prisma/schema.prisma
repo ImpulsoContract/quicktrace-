@@ -264,6 +264,7 @@ model GoodsReceipt {
   quantity          String?
   date              DateTime      @default(now())
   deliveryNoteImage String?       // Base64 or URL
+  manufacturingTemp String?       // Optional manufacturing temperature
   
   clientProfileId   Int
   clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)

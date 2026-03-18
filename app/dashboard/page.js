@@ -546,7 +546,8 @@ export default function ClientDashboard() {
           invoiceNumber: "",
           quantity: "",
           date: new Date().toISOString().slice(0, 16),
-          deliveryNoteImage: ""
+          deliveryNoteImage: "",
+          manufacturingTemp: ""
         });
         fetchGoodsReceipts();
       } else {
@@ -570,7 +571,8 @@ export default function ClientDashboard() {
       invoiceNumber: receipt.invoiceNumber || "",
       quantity: receipt.quantity || "",
       date: new Date(receipt.date).toISOString().slice(0, 16),
-      deliveryNoteImage: receipt.deliveryNoteImage || ""
+      deliveryNoteImage: receipt.deliveryNoteImage || "",
+      manufacturingTemp: receipt.manufacturingTemp || ""
     });
     setIsGoodsModalOpen(true);
   };
@@ -915,6 +917,10 @@ export default function ClientDashboard() {
           [t('goods_receipt_form.invoice_number') + ":", receipt.invoiceNumber || "N/A"],
           [t('dashboard.datetime') + ":", new Date(receipt.date).toLocaleString()]
         ];
+
+        if (receipt.manufacturingTemp) {
+          details.push(["Temp. Fab.:", receipt.manufacturingTemp]);
+        }
 
         let currentY = 50;
         details.forEach(([label, value]) => {
@@ -3615,6 +3621,20 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   value={formData.lote} 
                   onChange={(e) => setFormData({...formData, lote: e.target.value})} 
                   placeholder={t('dashboard.lote')}
+                  style={{ paddingLeft: '3rem' }}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="label">Temperatura de fabricación <span style={{fontSize:'0.8em', color:'var(--text-muted)'}}>(Opcional)</span></label>
+              <div style={{ position: 'relative' }}>
+                <Thermometer size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={formData.manufacturingTemp || ""} 
+                  onChange={(e) => setFormData({...formData, manufacturingTemp: e.target.value})} 
+                  placeholder="Ej: -18ºC"
                   style={{ paddingLeft: '3rem' }}
                 />
               </div>
