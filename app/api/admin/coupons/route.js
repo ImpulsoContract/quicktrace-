@@ -111,7 +111,10 @@ export async function POST(req) {
     let stripePromoCode;
     try {
       stripePromoCode = await stripe.promotionCodes.create({
-        coupon: stripeCoupon.id,
+        promotion: {
+          type: 'coupon',
+          coupon: stripeCoupon.id
+        },
         code: code.toUpperCase(),
         active: true
       });
