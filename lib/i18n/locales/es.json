@@ -393,7 +393,8 @@
     "provider": "Proveedor",
     "invoice_number": "Número de factura",
     "temp": "Temperatura Transporte / Fab.",
-    "end_date": "Fecha de finalización"
+    "end_date": "Fecha de finalización",
+    "upload_file": "Subir imagen..."
   },
   "plans": {
     "title": "Planes de Precios",

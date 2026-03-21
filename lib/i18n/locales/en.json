@@ -393,7 +393,8 @@
     "provider": "Provider",
     "invoice_number": "Invoice number",
     "temp": "Transport / Mfg. Temperature",
-    "end_date": "End Date"
+    "end_date": "End Date",
+    "upload_file": "Upload image..."
   },
   "plans": {
     "title": "Pricing Plans",
