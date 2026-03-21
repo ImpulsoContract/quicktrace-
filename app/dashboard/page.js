@@ -31,11 +31,8 @@ const DEFAULT_LABEL_CONFIG = {
   },
   ingredientOptions: {
     showLote: false,
-    showAmount: false
-  },
-  ingredientOptions: {
-    showLote: false,
-    showAmount: false
+    showAmount: false,
+    format: 'list'
   },
   fontSize: 14,
   columnsCount: 1,
@@ -45,7 +42,17 @@ const DEFAULT_LABEL_CONFIG = {
   }
 };
 
-const mergeLabelConfig = (config) => {
+const mergeLabelConfig = (rawConfig) => {
+  let config = rawConfig;
+  if (typeof rawConfig === "string") {
+    try {
+      config = JSON.parse(rawConfig);
+    } catch (e) {
+      console.error("Failed to parse labelConfig string", e);
+      config = {};
+    }
+  }
+
   if (!config || Object.keys(config).length === 0) return DEFAULT_LABEL_CONFIG;
   
   let mergedCols = config.columns || DEFAULT_LABEL_CONFIG.columns;
@@ -58,7 +65,9 @@ const mergeLabelConfig = (config) => {
     ...config,
     columns: mergedCols,
     ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) },
-    dimensions: { width: 100, height: 50, ...(config.dimensions || {}) }
+    dimensions: { width: 100, height: 50, ...(config.dimensions || {}) },
+    columnsCount: parseInt(config.columnsCount) || 1,
+    fontSize: parseInt(config.fontSize) || 14
   };
 };
 
@@ -87,7 +96,7 @@ export default function ClientDashboard() {
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
   const [videoModal, setVideoModal] = useState({ isOpen: false, videoId: "" });
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [elabFilters, setElabFilters] = useState({
     lote: "",
     startDate: "",
@@ -578,7 +587,15 @@ export default function ClientDashboard() {
         fetchGoodsReceipts();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert(errorData.error || t('alerts.request_error'));
+        let errorMsg = errorData.error || t('alerts.request_error');
+        
+        if (res.status === 413) {
+          errorMsg = "Error: El archivo de foto/albarán adjunto es demasiado grande. Por favor, sube una imagen menos pesada o baja la resolución (Máx 4.5 MB).";
+        } else if (errorData.details) {
+          errorMsg += `\nDetalles técnicos: ${errorData.details}`;
+        }
+        
+        alert(errorMsg);
       }
     } catch (error) {
       console.error("Error saving goods receipt:", error);
@@ -930,14 +947,53 @@ export default function ClientDashboard() {
             doc.text(t('modals.ingredients'), startX, currentY);
             currentY += lineHeightMM;
             doc.setFont("helvetica", "normal");
+            
+            const isParagraph = config.ingredientOptions?.format === 'paragraph';
+
+            let paragraphParts = [];
+
             elaboration.ingredients.forEach(ing => {
-              let ingText = `- ${ing.name}`;
+              let displayName = ing.name;
+              if (elaboration.recipe && elaboration.recipe.ingredients) {
+                const recipeIng = elaboration.recipe.ingredients.find(ri => 
+                  ri.name.trim().toLowerCase() === ing.name.trim().toLowerCase()
+                );
+                if (recipeIng && recipeIng.expandItem && recipeIng.expandedText) {
+                  displayName = recipeIng.expandedText;
+                }
+              }
+              
+              let ingText = isParagraph ? displayName : `- ${displayName}`;
               if (config.ingredientOptions?.showLote && ing.lote) ingText += ` (${ing.lote})`;
-              if (config.ingredientOptions?.showAmount) ingText += `: ${ing.realAmount} ${ing.unit}`;
-              const splitText = doc.splitTextToSize(ingText, columnWidth);
-              doc.text(splitText, startX, currentY);
-              currentY += (splitText.length * lineHeightMM);
+              if (config.ingredientOptions?.showAmount) {
+                ingText += isParagraph ? ` (${ing.realAmount}${ing.unit})` : `: ${ing.realAmount} ${ing.unit}`;
+              }
+              
+              if (isParagraph) {
+                paragraphParts.push(ingText);
+              } else {
+                const splitText = doc.splitTextToSize(ingText, columnWidth);
+                doc.text(splitText, startX, currentY, { align: 'left' });
+                currentY += (splitText.length * lineHeightMM);
+              }
             });
+
+            if (isParagraph && paragraphParts.length > 0) {
+              const fullParagraph = paragraphParts.join(', ') + '.';
+              
+              const isTwoCols = config.columnsCount === 2;
+              
+              // We calculate block width explicitly based on width and two-column setting
+              const pWidth = isTwoCols ? ((docWidthMM / 2) - 10) : (docWidthMM - 10);
+              
+              console.log('--- PDF ENGINE PARAGRAPH ---');
+              console.log('pWidth (mm):', pWidth);
+              
+              doc.text(fullParagraph, startX, currentY, { maxWidth: pWidth, align: 'justify' });
+              
+              const splitTextForHeight = doc.splitTextToSize(fullParagraph, pWidth);
+              currentY += (splitTextForHeight.length * lineHeightMM);
+            }
           }
           break;
         case 'barcode':
@@ -1611,19 +1667,24 @@ export default function ClientDashboard() {
           </h1>
         </div>
         <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           style={{ background: 'transparent', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--text-main)' }}
         >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {/* Sidebar / Topbar combined for responsive */}
-      <div style={{ display: 'flex', minHeight: '100vh' }} className="flex-responsive">
+      <div style={{ display: 'flex', minHeight: '100vh', overflowX: 'hidden' }} className="flex-responsive">
         <aside style={{ 
-          width: '280px', borderRight: '1px solid var(--border)', background: 'white', 
-          display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh'
-        }} className={`sidebar-responsive ${isMobileMenuOpen ? 'open' : ''}`}>
+          width: isSidebarOpen ? '280px' : '0px',
+          opacity: isSidebarOpen ? 1 : 0,
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
+          borderRight: isSidebarOpen ? '1px solid var(--border)' : 'none', 
+          background: 'white', 
+          display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh',
+          overflow: 'hidden', whiteSpace: 'nowrap'
+        }} className={`sidebar-responsive ${isSidebarOpen ? 'open' : ''}`}>
           <div className="desktop-logo" style={{ padding: '2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ position: 'relative', width: '32px', height: '32px' }}>
               <Image src="/images/logo.jpg"
@@ -1634,25 +1695,25 @@ export default function ClientDashboard() {
             </h1>
           </div>
 
-          <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
             <SidebarBtn 
               icon={<ClipboardList size={20} />} 
               label={t('sidebar.traceability')} 
               active={activeTab === 'trazabilidad'} 
-              onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
+              onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             <SidebarBtn 
               icon={<History size={20} />} 
               label={t('sidebar.history')} 
               active={activeTab === "historial"} 
-              onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
+              onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             {profile?.plan?.hasCleaning && (
               <SidebarBtn 
                 icon={<Brush size={20} />} 
                 label={t('sidebar.cleaning')} 
                 active={activeTab === "limpieza"} 
-                onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
+                onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
             {profile?.plan?.hasTemperatures && (
@@ -1660,7 +1721,7 @@ export default function ClientDashboard() {
                 icon={<Thermometer size={20} />} 
                 label={t('sidebar.temperatures')} 
                 active={activeTab === "temperaturas"} 
-                onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
+                onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
             {profile?.plan?.hasGoods && (
@@ -1668,7 +1729,7 @@ export default function ClientDashboard() {
                 icon={<Truck size={20} />} 
                 label={t('sidebar.goods')} 
                 active={activeTab === "entradas"} 
-                onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
+                onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
             {session?.user?.role === "CLIENT" && (
@@ -1676,7 +1737,7 @@ export default function ClientDashboard() {
                 icon={<ChefHat size={20} />} 
                 label={t('sidebar.manage_recipes')} 
                 active={activeTab === "gestionar-recetas"} 
-                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); setIsMobileMenuOpen(false); }} 
+                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
           </nav>
@@ -1716,7 +1777,19 @@ export default function ClientDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
+        <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', minWidth: 0, transition: 'padding 0.3s ease' }}>
+          
+          {/* Desktop Toggle Button */}
+          <div className="desktop-only" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              style={{ background: 'white', border: '1px solid var(--border)', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+            >
+              <Menu size={20} />
+            </button>
+            {!isSidebarOpen && <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>QuickTrace</h2>}
+          </div>
+
           {selectedRecipe ? (
             <div style={{ maxWidth: '850px', margin: '0 auto' }}>
               {/* VISTA FORMULARIO */}
@@ -4315,6 +4388,38 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                   <div>
                     <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_name')}</label>
                     <input type="text" className="input-field" value={ing.name} onChange={(e) => onIngredientChange(idx, 'name', e.target.value)} required placeholder={t('modals.ing_name')} />
+                    
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={ing.expandItem || false} 
+                            onChange={(e) => onIngredientChange(idx, 'expandItem', e.target.checked)} 
+                            style={{ accentColor: 'var(--corp-green)' }} 
+                          />
+                          {t('modals.expand_ingredient')}
+                        </label>
+                        <button 
+                          type="button" 
+                          onClick={() => alert(t('modals.expand_ingredient_info'))}
+                          style={{ background: '#e2e8f0', border: 'none', color: '#475569', cursor: 'pointer', width: '16px', height: '16px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                          title="Información"
+                        >
+                          ?
+                        </button>
+                      </div>
+                      {ing.expandItem && (
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={ing.expandedText || ''} 
+                          onChange={(e) => onIngredientChange(idx, 'expandedText', e.target.value)} 
+                          placeholder={t('modals.expand_ingredient_placeholder')} 
+                          style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem' }} 
+                        />
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_amount')}</label>
@@ -4873,6 +4978,57 @@ function LabelConfigModal({ config, onClose, onSave }) {
             </div>
           </section>
 
+          {/* Configuración de Ingredientes */}
+          <section style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)' }}>
+              {t('modals.ingredients_config')}
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.ingredientOptions?.showLote || false} 
+                  onChange={(e) => updateField('ingredientOptions', 'showLote', e.target.checked)}
+                  style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--corp-green)' }}
+                />
+                <div>
+                  <span style={{ fontWeight: '700', fontSize: '0.9rem', display: 'block' }}>{t('modals.show_lote')}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('modals.show_lote_desc')}</span>
+                </div>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={localConfig.ingredientOptions?.showAmount || false} 
+                  onChange={(e) => updateField('ingredientOptions', 'showAmount', e.target.checked)}
+                  style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--corp-green)' }}
+                />
+                <div>
+                  <span style={{ fontWeight: '700', fontSize: '0.9rem', display: 'block' }}>{t('modals.show_real_amount')}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('modals.show_real_amount_desc')}</span>
+                </div>
+              </label>
+
+              <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px dashed var(--border)' }}>
+                <span style={{ fontWeight: '700', fontSize: '0.9rem', display: 'block', marginBottom: '0.5rem' }}>{t('modals.visual_format')}</span>
+                <select 
+                  className="input-field" 
+                  value={localConfig.ingredientOptions?.format || 'list'} 
+                  onChange={(e) => updateField('ingredientOptions', 'format', e.target.value)}
+                  style={{ padding: '0.75rem' }}
+                >
+                  <option value="list">{t('modals.format_list')}</option>
+                  <option value="paragraph">{t('modals.format_paragraph')}</option>
+                </select>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                  {t('modals.format_desc')}
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Label Columns UI */}
           <section>
             <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>
@@ -4922,7 +5078,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
                     </div>
                   ))}
                   {getAvailableElements().length === 0 && (
-                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>Ninguno</div>
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>{t('modals.none')}</div>
                   )}
                 </div>
               </div>
@@ -4953,7 +5109,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
                     </div>
                   ))}
                   {(localConfig.columns?.col1 || []).length === 0 && (
-                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>Arrastra elementos aquí</div>
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>{t('modals.drag_elements')}</div>
                   )}
                 </div>
               </div>
@@ -4985,7 +5141,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
                       </div>
                     ))}
                     {(localConfig.columns?.col2 || []).length === 0 && (
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>Arrastra elementos aquí</div>
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>{t('modals.drag_elements')}</div>
                     )}
                   </div>
                 </div>
