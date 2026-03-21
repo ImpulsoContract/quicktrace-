@@ -264,7 +264,9 @@ export default function ClientDashboard() {
         amount: ing.amount,
         unit: ing.unit,
         loteMandatory: !!ing.loteMandatory,
-        quantityMandatory: !!ing.quantityMandatory
+        quantityMandatory: !!ing.quantityMandatory,
+        expandItem: !!ing.expandItem,
+        expandedText: ing.expandedText || ""
       })),
       expiryDays: recipe.expiryDays || 0,
       expiryType: recipe.expiryType || "EXPIRATION",
