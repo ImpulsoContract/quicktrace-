@@ -55,10 +55,10 @@ const mergeLabelConfig = (rawConfig) => {
 
   if (!config || Object.keys(config).length === 0) return DEFAULT_LABEL_CONFIG;
   
-  let mergedCols = config.columns || DEFAULT_LABEL_CONFIG.columns;
-  if (!config.columns && config.showFields) {
-    mergedCols = DEFAULT_LABEL_CONFIG.columns;
-  }
+  const mergedCols = {
+    col1: config.columns?.col1 || DEFAULT_LABEL_CONFIG.columns.col1,
+    col2: config.columns?.col2 || DEFAULT_LABEL_CONFIG.columns.col2
+  };
 
   return {
     ...DEFAULT_LABEL_CONFIG,
