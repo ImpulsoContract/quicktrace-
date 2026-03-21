@@ -11,7 +11,16 @@ export async function PATCH(req, { params }) {
 
     const { id } = params;
     const data = await req.json();
-    const { name, ingredients, personName, date, expirationDate } = data;
+    const { 
+      name, 
+      ingredients, 
+      personName, 
+      date, 
+      expirationDate, 
+      dryingRoomIn, 
+      dryingRoomOut, 
+      workshopTemp 
+    } = data;
 
     // Buscar el perfil del cliente
     const profile = await prisma.clientProfile.findUnique({
@@ -39,9 +48,10 @@ export async function PATCH(req, { params }) {
         name,
         personName,
         date: date ? new Date(date) : undefined,
-        expirationDate: expirationDate ? new Date(expirationDate) : null,
-        dryingRoomIn: dryingRoomIn !== undefined ? dryingRoomIn : null,
-        dryingRoomOut: dryingRoomOut !== undefined ? dryingRoomOut : null,
+        expirationDate: expirationDate !== undefined ? (expirationDate ? new Date(expirationDate) : null) : undefined,
+        dryingRoomIn: dryingRoomIn !== undefined ? dryingRoomIn : undefined,
+        dryingRoomOut: dryingRoomOut !== undefined ? dryingRoomOut : undefined,
+        workshopTemp: workshopTemp !== undefined ? workshopTemp : undefined,
         ingredients: {
           deleteMany: {},
           create: ingredients.map(ing => ({
