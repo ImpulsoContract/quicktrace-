@@ -151,6 +151,8 @@
     "generate_goods_report": "Sacar un informe",
     "cleaning_report": "Informe de limpieza",
     "generate_cleaning_report": "Generar informe de limpieza",
+    "temp_report": "Informe de temperaturas",
+    "generate_temp_report": "Generar informe de temperaturas",
     "recipe_manage_desc": "Configura tus recetas.",
     "new_record": "Nuevo Registro de Limpieza.",
     "manage_recipes": "Recetas contratadas",

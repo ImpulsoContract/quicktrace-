@@ -97,6 +97,8 @@ export default function ClientDashboard() {
   const [editingGoodsReceipt, setEditingGoodsReceipt] = useState(null);
   const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
   const [cleaningExportDates, setCleaningExportDates] = useState({ from: "", to: "" });
+  const [isTempExportModalOpen, setIsTempExportModalOpen] = useState(false);
+  const [tempExportDates, setTempExportDates] = useState({ from: "", to: "" });
   const [viewingImage, setViewingImage] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
@@ -827,6 +829,72 @@ export default function ClientDashboard() {
       alert(t('alerts.request_error'));
     }
   };
+
+  const generateTemperatureReportPDF = async (dates) => {
+    try {
+      const { from, to } = dates;
+      const res = await fetch(`/api/temperature-records?startDate=${from}&endDate=${to}`);
+      const records = await res.json();
+      
+      if (records.length === 0) {
+        alert(t('dashboard.no_records_range') || "No hay registros en este rango");
+        return;
+      }
+
+      // Get all unique chambers present in these records for table columns
+      const chamberMap = new Map();
+      records.forEach(record => {
+        record.values.forEach(val => {
+          if (!chamberMap.has(val.chamberId)) {
+            chamberMap.set(val.chamberId, val.chamber.name);
+          }
+        });
+      });
+      const sortedChamberIds = Array.from(chamberMap.keys()).sort((a, b) => a - b);
+
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(66, 98, 22);
+      doc.text(t('dashboard.temp_consultation').toUpperCase(), 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`${t('common.from')}: ${from}  ${t('common.to')}: ${to}`, 14, 30);
+      doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 35);
+      
+      // Table Columns
+      const tableColumn = [t('dashboard.datetime'), ...sortedChamberIds.map(id => chamberMap.get(id))];
+      
+      // Table Rows
+      const tableRows = records.map(record => {
+        const row = [new Date(record.date).toLocaleString()];
+        sortedChamberIds.forEach(chamberId => {
+          const val = record.values.find(v => v.chamberId === chamberId);
+          row.push(val ? `${val.value} ºC` : '-');
+        });
+        return row;
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 45,
+        theme: 'striped',
+        headStyles: { fillColor: [66, 98, 22], textColor: [255, 255, 255] },
+        styles: { fontSize: 8, cellPadding: 2 },
+        alternateRowStyles: { fillColor: [245, 247, 240] }
+      });
+
+      doc.save(`Informe_Temperaturas_${from}_${to}.pdf`);
+      setIsTempExportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating temperature report:", error);
+      alert(t('alerts.request_error'));
+    }
+  };
+
 
   const generateLabelPDF = (elaboration) => {
     const config = mergeLabelConfig(profile?.labelConfig);
@@ -2782,6 +2850,13 @@ export default function ClientDashboard() {
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
                     <button 
+                      onClick={() => setIsTempExportModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <FileText size={18} /> {t('dashboard.generate_temp_report')}
+                    </button>
+                    <button 
                       onClick={() => setIsManageChambersModalOpen(true)}
                       className="btn-secondary" 
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
@@ -3329,6 +3404,15 @@ export default function ClientDashboard() {
           onGenerate={generateCleaningReportPDF}
           dates={cleaningExportDates}
           setDates={setCleaningExportDates}
+        />
+      )}
+
+      {isTempExportModalOpen && (
+        <TemperatureExportModal 
+          onClose={() => setIsTempExportModalOpen(false)}
+          onGenerate={generateTemperatureReportPDF}
+          dates={tempExportDates}
+          setDates={setTempExportDates}
         />
       )}
 
@@ -5337,5 +5421,55 @@ function CleaningExportModal({ onClose, onGenerate, dates, setDates }) {
     </div>
   );
 }
+
+function TemperatureExportModal({ onClose, onGenerate, dates, setDates }) {
+  const { t } = useI18n();
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '400px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>{t('dashboard.temp_consultation')}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <X size={24} />
+          </button>
+        </header>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label className="input-label">{t('common.from')}</label>
+            <input 
+              type="date" 
+              className="input-field"
+              value={dates.from}
+              onChange={(e) => setDates({ ...dates, from: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="input-label">{t('common.to')}</label>
+            <input 
+              type="date" 
+              className="input-field"
+              value={dates.to}
+              onChange={(e) => setDates({ ...dates, to: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <footer style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+          <button onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
+          <button 
+            onClick={() => onGenerate(dates)} 
+            className="btn-primary"
+            disabled={!dates.from || !dates.to}
+          >
+            {t('dashboard.generate_report')}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 
 

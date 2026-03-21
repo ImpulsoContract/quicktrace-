@@ -151,6 +151,8 @@
     "generate_goods_report": "Get a report",
     "cleaning_report": "Cleaning report",
     "generate_cleaning_report": "Generate cleaning report",
+    "temp_report": "Temperature report",
+    "generate_temp_report": "Generate temperature report",
     "recipe_manage_desc": "Manage your recipes.",
     "new_record": "New Cleaning Record.",
     "manage_recipes": "Recipes",
