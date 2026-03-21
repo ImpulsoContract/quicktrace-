@@ -191,6 +191,18 @@
     "lote_obligatory": "Lote Oblig.",
     "real_qty_obligatory": "Cant. Real Oblig.",
     "add_ingredient": "Añadir Ingrediente",
+    "expand_ingredient": "Desglosar este ingrediente",
+    "expand_ingredient_info": "Selecciona esta casilla si quieres que este ingrediente salga con otro texto en la etiqueta. Por ejemplo si usas un mix de especias ya preparado y quieres que en la etiqueta salga todas las especias que contiene el mix.",
+    "expand_ingredient_placeholder": "Escribe el texto de la etiqueta aquí",
+    "ingredients_config": "Configuración de Ingredientes",
+    "show_lote": "Mostrar Lote de Ingrediente",
+    "show_lote_desc": "Incluye el número de lote de cada ingrediente (si existe) en la etiqueta.",
+    "show_real_amount": "Mostrar Cantidad Real",
+    "show_real_amount_desc": "Incluye la cantidad y unidad usada para cada ingrediente.",
+    "visual_format": "Formato de Visualización",
+    "format_list": "Un ingrediente por línea (Lista visual)",
+    "format_paragraph": "Párrafo seguido (Separado por comas)",
+    "format_desc": "Usar formato de párrafo te ayuda a ahorrar papel/espacio si la receta tiene muchos ingredientes.",
     "create_recipe": "CREAR RECETA",
     "edit_recipe": "Editar Receta",
     "recipe_manage_desc": "Configura los ingredientes y parámetros de tu receta.",
@@ -251,7 +263,9 @@
       "ingredientsList": "Listado de ingredientes",
       "madeBy": "Persona que elabora",
       "barcode": "Código de barras"
-    }
+    },
+    "drag_elements": "Arrastra elementos aquí",
+    "none": "Ninguno"
   },
   "alerts": {
     "missing_data": "Faltan datos obligatorios:",

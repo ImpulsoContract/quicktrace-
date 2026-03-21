@@ -191,6 +191,18 @@
     "lote_obligatory": "Batch Req.",
     "real_qty_obligatory": "Real Qty Req.",
     "add_ingredient": "Add Ingredient",
+    "expand_ingredient": "Break down this ingredient",
+    "expand_ingredient_info": "Select this box if you want this ingredient to appear with different text on the label. For example, if you use a prepared spice mix and you want all the spices it contains to appear on the label.",
+    "expand_ingredient_placeholder": "Write the label text here",
+    "ingredients_config": "Ingredients Configuration",
+    "show_lote": "Show Ingredient Lot",
+    "show_lote_desc": "Includes the batch number of each ingredient (if any) on the label.",
+    "show_real_amount": "Show Real Amount",
+    "show_real_amount_desc": "Includes the amount and unit used for each ingredient.",
+    "visual_format": "Visualization Format",
+    "format_list": "One ingredient per line (Visual list)",
+    "format_paragraph": "Continuous paragraph (Comma-separated)",
+    "format_desc": "Using the paragraph format helps you save paper/space if the recipe has many ingredients.",
     "create_recipe": "CREATE RECIPE",
     "edit_recipe": "Edit Recipe",
     "recipe_manage_desc": "Configure the ingredients and parameters of your recipe.",
@@ -251,7 +263,9 @@
       "ingredientsList": "Ingredients list",
       "madeBy": "Prepared by",
       "barcode": "Barcode"
-    }
+    },
+    "drag_elements": "Drag elements here",
+    "none": "None"
   },
   "alerts": {
     "missing_data": "Missing mandatory data:",
