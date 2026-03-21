@@ -803,7 +803,8 @@ export default function ClientDashboard() {
     doc.setTextColor(0, 0, 0);
 
     let y = 10;
-    const x = 5;
+    const margin = 5; // mm
+    const colGap = 5; // mm gap between columns
     
     if (config.headerImage) {
       try {
@@ -820,11 +821,12 @@ export default function ClientDashboard() {
       }
     }
     
-    // Dynamic column widths based on total width
-    const columnWidth = config.columnsCount === 2 
-      ? (docWidthMM / 2) - x - 5 
-      : docWidthMM - (x * 2); 
-
+    // Precise column calculation
+    const isTwoCols = config.columnsCount === 2;
+    const availableWidth = docWidthMM - (margin * 2);
+    const columnWidth = isTwoCols 
+      ? (availableWidth - colGap) / 2 
+      : availableWidth;
     // Calculate midpoint for horizontal layouts
     const horizontalMidpoint = docWidthMM / 2;
 
@@ -1032,7 +1034,8 @@ export default function ClientDashboard() {
       return currentY;
     };
 
-    const colDiff = config.columnsCount === 2 ? 5 : 0;
+    const col2X = margin + columnWidth + colGap;
+
     const renderColumnArray = (arr, startColX, startColY) => {
       let currentY = startColY;
       (arr || []).forEach(itemKey => {
@@ -1041,11 +1044,11 @@ export default function ClientDashboard() {
       return currentY;
     };
 
-    if (config.columnsCount === 2) {
-      renderColumnArray(config.columns?.col1, x, y);
-      renderColumnArray(config.columns?.col2, horizontalMidpoint + colDiff, y);
+    if (isTwoCols) {
+      renderColumnArray(config.columns?.col1, margin, y);
+      renderColumnArray(config.columns?.col2, col2X, y);
     } else {
-      renderColumnArray(config.columns?.col1, x, y);
+      renderColumnArray(config.columns?.col1, margin, y);
     }
 
     doc.save(`Etiqueta_${elaboration.name}.pdf`);
