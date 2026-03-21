@@ -65,7 +65,10 @@ const mergeLabelConfig = (rawConfig) => {
     ...config,
     columns: mergedCols,
     ingredientOptions: { ...DEFAULT_LABEL_CONFIG.ingredientOptions, ...(config.ingredientOptions || {}) },
-    dimensions: { width: 100, height: 50, ...(config.dimensions || {}) },
+    dimensions: { 
+      width: parseInt(config.dimensions?.width) || 100, 
+      height: parseInt(config.dimensions?.height) || 50 
+    },
     columnsCount: parseInt(config.columnsCount) || 1,
     fontSize: parseInt(config.fontSize) || 14
   };
@@ -772,11 +775,10 @@ export default function ClientDashboard() {
   const generateLabelPDF = (elaboration) => {
     const config = mergeLabelConfig(profile?.labelConfig);
     
-    // Default to 100x50mm if not specified
-    let storedWidth = config.dimensions?.width;
-    let storedHeight = config.dimensions?.height;
+    let storedWidth = parseInt(config.dimensions?.width);
+    let storedHeight = parseInt(config.dimensions?.height);
     
-    // Legacy conversion (if users had 10cm saved, convert to 100mm)
+    // Legacy conversion (if users had 10cm saved instead of 100mm)
     if (storedWidth && storedWidth < 30) storedWidth *= 10; 
     if (storedHeight && storedHeight < 30) storedHeight *= 10;
 
@@ -986,13 +988,8 @@ export default function ClientDashboard() {
             if (isParagraph && paragraphParts.length > 0) {
               const fullParagraph = paragraphParts.join(', ') + '.';
               
-              const isTwoCols = config.columnsCount === 2;
-              
-              // We calculate block width explicitly based on width and two-column setting
-              const pWidth = isTwoCols ? ((docWidthMM / 2) - 10) : (docWidthMM - 10);
-              
-              console.log('--- PDF ENGINE PARAGRAPH ---');
-              console.log('pWidth (mm):', pWidth);
+              // We use exactly the same columnWidth for the paragraph block
+              const pWidth = columnWidth;
               
               doc.text(fullParagraph, startX, currentY, { maxWidth: pWidth, align: 'justify' });
               
