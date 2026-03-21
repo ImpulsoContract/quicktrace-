@@ -337,7 +337,7 @@ export default function ClientDashboard() {
   const addIngredient = () => {
     setRecipeForm({
       ...recipeForm,
-      ingredients: [...recipeForm.ingredients, { name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }]
+      ingredients: [...recipeForm.ingredients, { name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }]
     });
   };
 
@@ -348,9 +348,12 @@ export default function ClientDashboard() {
   };
 
   const handleRecipeIngredientChange = (index, field, value) => {
-    const newIngs = [...recipeForm.ingredients];
-    newIngs[index][field] = value;
-    setRecipeForm({ ...recipeForm, ingredients: newIngs });
+    setRecipeForm(prev => {
+      const newIngs = prev.ingredients.map((ing, i) => 
+        i === index ? { ...ing, [field]: value } : ing
+      );
+      return { ...prev, ingredients: newIngs };
+    });
   };
 
   const fetchElaborations = async () => {
@@ -2916,7 +2919,24 @@ export default function ClientDashboard() {
                     <button 
                       onClick={() => {
                         setEditingRecipe(null);
-                        setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }], hasBarcode: false, barcode: "" });
+                        setRecipeForm({ 
+                          name: "", 
+                          ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }], 
+                          hasBarcode: false, 
+                          barcode: "",
+                          expiryDays: 0,
+                          expiryType: "EXPIRATION",
+                          elaborationInstructions: "",
+                          conservationInstructions: "",
+                          energyValue: "",
+                          fats: "",
+                          saturatedFats: "",
+                          carbohydrates: "",
+                          sugars: "",
+                          proteins: "",
+                          salt: "",
+                          allergens: []
+                        });
                         setIsRecipeManageModalOpen(true);
                       }}
                       className="btn-primary" 
@@ -2941,7 +2961,24 @@ export default function ClientDashboard() {
                     <button 
                       onClick={() => {
                         setEditingRecipe(null);
-                        setRecipeForm({ name: "", ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }], hasBarcode: false, barcode: "" });
+                        setRecipeForm({ 
+                          name: "", 
+                          ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }], 
+                          hasBarcode: false, 
+                          barcode: "",
+                          expiryDays: 0,
+                          expiryType: "EXPIRATION",
+                          elaborationInstructions: "",
+                          conservationInstructions: "",
+                          energyValue: "",
+                          fats: "",
+                          saturatedFats: "",
+                          carbohydrates: "",
+                          sugars: "",
+                          proteins: "",
+                          salt: "",
+                          allergens: []
+                        });
                         setIsRecipeManageModalOpen(true);
                       }}
                       className="btn-primary"
