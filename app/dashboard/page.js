@@ -785,8 +785,12 @@ export default function ClientDashboard() {
     const docWidthMM = storedWidth || 100;
     const docHeightMM = storedHeight || 50;
 
+    console.log('--- GENERATING PDF ---');
+    console.log('Configured Dimensions (mm):', docWidthMM, 'x', docHeightMM);
+    console.log('Orientation:', (docWidthMM > docHeightMM ? 'landscape' : 'portrait'));
+
     const doc = new jsPDF({
-      orientation: config.layout === 'vertical' ? 'p' : 'l',
+      orientation: docWidthMM > docHeightMM ? 'l' : 'p',
       unit: 'mm',
       format: [docWidthMM, docHeightMM]
     });
