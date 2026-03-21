@@ -74,7 +74,9 @@ export async function POST(req) {
             amount: ing.amount,
             unit: ing.unit,
             loteMandatory: !!ing.loteMandatory,
-            quantityMandatory: !!ing.quantityMandatory
+            quantityMandatory: !!ing.quantityMandatory,
+            expandItem: !!ing.expandItem,
+            expandedText: ing.expandedText || null
           }))
         }
       },

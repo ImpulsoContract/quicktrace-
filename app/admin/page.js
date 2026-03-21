@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { 
   Users, UserPlus, Mail, Lock, 
   Building2, Globe, FileText, 
@@ -8,7 +8,7 @@ import {
   Search, ShieldCheck, ChevronRight,
   MoreVertical, Edit, Plus, Trash2,
   X, AlertCircle, Loader2, LogOut,
-  Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag
+  Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -34,6 +34,81 @@ export default function AdminDashboard() {
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMasterPass, setShowMasterPass] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const [sortConfig, setSortConfig] = useState({ key: 'created', direction: 'desc' });
+  const [planFilter, setPlanFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
+
+  const processedClients = useMemo(() => {
+    let result = [...clients];
+    
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter(c => 
+        c.email.toLowerCase().includes(lowerSearch) || 
+        (c.clientProfile?.razonSocial || '').toLowerCase().includes(lowerSearch) ||
+        (c.clientProfile?.nif || '').toLowerCase().includes(lowerSearch)
+      );
+    }
+    
+    if (planFilter) {
+      result = result.filter(c => c.clientProfile?.plan?.name === planFilter || (planFilter === 'SIN PLAN' && !c.clientProfile?.plan));
+    }
+    
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        let aValue, bValue;
+        switch(sortConfig.key) {
+          case 'name':
+            aValue = a.clientProfile?.razonSocial || a.email;
+            bValue = b.clientProfile?.razonSocial || b.email;
+            break;
+          case 'plan':
+            aValue = a.clientProfile?.plan?.name || '';
+            bValue = b.clientProfile?.plan?.name || '';
+            break;
+          case 'recipes':
+            aValue = a.clientProfile?._count?.recipes || 0;
+            bValue = b.clientProfile?._count?.recipes || 0;
+            break;
+          case 'renewal':
+            aValue = new Date(a.clientProfile?.stripeCurrentPeriodEnd || 0).getTime();
+            bValue = new Date(b.clientProfile?.stripeCurrentPeriodEnd || 0).getTime();
+            break;
+          case 'created':
+            aValue = new Date(a.createdAt || 0).getTime();
+            bValue = new Date(b.createdAt || 0).getTime();
+            break;
+          case 'login':
+            aValue = new Date(a.lastLogin || 0).getTime();
+            bValue = new Date(b.lastLogin || 0).getTime();
+            break;
+          default:
+            aValue = ''; bValue = '';
+        }
+        
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    return result;
+  }, [clients, sortConfig, planFilter, searchTerm]);
+
+  const totalPages = Math.ceil(processedClients.length / itemsPerPage);
+  const currentClients = processedClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => setCurrentPage(1), [planFilter, searchTerm, itemsPerPage]);
 
   const [formData, setFormData] = useState({
     email: "", password: "", name: "", razonSocial: "", nif: "", phone: "",
@@ -181,113 +256,128 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSyncClientify = async (clientId) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/clients/sync-clientify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: 'success', text: data.message });
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      alert("Error al sincronizar con Clientify");
+    } finally {
+      setLoading(false);
+      setActiveMenu(null);
+    }
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)' }}>
-      <nav style={{
-        borderBottom: '1px solid var(--border)', padding: '1rem 2rem',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        background: 'white', position: 'sticky', top: 0, zIndex: 100,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+    <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Mobile Top Header */}
+      <div className="mobile-header" style={{ padding: '1rem 1.5rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ position: 'relative', width: '28px', height: '28px' }}>
             <Image src="/images/logo.jpg" alt="Logo" fill style={{ objectFit: 'contain' }} />
           </div>
-          <span style={{ fontWeight: '800', fontSize: '1.2rem', color: 'var(--corp-green)' }}>QuickTrace</span>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
+            Administración
+          </h1>
         </div>
-
-        <div className="desktop-only" style={{ display: 'flex', gap: '2rem' }}>
-          <button
-            onClick={() => setActiveTab("create")}
-            style={{
-              background: 'none', border: 'none', color: activeTab === 'create' ? 'var(--corp-green)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'create' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
-            }}
-          >
-            Crear Cliente
-            {activeTab === 'create' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
-          </button>
-          <button
-            onClick={() => setActiveTab("list")}
-            style={{
-              background: 'none', border: 'none', color: activeTab === 'list' ? 'var(--corp-green)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'list' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
-            }}
-          >
-            Ver Clientes <span style={{ fontSize: '0.6rem', background: '#e2e8f0', padding: '1px 4px', borderRadius: '4px', verticalAlign: 'middle' }}>v2.1</span>
-            {activeTab === 'list' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
-          </button>
-          <button
-            onClick={() => setActiveTab("plans")}
-            style={{
-              background: 'none', border: 'none', color: activeTab === 'plans' ? 'var(--corp-green)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'plans' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
-            }}
-          >
-            Planes de Precios
-            {activeTab === 'plans' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
-          </button>
-          <button
-            onClick={() => setActiveTab("terms")}
-            style={{
-              background: 'none', border: 'none', color: activeTab === 'terms' ? 'var(--corp-green)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'terms' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
-            }}
-          >
-            Cambio Condiciones
-            {activeTab === 'terms' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
-          </button>
-          <button
-            onClick={() => setActiveTab("coupons")}
-            style={{
-              background: 'none', border: 'none', color: activeTab === 'coupons' ? 'var(--corp-green)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'coupons' ? '700' : '500', cursor: 'pointer', position: 'relative', padding: '0.5rem 0'
-            }}
-          >
-            Cupones
-            {activeTab === 'coupons' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--corp-green)' }} />}
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="desktop-only" style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>Fernando Admin</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Administrador</div>
-          </div>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--corp-sand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>F</div>
-          
-          <button 
-            onClick={() => setShowMasterPass(true)}
-            style={{ 
-              background: 'rgba(66, 98, 22, 0.1)', border: '1px solid var(--corp-green)', color: 'var(--corp-green)', 
-              padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem',
-              fontSize: '0.85rem', fontWeight: '700'
-            }}
-          >
-            <ShieldCheck size={18} /> Contraseña Maestra
-          </button>
-          
-          <button 
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            style={{ 
-              background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', 
-              padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
-            }}
-            title="Cerrar sesión"
-          >
-            <LogOut size={18} />
-            <span className="desktop-only" style={{ fontSize: '0.85rem', fontWeight: '600' }}>Salir</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile nav indicator */}
-      <div style={{ display: 'none' }} className="mobile-nav">
-         {/* Could add a mobile tab switcher here if needed */}
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          style={{ background: 'transparent', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--text-main)' }}
+        >
+          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
 
-      <main style={{ padding: '2rem' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', overflowX: 'hidden' }} className="flex-responsive">
+        <aside style={{ 
+          width: isSidebarOpen ? '280px' : '0px',
+          opacity: isSidebarOpen ? 1 : 0,
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
+          borderRight: isSidebarOpen ? '1px solid var(--border)' : 'none', 
+          background: 'white', 
+          display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh',
+          overflow: 'hidden', whiteSpace: 'nowrap'
+        }} className={`sidebar-responsive ${isSidebarOpen ? 'open' : ''}`}>
+          <div className="desktop-logo" style={{ padding: '2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ position: 'relative', width: '32px', height: '32px' }}>
+              <Image src="/images/logo.jpg" alt="Logo" fill style={{ objectFit: 'contain' }} />
+            </div>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+              QT Admin
+            </h1>
+          </div>
+
+          <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
+            <SidebarBtn 
+              icon={<UserPlus size={20} />} label="Crear Cliente" 
+              active={activeTab === 'create'} onClick={() => { setActiveTab('create'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
+            <SidebarBtn 
+              icon={<Users size={20} />} label="Ver Clientes" 
+              active={activeTab === 'list'} onClick={() => { setActiveTab('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
+            <SidebarBtn 
+              icon={<FileText size={20} />} label="Planes de Precios" 
+              active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
+            <SidebarBtn 
+              icon={<CheckSquare size={20} />} label="Cambio Condiciones" 
+              active={activeTab === 'terms'} onClick={() => { setActiveTab('terms'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
+            <SidebarBtn 
+              icon={<Tag size={20} />} label="Cupones" 
+              active={activeTab === 'coupons'} onClick={() => { setActiveTab('coupons'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
+          </nav>
+
+          <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--corp-sand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>F</div>
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>Fernando Admin</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Administrador</div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setShowMasterPass(true)}
+              style={{ width: '100%', background: 'rgba(66, 98, 22, 0.1)', border: '1px solid var(--corp-green)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.5rem' }}
+            >
+              <ShieldCheck size={16} /> Contraseña Maestra
+            </button>
+            <button 
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              style={{ width: '100%', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700' }}
+            >
+              <LogOut size={16} /> Salir
+            </button>
+          </div>
+        </aside>
+
+        <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', minWidth: 0, transition: 'padding 0.3s ease' }}>
+          
+          <div className="desktop-only" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              style={{ background: 'white', border: '1px solid var(--border)', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+            >
+              <Menu size={20} />
+            </button>
+            {!isSidebarOpen && <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)' }}>Panel Administrativo</h2>}
+          </div>
+
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {activeTab === "create" ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
@@ -388,83 +478,162 @@ export default function AdminDashboard() {
                     Refrescar
                   </button>
                 </div>
-                <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
-                  <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="text" placeholder="Buscar por nombre o NIF..." className="input-field" style={{ paddingLeft: '2.75rem' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Filter size={16} color="var(--text-muted)" />
+                    <select 
+                      className="input-field" 
+                      style={{ padding: '0.5rem', minWidth: '150px' }}
+                      value={planFilter}
+                      onChange={(e) => setPlanFilter(e.target.value)}
+                    >
+                      <option value="">Todos los planes</option>
+                      {plans.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                      <option value="SIN PLAN">Sin Plan</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <select 
+                      className="input-field" 
+                      style={{ padding: '0.5rem' }}
+                      value={itemsPerPage}
+                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                    >
+                      <option value={20}>20 por pág</option>
+                      <option value={50}>50 por pág</option>
+                      <option value={100}>100 por pág</option>
+                    </select>
+                  </div>
+                  <div style={{ position: 'relative', width: '250px' }}>
+                    <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <input 
+                      type="text" 
+                      placeholder="Buscar por nombre o nif..." 
+                      className="input-field" 
+                      style={{ paddingLeft: '2.75rem' }} 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
               {listLoading ? (
                  <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
-                    <thead>
-                      <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cliente / Responsable</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>NIF / CIF</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recetas (Uso)</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Próxima Renovación</th>
-                        <th style={{ padding: '1rem', textAlign: 'right' }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {clients.map((client) => (
-                        <tr key={client.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
-                          <td style={{ padding: '1.25rem 1rem' }}>
-                            <div style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || 'Sin Razón Social'}</div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{client.email}</div>
-                          </td>
-                          <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>{client.clientProfile?.nif}</td>
-                          <td style={{ padding: '1.25rem 1rem' }}>
-                            <span style={{
-                              padding: '0.35rem 0.85rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: '700',
-                              background: '#dcfce7',
-                              color: '#15803d',
-                              textTransform: 'uppercase'
-                            }}>
-                              {client.clientProfile?.plan?.name || "SIN PLAN"}
-                            </span>
-                          </td>
-                          <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '600' }}>
-                            {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}
-                          </td>
-                          <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
-                            {client.clientProfile?.stripeCurrentPeriodEnd ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Globe size={14} color="var(--corp-green)" />
-                                {(() => {
-                                  const raw = client.clientProfile.stripeCurrentPeriodEnd;
-                                  try {
-                                    const d = new Date(raw);
-                                    return isNaN(d.getTime()) ? raw : d.toLocaleDateString();
-                                  } catch (e) {
-                                    return raw;
-                                  }
-                                })()}
-                              </div>
-                            ) : (
-                              <span style={{ color: '#94a3b8' }}>-</span>
-                            )}
-                          </td>
-                          <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
-                            <button
-                              onClick={(e) => {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                setMenuPosition({ x: rect.left - 180, y: rect.bottom + 10 });
-                                setActiveMenu(activeMenu && activeMenu.id === client.id ? null : client);
-                              }}
-                              style={{ background: '#f1f5f9', border: 'none', color: '#64748b', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
-                            >
-                              <MoreVertical size={18} />
-                            </button>
-                          </td>
+                <>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
+                      <thead>
+                        <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                          <th onClick={() => handleSort('name')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            Cliente / Responsable {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th onClick={() => handleSort('plan')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            Plan {sortConfig.key === 'plan' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th onClick={() => handleSort('recipes')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            Recetas (Uso) {sortConfig.key === 'recipes' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th onClick={() => handleSort('created')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            Registro {sortConfig.key === 'created' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th onClick={() => handleSort('login')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            Últ. Login {sortConfig.key === 'login' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th onClick={() => handleSort('renewal')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            Renovación {sortConfig.key === 'renewal' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th style={{ padding: '1rem', textAlign: 'right' }}></th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {currentClients.map((client) => (
+                          <tr key={client.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
+                            <td style={{ padding: '1.25rem 1rem' }}>
+                              <div style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || 'Sin Razón Social'}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{client.email}</div>
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem' }}>
+                              <span style={{
+                                padding: '0.35rem 0.85rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: '700',
+                                background: '#dcfce7',
+                                color: '#15803d',
+                                textTransform: 'uppercase'
+                              }}>
+                                {client.clientProfile?.plan?.name || "SIN PLAN"}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '600' }}>
+                              {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
+                              {client.createdAt ? new Date(client.createdAt).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
+                              {client.lastLogin ? new Date(client.lastLogin).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span style={{ color: '#94a3b8' }}>-</span>}
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
+                              {client.clientProfile?.stripeCurrentPeriodEnd ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <Globe size={14} color="var(--corp-green)" />
+                                  {(() => {
+                                    const raw = client.clientProfile.stripeCurrentPeriodEnd;
+                                    try {
+                                      const d = new Date(raw);
+                                      return isNaN(d.getTime()) ? raw : d.toLocaleDateString();
+                                    } catch (e) {
+                                      return raw;
+                                    }
+                                  })()}
+                                </div>
+                              ) : (
+                                <span style={{ color: '#94a3b8' }}>-</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
+                              <button
+                                onClick={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setMenuPosition({ x: rect.left - 180, y: rect.bottom + 10 });
+                                  setActiveMenu(activeMenu && activeMenu.id === client.id ? null : client);
+                                }}
+                                style={{ background: '#f1f5f9', border: 'none', color: '#64748b', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
+                              >
+                                <MoreVertical size={18} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Paginator */}
+                  {totalPages > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, processedClients.length)} de {processedClients.length} clientes
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', background: 'white', borderRadius: '0.5rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+                        >
+                          Anterior
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', background: 'white', borderRadius: '0.5rem', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </section>
           ) : activeTab === "terms" ? (
@@ -507,6 +676,7 @@ export default function AdminDashboard() {
             <MenuBtn icon={<CheckSquare size={16} />} text="Zonas de limpieza" onClick={() => { setManageCleaningZonesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<Thermometer size={16} />} text="Temperatura de cámaras" onClick={() => { setManageChambersModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<RefreshCw size={16} />} text="Sincronizar con Stripe" onClick={() => handleResyncStripe(activeMenu.id)} />
+            <MenuBtn icon={<UserPlus size={16} />} text="Sincronizar con Clientify" onClick={() => handleSyncClientify(activeMenu.id)} />
             <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
                <MenuBtn 
                 icon={<FileText size={16} />} 
@@ -793,7 +963,34 @@ export default function AdminDashboard() {
           from { opacity: 0; transform: translateY(-10px) scale(0.95); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
+
+        @media (max-width: 1024px) {
+          .flex-responsive { flex-direction: column !important; }
+          .mobile-header { display: flex !important; }
+          .desktop-logo { display: none !important; }
+          .sidebar-responsive { 
+            display: none !important; 
+            width: 100% !important; 
+            height: auto !important; 
+            position: relative !important;
+            border-right: none !important;
+            border-bottom: 1px solid var(--border) !important;
+          }
+          .sidebar-responsive.open {
+            display: flex !important;
+            position: fixed !important;
+            top: 61px !important;
+            left: 0 !important;
+            z-index: 90 !important;
+            background: white !important;
+            height: calc(100vh - 61px) !important;
+            overflow-y: auto !important;
+          }
+          main { padding: 1.5rem !important; }
+          .desktop-only { display: none !important; }
+        }
       `}</style>
+      </div> {/* Close flex-responsive */}
     </div>
   );
 }
@@ -1090,19 +1287,33 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
   const [recipeForm, setRecipeForm] = useState({
     name: recipeToEdit?.name || "", 
     ingredients: recipeToEdit?.ingredients.map(i => ({
-      id: i.id, // Keep ID for updates if necessary, or just treat as new for simplicity
+      id: i.id,
       name: i.name,
       amount: i.amount,
       unit: i.unit,
       loteMandatory: i.loteMandatory || false,
-      quantityMandatory: i.quantityMandatory || false
-    })) || [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }]
+      quantityMandatory: i.quantityMandatory || false,
+      expandItem: i.expandItem || false,
+      expandedText: i.expandedText || ""
+    })) || [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }],
+    expiryDays: recipeToEdit?.expiryDays || 0,
+    expiryType: recipeToEdit?.expiryType || "EXPIRATION",
+    elaborationInstructions: recipeToEdit?.elaborationInstructions || "",
+    conservationInstructions: recipeToEdit?.conservationInstructions || "",
+    energyValue: recipeToEdit?.energyValue || "",
+    fats: recipeToEdit?.fats || "",
+    saturatedFats: recipeToEdit?.saturatedFats || "",
+    carbohydrates: recipeToEdit?.carbohydrates || "",
+    sugars: recipeToEdit?.sugars || "",
+    proteins: recipeToEdit?.proteins || "",
+    salt: recipeToEdit?.salt || "",
+    allergens: recipeToEdit?.allergens || []
   });
 
   const handleAddIngredient = () => {
     setRecipeForm({
       ...recipeForm,
-      ingredients: [...recipeForm.ingredients, { name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }]
+      ingredients: [...recipeForm.ingredients, { name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }]
     });
   };
 
@@ -1114,9 +1325,12 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
   };
 
   const handleIngredientChange = (index, field, value) => {
-    const newIngs = [...recipeForm.ingredients];
-    newIngs[index] = { ...newIngs[index], [field]: value };
-    setRecipeForm({ ...recipeForm, ingredients: newIngs });
+    setRecipeForm(prev => {
+      const newIngs = prev.ingredients.map((ing, i) => 
+        i === index ? { ...ing, [field]: value } : ing
+      );
+      return { ...prev, ingredients: newIngs };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -1181,6 +1395,38 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
                         required
                         style={{ margin: 0, padding: '0.5rem' }}
                       />
+                      
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={ing.expandItem || false} 
+                              onChange={(e) => handleIngredientChange(idx, 'expandItem', e.target.checked)} 
+                              style={{ accentColor: 'var(--corp-green)' }} 
+                            />
+                            Desglosar este ingrediente
+                          </label>
+                          <button 
+                            type="button" 
+                            onClick={() => alert("Selecciona esta casilla si quieres que este ingrediente salga con otro texto en la etiqueta. Por ejemplo si usas un mix de especias ya preparado y quieres que en la etiqueta salga todas las especias que contiene el mix.")}
+                            style={{ background: '#e2e8f0', border: 'none', color: '#475569', cursor: 'pointer', width: '16px', height: '16px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                            title="Información"
+                          >
+                            ?
+                          </button>
+                        </div>
+                        {ing.expandItem && (
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            value={ing.expandedText || ''} 
+                            onChange={(e) => handleIngredientChange(idx, 'expandedText', e.target.value)} 
+                            placeholder="Escribe el texto de la etiqueta aquí" 
+                            style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem' }} 
+                          />
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>CANT. DEFECTO</label>
@@ -1742,6 +1988,28 @@ function AdminTermsTab({ onUpdateSuccess }) {
         )}
       </div>
     </section>
+  );
+}
+
+
+
+function SidebarBtn({ icon, label, active, onClick }) {
+  return (
+    <button 
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%',
+        padding: '0.875rem 1rem', border: 'none', background: active ? 'var(--corp-green)' : 'transparent',
+        color: active ? 'white' : 'var(--text-main)', borderRadius: '0.5rem',
+        cursor: 'pointer', transition: 'background 0.2s, color 0.2s', fontWeight: active ? '700' : '600',
+        textAlign: 'left', fontSize: '0.9rem'
+      }}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = 'var(--corp-green)'; } }}
+      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-main)'; } }}
+    >
+      <div style={{ opacity: active ? 1 : 0.7 }}>{icon}</div>
+      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{label}</span>
+    </button>
   );
 }
 
