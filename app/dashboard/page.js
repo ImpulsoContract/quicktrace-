@@ -819,7 +819,12 @@ export default function ClientDashboard() {
         theme: 'striped',
         headStyles: { fillColor: [66, 98, 22], textColor: [255, 255, 255] },
         styles: { fontSize: 9, cellPadding: 3 },
-        alternateRowStyles: { fillColor: [245, 247, 240] }
+        alternateRowStyles: { fillColor: [245, 247, 240] },
+        didDrawPage: (data) => {
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 14, doc.internal.pageSize.height - 10);
+        }
       });
 
       doc.save(`Informe_Limpieza_${from}_${to}.pdf`);
@@ -884,7 +889,12 @@ export default function ClientDashboard() {
         theme: 'striped',
         headStyles: { fillColor: [66, 98, 22], textColor: [255, 255, 255] },
         styles: { fontSize: 8, cellPadding: 2 },
-        alternateRowStyles: { fillColor: [245, 247, 240] }
+        alternateRowStyles: { fillColor: [245, 247, 240] },
+        didDrawPage: (data) => {
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 14, doc.internal.pageSize.height - 10);
+        }
       });
 
       doc.save(`Informe_Temperaturas_${from}_${to}.pdf`);
@@ -1248,7 +1258,12 @@ export default function ClientDashboard() {
         }
 
         // Pie de página
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 20, 285);
+        
         doc.setFontSize(10);
+        doc.setTextColor(100);
         doc.text(`${i + 1} / ${data.length}`, 190, 285, { align: 'right' });
       }
 
@@ -1379,11 +1394,21 @@ export default function ClientDashboard() {
           body: tableBody,
           theme: 'grid',
           headStyles: { fillStyle: '#3f6212', textColor: [255, 255, 255] },
-          margin: { left: 20, right: 20 }
+          margin: { left: 20, right: 20 },
+          didDrawPage: (data) => {
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 20, doc.internal.pageSize.height - 12);
+          }
         });
 
         // Pie de página
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 20, 285);
+
         doc.setFontSize(10);
+        doc.setTextColor(100);
         doc.text(`${index + 1} / ${filtered.length}`, 190, 285, { align: 'right' });
       });
 
