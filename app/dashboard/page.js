@@ -95,6 +95,8 @@ export default function ClientDashboard() {
   const [goodsReceipts, setGoodsReceipts] = useState([]);
   const [isGoodsModalOpen, setIsGoodsModalOpen] = useState(false);
   const [editingGoodsReceipt, setEditingGoodsReceipt] = useState(null);
+  const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
+  const [cleaningExportDates, setCleaningExportDates] = useState({ from: "", to: "" });
   const [viewingImage, setViewingImage] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
@@ -769,6 +771,60 @@ export default function ClientDashboard() {
     } catch (error) {
       console.error("Error updating label config:", error);
       return false;
+    }
+  };
+
+  const generateCleaningReportPDF = async (dates) => {
+    try {
+      const { from, to } = dates;
+      const res = await fetch(`/api/cleaning-logs?startDate=${from}&endDate=${to}`);
+      const logs = await res.json();
+      
+      if (logs.length === 0) {
+        alert(t('dashboard.no_records_range') || "No hay registros en este rango");
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(66, 98, 22); // corp-green
+      doc.text(t('dashboard.cleaning').toUpperCase(), 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`${t('common.from')}: ${from}  ${t('common.to')}: ${to}`, 14, 30);
+      doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 35);
+      
+      // Table
+      const tableColumn = [
+        t('dashboard.datetime'),
+        t('dashboard.person'),
+        t('dashboard.zones_cleaned')
+      ];
+      
+      const tableRows = logs.map(log => [
+        new Date(log.date).toLocaleString(),
+        log.personName,
+        log.zones.map(z => z.cleaningZone.name).join(', ')
+      ]);
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 45,
+        theme: 'striped',
+        headStyles: { fillColor: [66, 98, 22], textColor: [255, 255, 255] },
+        styles: { fontSize: 9, cellPadding: 3 },
+        alternateRowStyles: { fillColor: [245, 247, 240] }
+      });
+
+      doc.save(`Informe_Limpieza_${from}_${to}.pdf`);
+      setIsCleaningExportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating cleaning report:", error);
+      alert(t('alerts.request_error'));
     }
   };
 
@@ -2519,6 +2575,13 @@ export default function ClientDashboard() {
                     <PlayCircle size={18} /> {t('dashboard.video_help')}
                   </button>
                   <button 
+                    onClick={() => setIsCleaningExportModalOpen(true)}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                  >
+                    <FileText size={18} /> {t('dashboard.generate_cleaning_report')}
+                  </button>
+                  <button 
                     onClick={() => setIsManageZonesModalOpen(true)}
                     className="btn-secondary" 
                     style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
@@ -3257,6 +3320,15 @@ export default function ClientDashboard() {
           loading={loading}
           isEditing={!!editingTempRecord}
           lastRecord={tempRecords.length > 0 ? tempRecords[0] : null}
+        />
+      )}
+
+      {isCleaningExportModalOpen && (
+        <CleaningExportModal 
+          onClose={() => setIsCleaningExportModalOpen(false)}
+          onGenerate={generateCleaningReportPDF}
+          dates={cleaningExportDates}
+          setDates={setCleaningExportDates}
         />
       )}
 
@@ -5216,4 +5288,54 @@ function LabelConfigModal({ config, onClose, onSave }) {
     </div>
   );
 }
+
+function CleaningExportModal({ onClose, onGenerate, dates, setDates }) {
+  const { t } = useI18n();
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '400px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>{t('dashboard.cleaning_report')}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <X size={24} />
+          </button>
+        </header>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label className="input-label">{t('common.from')}</label>
+            <input 
+              type="date" 
+              className="input-field"
+              value={dates.from}
+              onChange={(e) => setDates({ ...dates, from: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="input-label">{t('common.to')}</label>
+            <input 
+              type="date" 
+              className="input-field"
+              value={dates.to}
+              onChange={(e) => setDates({ ...dates, to: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <footer style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+          <button onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
+          <button 
+            onClick={() => onGenerate(dates)} 
+            className="btn-primary"
+            disabled={!dates.from || !dates.to}
+          >
+            {t('dashboard.generate_report')}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 

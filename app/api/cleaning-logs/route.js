@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req) {
   const session = await getServerSession(authOptions);
 
   if (!session || session.user.role !== "CLIENT") {
@@ -11,6 +11,10 @@ export async function GET() {
   }
 
   try {
+    const { searchParams } = new URL(req.url);
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
     const profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) }
     });
@@ -19,8 +23,22 @@ export async function GET() {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
+    const where = { clientProfileId: profile.id };
+
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) {
+        where.date.gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.date.lte = end;
+      }
+    }
+
     const logs = await prisma.cleaningLog.findMany({
-      where: { clientProfileId: profile.id },
+      where,
       include: {
         zones: {
           include: {
