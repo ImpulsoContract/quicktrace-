@@ -17,6 +17,7 @@ export async function GET() {
         id: true,
         email: true,
         createdAt: true,
+        lastLogin: true,
         termsAcceptedAt: true,
         clientProfile: {
           include: {

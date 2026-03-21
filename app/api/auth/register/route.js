@@ -134,7 +134,7 @@ export async function POST(req) {
 
     // Report to Clientify CRM
     try {
-      createClientifyContact({
+      await createClientifyContact({
         email: normalizedEmail,
         name: name,
         phone: phone,

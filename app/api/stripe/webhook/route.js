@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import Stripe from "stripe";
 import { sendEmail } from "@/lib/mail";
+import { assignClientifyTagByEmail } from "@/lib/clientify";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,9 @@ export async function POST(req) {
               <p>Próxima renovación: ${nextRenewalStr ? new Date(nextRenewalStr).toLocaleDateString() : 'N/A'}</p>
             `
           });
+          
+          // Asignar etiqueta en Clientify
+          await assignClientifyTagByEmail(profile.user.email, "cliente quicktrace");
         }
       }
       break;
@@ -159,6 +163,11 @@ export async function POST(req) {
               <p>Nueva fecha de renovación: ${nextRenewalStr ? new Date(nextRenewalStr).toLocaleDateString() : 'N/A'}</p>
             `
           });
+        }
+        
+        if (profile) {
+          // Aseguramos la etiqueta de cliente en Clientify por cada pago verificado
+          await assignClientifyTagByEmail(profile.user.email, "cliente quicktrace");
         }
       }
       break;

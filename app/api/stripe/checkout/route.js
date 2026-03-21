@@ -83,6 +83,11 @@ export async function POST(req) {
       success_url: `${baseUrl}/dashboard/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/dashboard/plans`,
       allow_promotion_codes: true,
+      billing_address_collection: "required", // Añadido para forzar la dirección de facturación
+      tax_id_collection: { enabled: true },   // Añadido para permitir meter el NIF/CIF
+      ...(clientProfile.stripeCustomerId ? {
+        customer_update: { address: 'auto', name: 'auto' }
+      } : {}),
       metadata: {
         userId: String(session.user.id),
         planId: plan.id,
