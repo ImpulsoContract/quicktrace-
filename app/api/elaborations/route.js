@@ -99,7 +99,7 @@ export async function POST(req) {
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const data = await req.json();
-    const { name, lote, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut } = data;
+    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut } = data;
 
     // Buscar el perfil del cliente
     const profile = await prisma.clientProfile.findUnique({
@@ -144,7 +144,6 @@ export async function POST(req) {
     const elaboration = await prisma.elaboration.create({
       data: {
         name,
-        lote,
         recipeId: parseInt(recipeId),
         personName: data.personName,
         date: data.date ? new Date(data.date) : new Date(),
@@ -182,7 +181,7 @@ export async function PATCH(req) {
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const data = await req.json();
-    const { id, name, lote, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, ingredients } = data;
+    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, ingredients } = data;
 
     if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
@@ -204,7 +203,6 @@ export async function PATCH(req) {
 
     const updateData = {
       name,
-      lote,
       personName,
       date: date ? new Date(date) : undefined,
       expirationDate: expirationDate ? new Date(expirationDate) : null,

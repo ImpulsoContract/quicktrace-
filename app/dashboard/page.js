@@ -813,7 +813,6 @@ export default function ClientDashboard() {
 
     setElaboracionForm({
       titulo: `${dateStr}${initials}`,
-      lote: "",
       personName: lastPerson,
       date: currentDateTime,
       expirationDate: expirationDate,
@@ -840,7 +839,6 @@ export default function ClientDashboard() {
 
     setElaboracionForm({
       titulo: elab.name,
-      lote: elab.lote || "",
       personName: elab.personName || "",
       date: elab.date ? new Date(elab.date).toISOString().slice(0, 16) : "",
       expirationDate: elab.expirationDate ? new Date(elab.expirationDate).toISOString().slice(0, 10) : "",
@@ -1644,7 +1642,6 @@ export default function ClientDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: elaboracionForm.titulo,
-          lote: elaboracionForm.lote,
           recipeId: selectedRecipe.id,
           personName: elaboracionForm.personName,
           date: elaboracionForm.date,
@@ -2142,8 +2139,8 @@ export default function ClientDashboard() {
                     <input 
                       type="text" 
                       className="input-field" 
-                      value={elaboracionForm.lote} 
-                      onChange={(e) => setElaboracionForm({...elaboracionForm, lote: e.target.value})}
+                      value={elaboracionForm.titulo} 
+                      onChange={(e) => setElaboracionForm({...elaboracionForm, titulo: e.target.value})}
                       placeholder={t('traceability_form.elaboration_title_placeholder')}
                       required
                       style={{ fontSize: '1.1rem', fontWeight: '500', padding: '1rem', border: '2px solid var(--corp-green)' }}
@@ -2151,17 +2148,6 @@ export default function ClientDashboard() {
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('dashboard.elaboration_name_header')}</label>
-                      <input 
-                        type="text" 
-                        className="input-field" 
-                        value={elaboracionForm.titulo} 
-                        onChange={(e) => setElaboracionForm({...elaboracionForm, titulo: e.target.value})}
-                        style={{ }}
-                        placeholder=""
-                      />
-                    </div>
 
                     <div>
                       <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.quantity_produced')}</label>
@@ -3581,17 +3567,14 @@ export default function ClientDashboard() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                     <tr>
-                      <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('dashboard.elaboration_name_header')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th onClick={() => handleSort('lote')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('dashboard.lote')} {sortConfig.key === 'lote' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('dashboard.lote')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th onClick={() => handleSort('date')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {t('dashboard.elaboration_date_header')} {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Secadero</th>
                       <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
@@ -3600,15 +3583,14 @@ export default function ClientDashboard() {
                   <tbody>
                     {sortedElaborations.map(elab => (
                       <tr key={elab.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600' }}>{elab.name}</td>
-                        <td style={{ padding: '1.25rem 1.5rem', fontWeight: '700', color: 'var(--corp-green)' }}>{elab.lote || '-'}</td>
-                        <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
-                          {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </td>
                         <td style={{ padding: '1.25rem 1.5rem' }}>
                           <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
                             {elab.recipe.name}
                           </span>
+                        </td>
+                        <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--corp-green)' }}>{elab.name}</td>
+                        <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
+                          {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </td>
                         <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem' }}>
                           {(elab.dryingRoomIn || elab.dryingRoomOut || elab.workshopTemp) ? (

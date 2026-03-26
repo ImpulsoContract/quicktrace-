@@ -178,7 +178,6 @@ model Ingredient {
 model Elaboration {
   id        Int      @id @default(autoincrement())
   name      String
-  lote      String?
   date      DateTime @default(now())
   
   recipeId  Int
