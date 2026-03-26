@@ -99,7 +99,7 @@ export async function POST(req) {
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const data = await req.json();
-    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut } = data;
+    const { name, lote, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut } = data;
 
     // Buscar el perfil del cliente
     const profile = await prisma.clientProfile.findUnique({
@@ -144,6 +144,7 @@ export async function POST(req) {
     const elaboration = await prisma.elaboration.create({
       data: {
         name,
+        lote,
         recipeId: parseInt(recipeId),
         personName: data.personName,
         date: data.date ? new Date(data.date) : new Date(),
@@ -151,6 +152,8 @@ export async function POST(req) {
         dryingRoomIn: data.dryingRoomIn,
         dryingRoomOut: data.dryingRoomOut,
         workshopTemp: data.workshopTemp,
+        quantityProduced: data.quantityProduced,
+        netWeight: data.netWeight,
         ingredients: {
           create: ingredients.map(ing => ({
             name: toTitleCase(ing.name),
@@ -169,6 +172,73 @@ export async function POST(req) {
     return NextResponse.json(elaboration);
   } catch (error) {
     console.error("Error POST /api/elaborations:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+    const data = await req.json();
+    const { id, name, lote, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, ingredients } = data;
+
+    if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: parseInt(session.user.id) }
+    });
+
+    if (!profile) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+
+    // Verify ownership
+    const existing = await prisma.elaboration.findUnique({
+      where: { id: parseInt(id) },
+      include: { recipe: true }
+    });
+
+    if (!existing || existing.recipe.clientProfileId !== profile.id) {
+      return NextResponse.json({ error: "No autorizado o no encontrado" }, { status: 403 });
+    }
+
+    const updateData = {
+      name,
+      lote,
+      personName,
+      date: date ? new Date(date) : undefined,
+      expirationDate: expirationDate ? new Date(expirationDate) : null,
+      dryingRoomIn,
+      dryingRoomOut,
+      workshopTemp,
+      quantityProduced,
+      netWeight,
+    };
+
+    if (ingredients) {
+      updateData.ingredients = {
+        deleteMany: {},
+        create: ingredients.map(ing => ({
+          name: toTitleCase(ing.name),
+          lote: ing.lote,
+          realAmount: ing.realAmount.toString(),
+          unit: ing.unit
+        }))
+      };
+    }
+
+    const elaboration = await prisma.elaboration.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+      include: {
+        recipe: true,
+        ingredients: true
+      }
+    });
+
+    return NextResponse.json(elaboration);
+  } catch (error) {
+    console.error("Error PATCH /api/elaborations:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

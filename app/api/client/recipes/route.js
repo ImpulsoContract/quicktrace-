@@ -23,7 +23,7 @@ export async function GET() {
     const recipes = await prisma.recipe.findMany({
       where: { clientProfileId: profile.id },
       include: { ingredients: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { name: 'asc' }
     });
 
     return NextResponse.json(recipes);

@@ -6,8 +6,8 @@ import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "QuickTrace - Gestión de Clientes",
-  description: "Plataforma de seguimiento y gestión de clientes",
+  title: "QuickTrace - Gestión Inteligente de Trazabilidad e Higiene Alimentaria",
+  description: "Digitaliza tus registros de APPCC: Trazabilidad, Temperaturas, Limpieza y Calidad del Agua. Todo en una plataforma premium y fácil de usar.",
   icons: {
     icon: '/favicon.png',
   },

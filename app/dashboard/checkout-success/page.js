@@ -31,11 +31,16 @@ function CheckoutSuccessContent() {
 
         const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || "Error desconocido al verificar el pago.");
+        if (data.success) {
+          setStatus('success');
+          // Meta Pixel Purchase Tracking
+          if (typeof window !== 'undefined' && window.fbq) {
+            window.fbq('track', 'Purchase', {
+              value: data.value,
+              currency: data.currency || 'EUR'
+            });
+          }
         }
-
-        setStatus('success');
       } catch (error) {
         console.error("Sync Error:", error);
         setStatus('error');

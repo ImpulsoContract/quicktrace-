@@ -74,6 +74,7 @@ model ClientProfile {
   chambers              Chamber[]
   temperatureRecords    TemperatureRecord[]
   goodsReceipts         GoodsReceipt[]
+  waterMeasurements     WaterMeasurement[]
 }
 
 model PricingPlan {
@@ -98,6 +99,9 @@ model PricingPlan {
   
   hasTemperatures   Boolean         @default(false)
   temperaturesLimit Int?
+  
+  hasWater          Boolean         @default(false)
+  waterLimit        Int?
   
   clients           ClientProfile[]
   discountCoupons   DiscountCoupon[]
@@ -174,6 +178,7 @@ model Ingredient {
 model Elaboration {
   id        Int      @id @default(autoincrement())
   name      String
+  lote      String?
   date      DateTime @default(now())
   
   recipeId  Int
@@ -186,6 +191,9 @@ model Elaboration {
   workshopTemp    String?
   
   ingredients ElaborationIngredient[]
+  
+  quantityProduced String?
+  netWeight        String?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -282,10 +290,31 @@ model GoodsReceipt {
   deliveryNoteImage String?       // Base64 or URL
   manufacturingTemp String?       // Optional manufacturing temperature
   endDate           String?       // Optional end date text field
+  typeAndOrigin     String?       // Optional type and origin field
   
   clientProfileId   Int
   clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
   
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+}
+
+model WaterMeasurement {
+  id                Int           @id @default(autoincrement())
+  date              DateTime      @default(now())
+  samplingPoint     String?
+  chlorine          String        // Chlorine (mg/liter)
+  turbidity         Boolean       @default(false)
+  odor              Boolean       @default(false)
+  flavor            Boolean       @default(false)
+  color             Boolean       @default(false)
+  responsible       String?
+  
+  clientProfileId   Int
+  clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([clientProfileId])
 }

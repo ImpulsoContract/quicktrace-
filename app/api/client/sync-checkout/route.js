@@ -71,7 +71,9 @@ export async function POST(req) {
 
     return NextResponse.json({ 
       success: true, 
-      message: "Suscripción sincronizada correctamente" 
+      message: "Suscripción sincronizada correctamente",
+      value: checkoutSession.amount_total / 100,
+      currency: checkoutSession.currency?.toUpperCase() || 'EUR'
     });
 
   } catch (error) {

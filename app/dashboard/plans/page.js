@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { 
   Check, X, Crown, Star, 
   Zap, Shield, Plus, ArrowLeft,
-  ChefHat, Thermometer, Brush, Package, History, Loader2
+  ChefHat, Thermometer, Brush, Package, History, Loader2, Droplets
 } from "lucide-react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -181,6 +181,7 @@ export default function PlansPage() {
                   <FeatureToggle icon={<Brush size={18}/>} label={t('plans.cleaning')} active={plan.hasCleaning} limit={plan.cleaningLimit} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={plan.goodsLimit} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Thermometer size={18}/>} label={t('plans.temperatures')} active={plan.hasTemperatures} limit={plan.temperaturesLimit} t={t} showAsterisk={true} />
+                  <FeatureToggle icon={<Droplets size={18}/>} label={t('plans.water')} active={plan.hasWater} limit={plan.waterLimit} t={t} showAsterisk={true} />
                 </div>
 
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.25rem', lineHeight: '1.4' }}>

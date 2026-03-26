@@ -9,7 +9,8 @@ import {
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
-  CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle
+  CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
+  Droplets, Waves
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -27,7 +28,8 @@ const DEFAULT_LABEL_CONFIG = {
     lote: true,
     person: false,
     date: true,
-    expiration: true
+    expiration: true,
+    netWeight: false
   },
   ingredientOptions: {
     showLote: false,
@@ -81,6 +83,7 @@ export default function ClientDashboard() {
   const [recipes, setRecipes] = useState([]);
   const [elaborations, setElaborations] = useState([]);
   const [cleaningLogs, setCleaningLogs] = useState([]);
+  const [waterMeasurements, setWaterMeasurements] = useState([]);
   const [cleaningZones, setCleaningZones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -94,7 +97,9 @@ export default function ClientDashboard() {
   const [editingTempRecord, setEditingTempRecord] = useState(null);
   const [goodsReceipts, setGoodsReceipts] = useState([]);
   const [isGoodsModalOpen, setIsGoodsModalOpen] = useState(false);
+  const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [editingGoodsReceipt, setEditingGoodsReceipt] = useState(null);
+  const [editingWaterMeasurement, setEditingWaterMeasurement] = useState(null);
   const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
   const [cleaningExportDates, setCleaningExportDates] = useState({ from: "", to: "" });
   const [isTempExportModalOpen, setIsTempExportModalOpen] = useState(false);
@@ -163,6 +168,8 @@ export default function ClientDashboard() {
     dryingRoomIn: "",
     dryingRoomOut: "",
     workshopTemp: "",
+    quantityProduced: "",
+    netWeight: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
   });
 
@@ -189,7 +196,18 @@ export default function ClientDashboard() {
     date: new Date().toISOString().slice(0, 16),
     deliveryNoteImage: "",
     manufacturingTemp: "",
-    endDate: ""
+    endDate: "",
+    typeAndOrigin: ""
+  });
+  const [waterForm, setWaterForm] = useState({
+    date: new Date().toISOString().slice(0, 16),
+    samplingPoint: "",
+    chlorine: "",
+    turbidity: false,
+    odor: false,
+    flavor: false,
+    color: false,
+    responsible: ""
   });
 
   // Bulk Selection State
@@ -205,6 +223,7 @@ export default function ClientDashboard() {
       fetchChambers();
       fetchTempRecords();
       fetchGoodsReceipts();
+      fetchWaterMeasurements();
       fetchProfile();
     }
   }, [status]);
@@ -436,6 +455,16 @@ export default function ClientDashboard() {
     }
   };
 
+  const fetchWaterMeasurements = async () => {
+    try {
+      const res = await fetch("/api/water-measurements");
+      const data = await res.json();
+      if (!data.error) setWaterMeasurements(data);
+    } catch (error) {
+      console.error("Error fetching water:", error);
+    }
+  };
+
   const handleCreateChamber = async (name) => {
     try {
       const res = await fetch("/api/client/chambers", {
@@ -594,7 +623,7 @@ export default function ClientDashboard() {
           deliveryNoteImage: "",
           manufacturingTemp: "",
           endDate: "",
-          manufacturingTemp: ""
+          typeAndOrigin: ""
         });
         fetchGoodsReceipts();
       } else {
@@ -629,7 +658,7 @@ export default function ClientDashboard() {
       deliveryNoteImage: receipt.deliveryNoteImage || "",
       manufacturingTemp: receipt.manufacturingTemp || "",
       endDate: receipt.endDate || "",
-      manufacturingTemp: receipt.manufacturingTemp || ""
+      typeAndOrigin: receipt.typeAndOrigin || ""
     });
     setIsGoodsModalOpen(true);
   };
@@ -661,6 +690,85 @@ export default function ClientDashboard() {
         setGoodsForm({ ...goodsForm, deliveryNoteImage: reader.result });
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmitWater = async (e) => {
+    e.preventDefault();
+    if (!waterForm.date || waterForm.chlorine === "") {
+      alert(t('alerts.required_fields') || "Fecha y Cloro son obligatorios");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const url = "/api/water-measurements";
+      const method = editingWaterMeasurement ? "PATCH" : "POST";
+      const body = editingWaterMeasurement ? { ...waterForm, id: editingWaterMeasurement.id } : waterForm;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        alert(editingWaterMeasurement ? t('alerts.water_updated') : t('alerts.water_saved'));
+        setIsWaterModalOpen(false);
+        setEditingWaterMeasurement(null);
+        setWaterForm({
+          date: new Date().toISOString().slice(0, 16),
+          samplingPoint: "",
+          chlorine: "",
+          turbidity: false,
+          odor: false,
+          flavor: false,
+          color: false,
+          responsible: ""
+        });
+        fetchWaterMeasurements();
+      } else {
+        const data = await res.json();
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (error) {
+      console.error("Error saving water measurement:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditWater = (measurement) => {
+    setEditingWaterMeasurement(measurement);
+    setWaterForm({
+      date: new Date(measurement.date).toISOString().slice(0, 16),
+      samplingPoint: measurement.samplingPoint || "",
+      chlorine: measurement.chlorine || "",
+      turbidity: !!measurement.turbidity,
+      odor: !!measurement.odor,
+      flavor: !!measurement.flavor,
+      color: !!measurement.color,
+      responsible: measurement.responsible || ""
+    });
+    setIsWaterModalOpen(true);
+  };
+
+  const handleDeleteWater = async (id) => {
+    if (!confirm(t('alerts.delete_confirm') || '¿Seguro que quieres eliminar este registro?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/water-measurements?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        fetchWaterMeasurements();
+      } else {
+        alert(data.error || t('alerts.delete_error'));
+      }
+    } catch (error) {
+      console.error("Error deleting water measurement:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -705,9 +813,12 @@ export default function ClientDashboard() {
 
     setElaboracionForm({
       titulo: `${dateStr}${initials}`,
+      lote: "",
       personName: lastPerson,
       date: currentDateTime,
       expirationDate: expirationDate,
+      quantityProduced: "",
+      netWeight: "",
       ingredientes: initialIngredientes
     });
   };
@@ -729,11 +840,15 @@ export default function ClientDashboard() {
 
     setElaboracionForm({
       titulo: elab.name,
+      lote: elab.lote || "",
       personName: elab.personName || "",
       date: elab.date ? new Date(elab.date).toISOString().slice(0, 16) : "",
       expirationDate: elab.expirationDate ? new Date(elab.expirationDate).toISOString().slice(0, 10) : "",
       dryingRoomIn: elab.dryingRoomIn || "",
       dryingRoomOut: elab.dryingRoomOut || "",
+      workshopTemp: elab.workshopTemp || "",
+      quantityProduced: elab.quantityProduced || "",
+      netWeight: elab.netWeight || "",
       ingredientes: initialIngredientes
     });
   };
@@ -1021,6 +1136,16 @@ export default function ClientDashboard() {
             currentY += lineHeightMM;
           }
           break;
+        case 'netWeight':
+          if (elaboration.netWeight) {
+            doc.setFont("helvetica", "bold");
+            doc.text(`${t('traceability_form.label_net_weight') || "Peso neto"}:`, startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+            doc.text(elaboration.netWeight, startX, currentY);
+            currentY += lineHeightMM;
+          }
+          break;
         case 'elaborationInstructions':
           if (elaboration.recipe.elaborationInstructions) {
             doc.setFont("helvetica", "bold");
@@ -1231,6 +1356,7 @@ export default function ClientDashboard() {
           [t('goods_receipt_form.invoice_number') + ":", receipt.invoiceNumber || "N/A"],
           [t('goods_receipt_form.temp') + " (°C):", receipt.manufacturingTemp || "N/A"],
           [t('goods_receipt_form.end_date') + ":", receipt.endDate || "N/A"],
+          [t('goods_receipt_form.type_and_origin') + ":", receipt.typeAndOrigin || "N/A"],
           [t('dashboard.datetime') + ":", new Date(receipt.date).toLocaleString()]
         ];
 
@@ -1518,6 +1644,7 @@ export default function ClientDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: elaboracionForm.titulo,
+          lote: elaboracionForm.lote,
           recipeId: selectedRecipe.id,
           personName: elaboracionForm.personName,
           date: elaboracionForm.date,
@@ -1525,6 +1652,8 @@ export default function ClientDashboard() {
           dryingRoomIn: elaboracionForm.dryingRoomIn,
           dryingRoomOut: elaboracionForm.dryingRoomOut,
           workshopTemp: elaboracionForm.workshopTemp,
+          quantityProduced: elaboracionForm.quantityProduced,
+          netWeight: elaboracionForm.netWeight,
           ingredients: ingredientsData
         })
       });
@@ -1610,6 +1739,7 @@ export default function ClientDashboard() {
       else if (activeTab === "limpieza") endpoint = "/api/cleaning-logs";
       else if (activeTab === "temperaturas") endpoint = "/api/temperature-records";
       else if (activeTab === "entradas") endpoint = "/api/goods-receipts";
+      else if (activeTab === "agua") endpoint = "/api/water-measurements";
 
       const res = await fetch(endpoint, {
         method: "DELETE",
@@ -1627,6 +1757,7 @@ export default function ClientDashboard() {
       else if (activeTab === "limpieza") fetchCleaningLogs();
       else if (activeTab === "temperaturas") fetchTempRecords();
       else if (activeTab === "entradas") fetchGoodsReceipts();
+      else if (activeTab === "agua") fetchWaterMeasurements();
       
       fetchProfile(); // Update usage limits
       setSelectedRecords([]);
@@ -1801,8 +1932,39 @@ export default function ClientDashboard() {
     setSortConfig({ key, direction });
   };
 
-  const filteredElaborations = elaborations;
-  const sortedElaborations = elaborations;
+  const filteredElaborations = elaborations.filter(elab => {
+    const matchesLote = !elabFilters.lote || (elab.lote && elab.lote.toLowerCase().includes(elabFilters.lote.toLowerCase())) || (elab.name && elab.name.toLowerCase().includes(elabFilters.lote.toLowerCase()));
+    const matchesRecipe = elabFilters.recipeId === 'all' || elab.recipeId.toString() === elabFilters.recipeId.toString();
+    
+    let matchesDate = true;
+    if (elabFilters.startDate) {
+      const start = new Date(elabFilters.startDate);
+      matchesDate = matchesDate && new Date(elab.date) >= start;
+    }
+    if (elabFilters.endDate) {
+      const end = new Date(elabFilters.endDate);
+      end.setHours(23, 59, 59, 999);
+      matchesDate = matchesDate && new Date(elab.date) <= end;
+    }
+    
+    return matchesLote && matchesRecipe && matchesDate;
+  });
+
+  const sortedElaborations = [...filteredElaborations].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    
+    let aVal = a[sortConfig.key];
+    let bVal = b[sortConfig.key];
+    
+    if (sortConfig.key === 'recipe') {
+      aVal = a.recipe?.name || "";
+      bVal = b.recipe?.name || "";
+    }
+    
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   if (loading && recipes.length === 0) {
     return (
@@ -1880,6 +2042,14 @@ export default function ClientDashboard() {
                 label={t('sidebar.temperatures')} 
                 active={activeTab === "temperaturas"} 
                 onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
+            {profile?.plan?.hasWater && (
+              <SidebarBtn 
+                icon={<Waves size={20} />} 
+                label={t('sidebar.water') || "Agua"} 
+                active={activeTab === "agua"} 
+                onClick={() => { setActiveTab("agua"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
             {profile?.plan?.hasGoods && (
@@ -1972,15 +2142,48 @@ export default function ClientDashboard() {
                     <input 
                       type="text" 
                       className="input-field" 
-                      value={elaboracionForm.titulo} 
-                      onChange={(e) => setElaboracionForm({...elaboracionForm, titulo: e.target.value})}
+                      value={elaboracionForm.lote} 
+                      onChange={(e) => setElaboracionForm({...elaboracionForm, lote: e.target.value})}
                       placeholder={t('traceability_form.elaboration_title_placeholder')}
                       required
-                      style={{ fontSize: '1.1rem', fontWeight: '500', padding: '1rem' }}
+                      style={{ fontSize: '1.1rem', fontWeight: '500', padding: '1rem', border: '2px solid var(--corp-green)' }}
                     />
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('dashboard.elaboration_name_header')}</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.titulo} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, titulo: e.target.value})}
+                        style={{ }}
+                        placeholder=""
+                      />
+                    </div>
+
+                    <div>
+                      <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.quantity_produced')}</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.quantityProduced} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, quantityProduced: e.target.value})}
+                        placeholder="Ej: 50 kg, 100 unidades..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.net_weight_label')}</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.netWeight} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, netWeight: e.target.value})}
+                        placeholder="Ej: 250g, 1kg..."
+                      />
+                    </div>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.made_by')}</label>
                       <input 
@@ -2623,10 +2826,11 @@ export default function ClientDashboard() {
                           <span className="info-label">{t('goods_receipt_form.invoice_number')}</span>
                           <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.invoiceNumber || '-'}</span>
                         </div>
-                        {(receipt.manufacturingTemp || receipt.endDate) && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        {(receipt.manufacturingTemp || receipt.endDate || receipt.typeAndOrigin) && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', gridColumn: 'span 2' }}>
                             {receipt.manufacturingTemp && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.temp')}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.manufacturingTemp}</span></div>}
                             {receipt.endDate && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.end_date') || "Fecha finalización"}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.endDate}</span></div>}
+                            {receipt.typeAndOrigin && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.type_and_origin') || "Tipo y procedencia"}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.typeAndOrigin}</span></div>}
                           </div>
                         )}
                       </div>
@@ -3062,6 +3266,103 @@ export default function ClientDashboard() {
                 </div>
               )}
             </div>
+          ) : activeTab === 'agua' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.water') || "Agua"}</h2>
+                  <PlanUsageIndicator 
+                    label={t('sidebar.water') || "Agua"} 
+                    current={waterMeasurements.length} 
+                    limit={profile?.plan?.waterLimit} 
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('water.description') || "Registra y gestiona las mediciones de calidad del agua."}</p>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                      onClick={() => {
+                        setEditingWaterMeasurement(null);
+                        setWaterForm({
+                          date: new Date().toISOString().slice(0, 16),
+                          samplingPoint: "",
+                          chlorine: "",
+                          turbidity: false,
+                          odor: false,
+                          flavor: false,
+                          color: false,
+                          responsible: ""
+                        });
+                        setIsWaterModalOpen(true);
+                      }}
+                      className="btn-primary" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <Plus size={18} /> {t('water.new_measurement') || "Nueva medición"}
+                    </button>
+                  </div>
+                </div>
+              </header>
+
+              {waterMeasurements.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                    <Droplets size={40} color="var(--border)" />
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{t('sidebar.water') || "Agua"}</h3>
+                  <p>{t('dashboard.no_records')}</p>
+                </div>
+              ) : (
+                <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                        <tr>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.sampling_point') || "Punto de muestreo"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.chlorine') || "Cloro"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('water.table_checks')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.responsible') || "Responsable"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {waterMeasurements.map(m => (
+                          <tr key={m.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover-row">
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleString()}</td>
+                            <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{m.samplingPoint || '-'}</td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-main)', fontWeight: '800' }}>{m.chlorine} mg/l</td>
+                            <td style={{ padding: '1.5rem 2rem', textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                                <span title={t('water.turbidity')} style={{ color: m.turbidity ? '#ef4444' : '#10b981', fontWeight: '900' }}>{t('water.check_t')}</span>
+                                <span title={t('water.odor')} style={{ color: m.odor ? '#ef4444' : '#10b981', fontWeight: '900' }}>{t('water.check_o')}</span>
+                                <span title={t('water.flavor')} style={{ color: m.flavor ? '#ef4444' : '#10b981', fontWeight: '900' }}>{t('water.check_s')}</span>
+                                <span title={t('water.color')} style={{ color: m.color ? '#ef4444' : '#10b981', fontWeight: '900' }}>{t('water.check_c')}</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{m.responsible || '-'}</td>
+                            <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                <button 
+                                  onClick={() => handleEditWater(m)}
+                                  style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteWater(m.id)}
+                                  style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                </div>
+              )}
+            </div>
           ) : activeTab === 'gestionar-recetas' ? (
             <div>
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
@@ -3283,6 +3584,9 @@ export default function ClientDashboard() {
                       <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {t('dashboard.elaboration_name_header')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
+                      <th onClick={() => handleSort('lote')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('dashboard.lote')} {sortConfig.key === 'lote' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </th>
                       <th onClick={() => handleSort('date')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {t('dashboard.elaboration_date_header')} {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
@@ -3297,6 +3601,7 @@ export default function ClientDashboard() {
                     {sortedElaborations.map(elab => (
                       <tr key={elab.id} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600' }}>{elab.name}</td>
+                        <td style={{ padding: '1.25rem 1.5rem', fontWeight: '700', color: 'var(--corp-green)' }}>{elab.lote || '-'}</td>
                         <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
                           {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </td>
@@ -3440,6 +3745,21 @@ export default function ClientDashboard() {
           setDates={setTempExportDates}
         />
       )}
+
+      {isWaterModalOpen && (
+        <WaterMeasurementRegistrationModal 
+          onClose={() => {
+            setIsWaterModalOpen(false);
+            setEditingWaterMeasurement(null);
+          }}
+          onSubmit={handleSubmitWater}
+          formData={waterForm}
+          setFormData={setWaterForm}
+          loading={loading}
+          isEditing={!!editingWaterMeasurement}
+        />
+      )}
+
 
       {isGoodsModalOpen && (
         <GoodsReceiptModal 
@@ -4130,6 +4450,15 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                 className="input-field" 
                 value={formData.endDate} 
                 onChange={(e) => setFormData({...formData, endDate: e.target.value})} 
+              />
+            </div>
+            <div className="form-group">
+              <label className="label">{t('goods_receipt_form.type_and_origin') || "Tipo y procedencia"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.typeAndOrigin} 
+                onChange={(e) => setFormData({...formData, typeAndOrigin: e.target.value})} 
               />
             </div>
             <div className="form-group">
@@ -5051,7 +5380,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
   };
 
   const ALL_ELEMENTS = [
-    'recipeName', 'lote', 'elaborationDate', 'expirationDate', 
+    'recipeName', 'lote', 'elaborationDate', 'expirationDate', 'netWeight',
     'elaborationInstructions', 'conservationInstructions', 
     'allergens', 'nutritionalTable', 'ingredientsList', 
     'madeBy', 'barcode'
@@ -5106,6 +5435,24 @@ function LabelConfigModal({ config, onClose, onSave }) {
         [field]: value
       }
     });
+  };
+
+  const getElementLabel = (el) => {
+    switch(el) {
+      case 'recipeName': return t('elaboration_recipe_header');
+      case 'lote': return t('traceability_form.lot');
+      case 'elaborationDate': return t('traceability_form.label_date');
+      case 'expirationDate': return t('traceability_form.label_expiration');
+      case 'netWeight': return t('traceability_form.label_net_weight');
+      case 'elaborationInstructions': return "Instrucciones de elaboración";
+      case 'conservationInstructions': return "Instrucciones de conservación";
+      case 'allergens': return t('side_menu.elaborations_ingredients_allergens') || "Alérgenos";
+      case 'nutritionalTable': return t('traceability_form.label_nutritional_title') || "Información Nutricional";
+      case 'ingredientsList': return t('modals.ingredients');
+      case 'madeBy': return t('traceability_form.made_by');
+      case 'barcode': return "Código de barras";
+      default: return el;
+    }
   };
 
   return (
@@ -5298,7 +5645,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
                       onDragStart={(e) => e.dataTransfer.setData('text/plain', el)}
                       style={{ padding: '0.75rem', background: 'white', border: '1px solid var(--border)', borderRadius: '0.5rem', fontSize: '0.85rem', cursor: 'grab', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
                     >
-                      {t(`modals.labels_elements.${el}`) || el}
+                      {getElementLabel(el)}
                     </div>
                   ))}
                   {getAvailableElements().length === 0 && (
@@ -5324,7 +5671,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
                       onDragStart={(e) => e.dataTransfer.setData('text/plain', el)}
                       style={{ padding: '0.5rem', background: 'white', border: '1px solid var(--corp-green)', borderRadius: '0.5rem', fontSize: '0.85rem', cursor: 'grab', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                     >
-                      <span>{t(`modals.labels_elements.${el}`) || el}</span>
+                      <span>{getElementLabel(el)}</span>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <button type="button" onClick={() => moveItem('col1', idx, -1)} disabled={idx === 0} style={{ border: 'none', background: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#cbd5e1' : 'var(--text-main)' }}>↑</button>
                         <button type="button" onClick={() => moveItem('col1', idx, 1)} disabled={idx === arr.length - 1} style={{ border: 'none', background: 'none', cursor: idx === arr.length - 1 ? 'default' : 'pointer', color: idx === arr.length - 1 ? '#cbd5e1' : 'var(--text-main)' }}>↓</button>
@@ -5356,7 +5703,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
                         onDragStart={(e) => e.dataTransfer.setData('text/plain', el)}
                         style={{ padding: '0.5rem', background: 'white', border: '1px solid var(--corp-green)', borderRadius: '0.5rem', fontSize: '0.85rem', cursor: 'grab', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                       >
-                        <span>{t(`modals.labels_elements.${el}`) || el}</span>
+                        <span>{getElementLabel(el)}</span>
                         <div style={{ display: 'flex', gap: '0.25rem' }}>
                           <button type="button" onClick={() => moveItem('col2', idx, -1)} disabled={idx === 0} style={{ border: 'none', background: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#cbd5e1' : 'var(--text-main)' }}>↑</button>
                           <button type="button" onClick={() => moveItem('col2', idx, 1)} disabled={idx === arr.length - 1} style={{ border: 'none', background: 'none', cursor: idx === arr.length - 1 ? 'default' : 'pointer', color: idx === arr.length - 1 ? '#cbd5e1' : 'var(--text-main)' }}>↓</button>
@@ -5491,6 +5838,116 @@ function TemperatureExportModal({ onClose, onGenerate, dates, setDates }) {
             {t('dashboard.generate_report')}
           </button>
         </footer>
+      </div>
+    </div>
+  );
+}
+
+function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+  const { t } = useI18n();
+  
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '600px' }}>
+        <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+              {isEditing ? t('water.edit_measurement') : t('water.new_measurement')}
+            </h2>
+            <p style={{ color: 'var(--text-muted)' }}>{t('water.description')}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}><X size={24} /></button>
+        </header>
+
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div>
+              <label className="label">{t('water.date')} <span style={{color:'#ef4444'}}>*</span></label>
+              <input 
+                type="datetime-local" 
+                className="input-field" 
+                value={formData.date} 
+                onChange={(e) => setFormData({...formData, date: e.target.value})} 
+                required 
+              />
+            </div>
+            <div>
+              <label className="label">{t('water.sampling_point')}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.samplingPoint} 
+                onChange={(e) => setFormData({...formData, samplingPoint: e.target.value})} 
+                placeholder="Grifo cocina, depósito..."
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div>
+              <label className="label">{t('water.chlorine')} <span style={{color:'#ef4444'}}>*</span></label>
+              <input 
+                type="number" 
+                step="0.01"
+                className="input-field" 
+                value={formData.chlorine} 
+                onChange={(e) => setFormData({...formData, chlorine: e.target.value})} 
+                required 
+                placeholder="0.5"
+              />
+            </div>
+            <div>
+              <label className="label">{t('water.responsible')}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.responsible} 
+                onChange={(e) => setFormData({...formData, responsible: e.target.value})} 
+                placeholder="Nombre del operario"
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+            {[
+              { id: 'turbidity', label: t('water.turbidity') },
+              { id: 'odor', label: t('water.odor') },
+              { id: 'flavor', label: t('water.flavor') },
+              { id: 'color', label: t('water.color') }
+            ].map(field => (
+              <div key={field.id}>
+                <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.75rem' }}>{field.label} <span style={{color:'#ef4444'}}>*</span></label>
+                <div style={{ display: 'flex', gap: '1.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}>
+                    <input 
+                      type="radio" 
+                      name={field.id} 
+                      checked={formData[field.id] === true} 
+                      onChange={() => setFormData({...formData, [field.id]: true})}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)' }}
+                    /> {t('water.yes')}
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}>
+                    <input 
+                      type="radio" 
+                      name={field.id} 
+                      checked={formData[field.id] === false} 
+                      onChange={() => setFormData({...formData, [field.id]: false})}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)' }}
+                    /> {t('water.no')}
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1 }}>{t('common.cancel')}</button>
+            <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2 }}>
+              {loading ? <Loader2 className="animate-spin" size={20} /> : t('common.save')}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

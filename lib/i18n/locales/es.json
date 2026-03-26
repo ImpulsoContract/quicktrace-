@@ -24,7 +24,7 @@
     "profile": "Perfil",
     "logout": "Cerrar Sesión",
     "traceability": "Trazabilidad",
-    "history": "Elaborciones",
+    "history": "Elaboraciones",
     "cleaning": "Limpieza",
     "goods_receipt": "Entrada de Mercancía",
     "temperatures": "Temperaturas",
@@ -80,10 +80,11 @@
   },
   "sidebar": {
     "traceability": "Trazabilidad",
-    "history": "Elaborciones",
+    "history": "Elaboraciones",
     "cleaning": "Limpieza",
     "goods": "Mercancías",
     "temperatures": "Temperaturas",
+    "water": "Agua",
     "manage_recipes": "Mis Recetas",
     "plan": "PLAN",
     "logout": "Cerrar Sesión"
@@ -303,7 +304,10 @@
     "zone_updated": "Zona actualizada correctamente",
     "delete_confirm_zone": "¿Seguro que quieres eliminar esta zona?",
     "delete_confirm_elaboration": "¿Seguro que quieres eliminar esta elaboración de forma permanente?",
-    "deleted_successfully": "Registros eliminados correctamente"
+    "deleted_successfully": "Registros eliminados correctamente",
+    "water_saved": "Medición de agua guardada",
+    "water_updated": "Medición de agua actualizada",
+    "water_limit_reached": "Has alcanzado el límite de mediciones de agua para tu plan."
   },
   "register": {
     "title": "Empieza Hoy",
@@ -390,7 +394,10 @@
     "label_salt": "Sal",
     "workshop_temp": "Temperatura del obrador",
     "label_drying_in": "Entrada secadero",
-    "label_drying_out": "Salida secadero"
+    "label_drying_out": "Salida secadero",
+    "quantity_produced": "Cantidad elaborada",
+    "net_weight_label": "Peso neto para la etiqueta",
+    "label_net_weight": "Peso neto"
   },
   "goods_receipt_form": {
     "product": "Producto",
@@ -398,6 +405,7 @@
     "invoice_number": "Número de factura",
     "temp": "Temperatura Transporte / Fab.",
     "end_date": "Fecha de finalización",
+    "type_and_origin": "Tipo y procedencia",
     "upload_file": "Subir imagen..."
   },
   "plans": {
@@ -414,6 +422,7 @@
     "cleaning": "Módulo Limpieza",
     "goods": "Entradas Mercancías",
     "temperatures": "Control Temperatura",
+    "water": "Mediciones de Agua",
     "unlimited": "Ilimitadas",
     "unlimited_feature": "Ilimitado",
     "current_plan": "Plan Actual",
@@ -466,5 +475,29 @@
     "continue_delete": "Continuar con la eliminación",
     "select_all": "Seleccionar todos",
     "deselect_all": "Deseleccionar todos"
+  },
+  "water": {
+    "title": "Control de Agua",
+    "description": "Registra y gestiona las mediciones de calidad del agua.",
+    "new_measurement": "Nueva medición",
+    "edit_measurement": "Editar medición",
+    "date": "Fecha y hora",
+    "sampling_point": "Punto de muestreo",
+    "chlorine": "Cloro (mg/litro)",
+    "turbidity": "Turbidez",
+    "odor": "Olor",
+    "flavor": "Sabor",
+    "color": "Color",
+    "check_t": "T",
+    "check_o": "O",
+    "check_s": "S",
+    "check_c": "C",
+    "responsible": "Responsable del muestreo",
+    "table_date": "Fecha",
+    "table_point": "Punto",
+    "table_chlorine": "Cloro",
+    "table_checks": "Controles (T/O/S/C)",
+    "yes": "Sí",
+    "no": "No"
   }
 }

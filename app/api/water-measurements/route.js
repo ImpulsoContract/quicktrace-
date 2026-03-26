@@ -36,13 +36,13 @@ export async function GET(req) {
       }
     }
 
-    const receipts = await prisma.goodsReceipt.findMany({
+    const measurements = await prisma.waterMeasurement.findMany({
       where,
       orderBy: { date: 'desc' }
     });
-    return NextResponse.json(receipts);
+    return NextResponse.json(measurements);
   } catch (error) {
-    console.error("Error fetching goods receipts:", error);
+    console.error("Error fetching water measurements:", error);
     return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
   }
 }
@@ -58,7 +58,7 @@ export async function POST(req) {
       where: { userId: parseInt(session.user.id) },
       include: { 
         plan: true,
-        _count: { select: { goodsReceipts: true } }
+        _count: { select: { waterMeasurements: true } }
       }
     });
 
@@ -66,51 +66,49 @@ export async function POST(req) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
-    if (!profile.plan || !profile.plan.hasGoods) {
-      return NextResponse.json({ error: "El módulo de recepción de mercancías no está incluido en tu plan." }, { status: 403 });
-    }
-
-    if (profile.plan.goodsLimit !== null && profile._count.goodsReceipts >= profile.plan.goodsLimit) {
-      return NextResponse.json({ error: "Has alcanzado el límite de registros de mercancías de tu plan." }, { status: 403 });
+    // Check plan limits for Water module
+    if (profile.plan && profile.plan.waterLimit !== null) {
+      if (profile._count.waterMeasurements >= profile.plan.waterLimit) {
+        return NextResponse.json({ 
+          error: "Has alcanzado el límite de mediciones de agua para tu plan.",
+          code: "LIMIT_REACHED"
+        }, { status: 403 });
+      }
     }
 
     const body = await req.json();
     const { 
-      providerName, 
-      productName, 
-      lote, 
-      invoiceNumber, 
-      quantity, 
-      date, 
-      deliveryNoteImage,
-      manufacturingTemp,
-      endDate,
-      typeAndOrigin
+      date,
+      samplingPoint,
+      chlorine,
+      turbidity,
+      odor,
+      flavor,
+      color,
+      responsible
     } = body;
 
-    if (!productName || !date) {
-      return NextResponse.json({ error: "Producto y fecha son obligatorios" }, { status: 400 });
+    if (!date || chlorine === undefined) {
+      return NextResponse.json({ error: "Fecha y Cloro son obligatorios" }, { status: 400 });
     }
 
-    const receipt = await prisma.goodsReceipt.create({
+    const measurement = await prisma.waterMeasurement.create({
       data: {
-        providerName,
-        productName,
-        lote,
-        invoiceNumber,
-        quantity,
         date: new Date(date),
-        deliveryNoteImage,
-        manufacturingTemp,
-        endDate,
-        typeAndOrigin,
+        samplingPoint,
+        chlorine,
+        turbidity: !!turbidity,
+        odor: !!odor,
+        flavor: !!flavor,
+        color: !!color,
+        responsible,
         clientProfileId: profile.id
       }
     });
 
-    return NextResponse.json({ success: true, receipt });
+    return NextResponse.json({ success: true, measurement });
   } catch (error) {
-    console.error("Error creating goods receipt:", error);
+    console.error("Error creating water measurement:", error);
     return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
   }
 }
@@ -133,44 +131,40 @@ export async function PATCH(req) {
     const body = await req.json();
     const { 
       id,
-      providerName, 
-      productName, 
-      lote, 
-      invoiceNumber, 
-      quantity, 
-      date, 
-      deliveryNoteImage,
-      manufacturingTemp,
-      endDate,
-      typeAndOrigin
+      date,
+      samplingPoint,
+      chlorine,
+      turbidity,
+      odor,
+      flavor,
+      color,
+      responsible
     } = body;
 
-    if (!id || !productName || !date) {
+    if (!id || !date || chlorine === undefined) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    const receipt = await prisma.goodsReceipt.update({
+    const measurement = await prisma.waterMeasurement.update({
       where: { 
         id: parseInt(id),
         clientProfileId: profile.id
       },
       data: {
-        providerName,
-        productName,
-        lote,
-        invoiceNumber,
-        quantity,
         date: new Date(date),
-        deliveryNoteImage,
-        manufacturingTemp,
-        endDate,
-        typeAndOrigin
+        samplingPoint,
+        chlorine,
+        turbidity: !!turbidity,
+        odor: !!odor,
+        flavor: !!flavor,
+        color: !!color,
+        responsible
       }
     });
 
-    return NextResponse.json({ success: true, receipt });
+    return NextResponse.json({ success: true, measurement });
   } catch (error) {
-    console.error("Error updating goods receipt:", error);
+    console.error("Error updating water measurement:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
@@ -209,7 +203,7 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
-    const deleteResult = await prisma.goodsReceipt.deleteMany({
+    const deleteResult = await prisma.waterMeasurement.deleteMany({
       where: { 
         id: { in: idsToDelete },
         clientProfileId: profile.id
@@ -217,7 +211,7 @@ export async function DELETE(req) {
     });
     return NextResponse.json({ success: true, count: deleteResult.count });
   } catch (error) {
-    console.error("Error deleting goods receipts:", error);
+    console.error("Error deleting water measurements:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
