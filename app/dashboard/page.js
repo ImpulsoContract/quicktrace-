@@ -3567,41 +3567,29 @@ export default function ClientDashboard() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                     <tr>
-                      <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      <th onClick={() => handleSort('date')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('dashboard.elaboration_date_header')} {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {t('dashboard.lote')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th onClick={() => handleSort('date')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('dashboard.elaboration_date_header')} {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Secadero</th>
                       <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sortedElaborations.map(elab => (
                       <tr key={elab.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
+                          {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--corp-green)' }}>{elab.name}</td>
                         <td style={{ padding: '1.25rem 1.5rem' }}>
                           <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
                             {elab.recipe.name}
                           </span>
-                        </td>
-                        <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--corp-green)' }}>{elab.name}</td>
-                        <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
-                          {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </td>
-                        <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem' }}>
-                          {(elab.dryingRoomIn || elab.dryingRoomOut || elab.workshopTemp) ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', background: 'var(--bg-main)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem' }}>
-                              {elab.dryingRoomIn && <span><strong style={{ color: 'var(--text-main)' }}>ENT:</strong> {elab.dryingRoomIn || '-'}</span>}
-                              {elab.dryingRoomOut && <span><strong style={{ color: 'var(--text-main)' }}>SAL:</strong> {elab.dryingRoomOut || '-'}</span>}
-                              {elab.workshopTemp && <span><strong style={{ color: 'var(--text-main)' }}>Tª OBR:</strong> {elab.workshopTemp}</span>}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#cbd5e1' }}>-</span>
-                          )}
                         </td>
                         <td style={{ padding: '1.25rem 1.5rem' }}>
                           <button 
