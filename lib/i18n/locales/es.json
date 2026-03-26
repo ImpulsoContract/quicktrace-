@@ -226,6 +226,8 @@
     "labels_header_image_desc": "Introduce una imagen que aparecerá en la parte superior de la etiqueta. Puede ser un logo o por ejemplo una imagen con tu logo y los datos de tu empresa",
     "labels_header_image_change": "Cambiar imagen",
     "labels_header_image_remove": "Eliminar imagen",
+    "labels_health_registry": "Registro sanitario",
+    "labels_health_registry_desc": "Introduce aquí el texto relativo a tu registro sanitario si quieres que aparezca en la etiqueta",
     "labels_show_fields": "Mostrar campos en la etiqueta",
     "labels_batch_num": "Número de lote",
     "labels_made_by": "Persona que elabora",
@@ -267,7 +269,8 @@
       "nutritionalTable": "Valor nutricional",
       "ingredientsList": "Listado de ingredientes",
       "madeBy": "Persona que elabora",
-      "barcode": "Código de barras"
+      "barcode": "Código de barras",
+      "healthRegistry": "Registro sanitario"
     },
     "drag_elements": "Arrastra elementos aquí",
     "none": "Ninguno"

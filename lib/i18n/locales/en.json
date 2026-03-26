@@ -226,6 +226,8 @@
     "labels_header_image_desc": "Insert an image that will appear at the top of the label. It can be a logo or an image with your logo and company details",
     "labels_header_image_change": "Change image",
     "labels_header_image_remove": "Remove image",
+    "labels_health_registry": "Health registry",
+    "labels_health_registry_desc": "Enter the text related to your health registry here if you want it to appear on the label",
     "labels_show_fields": "Show fields on the label",
     "labels_batch_num": "Batch number",
     "labels_made_by": "Person who prepares",
@@ -267,7 +269,8 @@
       "nutritionalTable": "Nutritional value",
       "ingredientsList": "Ingredients list",
       "madeBy": "Prepared by",
-      "barcode": "Barcode"
+      "barcode": "Barcode",
+      "healthRegistry": "Health registry"
     },
     "drag_elements": "Drag elements here",
     "none": "None"

@@ -24,6 +24,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const DEFAULT_LABEL_CONFIG = {
   headerImage: null,
+  healthRegistry: "",
   showFields: {
     lote: true,
     person: false,
@@ -1281,6 +1282,18 @@ export default function ClientDashboard() {
             } catch (err) {
               console.error("Failed to generate label barcode:", err);
             }
+          }
+          break;
+        case 'healthRegistry':
+          const hrText = config.healthRegistry || profile?.labelConfig?.healthRegistry;
+          if (hrText) {
+            doc.setFont("helvetica", "bold");
+            doc.text(`${t('labels_health_registry') || "Registro sanitario"}:`, startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+            const splitHR = doc.splitTextToSize(hrText, columnWidth);
+            doc.text(splitHR, startX, currentY);
+            currentY += (splitHR.length * lineHeightMM);
           }
           break;
       }
@@ -5355,7 +5368,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
     'recipeName', 'lote', 'elaborationDate', 'expirationDate', 'netWeight',
     'elaborationInstructions', 'conservationInstructions', 
     'allergens', 'nutritionalTable', 'ingredientsList', 
-    'madeBy', 'barcode'
+    'madeBy', 'barcode', 'healthRegistry'
   ];
 
   const getAvailableElements = () => {
@@ -5423,6 +5436,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
       case 'ingredientsList': return t('modals.ingredients');
       case 'madeBy': return t('traceability_form.made_by');
       case 'barcode': return "Código de barras";
+      case 'healthRegistry': return t('labels_health_registry');
       default: return el;
     }
   };
@@ -5492,6 +5506,23 @@ function LabelConfigModal({ config, onClose, onSave }) {
                 />
               </label>
             )}
+          </section>
+          
+          {/* Health Registry Input */}
+          <section style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginTop: '-1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>
+              {t('labels_health_registry')}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              {t('labels_health_registry_desc')}
+            </p>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="Ej: RGSEAA 12.34567/XX"
+              value={localConfig.healthRegistry || ""}
+              onChange={(e) => setLocalConfig({...localConfig, healthRegistry: e.target.value})}
+            />
           </section>
 
           {/* Label Dimensions UI */}
