@@ -2547,6 +2547,7 @@ export default function ClientDashboard() {
                             </div>
                           </th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_title')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
@@ -2562,7 +2563,8 @@ export default function ClientDashboard() {
                                 onChange={() => toggleSelectRecord(el.id)}
                               />
                             </td>
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.createdAt).toLocaleDateString()}</td>
+                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.date || el.createdAt).toLocaleDateString()}</td>
+                          <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--corp-green)' }}>{el.name}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
