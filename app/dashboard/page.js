@@ -244,6 +244,12 @@ export default function ClientDashboard() {
     setSelectedRecords([]);
     setBulkDeletePhase(1);
   }, [activeTab]);
+  
+  useEffect(() => {
+    if (activeTab === "afiliados" && profile?.isAffiliate) {
+      fetchAffiliateStats();
+    }
+  }, [activeTab, profile]);
 
   useEffect(() => {
     if (status === "authenticated") {
