@@ -1288,7 +1288,7 @@ export default function ClientDashboard() {
           const hrText = config.healthRegistry || profile?.labelConfig?.healthRegistry;
           if (hrText) {
             doc.setFont("helvetica", "bold");
-            doc.text(`${t('labels_health_registry') || "Registro sanitario"}:`, startX, currentY);
+            doc.text(`${t('modals.labels_health_registry') || "Registro sanitario"}:`, startX, currentY);
             currentY += lineHeightMM;
             doc.setFont("helvetica", "normal");
             const splitHR = doc.splitTextToSize(hrText, columnWidth);
@@ -5423,22 +5423,8 @@ function LabelConfigModal({ config, onClose, onSave }) {
   };
 
   const getElementLabel = (el) => {
-    switch(el) {
-      case 'recipeName': return t('elaboration_recipe_header');
-      case 'lote': return t('traceability_form.lot');
-      case 'elaborationDate': return t('traceability_form.label_date');
-      case 'expirationDate': return t('traceability_form.label_expiration');
-      case 'netWeight': return t('traceability_form.label_net_weight');
-      case 'elaborationInstructions': return "Instrucciones de elaboración";
-      case 'conservationInstructions': return "Instrucciones de conservación";
-      case 'allergens': return t('side_menu.elaborations_ingredients_allergens') || "Alérgenos";
-      case 'nutritionalTable': return t('traceability_form.label_nutritional_title') || "Información Nutricional";
-      case 'ingredientsList': return t('modals.ingredients');
-      case 'madeBy': return t('traceability_form.made_by');
-      case 'barcode': return "Código de barras";
-      case 'healthRegistry': return t('labels_health_registry');
-      default: return el;
-    }
+    const translated = t(`modals.labels_elements.${el}`);
+    return (translated && translated !== `modals.labels_elements.${el}`) ? translated : el;
   };
 
   return (
@@ -5511,10 +5497,10 @@ function LabelConfigModal({ config, onClose, onSave }) {
           {/* Health Registry Input */}
           <section style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginTop: '-1rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>
-              {t('labels_health_registry')}
+              {t('modals.labels_health_registry')}
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-              {t('labels_health_registry_desc')}
+              {t('modals.labels_health_registry_desc')}
             </p>
             <input 
               type="text" 

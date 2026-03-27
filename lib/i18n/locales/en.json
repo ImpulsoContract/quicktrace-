@@ -263,6 +263,7 @@
       "lote": "Batch number",
       "elaborationDate": "Preparation date",
       "expirationDate": "Expiration date",
+      "netWeight": "Net weight",
       "elaborationInstructions": "Preparation instructions",
       "conservationInstructions": "Conservation",
       "allergens": "Allergens",

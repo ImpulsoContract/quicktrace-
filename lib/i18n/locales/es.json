@@ -263,6 +263,7 @@
       "lote": "Número de lote",
       "elaborationDate": "Fecha de elaboración",
       "expirationDate": "Fecha de caducidad",
+      "netWeight": "Peso neto",
       "elaborationInstructions": "Elaboración",
       "conservationInstructions": "Conservación",
       "allergens": "Alérgenos",
