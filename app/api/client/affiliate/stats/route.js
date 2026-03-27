@@ -25,7 +25,7 @@ export async function GET(req) {
       where: { referredById: clientProfile.id },
       select: {
         id: true,
-        businessName: true,
+        razonSocial: true,
         personName: true,
         createdAt: true,
         registrationFinished: true,

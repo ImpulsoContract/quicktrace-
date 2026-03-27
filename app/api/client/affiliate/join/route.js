@@ -28,7 +28,7 @@ export async function POST(req) {
 
     // Generar código de referido único (usando parte del nombre o un random)
     const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
-    const referralCode = `${clientProfile.businessName?.substring(0, 3).toUpperCase() || 'QT'}${randomSuffix}`;
+    const referralCode = `${clientProfile.razonSocial?.substring(0, 3).toUpperCase() || 'QT'}${randomSuffix}`;
 
     await prisma.clientProfile.update({
       where: { id: clientProfile.id },
@@ -43,11 +43,11 @@ export async function POST(req) {
     try {
       await sendEmail({
         to: "soporte@quicktrace.es",
-        subject: `Nuevo Afiliado: ${clientProfile.businessName}`,
-        text: `El usuario ${clientProfile.personName} (${clientProfile.user.email}) de la empresa ${clientProfile.businessName} se ha unido al programa de recomendación.\n\nCódigo de referido: ${referralCode}`,
+        subject: `Nuevo Afiliado: ${clientProfile.razonSocial}`,
+        text: `El usuario ${clientProfile.personName} (${clientProfile.user.email}) de la empresa ${clientProfile.razonSocial} se ha unido al programa de recomendación.\n\nCódigo de referido: ${referralCode}`,
         html: `
           <h1>Nuevo Alta en Programa de Recomendación</h1>
-          <p><strong>Empresa:</strong> ${clientProfile.businessName}</p>
+          <p><strong>Empresa:</strong> ${clientProfile.razonSocial}</p>
           <p><strong>Usuario:</strong> ${clientProfile.personName} (${clientProfile.user.email})</p>
           <p><strong>Código de referido:</strong> ${referralCode}</p>
           <p>Fecha: ${new Date().toLocaleString()}</p>
