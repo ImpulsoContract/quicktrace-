@@ -3693,6 +3693,7 @@ export default function ClientDashboard() {
                                   {ref.plan?.name || 'Demo'}
                                 </span>
                               </td>
+                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                                 <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>Activo</span>
                               </td>
                             </tr>
