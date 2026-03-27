@@ -258,6 +258,11 @@ export default function ClientDashboard() {
       if (!data.error) {
         setProfile(data);
         if (data.isAffiliate) {
+          setAffiliateData(prev => ({ 
+            ...prev, 
+            isAffiliate: true, 
+            referralCode: data.referralCode || prev.referralCode 
+          }));
           fetchAffiliateStats();
         }
       }
