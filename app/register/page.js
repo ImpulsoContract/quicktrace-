@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Mail, Building2, Phone, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
