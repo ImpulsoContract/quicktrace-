@@ -2164,7 +2164,7 @@ export default function ClientDashboard() {
             
             <div style={{ padding: '0 1.5rem 1rem' }}>
               <button 
-                onClick={() => { setActiveTab('afiliados'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }}
+                onClick={(e) => { e.stopPropagation(); setActiveTab('afiliados'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }}
                 className="btn-secondary"
                 style={{ 
                   width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', 
