@@ -280,8 +280,9 @@ export default function ClientDashboard() {
   const fetchAffiliateStats = async () => {
     try {
       setAffiliateData(prev => ({ ...prev, loading: true }));
-      const res = await fetch("/api/client/affiliate/stats");
+      const res = await fetch(`/api/client/affiliate/stats?t=${Date.now()}`);
       const data = await res.json();
+      console.log("[AffiliateData]", data);
       if (!data.error) {
         setAffiliateData({
           isAffiliate: true,
