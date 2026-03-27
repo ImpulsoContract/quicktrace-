@@ -42,7 +42,6 @@ export async function GET(req) {
         razonSocial: true,
         personName: true,
         createdAt: true,
-        registrationFinished: true,
         user: {
           select: {
             email: true

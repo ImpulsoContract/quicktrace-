@@ -3685,22 +3685,15 @@ export default function ClientDashboard() {
                             <tr key={ref.id} style={{ borderBottom: '1px solid var(--border)' }}>
                               <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(ref.createdAt).toLocaleDateString()}</td>
                               <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                                {ref.razonSocial || 'Empresa pendiente'}
-                                <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.user?.email}</div>
+                                {ref.user?.email}
+                                <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.razonSocial || 'Empresa pendiente'}</div>
                               </td>
                               <td style={{ padding: '1.5rem 2rem' }}>
                                 <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: '700' }}>
                                   {ref.plan?.name || 'Demo'}
                                 </span>
                               </td>
-                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                                {ref.registrationFinished ? (
-                                  <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
-                                    <FileCheck size={16} /> Completado
-                                  </span>
-                                ) : (
-                                  <span style={{ color: '#f59e0b', fontWeight: '800', fontSize: '0.85rem' }}>Pendiente</span>
-                                )}
+                                <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>Activo</span>
                               </td>
                             </tr>
                           ))}
