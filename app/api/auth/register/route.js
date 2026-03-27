@@ -8,7 +8,7 @@ import { headers } from "next/headers";
 
 export async function POST(req) {
   try {
-    const { name, email, razonSocial, phone, termsAccepted } = await req.json();
+    const { name, email, razonSocial, phone, termsAccepted, referralCode } = await req.json();
     const headersList = headers();
 
     if (!name || !email || !razonSocial || !phone) {
