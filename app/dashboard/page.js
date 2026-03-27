@@ -3684,7 +3684,7 @@ export default function ClientDashboard() {
                             <tr key={ref.id} style={{ borderBottom: '1px solid var(--border)' }}>
                               <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(ref.createdAt).toLocaleDateString()}</td>
                               <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                                {ref.businessName || 'Empresa pendiente'}
+                                {ref.razonSocial || 'Empresa pendiente'}
                                 <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.user?.email}</div>
                               </td>
                               <td style={{ padding: '1.5rem 2rem' }}>

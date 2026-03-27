@@ -32,6 +32,8 @@ export async function GET(req) {
       clientProfile.referralCode = newReferralCode;
     }
 
+    console.log(`[AffiliateStats] Fetching for userId: ${userId}, profileId: ${clientProfile.id}`);
+
     // Traer los usuarios que han sido referidos por este afiliado
     const referrals = await prisma.clientProfile.findMany({
       where: { referredById: clientProfile.id },
@@ -54,6 +56,8 @@ export async function GET(req) {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    console.log(`[AffiliateStats] Found ${referrals.length} referrals for profileId ${clientProfile.id}`);
 
     return NextResponse.json({
       success: true,
