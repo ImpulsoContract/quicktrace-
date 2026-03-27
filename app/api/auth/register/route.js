@@ -117,6 +117,8 @@ export async function POST(req) {
             <li><strong>Contacto:</strong> ${name}</li>
             <li><strong>Email:</strong> ${normalizedEmail}</li>
             <li><strong>Teléfono:</strong> ${phone}</li>
+            <li><strong>Código Ref:</strong> ${referralCode || 'Ninguno'}</li>
+            <li><strong>Recomendado por:</strong> ${referrer ? (referrer.razonSocial || 'ID: ' + referrer.id) : 'Directo'}</li>
             <li><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</li>
           </ul>
         `
