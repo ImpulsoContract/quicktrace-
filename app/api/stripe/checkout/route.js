@@ -97,7 +97,10 @@ export async function POST(req) {
           userId: String(session.user.id),
           planId: plan.id,
         }
-      }
+      },
+      ...(clientProfile.referredById ? {
+        discounts: [{ coupon: 'RECOMENDADO5' }]
+      } : {})
     });
 
     return NextResponse.json({ url: checkoutSession.url });

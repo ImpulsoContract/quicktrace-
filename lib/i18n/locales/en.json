@@ -313,6 +313,26 @@
     "water_updated": "Water measurement updated",
     "water_limit_reached": "You have reached the water measurement limit for your plan."
   },
+  "affiliate": {
+    "sidebar_link": "Earn money with Quicktrace",
+    "dashboard_title": "Affiliate Program",
+    "dashboard_desc": "Manage your referrals and earn rewards for each new user.",
+    "welcome_header": "Earn money by recommending Quicktrace!",
+    "explanation": "We have a system where everyone who signs up with your unique link will receive a 5% discount and you will earn 5% of the amount they contract.",
+    "i_accept": "I have read and accept the",
+    "conditions_link": "referral program conditions",
+    "btn_start": "I want to start",
+    "accept_terms_error": "You must accept the conditions to continue.",
+    "welcome_alert": "Welcome to the referral program!",
+    "your_referral_link": "Your unique affiliate link:",
+    "btn_copy": "Copy link",
+    "copied_alert": "Link copied to clipboard!",
+    "stats_header": "Your recommendations",
+    "no_referrals_title": "No recommendations yet",
+    "no_referrals_desc": "Share your link to start earning!",
+    "referral_discount_banner": "You have a 5% active discount!",
+    "referral_discount_applied_desc": "Since you came recommended, a 5% discount will be applied automatically when contracting any plan."
+  },
   "register": {
     "title": "Start Today",
     "subtitle": "Register your business in QuickTrace",
@@ -441,7 +461,11 @@
       "popular": "Most popular",
       "producers": "For top producers"
     },
-    "disclaimer": "* You can export your records and delete them when you reach the limit to reset it to zero whenever you want. This way you won't have any limitations."
+    "disclaimer": "* You can export your records and delete them when you reach the limit to reset it to zero whenever you want. This way you won't have any limitations.",
+    "referral_discount_msg": "5% discount for coming recommended by another user",
+    "referral_discount_banner": "5% discount applied!",
+    "referral_discount_applied_desc": "By coming recommended, you have a 5% direct discount on your subscription.",
+    "learn_affiliate": "Learn how to earn money with Quicktrace"
   },
   "allergens": {
     "title": "Allergens",

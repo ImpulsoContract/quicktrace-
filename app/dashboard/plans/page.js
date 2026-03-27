@@ -15,22 +15,31 @@ export default function PlansPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(null);
   const [billingCycle, setBillingCycle] = useState("yearly"); // "monthly" or "yearly"
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         const res = await fetch("/api/plans");
         const data = await res.json();
-        if (!data.error) {
-          setPlans(data);
-        }
+        if (!data.error) setPlans(data);
       } catch (e) {
         console.error("Error loading plans:", e);
       } finally {
         setLoading(false);
       }
     };
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/client/profile");
+        const data = await res.json();
+        if (!data.error) setProfile(data);
+      } catch (e) {
+        console.error("Error loading profile:", e);
+      }
+    };
     fetchPlans();
+    fetchProfile();
   }, []);
 
   const handleSubscribe = async (planId) => {
@@ -93,6 +102,33 @@ export default function PlansPage() {
             <p style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{t('plans.subtitle')}</p>
           </div>
         </div>
+
+        {/* Referral Discount Banner */}
+        {profile?.referredById && (
+          <div className="glass-card" style={{ 
+            background: 'rgba(66, 98, 22, 0.05)', 
+            border: '2px dashed var(--corp-green)', 
+            padding: '1.5rem', 
+            borderRadius: '1.5rem', 
+            marginBottom: '3rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            animation: 'fadeIn 0.5s ease'
+          }}>
+            <div style={{ background: 'var(--corp-green)', color: 'white', padding: '0.75rem', borderRadius: '50%', display: 'flex' }}>
+              <Zap size={24} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: 'var(--corp-green)' }}>
+                {t('plans.referral_discount_banner')}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+                {t('plans.referral_discount_applied_desc')}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Billing Toggle */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>

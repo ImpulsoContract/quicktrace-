@@ -65,6 +65,15 @@ model ClientProfile {
   canManageRecipes      Boolean  @default(true)
   labelConfig           Json?    @default("{}")
 
+  // Referrals / Affiliates
+  referralCode          String?  @unique
+  isAffiliate           Boolean  @default(false)
+  affiliateAcceptedAt   DateTime?
+  
+  referredById          Int?
+  referredBy            ClientProfile?  @relation("Referrals", fields: [referredById], references: [id])
+  referrals             ClientProfile[] @relation("Referrals")
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

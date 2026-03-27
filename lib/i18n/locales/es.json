@@ -313,6 +313,26 @@
     "water_updated": "Medición de agua actualizada",
     "water_limit_reached": "Has alcanzado el límite de mediciones de agua para tu plan."
   },
+  "affiliate": {
+    "sidebar_link": "Gana dinero con Quicktrace",
+    "dashboard_title": "Programa de Afiliados",
+    "dashboard_desc": "Gestiona tus recomendaciones y gana recompensas por cada nuevo usuario.",
+    "welcome_header": "¡Gana dinero recomendando Quicktrace!",
+    "explanation": "Tenemos un sistema en el que todas las personas que se registren con tu enlace único, recibirán un 5% de descuento y tú ganarás un 5% de la cantidad que ellos contraten.",
+    "i_accept": "He leído y acepto las",
+    "conditions_link": "condiciones del programa de recomendación",
+    "btn_start": "Quiero comenzar",
+    "accept_terms_error": "Debes aceptar las condiciones para continuar.",
+    "welcome_alert": "¡Bienvenido al programa de recomendación!",
+    "your_referral_link": "Tu enlace de afiliado único:",
+    "btn_copy": "Copiar enlace",
+    "copied_alert": "¡Enlace copiado al portapapeles!",
+    "stats_header": "Tus recomendaciones",
+    "no_referrals_title": "Aún no tienes recomendaciones",
+    "no_referrals_desc": "¡Comparte tu enlace para empezar a ganar!",
+    "referral_discount_banner": "¡Tienes un 5% de descuento activo!",
+    "referral_discount_applied_desc": "Gracias a que vienes recomendado, se aplicará un 5% de descuento automáticamente al contratar cualquier plan."
+  },
   "register": {
     "title": "Empieza Hoy",
     "subtitle": "Registra tu negocio en QuickTrace",
@@ -441,7 +461,11 @@
       "popular": "El más popular",
       "producers": "Para los más productores"
     },
-    "disclaimer": "* Podrás exportar tu registros y eliminarlos cuando llegues al límite para ponerlo a cero cuando quieras. Así no tendrás ninguna limitación."
+    "disclaimer": "* Podrás exportar tu registros y eliminarlos cuando llegues al límite para ponerlo a cero cuando quieras. Así no tendrás ninguna limitación.",
+    "referral_discount_msg": "5% de descuento por venir recomendado por otro usuario",
+    "referral_discount_banner": "¡5% de descuento aplicado!",
+    "referral_discount_applied_desc": "Al venir recomendado, tienes un 5% de descuento directo en tu suscripción.",
+    "learn_affiliate": "Aprende como ganar dinero con Quicktrace"
   },
   "allergens": {
     "title": "Alérgenos",

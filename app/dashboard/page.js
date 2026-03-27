@@ -123,6 +123,16 @@ export default function ClientDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
+  // Affiliate State
+  const [affiliateData, setAffiliateData] = useState({
+    isAffiliate: false,
+    referralCode: "",
+    referrals: [],
+    loading: true
+  });
+  const [isJoiningAffiliate, setIsJoiningAffiliate] = useState(false);
+  const [acceptAffiliateTerms, setAcceptAffiliateTerms] = useState(false);
+
 
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
@@ -245,9 +255,58 @@ export default function ClientDashboard() {
     try {
       const res = await fetch("/api/client/profile");
       const data = await res.json();
-      if (!data.error) setProfile(data);
+      if (!data.error) {
+        setProfile(data);
+        if (data.isAffiliate) {
+          fetchAffiliateStats();
+        }
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
+    }
+  };
+
+  const fetchAffiliateStats = async () => {
+    try {
+      setAffiliateData(prev => ({ ...prev, loading: true }));
+      const res = await fetch("/api/client/affiliate/stats");
+      const data = await res.json();
+      if (!data.error) {
+        setAffiliateData({
+          isAffiliate: true,
+          referralCode: data.referralCode,
+          referrals: data.referrals || [],
+          loading: false
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching affiliate stats:", error);
+    } finally {
+      setAffiliateData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleJoinAffiliate = async () => {
+    if (!acceptAffiliateTerms) {
+      alert(t('affiliate.accept_terms_error') || "Debes aceptar las condiciones");
+      return;
+    }
+
+    setIsJoiningAffiliate(true);
+    try {
+      const res = await fetch("/api/client/affiliate/join", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        alert(t('affiliate.welcome_alert') || "¡Bienvenido al programa de recomendación!");
+        fetchProfile();
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (error) {
+      console.error("Error joining affiliate:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setIsJoiningAffiliate(false);
     }
   };
 
@@ -2103,6 +2162,21 @@ export default function ClientDashboard() {
               </div>
             </div>
             
+            <div style={{ padding: '0 1.5rem 1rem' }}>
+              <button 
+                onClick={() => { setActiveTab('afiliados'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }}
+                className="btn-secondary"
+                style={{ 
+                  width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', 
+                  padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.85rem',
+                  fontWeight: '700', color: 'var(--corp-green)', background: 'rgba(66, 98, 22, 0.05)',
+                  border: '1px solid rgba(66, 98, 22, 0.15)', cursor: 'pointer'
+                }}
+              >
+                <ArrowUpCircle size={18} /> {t('affiliate.sidebar_link')}
+              </button>
+            </div>
+            
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
                 onClick={(e) => { e.stopPropagation(); signOut({ callbackUrl: '/login' }); }}
@@ -3495,6 +3569,135 @@ export default function ClientDashboard() {
                   ))
                 )}
               </div>
+            </div>
+          ) : activeTab === 'afiliados' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+                  {t('affiliate.dashboard_title')}
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
+                  {t('affiliate.dashboard_desc')}
+                </p>
+              </header>
+
+              {!profile?.isAffiliate ? (
+                <div className="glass-card" style={{ maxWidth: '700px', margin: '0 auto', background: 'white', padding: '3rem', textAlign: 'center' }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem' }}>
+                    <ArrowUpCircle size={40} color="var(--corp-green)" />
+                  </div>
+                  <h3 style={{ fontSize: '1.75rem', fontWeight: '900', marginBottom: '1rem' }}>{t('affiliate.welcome_header')}</h3>
+                  <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '2.5rem' }}>
+                    {t('affiliate.explanation')}
+                  </p>
+                  
+                  <div style={{ textAlign: 'left', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={acceptAffiliateTerms}
+                        onChange={(e) => setAcceptAffiliateTerms(e.target.checked)}
+                        style={{ width: '1.25rem', height: '1.25rem', marginTop: '0.2rem', accentColor: 'var(--corp-green)' }}
+                      />
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: '1.4' }}>
+                        {t('affiliate.i_accept')}{' '}
+                        <a href="https://quicktrace.es/programa-de-recomendacion" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '700', textDecoration: 'underline' }}>
+                          {t('affiliate.conditions_link')}
+                        </a>
+                      </span>
+                    </label>
+                  </div>
+
+                  <button 
+                    onClick={handleJoinAffiliate}
+                    disabled={!acceptAffiliateTerms || isJoiningAffiliate}
+                    className="btn-primary"
+                    style={{ width: '100%', padding: '1.25rem', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+                  >
+                    {isJoiningAffiliate ? <Loader2 className="animate-spin" size={24} /> : t('affiliate.btn_start')}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                  {/* Referral Link Card */}
+                  <div className="glass-card" style={{ background: 'white', padding: '2rem', border: '2px solid var(--corp-green)' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--corp-green)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Zap size={20} /> {t('affiliate.your_referral_link')}
+                    </h3>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <input 
+                        readOnly 
+                        className="input-field" 
+                        value={`${typeof window !== 'undefined' ? window.location.protocol : 'https:'}//${typeof window !== 'undefined' ? window.location.host : 'quicktrace.es'}/register?ref=${affiliateData.referralCode}`}
+                        style={{ flex: 1, background: '#f8fafc', fontWeight: '600', color: 'var(--text-muted)' }}
+                      />
+                      <button 
+                        onClick={() => {
+                          const link = `${window.location.protocol}//${window.location.host}/register?ref=${affiliateData.referralCode}`;
+                          navigator.clipboard.writeText(link);
+                          alert(t('affiliate.copied_alert') || "Enlace copiado al portapapeles");
+                        }}
+                        className="btn-primary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}
+                      >
+                        {t('affiliate.btn_copy')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stats Table */}
+                  <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+                    <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>{t('affiliate.stats_header')}</h3>
+                    </div>
+                    {affiliateData.loading ? (
+                      <div style={{ padding: '4rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+                    ) : affiliateData.referrals.length === 0 ? (
+                      <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <User size={48} color="var(--border)" style={{ marginBottom: '1.5rem' }} />
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{t('affiliate.no_referrals_title')}</h4>
+                        <p>{t('affiliate.no_referrals_desc')}</p>
+                      </div>
+                    ) : (
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                          <tr>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>Empresa / Usuario</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('sidebar.plan')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {affiliateData.referrals.map(ref => (
+                            <tr key={ref.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                              <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(ref.createdAt).toLocaleDateString()}</td>
+                              <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                                {ref.businessName || 'Empresa pendiente'}
+                                <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.user?.email}</div>
+                              </td>
+                              <td style={{ padding: '1.5rem 2rem' }}>
+                                <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: '700' }}>
+                                  {ref.plan?.name || 'Demo'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                                {ref.registrationFinished ? (
+                                  <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                                    <FileCheck size={16} /> Completado
+                                  </span>
+                                ) : (
+                                  <span style={{ color: '#f59e0b', fontWeight: '800', fontSize: '0.85rem' }}>Pendiente</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div>

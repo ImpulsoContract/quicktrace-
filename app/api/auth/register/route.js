@@ -45,6 +45,14 @@ export async function POST(req) {
         }
       });
 
+      // Find the referring client if any
+      let referrer = null;
+      if (referralCode) {
+        referrer = await tx.clientProfile.findUnique({
+          where: { referralCode: referralCode.toUpperCase() }
+        });
+      }
+
       const user = await tx.user.create({
         data: {
           email: normalizedEmail,
@@ -67,7 +75,8 @@ export async function POST(req) {
           planId: demoPlan ? demoPlan.id : undefined,
           accountType: demoPlan ? demoPlan.name : "DEMO",
           recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
-          canManageRecipes: true
+          canManageRecipes: true,
+          referredById: referrer ? referrer.id : undefined
         }
       });
     });
