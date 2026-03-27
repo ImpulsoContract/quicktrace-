@@ -3633,12 +3633,12 @@ export default function ClientDashboard() {
                       <input 
                         readOnly 
                         className="input-field" 
-                        value={`${typeof window !== 'undefined' ? window.location.protocol : 'https:'}//${typeof window !== 'undefined' ? window.location.host : 'quicktrace.es'}/register?ref=${affiliateData.referralCode}`}
+                        value={`${typeof window !== 'undefined' ? window.location.protocol : 'https:'}//${typeof window !== 'undefined' ? window.location.host : 'quicktrace.es'}/register?ref=${profile?.referralCode || affiliateData.referralCode}`}
                         style={{ flex: 1, background: '#f8fafc', fontWeight: '600', color: 'var(--text-muted)' }}
                       />
                       <button 
                         onClick={() => {
-                          const link = `${window.location.protocol}//${window.location.host}/register?ref=${affiliateData.referralCode}`;
+                          const link = `${window.location.protocol}//${window.location.host}/register?ref=${profile?.referralCode || affiliateData.referralCode}`;
                           navigator.clipboard.writeText(link);
                           alert(t('affiliate.copied_alert') || "Enlace copiado al portapapeles");
                         }}
