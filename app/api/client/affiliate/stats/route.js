@@ -20,6 +20,18 @@ export async function GET(req) {
       return NextResponse.json({ error: "No eres afiliado o perfil no encontrado" }, { status: 403 });
     }
 
+    // Auto-generación de código si falta (para corregir registros previos con error)
+    if (!clientProfile.referralCode) {
+      const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const newReferralCode = `${clientProfile.razonSocial?.substring(0, 3).toUpperCase() || 'QT'}${randomSuffix}`;
+      
+      const updatedProfile = await prisma.clientProfile.update({
+        where: { id: clientProfile.id },
+        data: { referralCode: newReferralCode }
+      });
+      clientProfile.referralCode = newReferralCode;
+    }
+
     // Traer los usuarios que han sido referidos por este afiliado
     const referrals = await prisma.clientProfile.findMany({
       where: { referredById: clientProfile.id },
