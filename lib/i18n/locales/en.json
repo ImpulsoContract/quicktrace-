@@ -471,7 +471,7 @@
     "disclaimer": "* You can export your records and delete them when you reach the limit to reset it to zero whenever you want. This way you won't have any limitations.",
     "referral_discount_msg": "5% discount for coming recommended by another user",
     "referral_discount_banner": "5% discount applied!",
-    "referral_discount_applied_desc": "By coming recommended, you have a 5% direct discount on your subscription.",
+    "referral_discount_applied_desc": "By coming recommended, you have a 5% direct discount on your subscription. Use the discount coupon \"RECOMANDADOS\" during checkout to receive your 5% discount.",
     "learn_affiliate": "Learn how to earn money with Quicktrace"
   },
   "allergens": {
