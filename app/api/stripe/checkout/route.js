@@ -106,10 +106,14 @@ export async function POST(req) {
     return NextResponse.json({ url: checkoutSession.url });
 
   } catch (error) {
-    console.error("Stripe Checkout Error:", error);
+    console.error("STRIKE CHECKOUT ERROR [FULL]:", error);
+    if (error.type === 'StripeInvalidRequestError') {
+      console.error("Stripe Invalid Request Details:", error.raw);
+    }
     return NextResponse.json({ 
-      error: "Error al procesar el pago",
-      details: error.message 
+      error: "Error al procesar el pago: " + error.message,
+      details: error.message,
+      type: error.type
     }, { status: 500 });
   }
 }
