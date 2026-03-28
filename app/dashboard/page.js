@@ -3676,7 +3676,7 @@ export default function ClientDashboard() {
                         <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                           <tr>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>Empresa / Usuario</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.table_user')}</th>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('sidebar.plan')}</th>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
                           </tr>
@@ -3699,6 +3699,53 @@ export default function ClientDashboard() {
                               </td>
                             </tr>
                           ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  {/* Referral Payments Table */}
+                  <div className="glass-card" style={{ background: 'white', overflow: 'hidden', marginTop: '2.5rem' }}>
+                    <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>{t('affiliate.payments_header')}</h3>
+                    </div>
+                    {affiliateData.loading ? (
+                      <div style={{ padding: '4rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+                    ) : (
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                          <tr>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.table_user')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('common.amount')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {affiliateData.payments?.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                <Zap size={32} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                                <p>{t('affiliate.no_payments_desc')}</p>
+                              </td>
+                            </tr>
+                          ) : (
+                            affiliateData.payments?.map(pay => (
+                              <tr key={pay.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(pay.createdAt).toLocaleDateString()}</td>
+                                <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                                  {pay.clientProfile?.user?.email}
+                                  <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{pay.clientProfile?.razonSocial}</div>
+                                </td>
+                                <td style={{ padding: '1.5rem 2rem', textAlign: 'center', fontWeight: '700' }}>
+                                  {pay.amount.toFixed(2)} {pay.currency?.toUpperCase()}
+                                </td>
+                                <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                                  <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>{t('common.success')}</span>
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     )}
