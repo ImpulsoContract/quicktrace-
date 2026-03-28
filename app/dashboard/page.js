@@ -288,6 +288,7 @@ export default function ClientDashboard() {
           isAffiliate: true,
           referralCode: data.referralCode,
           referrals: data.referrals || [],
+          payments: data.payments || [],
           loading: false
         });
       }
@@ -3694,7 +3695,7 @@ export default function ClientDashboard() {
                                 </span>
                               </td>
                               <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                                <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>Activo</span>
+                                <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>{t('affiliate.status_active')}</span>
                               </td>
                             </tr>
                           ))}
