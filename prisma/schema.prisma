@@ -84,6 +84,7 @@ model ClientProfile {
   temperatureRecords    TemperatureRecord[]
   goodsReceipts         GoodsReceipt[]
   waterMeasurements     WaterMeasurement[]
+  payments              Payment[]
 }
 
 model PricingPlan {
@@ -323,6 +324,22 @@ model WaterMeasurement {
   
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+
+  @@index([clientProfileId])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  
+  stripeInvoiceId String?  @unique
+  amount          Float
+  currency        String   @default("eur")
+  status          String   // paid, open, etc.
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([clientProfileId])
 }

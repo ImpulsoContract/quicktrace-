@@ -165,9 +165,25 @@ export async function POST(req) {
           });
         }
         
-        if (profile) {
-          // Aseguramos la etiqueta de cliente en Clientify por cada pago verificado
+          // Asignar etiqueta en Clientify por cada pago verificado
           await assignClientifyTagByEmail(profile.user.email, "cliente quicktrace");
+
+          // REGISTRAR PAGO EN NUESTRA BASE DE DATOS
+          try {
+            await prisma.payment.create({
+              data: {
+                clientProfileId: profile.id,
+                stripeInvoiceId: invoice.id,
+                amount: invoice.amount_paid / 100, // Stripe uses cents
+                currency: invoice.currency,
+                status: 'paid',
+                createdAt: new Date(invoice.created * 1000)
+              }
+            });
+            console.log(`[Webhook] Recorded payment for profile ${profile.id}, invoice ${invoice.id}`);
+          } catch (paymentErr) {
+            console.error(`[Webhook] Error recording payment: ${paymentErr.message}`);
+          }
         }
       }
       break;

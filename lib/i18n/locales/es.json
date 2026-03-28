@@ -33,7 +33,9 @@
     "usage": "Uso",
     "all_plans": "Todos los planes",
     "from": "Fecha desde",
-    "to": "Fecha hasta"
+    "to": "Fecha hasta",
+    "amount": "Importe",
+    "status": "Estado"
   },
   "profile": {
     "title": "Perfil",
@@ -331,7 +333,12 @@
     "no_referrals_title": "Aún no tienes recomendaciones",
     "no_referrals_desc": "¡Comparte tu enlace para empezar a ganar!",
     "referral_discount_banner": "¡Tienes un 5% de descuento activo!",
-    "referral_discount_applied_desc": "Gracias a que vienes recomendado, se aplicará un 5% de descuento automáticamente al contratar cualquier plan."
+    "referral_discount_applied_desc": "Gracias a que vienes recomendado, se aplicará un 5% de descuento automáticamente al contratar cualquier plan.",
+    "table_user": "Empresa / Usuario",
+    "status_active": "Activo",
+    "status_pending": "Pendiente",
+    "payments_header": "Pagos de tus recomendados",
+    "no_payments_desc": "Aún no hay pagos registrados de tus recomendados."
   },
   "register": {
     "title": "Empieza Hoy",

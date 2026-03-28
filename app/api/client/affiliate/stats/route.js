@@ -58,10 +58,33 @@ export async function GET(req) {
 
     console.log(`[AffiliateStats] Found ${referrals.length} referrals for profileId ${clientProfile.id}`);
 
+    // Traer todos los pagos de esos referidos
+    const referralIds = referrals.map(r => r.id);
+    const payments = await prisma.payment.findMany({
+      where: {
+        clientProfileId: { in: referralIds },
+        status: 'paid'
+      },
+      include: {
+        clientProfile: {
+          select: {
+            razonSocial: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
     return NextResponse.json({
       success: true,
       referralCode: clientProfile.referralCode,
-      referrals: referrals
+      referrals: referrals,
+      payments: payments
     });
 
   } catch (error) {

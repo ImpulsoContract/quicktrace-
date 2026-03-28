@@ -33,7 +33,9 @@
     "usage": "Usage",
     "all_plans": "All plans",
     "from": "Date from",
-    "to": "Date to"
+    "to": "Date to",
+    "amount": "Amount",
+    "status": "Status"
   },
   "profile": {
     "title": "Profile",
@@ -331,7 +333,12 @@
     "no_referrals_title": "No recommendations yet",
     "no_referrals_desc": "Share your link to start earning!",
     "referral_discount_banner": "You have a 5% active discount!",
-    "referral_discount_applied_desc": "Since you came recommended, a 5% discount will be applied automatically when contracting any plan."
+    "referral_discount_applied_desc": "Since you came recommended, a 5% discount will be applied automatically when contracting any plan.",
+    "table_user": "Company / User",
+    "status_active": "Active",
+    "status_pending": "Pending",
+    "payments_header": "Referral Payments",
+    "no_payments_desc": "No referral payments recorded yet."
   },
   "register": {
     "title": "Start Today",
