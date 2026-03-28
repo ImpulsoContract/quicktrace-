@@ -3718,13 +3718,14 @@ export default function ClientDashboard() {
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.table_user')}</th>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('common.amount')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('affiliate.commission_column')}</th>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {affiliateData.payments?.length === 0 ? (
                             <tr>
-                              <td colSpan={4} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                              <td colSpan={5} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                                 <Zap size={32} color="var(--border)" style={{ marginBottom: '1rem' }} />
                                 <p>{t('affiliate.no_payments_desc')}</p>
                               </td>
@@ -3737,8 +3738,11 @@ export default function ClientDashboard() {
                                   {pay.clientProfile?.user?.email}
                                   <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{pay.clientProfile?.razonSocial}</div>
                                 </td>
-                                <td style={{ padding: '1.5rem 2rem', textAlign: 'center', fontWeight: '700' }}>
+                                <td style={{ padding: '1.5rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                                   {pay.amount.toFixed(2)} {pay.currency?.toUpperCase()}
+                                </td>
+                                <td style={{ padding: '1.5rem 2rem', textAlign: 'center', fontWeight: '700', color: 'var(--corp-green)' }}>
+                                  {(pay.amount * 0.05).toFixed(2)} {pay.currency?.toUpperCase()}
                                 </td>
                                 <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                                   <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>{t('common.success')}</span>
@@ -3749,6 +3753,58 @@ export default function ClientDashboard() {
                         </tbody>
                       </table>
                     )}
+                  </div>
+
+                  {/* Settlements Table */}
+                  <div className="glass-card" style={{ background: 'white', overflow: 'hidden', marginTop: '2.5rem' }}>
+                    <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>{t('affiliate.settlements_header')}</h3>
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                        <tr>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.date_collected')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td colSpan={3} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            <p>{t('affiliate.no_settlements_desc')}</p>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Summary and Request Button */}
+                  <div style={{ marginTop: '3rem', padding: '2rem', background: '#f8fafc', borderRadius: '1.5rem', border: '1px solid var(--border)', textAlign: 'center' }}>
+                    <h4 style={{ fontSize: '1rem', color: '#64748b', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '800' }}>
+                      {t('affiliate.pending_commissions')}
+                    </h4>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '2rem' }}>
+                      {affiliateData.payments.reduce((acc, p) => acc + (p.amount * 0.05), 0).toFixed(2)} €
+                    </div>
+                    <button 
+                      onClick={() => alert(t('affiliate.payout_request_info'))}
+                      style={{
+                        padding: '1rem 2.5rem', borderRadius: '1rem', border: 'none',
+                        background: 'var(--corp-green)', color: 'white', fontWeight: '800',
+                        fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(66, 98, 22, 0.2)',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.filter = 'brightness(1.1)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.filter = 'brightness(1)';
+                      }}
+                    >
+                      {t('affiliate.btn_request_payout')}
+                    </button>
                   </div>
                 </div>
               )}

@@ -338,7 +338,14 @@
     "status_active": "Activo",
     "status_pending": "Pendiente",
     "payments_header": "Pagos de tus recomendados",
-    "no_payments_desc": "Aún no hay pagos registrados de tus recomendados."
+    "no_payments_desc": "Aún no hay pagos registrados de tus recomendados.",
+    "commission_column": "Comisión (5%)",
+    "settlements_header": "Liquidaciones",
+    "no_settlements_desc": "Aún no hay liquidaciones registradas.",
+    "pending_commissions": "Comisiones pendientes de cobrar",
+    "btn_request_payout": "Solicitar cobro de comisiones",
+    "payout_request_info": "Envía un email a soporte@quicktrace.es solicitando el cobro de tus comisiones pendientes. Recuerda enviar el email desde el email que tienes en tu cuenta de usuario de Quicktrace",
+    "date_collected": "Cantidad cobrada"
   },
   "register": {
     "title": "Empieza Hoy",

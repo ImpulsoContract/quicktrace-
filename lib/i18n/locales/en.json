@@ -338,7 +338,14 @@
     "status_active": "Active",
     "status_pending": "Pending",
     "payments_header": "Referral Payments",
-    "no_payments_desc": "No referral payments recorded yet."
+    "no_payments_desc": "No referral payments recorded yet.",
+    "commission_column": "Commission (5%)",
+    "settlements_header": "Settlements",
+    "no_settlements_desc": "No settlements recorded yet.",
+    "pending_commissions": "Pending commissions to be collected",
+    "btn_request_payout": "Request commission payout",
+    "payout_request_info": "Send an email to soporte@quicktrace.es requesting the payout of your pending commissions. Remember to send the email from the email address associated with your Quicktrace account.",
+    "date_collected": "Amount collected"
   },
   "register": {
     "title": "Start Today",
