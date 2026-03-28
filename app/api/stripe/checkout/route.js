@@ -99,7 +99,7 @@ export async function POST(req) {
         }
       },
       ...(clientProfile.referredById ? {
-        discounts: [{ coupon: 'RECOMENDADO5' }]
+        discounts: [{ coupon: 'RECOMANDADOS' }]
       } : {})
     });
 

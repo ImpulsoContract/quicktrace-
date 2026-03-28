@@ -199,12 +199,19 @@ export default function PlansPage() {
                 <div style={{ marginBottom: '2rem' }}>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{plan.name}</h2>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
-                    <span style={{ fontSize: '2.5rem', fontWeight: '900', color: isDemo ? 'var(--text-main)' : 'var(--corp-green)' }}>
-                      {billingCycle === "monthly" 
-                        ? (plan.priceMonthly === 0 ? t('plans.free') : `${plan.priceMonthly}€`)
-                        : (plan.priceYearly === 0 ? t('plans.free') : `${plan.priceYearly}€`)
-                      }
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {profile?.referredById && (plan.priceMonthly > 0 || plan.priceYearly > 0) && (
+                        <span style={{ fontSize: '1rem', textDecoration: 'line-through', color: 'var(--text-muted)', fontWeight: '600' }}>
+                          {billingCycle === "monthly" ? `${plan.priceMonthly}€` : `${plan.priceYearly}€`}
+                        </span>
+                      )}
+                      <span style={{ fontSize: '2.5rem', fontWeight: '900', color: isDemo ? 'var(--text-main)' : 'var(--corp-green)' }}>
+                        {billingCycle === "monthly" 
+                          ? (plan.priceMonthly === 0 ? t('plans.free') : `${(plan.priceMonthly * (profile?.referredById ? 0.95 : 1)).toFixed(2)}€`)
+                          : (plan.priceYearly === 0 ? t('plans.free') : `${(plan.priceYearly * (profile?.referredById ? 0.95 : 1)).toFixed(2)}€`)
+                        }
+                      </span>
+                    </div>
                     <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
                       {billingCycle === "monthly" ? t('plans.monthly') : t('plans.yearly')}
                     </span>

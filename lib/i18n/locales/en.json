@@ -35,7 +35,8 @@
     "from": "Date from",
     "to": "Date to",
     "amount": "Amount",
-    "status": "Status"
+    "status": "Status",
+    "date": "Date"
   },
   "profile": {
     "title": "Profile",

@@ -35,7 +35,8 @@
     "from": "Fecha desde",
     "to": "Fecha hasta",
     "amount": "Importe",
-    "status": "Estado"
+    "status": "Estado",
+    "date": "Fecha"
   },
   "profile": {
     "title": "Perfil",
