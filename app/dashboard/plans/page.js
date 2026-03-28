@@ -172,17 +172,18 @@ export default function PlansPage() {
         }}>
           {plans.map((plan) => {
             const isDemo = plan.name.toLowerCase().includes('demo');
+            const isCurrentPlan = profile?.planId === plan.id || (!profile?.planId && isDemo);
             const badge = getPlanBadge(plan.name);
             
             return (
               <div key={plan.id} className="glass-card plan-card" style={{ 
                 padding: '2.5rem', 
                 background: 'white', 
-                border: isDemo ? '1px solid var(--border)' : '2px solid var(--corp-green)',
+                border: isCurrentPlan ? '2px solid var(--corp-green)' : '1px solid var(--border)',
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
-                boxShadow: isDemo ? '0 10px 15px -3px rgba(0,0,0,0.1)' : '0 20px 25px -5px rgba(66, 98, 22, 0.1)'
+                boxShadow: isCurrentPlan ? '0 20px 25px -5px rgba(66, 98, 22, 0.1)' : '0 10px 15px -3px rgba(0,0,0,0.1)'
               }}>
                 {!isDemo && badge && (
                   <div style={{ 
@@ -205,7 +206,7 @@ export default function PlansPage() {
                           {billingCycle === "monthly" ? `${plan.priceMonthly}€` : `${plan.priceYearly}€`}
                         </span>
                       )}
-                      <span style={{ fontSize: '2.5rem', fontWeight: '900', color: isDemo ? 'var(--text-main)' : 'var(--corp-green)' }}>
+                      <span style={{ fontSize: '2.5rem', fontWeight: '900', color: isCurrentPlan ? 'var(--corp-green)' : 'var(--text-main)' }}>
                         {billingCycle === "monthly" 
                           ? (plan.priceMonthly === 0 ? t('plans.free') : `${(plan.priceMonthly * (profile?.referredById ? 0.95 : 1)).toFixed(2)}€`)
                           : (plan.priceYearly === 0 ? t('plans.free') : `${(plan.priceYearly * (profile?.referredById ? 0.95 : 1)).toFixed(2)}€`)
@@ -232,19 +233,19 @@ export default function PlansPage() {
                 </div>
 
                 <button 
-                  onClick={() => !isDemo && handleSubscribe(plan.id)}
-                  disabled={submitting === plan.id}
-                  className={isDemo ? "btn-secondary" : "btn-primary"} 
+                  onClick={() => !isCurrentPlan && handleSubscribe(plan.id)}
+                  disabled={submitting === plan.id || isCurrentPlan}
+                  className={isCurrentPlan ? "btn-secondary" : "btn-primary"} 
                   style={{ 
                     width: '100%', padding: '1rem', borderRadius: '1rem', 
                     fontSize: '1rem', fontWeight: '800', textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    cursor: (isDemo || submitting === plan.id) ? 'not-allowed' : 'pointer',
-                    opacity: (isDemo || submitting === plan.id) ? 0.7 : 1
+                    cursor: (isCurrentPlan || submitting === plan.id) ? 'not-allowed' : 'pointer',
+                    opacity: (isCurrentPlan || submitting === plan.id) ? 0.7 : 1
                   }}
                 >
-                  {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isDemo ? t('plans.current_plan') : t('plans.subscribe'))}
+                  {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isCurrentPlan ? t('plans.current_plan') : t('plans.subscribe'))}
                 </button>
               </div>
             );
