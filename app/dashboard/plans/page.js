@@ -232,21 +232,27 @@ export default function PlansPage() {
                   {t('plans.disclaimer')}
                 </div>
 
-                <button 
-                  onClick={() => !isCurrentPlan && handleSubscribe(plan.id)}
-                  disabled={submitting === plan.id || isCurrentPlan}
-                  className={isCurrentPlan ? "btn-secondary" : "btn-primary"} 
-                  style={{ 
-                    width: '100%', padding: '1rem', borderRadius: '1rem', 
-                    fontSize: '1rem', fontWeight: '800', textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    cursor: (isCurrentPlan || submitting === plan.id) ? 'not-allowed' : 'pointer',
-                    opacity: (isCurrentPlan || submitting === plan.id) ? 0.7 : 1
-                  }}
-                >
-                  {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isCurrentPlan ? t('plans.current_plan') : t('plans.subscribe'))}
-                </button>
+                {!isCurrentPlan && isDemo && profile?.planId && (
+                  <div style={{ height: '3.5rem' }}></div>
+                )}
+
+                {!(isDemo && profile?.planId && !isCurrentPlan) && (
+                  <button 
+                    onClick={() => !isCurrentPlan && handleSubscribe(plan.id)}
+                    disabled={submitting === plan.id || isCurrentPlan}
+                    className={isCurrentPlan ? "btn-secondary" : "btn-primary"} 
+                    style={{ 
+                      width: '100%', padding: '1rem', borderRadius: '1rem', 
+                      fontSize: '1rem', fontWeight: '800', textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                      cursor: (isCurrentPlan || submitting === plan.id) ? 'not-allowed' : 'pointer',
+                      opacity: (isCurrentPlan || submitting === plan.id) ? 0.7 : 1
+                    }}
+                  >
+                    {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isCurrentPlan ? t('plans.current_plan') : t('plans.subscribe'))}
+                  </button>
+                )}
               </div>
             );
           })}
