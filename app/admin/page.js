@@ -42,6 +42,12 @@ export default function AdminDashboard() {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [affiliates, setAffiliates] = useState([]);
+  const [affiliatesLoading, setAffiliatesLoading] = useState(false);
+  const [selectedAffiliate, setSelectedAffiliate] = useState(null);
+  const [affiliateDetails, setAffiliateDetails] = useState(null);
+  const [affiliateDetailsLoading, setAffiliateDetailsLoading] = useState(false);
+
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
@@ -143,9 +149,38 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchAffiliates = async () => {
+    setAffiliatesLoading(true);
+    try {
+      const res = await fetch("/api/admin/affiliates");
+      const data = await res.json();
+      if (!data.error) setAffiliates(data);
+    } catch (error) {
+      console.error("Error loading affiliates:", error);
+    } finally {
+      setAffiliatesLoading(false);
+    }
+  };
+
+  const fetchAffiliateDetails = async (id) => {
+    setAffiliateDetailsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/affiliates/${id}`);
+      const data = await res.json();
+      if (!data.error) setAffiliateDetails(data);
+      else alert(data.error);
+    } catch (error) {
+      console.error("Error loading affiliate details:", error);
+      alert("Error al cargar detalles del afiliado");
+    } finally {
+      setAffiliateDetailsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "list") fetchClients();
     if (activeTab === "plans" || activeTab === "create") fetchPlans();
+    if (activeTab === "affiliates") fetchAffiliates();
   }, [activeTab]);
 
   const handleChange = (e) => {
@@ -338,6 +373,10 @@ export default function AdminDashboard() {
             <SidebarBtn 
               icon={<Tag size={20} />} label="Cupones" 
               active={activeTab === 'coupons'} onClick={() => { setActiveTab('coupons'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
+            <SidebarBtn 
+              icon={<Globe size={20} />} label="Afiliados" 
+              active={activeTab === 'affiliates'} onClick={() => { setActiveTab('affiliates'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
           </nav>
 
@@ -638,11 +677,26 @@ export default function AdminDashboard() {
             </section>
           ) : activeTab === "terms" ? (
             <AdminTermsTab onUpdateSuccess={() => setMessage({ type: 'success', text: 'Se ha forzado la aceptación de condiciones para todos los clientes.' })} />
+          ) : activeTab === "affiliates" ? (
+            <AffiliatesTab 
+              affiliates={affiliates} 
+              loading={affiliatesLoading} 
+              onViewDetails={(id) => { setSelectedAffiliate(id); fetchAffiliateDetails(id); }} 
+            />
           ) : (
             <PlansTab plans={plans} loading={plansLoading} onRefresh={fetchPlans} />
           )}
         </div>
       </main>
+
+      {/* AFFILIATE DETAILS MODAL */}
+      {selectedAffiliate && (
+        <AffiliateDetailsModal 
+          details={affiliateDetails} 
+          loading={affiliateDetailsLoading} 
+          onClose={() => { setSelectedAffiliate(null); setAffiliateDetails(null); }} 
+        />
+      )}
 
       {/* FIXED CONTEXT MENU */}
       {activeMenu && typeof activeMenu === 'object' && (
@@ -1992,6 +2046,124 @@ function AdminTermsTab({ onUpdateSuccess }) {
 }
 
 
+
+function AffiliatesTab({ affiliates, loading, onViewDetails }) {
+  return (
+    <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
+        <Globe size={24} color="var(--corp-green)" />
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Gestión de Afiliados</h2>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+      ) : affiliates.length === 0 ? (
+        <p style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>No hay usuarios apuntados al programa de afiliados.</p>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Usuario / Email</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Enlace de Afiliado</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {affiliates.map((aff) => (
+                <tr key={aff.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '1.25rem 1rem' }}>
+                    <div style={{ fontWeight: '700', color: '#1e293b' }}>{aff.clientProfile?.razonSocial || 'Sin Razón Social'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{aff.email}</div>
+                  </td>
+                  <td style={{ padding: '1.25rem 1rem' }}>
+                    <code style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.85rem' }}>
+                      {aff.clientProfile?.referralCode}
+                    </code>
+                  </td>
+                  <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
+                    <button 
+                      onClick={() => onViewDetails(aff.id)}
+                      className="btn-secondary"
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      <Search size={14} /> Ver detalles
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AffiliateDetailsModal({ details, loading, onClose }) {
+  return (
+    <Modal title="Detalles del Afiliado" onClose={onClose} width="900px">
+      {loading || !details ? (
+        <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
+              <h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Email</h4>
+              <div style={{ fontWeight: '700' }}>{details.email}</div>
+            </div>
+            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
+              <h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Enlace de Afiliado</h4>
+              <code style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{details.referralCode}</code>
+            </div>
+            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
+              <h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Fecha de Aceptación</h4>
+              <div style={{ fontWeight: '700' }}>
+                {details.affiliateAcceptedAt ? new Date(details.affiliateAcceptedAt).toLocaleString('es-ES') : 'N/A'}
+              </div>
+            </div>
+            <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', border: '1px solid rgba(66, 98, 22, 0.1)' }}>
+              <h4 style={{ fontSize: '0.75rem', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Comisiones Pendientes</h4>
+              <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--corp-green)' }}>{details.totalCommission.toFixed(2)} €</div>
+            </div>
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.25rem', borderBottom: '2px solid #f1f5f9', paddingBottom: '0.5rem' }}>
+              Usuarios Recomendados ({details.referrals.length})
+            </h3>
+            {details.referrals.length === 0 ? (
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Este afiliado aún no tiene recomendaciones.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #f1f5f9' }}>
+                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>Empresa</th>
+                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>Email</th>
+                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Total Pagado</th>
+                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Comisión (5%)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {details.referrals.map((ref) => (
+                      <tr key={ref.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '1rem', fontWeight: '600' }}>{ref.razonSocial}</td>
+                        <td style={{ padding: '1rem', fontSize: '0.9rem' }}>{ref.email}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '600' }}>{ref.totalPaid.toFixed(2)} €</td>
+                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '700', color: 'var(--corp-green)' }}>{ref.commission.toFixed(2)} €</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
 
 function SidebarBtn({ icon, label, active, onClick }) {
   return (
