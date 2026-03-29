@@ -32,6 +32,11 @@ export async function GET(req, { params }) {
                   }
                 }
               }
+            },
+            affiliateSettlements: {
+              orderBy: {
+                date: 'desc'
+              }
             }
           }
         }
@@ -58,7 +63,9 @@ export async function GET(req, { params }) {
       };
     });
 
-    const totalCommission = referralsData.reduce((acc, ref) => acc + ref.commission, 0);
+    const totalGenerated = referralsData.reduce((acc, ref) => acc + ref.commission, 0);
+    const totalSettled = affiliate.clientProfile.affiliateSettlements.reduce((acc, s) => acc + (s.amount || 0), 0);
+    const pendingCommission = totalGenerated - totalSettled;
 
     return NextResponse.json({
       id: affiliate.id,
@@ -66,7 +73,10 @@ export async function GET(req, { params }) {
       referralCode: affiliate.clientProfile.referralCode,
       affiliateAcceptedAt: affiliate.clientProfile.affiliateAcceptedAt,
       referrals: referralsData,
-      totalCommission
+      settlements: affiliate.clientProfile.affiliateSettlements,
+      totalGenerated,
+      totalSettled,
+      pendingCommission
     });
   } catch (error) {
     console.error(`Error fetching affiliate details for user ${id}:`, error);

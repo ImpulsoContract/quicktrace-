@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [affiliateDetails, setAffiliateDetails] = useState(null);
   const [affiliateDetailsLoading, setAffiliateDetailsLoading] = useState(false);
+  const [settleAffiliate, setSettleAffiliate] = useState(null); // { id, email, pending }
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -682,6 +683,7 @@ export default function AdminDashboard() {
               affiliates={affiliates} 
               loading={affiliatesLoading} 
               onViewDetails={(id) => { setSelectedAffiliate(id); fetchAffiliateDetails(id); }} 
+              onSettle={(aff) => setSettleAffiliate(aff)}
             />
           ) : (
             <PlansTab plans={plans} loading={plansLoading} onRefresh={fetchPlans} />
@@ -695,6 +697,15 @@ export default function AdminDashboard() {
           details={affiliateDetails} 
           loading={affiliateDetailsLoading} 
           onClose={() => { setSelectedAffiliate(null); setAffiliateDetails(null); }} 
+        />
+      )}
+
+      {/* SETTLE COMMISSION MODAL */}
+      {settleAffiliate && (
+        <SettleCommissionsModal 
+          affiliate={settleAffiliate} 
+          onClose={() => setSettleAffiliate(null)} 
+          onSuccess={() => { setSettleAffiliate(null); fetchAffiliates(); }} 
         />
       )}
 
@@ -2047,7 +2058,7 @@ function AdminTermsTab({ onUpdateSuccess }) {
 
 
 
-function AffiliatesTab({ affiliates, loading, onViewDetails }) {
+function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
   return (
     <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
@@ -2065,7 +2076,8 @@ function AffiliatesTab({ affiliates, loading, onViewDetails }) {
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Usuario / Email</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Enlace de Afiliado</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Enlace</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Saldo Pendiente</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
@@ -2081,14 +2093,27 @@ function AffiliatesTab({ affiliates, loading, onViewDetails }) {
                       {aff.clientProfile?.referralCode}
                     </code>
                   </td>
+                  <td style={{ padding: '1.25rem 1rem', textAlign: 'right', fontWeight: '700', color: aff.pendingCommission > 0 ? 'var(--corp-green)' : 'var(--text-muted)' }}>
+                    {aff.pendingCommission.toFixed(2)} €
+                  </td>
                   <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
-                    <button 
-                      onClick={() => onViewDetails(aff.id)}
-                      className="btn-secondary"
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                    >
-                      <Search size={14} /> Ver detalles
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => onSettle({ id: aff.id, email: aff.email, pending: aff.pendingCommission })}
+                        disabled={aff.pendingCommission <= 0}
+                        className="btn-primary"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', opacity: aff.pendingCommission <= 0 ? 0.5 : 1 }}
+                      >
+                        Registrar liquidación
+                      </button>
+                      <button 
+                        onClick={() => onViewDetails(aff.id)}
+                        className="btn-secondary"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'white' }}
+                      >
+                        <Search size={14} /> Ver detalles
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -2102,65 +2127,196 @@ function AffiliatesTab({ affiliates, loading, onViewDetails }) {
 
 function AffiliateDetailsModal({ details, loading, onClose }) {
   return (
-    <Modal title="Detalles del Afiliado" onClose={onClose} width="900px">
+    <Modal title="Detalles del Afiliado" onClose={onClose} width="950px">
       {loading || !details ? (
         <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
-              <h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Email</h4>
-              <div style={{ fontWeight: '700' }}>{details.email}</div>
+            <div className="glass-card" style={{ padding: '1.5rem', background: '#f1f5f9' }}>
+              <h4 style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>Total Generado</h4>
+              <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)' }}>{details.totalGenerated.toFixed(2)} €</div>
             </div>
-            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
-              <h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Enlace de Afiliado</h4>
-              <code style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{details.referralCode}</code>
+            <div className="glass-card" style={{ padding: '1.5rem', background: '#fef2f2' }}>
+              <h4 style={{ fontSize: '0.7rem', color: '#991b1b', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>Total Liquidado</h4>
+              <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#dc2626' }}>{details.totalSettled.toFixed(2)} €</div>
             </div>
-            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
-              <h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Fecha de Aceptación</h4>
-              <div style={{ fontWeight: '700' }}>
-                {details.affiliateAcceptedAt ? new Date(details.affiliateAcceptedAt).toLocaleString('es-ES') : 'N/A'}
-              </div>
-            </div>
-            <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', border: '1px solid rgba(66, 98, 22, 0.1)' }}>
-              <h4 style={{ fontSize: '0.75rem', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Comisiones Pendientes</h4>
-              <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--corp-green)' }}>{details.totalCommission.toFixed(2)} €</div>
+            <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', border: '1px solid var(--corp-green)' }}>
+              <h4 style={{ fontSize: '0.7rem', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>Saldo Pendiente</h4>
+              <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--corp-green)' }}>{details.pendingCommission.toFixed(2)} €</div>
             </div>
           </div>
 
-          <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.25rem', borderBottom: '2px solid #f1f5f9', paddingBottom: '0.5rem' }}>
-              Usuarios Recomendados ({details.referrals.length})
-            </h3>
-            {details.referrals.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Este afiliado aún no tiene recomendaciones.</p>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #f1f5f9' }}>
-                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>Empresa</th>
-                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>Email</th>
-                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Total Pagado</th>
-                      <th style={{ padding: '1rem', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Comisión (5%)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {details.referrals.map((ref) => (
-                      <tr key={ref.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '1rem', fontWeight: '600' }}>{ref.razonSocial}</td>
-                        <td style={{ padding: '1rem', fontSize: '0.9rem' }}>{ref.email}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '600' }}>{ref.totalPaid.toFixed(2)} €</td>
-                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '700', color: 'var(--corp-green)' }}>{ref.commission.toFixed(2)} €</td>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            {/* Referrals List */}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users size={18} /> Recomendados ({details.referrals.length})
+              </h3>
+              {details.referrals.length === 0 ? (
+                <p style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sin recomendaciones todavía.</p>
+              ) : (
+                <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <tr>
+                        <th style={{ padding: '0.75rem', textAlign: 'left' }}>Cliente</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Comisión</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {details.referrals.map(ref => (
+                        <tr key={ref.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '0.75rem' }}>
+                            <div style={{ fontWeight: '700' }}>{ref.razonSocial}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ref.email}</div>
+                          </td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '700' }}>{ref.commission.toFixed(2)}€</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Settlements History */}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <RefreshCw size={18} /> Historial de Pagos ({details.settlements.length})
+              </h3>
+              {details.settlements.length === 0 ? (
+                <p style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>No hay liquidaciones registradas.</p>
+              ) : (
+                <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <tr>
+                        <th style={{ padding: '0.75rem', textAlign: 'left' }}>Fecha</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {details.settlements.map(s => (
+                        <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '0.75rem' }}>
+                            <div style={{ fontWeight: '600' }}>{new Date(s.date).toLocaleDateString()}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.notes || 'Liquidación'}</div>
+                          </td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '700', color: '#dc2626' }}>-{s.amount.toFixed(2)}€</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
+    </Modal>
+  );
+}
+
+function SettleCommissionsModal({ affiliate, onClose, onSuccess }) {
+  const [amount, setAmount] = useState(affiliate.pending);
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!showConfirm) {
+      setShowConfirm(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/affiliates/settle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: affiliate.id,
+          amount: parseFloat(amount),
+          notes
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        onSuccess();
+      } else {
+        alert(data.error);
+        setShowConfirm(false);
+      }
+    } catch (e) {
+      alert("Error al registrar liquidación");
+      setShowConfirm(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title={`Registrar Liquidación: ${affiliate.email}`} onClose={onClose}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--corp-green)', textAlign: 'center' }}>
+          <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Comisiones Pendientes</h4>
+          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--corp-green)' }}>{affiliate.pending.toFixed(2)} €</div>
+        </div>
+
+        <div>
+          <label className="label">Cantidad a liquidar (€)</label>
+          <input 
+            type="number" 
+            step="0.01" 
+            max={affiliate.pending} 
+            min="0.01"
+            className="input-field" 
+            value={amount} 
+            onChange={(e) => setAmount(e.target.value)} 
+            required
+            style={{ fontSize: '1.25rem', fontWeight: '700', textAlign: 'center' }}
+          />
+          {parseFloat(amount) > parseFloat(affiliate.pending) && (
+            <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>
+              La cantidad no puede superar el saldo pendiente.
+            </div>
+          )}
+        </div>
+
+        <div>
+           <label className="label">Notas / Referencia de transferencia</label>
+           <textarea 
+             className="input-field" 
+             value={notes} 
+             onChange={(e) => setNotes(e.target.value)}
+             placeholder="Ej: Transferencia bancaria realizada el 25/03"
+             style={{ minHeight: '80px', paddingTop: '0.75rem' }}
+           />
+        </div>
+
+        {showConfirm && (
+          <div style={{ background: '#fff7ed', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #fdba74', animation: 'fadeIn 0.2s ease' }}>
+            <p style={{ color: '#9a3412', fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+              ¿Seguro que vas a liquidar {parseFloat(amount).toFixed(2)} € para este afiliado?
+            </p>
+            <p style={{ color: '#9a3412', fontSize: '0.8rem' }}>Esta acción restará la cantidad del saldo pendiente permanentemente.</p>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button type="button" onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={loading || amount <= 0 || parseFloat(amount) > parseFloat(affiliate.pending)}
+            style={{ flex: 2, background: showConfirm ? '#ea580c' : 'var(--corp-green)' }}
+          >
+            {loading ? "Procesando..." : showConfirm ? "SÍ, CONFIRMAR LIQUIDACIÓN" : "REGISTRAR PAGO AHORA"}
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }

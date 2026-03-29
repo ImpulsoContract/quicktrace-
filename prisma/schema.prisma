@@ -85,6 +85,22 @@ model ClientProfile {
   goodsReceipts         GoodsReceipt[]
   waterMeasurements     WaterMeasurement[]
   payments              Payment[]
+  affiliateSettlements  AffiliateSettlement[]
+}
+
+model AffiliateSettlement {
+  id                Int           @id @default(autoincrement())
+  clientProfileId   Int
+  clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  
+  amount            Float
+  date              DateTime      @default(now())
+  notes             String?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([clientProfileId])
 }
 
 model PricingPlan {

@@ -29,7 +29,18 @@ export async function GET() {
             id: true,
             referralCode: true,
             affiliateAcceptedAt: true,
-            razonSocial: true
+            razonSocial: true,
+            referrals: {
+              select: {
+                payments: {
+                  where: { status: "paid" },
+                  select: { amount: true }
+                }
+              }
+            },
+            affiliateSettlements: {
+              select: { amount: true }
+            }
           }
         }
       },
@@ -38,7 +49,21 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json(affiliates);
+    // Calculate pending for each
+    const processed = affiliates.map(aff => {
+      const generated = aff.clientProfile.referrals.reduce((acc, ref) => {
+        return acc + (ref.payments.reduce((pAcc, p) => pAcc + (p.amount || 0), 0) * 0.05);
+      }, 0);
+      
+      const settled = aff.clientProfile.affiliateSettlements.reduce((acc, s) => acc + (s.amount || 0), 0);
+      
+      return {
+        ...aff,
+        pendingCommission: generated - settled
+      };
+    });
+
+    return NextResponse.json(processed);
   } catch (error) {
     console.error("Error fetching affiliates:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
