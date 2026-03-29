@@ -290,6 +290,7 @@ export default function ClientDashboard() {
           referralCode: data.referralCode,
           referrals: data.referrals || [],
           payments: data.payments || [],
+          settlements: data.settlements || [],
           pendingCommission: data.pendingCommission || 0,
           totalGenerated: data.totalGenerated || 0,
           totalSettled: data.totalSettled || 0,
@@ -3773,11 +3774,32 @@ export default function ClientDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td colSpan={3} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            <p>{t('affiliate.no_settlements_desc')}</p>
-                          </td>
-                        </tr>
+                        {affiliateData.settlements?.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                              <p>{t('affiliate.no_settlements_desc')}</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          affiliateData.settlements?.map(s => (
+                            <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                              <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>
+                                {new Date(s.date).toLocaleDateString()}
+                              </td>
+                              <td style={{ padding: '1.25rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                                {s.amount.toFixed(2)} €
+                                <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>
+                                  {s.notes || 'Liquidación de comisiones'}
+                                </div>
+                              </td>
+                              <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
+                                <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>
+                                  {t('common.success') || 'Completado'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
