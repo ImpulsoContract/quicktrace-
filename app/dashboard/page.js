@@ -290,6 +290,9 @@ export default function ClientDashboard() {
           referralCode: data.referralCode,
           referrals: data.referrals || [],
           payments: data.payments || [],
+          pendingCommission: data.pendingCommission || 0,
+          totalGenerated: data.totalGenerated || 0,
+          totalSettled: data.totalSettled || 0,
           loading: false
         });
       }
@@ -3680,8 +3683,8 @@ export default function ClientDashboard() {
                           <tr>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.table_user')}</th>
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('sidebar.plan')}</th>
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('affiliate.table_paid') || 'Total Pagado'}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('affiliate.commission_column')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -3692,13 +3695,11 @@ export default function ClientDashboard() {
                                 {ref.user?.email}
                                 <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.razonSocial || 'Empresa pendiente'}</div>
                               </td>
-                              <td style={{ padding: '1.5rem 2rem' }}>
-                                <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: '700' }}>
-                                  {ref.plan?.name || 'Demo'}
-                                </span>
+                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right', fontWeight: '600' }}>
+                                {(ref.totalPaidFromStripe || 0).toFixed(2)} €
                               </td>
-                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                                <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>{t('affiliate.status_active')}</span>
+                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right', fontWeight: '800', color: 'var(--corp-green)' }}>
+                                {(ref.commission || 0).toFixed(2)} €
                               </td>
                             </tr>
                           ))}
@@ -3787,11 +3788,11 @@ export default function ClientDashboard() {
                       {t('affiliate.pending_commissions')}
                     </h4>
                     <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '0.5rem' }}>
-                      {(affiliateData.payments || []).reduce((acc, p) => acc + (p.amount * 0.05), 0).toFixed(2)} €
+                      {(affiliateData.pendingCommission || 0).toFixed(2)} €
                     </div>
                     <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '2rem', lineHeight: '1.4' }}>
                       Las liquidaciones incluyen un 21% de impuestos.<br />
-                      La cantidad neta es: <strong>{((affiliateData.payments || []).reduce((acc, p) => acc + (p.amount * 0.05), 0) / 1.21).toFixed(2)} €</strong>
+                      La cantidad neta es: <strong>{((affiliateData.pendingCommission || 0) / 1.21).toFixed(2)} €</strong>
                     </p>
                     <button 
                       onClick={() => alert(t('affiliate.payout_request_info'))}

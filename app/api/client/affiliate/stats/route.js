@@ -3,6 +3,9 @@ export const dynamic = "force-dynamic";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function GET(req) {
   try {
@@ -13,26 +16,29 @@ export async function GET(req) {
 
     const userId = Number(session.user.id);
     const clientProfile = await prisma.clientProfile.findUnique({
-      where: { userId }
+      where: { userId },
+      include: {
+        affiliateSettlements: {
+          orderBy: { date: 'desc' }
+        }
+      }
     });
 
     if (!clientProfile || !clientProfile.isAffiliate) {
       return NextResponse.json({ error: "No eres afiliado o perfil no encontrado" }, { status: 403 });
     }
 
-    // Auto-generación de código si falta (para corregir registros previos con error)
+    // Auto-generación de código si falta
     if (!clientProfile.referralCode) {
       const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
       const newReferralCode = `${clientProfile.razonSocial?.substring(0, 3).toUpperCase() || 'QT'}${randomSuffix}`;
       
-      const updatedProfile = await prisma.clientProfile.update({
+      await prisma.clientProfile.update({
         where: { id: clientProfile.id },
         data: { referralCode: newReferralCode }
       });
       clientProfile.referralCode = newReferralCode;
     }
-
-    console.log(`[AffiliateStats] Fetching for userId: ${userId}, profileId: ${clientProfile.id}`);
 
     // Traer los usuarios que han sido referidos por este afiliado
     const referrals = await prisma.clientProfile.findMany({
@@ -42,6 +48,7 @@ export async function GET(req) {
         razonSocial: true,
         personName: true,
         createdAt: true,
+        stripeCustomerId: true,
         user: {
           select: {
             email: true
@@ -56,35 +63,61 @@ export async function GET(req) {
       orderBy: { createdAt: 'desc' }
     });
 
-    console.log(`[AffiliateStats] Found ${referrals.length} referrals for profileId ${clientProfile.id}`);
+    // Para cada referido, obtener sus facturas reales de Stripe para precisión total
+    const referralsWithPayments = await Promise.all(referrals.map(async (ref) => {
+      let realPayments = [];
+      let totalPaidFromStripe = 0;
 
-    // Traer todos los pagos de esos referidos
-    const referralIds = referrals.map(r => r.id);
-    const payments = await prisma.payment.findMany({
-      where: {
-        clientProfileId: { in: referralIds },
-        status: 'paid'
-      },
-      include: {
-        clientProfile: {
-          select: {
-            razonSocial: true,
-            user: {
-              select: {
-                email: true
-              }
+      if (ref.stripeCustomerId) {
+        try {
+          const invoices = await stripe.invoices.list({
+            customer: ref.stripeCustomerId,
+            status: 'paid',
+            limit: 50
+          });
+
+          realPayments = invoices.data.map(inv => ({
+            id: inv.id,
+            amount: inv.amount_paid / 100,
+            currency: inv.currency,
+            createdAt: new Date(inv.created * 1000).toISOString(),
+            status: 'paid',
+            clientProfile: {
+              razonSocial: ref.razonSocial,
+              user: { email: ref.user?.email }
             }
-          }
+          }));
+          totalPaidFromStripe = realPayments.reduce((acc, p) => acc + p.amount, 0);
+        } catch (e) {
+          console.error(`Error fetching stripe invoices for ${ref.stripeCustomerId}:`, e);
         }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+      }
+
+      return {
+        ...ref,
+        realPayments,
+        totalPaidFromStripe,
+        commission: totalPaidFromStripe * 0.05
+      };
+    }));
+
+    // Consolidar todos los pagos para la tabla del dashboard
+    const allStripePayments = referralsWithPayments.flatMap(r => r.realPayments)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const totalGenerated = referralsWithPayments.reduce((acc, r) => acc + r.commission, 0);
+    const totalSettled = clientProfile.affiliateSettlements.reduce((acc, s) => acc + (s.amount || 0), 0);
+    const pendingCommission = totalGenerated - totalSettled;
 
     return NextResponse.json({
       success: true,
       referralCode: clientProfile.referralCode,
-      referrals: referrals,
-      payments: payments
+      referrals: referralsWithPayments,
+      payments: allStripePayments,
+      settlements: clientProfile.affiliateSettlements,
+      totalGenerated,
+      totalSettled,
+      pendingCommission
     });
 
   } catch (error) {
