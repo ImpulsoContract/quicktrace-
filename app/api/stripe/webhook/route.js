@@ -150,7 +150,38 @@ export async function POST(req) {
             });
             console.log(`[Webhook] Updated profile by stripeCustomerId/userId fallback`);
           } else {
-            console.error(`[Webhook] CRITICAL: Could not find client profile for invoice ${invoice.id}`);
+            console.log(`[Webhook] ID fallbacks failed, trying email lookup via Stripe Customer...`);
+            try {
+              const customer = await stripe.customers.retrieve(invoice.customer);
+              const customerEmail = customer.email;
+              if (customerEmail) {
+                const userByEmail = await prisma.user.findUnique({
+                  where: { email: customerEmail },
+                  include: { clientProfile: true }
+                });
+                if (userByEmail?.clientProfile) {
+                  profile = await prisma.clientProfile.update({
+                    where: { id: userByEmail.clientProfile.id },
+                    include: { user: true },
+                    data: {
+                      stripeSubscriptionId: invoice.subscription,
+                      stripeCustomerId: invoice.customer,
+                      stripeCurrentPeriodEnd: nextRenewalStr,
+                      stripePriceId: priceId,
+                      planId: plan?.id || subPlanId || undefined,
+                      stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+                    }
+                  });
+                  console.log(`[Webhook] Updated profile by customer email fallback: ${customerEmail}`);
+                }
+              }
+            } catch (emailErr) {
+              console.error(`[Webhook] Email fallback failed: ${emailErr.message}`);
+            }
+          }
+
+          if (!profile) {
+              console.error(`[Webhook] CRITICAL: Could not find client profile for invoice ${invoice.id} after all fallbacks.`);
           }
         }
 

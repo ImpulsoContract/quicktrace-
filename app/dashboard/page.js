@@ -128,6 +128,7 @@ export default function ClientDashboard() {
     isAffiliate: false,
     referralCode: "",
     referrals: [],
+    payments: [],
     loading: true
   });
   const [isJoiningAffiliate, setIsJoiningAffiliate] = useState(false);
@@ -2183,10 +2184,12 @@ export default function ClientDashboard() {
                   width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', 
                   padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.85rem',
                   fontWeight: '700', color: 'var(--corp-green)', background: 'rgba(66, 98, 22, 0.05)',
-                  border: '1px solid rgba(66, 98, 22, 0.15)', cursor: 'pointer'
+                  border: '1px solid rgba(66, 98, 22, 0.15)', cursor: 'pointer',
+                  textAlign: 'left', lineHeight: '1.2', whiteSpace: 'normal'
                 }}
               >
-                <ArrowUpCircle size={18} /> {t('affiliate.sidebar_link')}
+                <ArrowUpCircle size={18} style={{ flexShrink: 0 }} /> 
+                <span>{t('affiliate.sidebar_link')}</span>
               </button>
             </div>
             
@@ -3783,9 +3786,13 @@ export default function ClientDashboard() {
                     <h4 style={{ fontSize: '1rem', color: '#64748b', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '800' }}>
                       {t('affiliate.pending_commissions')}
                     </h4>
-                    <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '2rem' }}>
-                      {affiliateData.payments.reduce((acc, p) => acc + (p.amount * 0.05), 0).toFixed(2)} €
+                    <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '0.5rem' }}>
+                      {(affiliateData.payments || []).reduce((acc, p) => acc + (p.amount * 0.05), 0).toFixed(2)} €
                     </div>
+                    <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '2rem', lineHeight: '1.4' }}>
+                      Las liquidaciones incluyen un 21% de impuestos.<br />
+                      La cantidad neta es: <strong>{((affiliateData.payments || []).reduce((acc, p) => acc + (p.amount * 0.05), 0) / 1.21).toFixed(2)} €</strong>
+                    </p>
                     <button 
                       onClick={() => alert(t('affiliate.payout_request_info'))}
                       style={{
