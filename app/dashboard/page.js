@@ -1566,6 +1566,17 @@ export default function ClientDashboard() {
         doc.text(new Date(el.expirationDate).toLocaleDateString(), 70, currentY);
         currentY += 10;
 
+        // Alérgenos
+        const allergensList = (el.recipe?.allergens || [])
+          .map(a => t(`allergens.list.${a}`))
+          .join(", ");
+        
+        doc.setFont("helvetica", "bold");
+        doc.text(t('allergens.title') + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(allergensList || t('modals.none'), 70, currentY);
+        currentY += 10;
+
         if (el.workshopTemp) {
           doc.setFont("helvetica", "bold");
           doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
