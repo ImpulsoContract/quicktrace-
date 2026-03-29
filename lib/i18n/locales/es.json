@@ -346,7 +346,8 @@
     "pending_commissions": "Comisiones pendientes de cobrar",
     "btn_request_payout": "Solicitar cobro de comisiones",
     "payout_request_info": "Envía un email a soporte@quicktrace.es solicitando el cobro de tus comisiones pendientes. Recuerda enviar el email desde el email que tienes en tu cuenta de usuario de Quicktrace",
-    "date_collected": "Cantidad cobrada"
+    "date_collected": "Cantidad cobrada",
+    "table_paid": "Total Pagado"
   },
   "register": {
     "title": "Empieza Hoy",

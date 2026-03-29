@@ -346,7 +346,8 @@
     "pending_commissions": "Pending commissions to be collected",
     "btn_request_payout": "Request commission payout",
     "payout_request_info": "Send an email to soporte@quicktrace.es requesting the payout of your pending commissions. Remember to send the email from the email address associated with your Quicktrace account.",
-    "date_collected": "Amount collected"
+    "date_collected": "Amount collected",
+    "table_paid": "Total Paid"
   },
   "register": {
     "title": "Start Today",
