@@ -1132,24 +1132,24 @@ function PlansTab({ plans, loading, onRefresh }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('common.recipes')}:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.recipesLimit || t('admin.plans.unlimited') || "Ilimitadas"}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('common.recipes') || 'Recetas'}:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.recipesLimit || t('admin.plans.unlimited') || "∞"}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('common.elaborations')}:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.elaborationsLimit || t('admin.plans.unlimited') || "Ilimitadas"}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('common.elaborations') || 'Elaboraciones'}:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.elaborationsLimit || t('admin.plans.unlimited') || "∞"}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasCleaning ? 1 : 0.5 }}>
                   <span style={{ color: 'var(--text-muted)' }}>{t('admin.plans.cleaning') || "Limpieza"}:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.hasCleaning ? (plan.cleaningLimit || t('admin.plans.unlimited') || "Ilimitado") : (t('admin.plans.not_available') || "No disponible")}</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasCleaning ? (plan.cleaningLimit || t('admin.plans.unlimited') || "∞") : (t('admin.plans.not_available') || "No disponible")}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasGoods ? 1 : 0.5 }}>
                   <span style={{ color: 'var(--text-muted)' }}>{t('admin.plans.goods') || "Mercancías"}:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.hasGoods ? (plan.goodsLimit || t('admin.plans.unlimited') || "Ilimitado") : (t('admin.plans.not_available') || "No disponible")}</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasGoods ? (plan.goodsLimit || t('admin.plans.unlimited') || "∞") : (t('admin.plans.not_available') || "No disponible")}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasTemperatures ? 1 : 0.5 }}>
                   <span style={{ color: 'var(--text-muted)' }}>{t('admin.plans.temperatures') || "Temperaturas"}:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.hasTemperatures ? (plan.temperaturesLimit || t('admin.plans.unlimited') || "Ilimitado") : (t('admin.plans.not_available') || "No disponible")}</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasTemperatures ? (plan.temperaturesLimit || t('admin.plans.unlimited') || "∞") : (t('admin.plans.not_available') || "No disponible")}</span>
                 </div>
               </div>
 
@@ -1209,7 +1209,7 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
       } else {
         alert(data.error);
       }
-    } catch (e) { alert("Error al guardar plan"); }
+    } catch (e) { alert(t('admin.plans.save_error') || "Error al guardar plan"); }
     finally { setLoading(false); }
   };
 
@@ -1279,7 +1279,7 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
         </div>
 
         <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? "Guardando..." : "Guardar Plan"}
+          {loading ? t('common.loading') : t('admin.plans.save_btn')}
         </button>
       </form>
     </Modal>
@@ -1549,7 +1549,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
           className="btn-primary" 
           disabled={loading || ((profile._count.recipes >= (profile.accountType === 'demo' ? 3 : profile.recetasContratadas)) && !recipeToEdit)}
         >
-          {loading ? "Guardando..." : recipeToEdit ? "Actualizar Receta" : "Crear Receta"}
+          {loading ? t('common.loading') : recipeToEdit ? t('admin.recipes.update_btn') : t('admin.recipes.create_btn')}
         </button>
       </form>
     </Modal>
@@ -2050,7 +2050,7 @@ function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
       {loading ? (
         <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
       ) : affiliates.length === 0 ? (
-        <p style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>{t('admin.affiliate.no_referrals_desc')}</p>
+        <p style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>{t('affiliate.no_referrals_desc')}</p>
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

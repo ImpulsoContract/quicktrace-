@@ -37,7 +37,11 @@
     "amount": "Montant",
     "status": "Statut",
     "date": "Date",
-    "technical_details": "Détails techniques : "
+    "technical_details": "Détails techniques : ",
+    "year": "an",
+    "recipes": "Recettes",
+    "elaborations": "Élaborations",
+    "ingredients": "Ingrédients"
   },
   "profile": {
     "title": "Profil",
@@ -558,6 +562,8 @@
       "coupons": "Coupons",
       "affiliates": "Affiliés",
       "master_pass": "Mot de passe Maître",
+      "admin_name": "Fernando Admin",
+      "admin_role": "Administrateur",
       "logout": "Déconnexion"
     },
     "header": {
@@ -630,7 +636,9 @@
       "recipes_limit": "Limite Recettes (vide = ∞)",
       "elaborations_limit": "Limite Élaborations (vide = ∞)",
       "cleaning_limit": "Limite d'enregistrements...",
-      "hygiene_modules": "MODULES D'HYGIÈNE"
+      "hygiene_modules": "MODULES D'HYGIÈNE",
+      "save_btn": "Enregistrer le plan",
+      "save_error": "Erreur lors de l'enregistrement du plan"
     },
     "recipes": {
       "add_title": "Ajouter Recette à {name}",
@@ -650,7 +658,10 @@
       "placeholder_expanded": "Saisissez le texte de l'étiquette ici",
       "save_error": "Erreur lors de l'enregistrement de la recette",
       "all_ingredients_required": "Tous les ingrédients doivent avoir un nom.",
-      "manage_title": "Gérer les Recettes pour {name}"
+      "manage_title": "Gérer les Recettes pour {name}",
+      "save_btn": "Enregistrer la recette",
+      "create_btn": "Créer une recette",
+      "update_btn": "Mettre à jour la recette"
     },
     "cleaning": {
       "manage_title": "Gérer les Zones de Nettoyage pour {name}",
@@ -700,6 +711,7 @@
       "title": "Acceptation des Conditions",
       "status": "Statut d'Acceptation",
       "accepted": "Accepté",
+      "accepted_desc": "L'utilisateur a lu et accepté les Conditions d'Utilisation et la Politique de Confidentialité de QuickTrace.",
       "legacy": "Utilisateur Legacy",
       "legacy_desc": "Il n'existe aucun enregistrement technique de la date d'acceptation pour ce compte, probablement parce qu'il a été créé avant la mise en œuvre de ce système de suivi.",
       "close": "Fermer",

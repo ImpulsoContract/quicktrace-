@@ -37,7 +37,11 @@
     "amount": "Importe",
     "status": "Estado",
     "date": "Fecha",
-    "technical_details": "Detalles técnicos: "
+    "technical_details": "Detalles técnicos: ",
+    "year": "año",
+    "recipes": "Recetas",
+    "elaborations": "Elaboraciones",
+    "ingredients": "Ingredientes"
   },
   "profile": {
     "title": "Perfil",
@@ -558,6 +562,8 @@
       "coupons": "Cupones",
       "affiliates": "Afiliados",
       "master_pass": "Contraseña Maestra",
+      "admin_name": "Fernando Admin",
+      "admin_role": "Administrador",
       "logout": "Salir"
     },
     "header": {
@@ -630,7 +636,9 @@
       "recipes_limit": "Límite Recetas (vacío = ∞)",
       "elaborations_limit": "Límite Elaboraciones (vacío = ∞)",
       "cleaning_limit": "Límite registros...",
-      "hygiene_modules": "MÓDULOS DE HIGIENE"
+      "hygiene_modules": "MÓDULOS DE HIGIENE",
+      "save_btn": "Guardar Plan",
+      "save_error": "Error al guardar plan"
     },
     "recipes": {
       "add_title": "Añadir Receta a {name}",
@@ -650,7 +658,10 @@
       "placeholder_expanded": "Escribe el texto de la etiqueta aquí",
       "save_error": "Error al guardar receta",
       "all_ingredients_required": "Todos los ingredientes deben tener nombre.",
-      "manage_title": "Gestionar Recetas de {name}"
+      "manage_title": "Gestionar Recetas de {name}",
+      "save_btn": "Guardar Receta",
+      "create_btn": "Crear Receta",
+      "update_btn": "Actualizar Receta"
     },
     "cleaning": {
       "manage_title": "Gestionar Zonas de Limpieza de {name}",
@@ -700,6 +711,7 @@
       "title": "Aceptación de Términos",
       "status": "Status de Aceptación",
       "accepted": "Aceptado",
+      "accepted_desc": "El usuario ha leído y aceptado las Condiciones de Uso y la Política de Privacidad de QuickTrace.",
       "legacy": "Usuario Anterior (Legado)",
       "legacy_desc": "No existe un registro técnico de la fecha de aceptación para esta cuenta, probablemente porque fue creada antes de implementar este sistema de tracking.",
       "close": "Cerrar",

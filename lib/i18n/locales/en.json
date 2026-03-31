@@ -37,7 +37,11 @@
     "amount": "Amount",
     "status": "Status",
     "date": "Date",
-    "technical_details": "Technical details: "
+    "technical_details": "Technical details: ",
+    "year": "year",
+    "recipes": "Recipes",
+    "elaborations": "Elaborations",
+    "ingredients": "Ingredients"
   },
   "profile": {
     "title": "Profile",
@@ -558,6 +562,8 @@
       "coupons": "Coupons",
       "affiliates": "Affiliates",
       "master_pass": "Master Pass",
+      "admin_name": "Fernando Admin",
+      "admin_role": "Administrator",
       "logout": "Logout"
     },
     "header": {
@@ -630,7 +636,9 @@
       "recipes_limit": "Recipe Limit (empty = ∞)",
       "elaborations_limit": "Elaboration Limit (empty = ∞)",
       "cleaning_limit": "Records limit...",
-      "hygiene_modules": "HYGIENE MODULES"
+      "hygiene_modules": "HYGIENE MODULES",
+      "save_btn": "Save Plan",
+      "save_error": "Error saving plan"
     },
     "recipes": {
       "add_title": "Add Recipe to {name}",
@@ -650,7 +658,10 @@
       "placeholder_expanded": "Type the label text here",
       "save_error": "Error saving recipe",
       "all_ingredients_required": "All ingredients must have a name.",
-      "manage_title": "Manage Recipes for {name}"
+      "manage_title": "Manage Recipes for {name}",
+      "save_btn": "Save Recipe",
+      "create_btn": "Create Recipe",
+      "update_btn": "Update Recipe"
     },
     "cleaning": {
       "manage_title": "Manage Cleaning Zones for {name}",
@@ -700,6 +711,7 @@
       "title": "Terms Acceptance",
       "status": "Acceptance Status",
       "accepted": "Accepted",
+      "accepted_desc": "The user has read and accepted the Terms of Use and the Privacy Policy of QuickTrace.",
       "legacy": "Legacy User",
       "legacy_desc": "No technical record of the acceptance date exists for this account, likely because it was created before this tracking system was implemented.",
       "close": "Close",

@@ -37,7 +37,11 @@
     "amount": "Importo",
     "status": "Stato",
     "date": "Data",
-    "technical_details": "Dettagli tecnici: "
+    "technical_details": "Dettagli tecnici: ",
+    "year": "anno",
+    "recipes": "Ricette",
+    "elaborations": "Elaborazioni",
+    "ingredients": "Ingredienti"
   },
   "profile": {
     "title": "Profilo",
@@ -558,6 +562,8 @@
       "coupons": "Coupon",
       "affiliates": "Affiliati",
       "master_pass": "Password Maestra",
+      "admin_name": "Fernando Admin",
+      "admin_role": "Amministratore",
       "logout": "Esci"
     },
     "header": {
@@ -630,7 +636,9 @@
       "recipes_limit": "Limite Ricette (vuoto = ∞)",
       "elaborations_limit": "Limite Lavorazioni (vuoto = ∞)",
       "cleaning_limit": "Limite record...",
-      "hygiene_modules": "MODULI DI IGIENE"
+      "hygiene_modules": "MODULI DI IGIENE",
+      "save_btn": "Salva Piano",
+      "save_error": "Errore nel salvataggio del piano"
     },
     "recipes": {
       "add_title": "Aggiungi Ricetta a {name}",
@@ -650,7 +658,10 @@
       "placeholder_expanded": "Scrivi qui il testo della etiqueta",
       "save_error": "Errore durante il salvataggio della ricetta",
       "all_ingredients_required": "Tutti gli ingredienti devono avere un nome.",
-      "manage_title": "Gestisci Ricette per {name}"
+      "manage_title": "Gestisci Ricette per {name}",
+      "save_btn": "Salva Ricetta",
+      "create_btn": "Crea Ricetta",
+      "update_btn": "Aggiorna Ricetta"
     },
     "cleaning": {
       "manage_title": "Gestisci Zone di Pulizia per {name}",
@@ -700,6 +711,7 @@
       "title": "Accettazione dei Termini",
       "status": "Stato di Accettazione",
       "accepted": "Accettato",
+      "accepted_desc": "L'utente ha letto e accettato le Condizioni d'Uso e l'Informativa sulla Privacy di QuickTrace.",
       "legacy": "Utente Legacy",
       "legacy_desc": "Non esiste un record tecnico della data di accettazione per questo account, probabilmente perché è stato creato prima dell'implementazione di questo sistema di monitoraggio.",
       "close": "Chiudi",
