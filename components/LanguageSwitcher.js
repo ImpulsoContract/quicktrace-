@@ -7,7 +7,22 @@ export default function LanguageSwitcher() {
   const { locale, changeLanguage } = useI18n();
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.8)', padding: '0.4rem 0.75rem', borderRadius: '2rem', border: '1px solid var(--border)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+    <div style={{ 
+      position: 'fixed', 
+      top: '1.5rem', 
+      right: '1.5rem', 
+      zIndex: 10000, 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '0.5rem', 
+      background: 'rgba(255,255,255,0.7)', 
+      backdropFilter: 'blur(10px)', 
+      WebkitBackdropFilter: 'blur(10px)', 
+      padding: '0.4rem 0.75rem', 
+      borderRadius: '2rem', 
+      border: '1px solid var(--border)', 
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+    }}>
       <Globe size={16} color="var(--corp-green)" />
       <select 
         value={locale} 
