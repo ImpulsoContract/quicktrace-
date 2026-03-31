@@ -2114,6 +2114,14 @@ export default function ClientDashboard() {
           </div>
 
           <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
+            {session?.user?.role === "CLIENT" && (
+              <SidebarBtn 
+                icon={<ChefHat size={20} />} 
+                label={t('sidebar.manage_recipes')} 
+                active={activeTab === "gestionar-recetas"} 
+                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
             <SidebarBtn 
               icon={<ClipboardList size={20} />} 
               label={t('sidebar.traceability')} 
@@ -2156,14 +2164,6 @@ export default function ClientDashboard() {
                 label={t('sidebar.goods')} 
                 active={activeTab === "entradas"} 
                 onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-              />
-            )}
-            {session?.user?.role === "CLIENT" && (
-              <SidebarBtn 
-                icon={<ChefHat size={20} />} 
-                label={t('sidebar.manage_recipes')} 
-                active={activeTab === "gestionar-recetas"} 
-                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
           </nav>
