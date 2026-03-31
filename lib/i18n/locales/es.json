@@ -36,7 +36,8 @@
     "to": "Fecha hasta",
     "amount": "Importe",
     "status": "Estado",
-    "date": "Fecha"
+    "date": "Fecha",
+    "technical_details": "Detalles técnicos: "
   },
   "profile": {
     "title": "Perfil",
@@ -59,7 +60,10 @@
     "cancel_subscription_btn": "Cancelar suscripción",
     "canceling": "Procesando...",
     "notice_label": "Aviso",
-    "cancellation_notice": "Al cancelar la suscripción, mantendrás tus beneficios hasta el final del periodo de facturación actual. Después, tu cuenta volverá al plan Demo."
+    "cancellation_notice": "Al cancelar la suscripción, mantendrás tus beneficios hasta el final del periodo de facturación actual. Después, tu cuenta volverá al plan Demo.",
+    "cancel_confirm": "¿Seguro que quieres cancelar la renovación automática? Mantendrás el plan hasta el final del periodo.",
+    "cancel_success": "Suscripción cancelada correctamente.",
+    "cancel_error": "Error al procesar la cancelación."
   },
   "auth": {
     "welcome": "Bienvenido de nuevo",
@@ -312,9 +316,10 @@
     "delete_confirm_zone": "¿Seguro que quieres eliminar esta zona?",
     "delete_confirm_elaboration": "¿Seguro que quieres eliminar esta elaboración de forma permanente?",
     "deleted_successfully": "Registros eliminados correctamente",
-    "water_saved": "Medición de agua guardada",
     "water_updated": "Medición de agua actualizada",
-    "water_limit_reached": "Has alcanzado el límite de mediciones de agua para tu plan."
+    "water_limit_reached": "Has alcanzado el límite de mediciones de agua para tu plan.",
+    "product_date_required": "Producto y fecha son obligatorios",
+    "file_too_large": "Error: El archivo de foto/albarán adjunto es demasiado grande. Por favor, sube una imagen menos pesada o baja la resolución (Máx 4.5 MB)."
   },
   "affiliate": {
     "sidebar_link": "Gana dinero con Quicktrace",
@@ -543,5 +548,171 @@
     "table_checks": "Controles (T/O/S/C)",
     "yes": "Sí",
     "no": "No"
+  },
+  "admin": {
+    "sidebar": {
+      "create_client": "Crear Cliente",
+      "view_clients": "Ver Clientes",
+      "pricing_plans": "Planes de Precios",
+      "terms_change": "Cambio Condiciones",
+      "coupons": "Cupones",
+      "affiliates": "Afiliados",
+      "master_pass": "Contraseña Maestra",
+      "logout": "Salir"
+    },
+    "header": {
+      "title": "Administración",
+      "subtitle": "Panel Administrativo"
+    },
+    "create": {
+      "title": "Nueva Cuenta de Cliente",
+      "access_data": "Datos de Acceso",
+      "fiscal_data": "Datos Fiscales",
+      "address_data": "Dirección y Localización",
+      "pricing_plan": "Plan de Precios",
+      "select_plan": "Seleccionar Plan",
+      "submit": "Crear Cliente Ahora",
+      "success": "Cliente creado correctamente",
+      "active_accounts": "Cuentas Activas",
+      "clients": "Clientes",
+      "demos": "Demos",
+      "instructions_title": "Instrucciones Pro",
+      "instruction_1": "La contraseña debe ser segura pero fácil de recordar para el cliente.",
+      "instruction_2": "El NIF se utilizará para la facturación automática.",
+      "instruction_3": "Los planes definen los límites y módulos activos."
+    },
+    "list": {
+      "title": "Gestión de Clientes",
+      "refresh": "Refrescar",
+      "all_plans": "Todos los planes",
+      "no_plan": "Sin Plan",
+      "per_page": "{count} por pág",
+      "search_placeholder": "Buscar por nombre o nif...",
+      "col_client": "Cliente / Responsable",
+      "col_plan": "Plan",
+      "col_recipes": "Recetas (Uso)",
+      "col_registered": "Registro",
+      "col_last_login": "Últ. Login",
+      "col_renewal": "Renovación",
+      "no_razon_social": "Sin Razón Social",
+      "sin_plan_badge": "SIN PLAN",
+      "showing_info": "Mostrando {start} - {end} de {total} clientes"
+    },
+    "actions": {
+      "title": "Acciones",
+      "edit": "Editar Cliente",
+      "add_recipe": "Añadir Receta",
+      "manage_recipes": "Gestionar Recetas",
+      "cleaning_zones": "Zonas de limpieza",
+      "chambers": "Temperatura de cámaras",
+      "sync_stripe": "Sincronizar con Stripe",
+      "sync_clientify": "Sincronizar con Clientify",
+      "view_terms": "Ver aceptación de condiciones",
+      "delete_client": "ELIMINAR CLIENTE"
+    },
+    "delete": {
+      "confirm_msg": "¿Confirmar eliminación total de datos para {name}? Se borrarán permanentemente sus recetas, elaboraciones, registros y cuenta.",
+      "warning_final": "ADVERTENCIA FINAL: Esta acción es irreversible y eliminará TODOS los datos acumulados por este cliente. ¿Seguro que desea proceder?",
+      "success": "Cliente eliminado correctamente."
+    },
+    "plans": {
+      "title": "Planes de Precios",
+      "new_plan": "Nuevo Plan",
+      "edit_plan": "Editar Plan: {name}",
+      "delete_confirm": "¿Seguro que quieres eliminar este plan? Solo podrás hacerlo si no hay clientes usándolo.",
+      "save": "Guardar Plan",
+      "modules": "MÓDULOS DE HIGIENE",
+      "active_clients": "{count} clientes activos",
+      "price_yearly": "{price}€ / año",
+      "price_monthly": "{price}€ / mes",
+      "unlimited": "Ilimitadas",
+      "not_available": "No disponible",
+      "recipes_limit": "Límite Recetas (vacío = ∞)",
+      "elaborations_limit": "Límite Elaboraciones (vacío = ∞)",
+      "cleaning_limit": "Límite registros...",
+      "hygiene_modules": "MÓDULOS DE HIGIENE"
+    },
+    "recipes": {
+      "add_title": "Añadir Receta a {name}",
+      "edit_title": "Editar Receta: {name}",
+      "name_label": "Nombre de la Receta",
+      "ingredients_label": "Ingredientes",
+      "ingredient_name": "NOMBRE",
+      "amount_label": "CANT. DEFECTO",
+      "unit_label": "UNIDAD",
+      "lote_mandatory": "Lote obligatorio",
+      "quantity_mandatory": "Cantidad obligatoria",
+      "add_another": "AÑADIR OTRO",
+      "quota_usage": "Uso de quota: {used} / {limit} recetas.",
+      "editing_existing": "Editando receta existente.",
+      "expand_item": "Desglosar este ingrediente",
+      "expand_info": "Selecciona esta casilla si quieres que este ingrediente salga con otro texto en la etiqueta. Por ejemplo si usas un mix de especias ya preparado y quieres que en la etiqueta salga todas las especias que contiene el mix.",
+      "placeholder_expanded": "Escribe el texto de la etiqueta aquí",
+      "save_error": "Error al guardar receta",
+      "all_ingredients_required": "Todos los ingredientes deben tener nombre.",
+      "manage_title": "Gestionar Recetas de {name}"
+    },
+    "cleaning": {
+      "manage_title": "Gestionar Zonas de Limpieza de {name}",
+      "new_zone": "Nueva Zona",
+      "placeholder": "Ej. Cocina, Almacén...",
+      "current_zones": "Zonas Actuales ({count})"
+    },
+    "chambers": {
+      "manage_title": "Gestionar Cámaras de {name}",
+      "new_chamber": "Nueva Cámara",
+      "placeholder": "Ej. Cámara 1 (Positivo)",
+      "current_chambers": "Cámaras Actuales ({count})"
+    },
+    "affiliates": {
+      "title": "Gestión de Afiliados",
+      "col_name": "Nombre / Empresa",
+      "col_email": "Usuario / Email",
+      "col_link": "Enlace",
+      "col_code": "Código",
+      "col_balance": "Balance Pendiente",
+      "col_total": "Total Generado",
+      "settle": "Liquidar",
+      "no_results": "No hay resultados.",
+      "details": "Ver Detalles",
+      "register_settlement": "Registrar liquidación",
+      "settled_total": "Total Liquidado",
+      "referrals": "Recomendados ({count})",
+      "payment_history": "Historial de Pagos ({count})",
+      "settle_title": "Registrar Liquidación: {email}",
+      "pending_commissions": "Comisiones Pendientes",
+      "amount_to_settle": "Cantidad a liquidar (€)",
+      "notes_label": "Notas / Referencia de transferencia",
+      "limit_error": "La cantidad no puede superar el saldo pendiente.",
+      "confirm_settlement": "¿Seguro que vas a liquidar {amount} € para este afiliado?",
+      "confirm_settlement_desc": "Esta acción restará la cantidad del saldo pendiente permanentemente.",
+      "settle_btn_confirm": "SÍ, CONFIRMAR LIQUIDACIÓN",
+      "settle_btn_now": "REGISTRAR PAGO AHORA",
+      "no_referrals": "Sin recomendaciones todavía.",
+      "no_settlements": "No hay liquidaciones registradas."
+    },
+    "master_pass": {
+      "title": "Llave Maestra del Sistema",
+      "desc": "Esta contraseña permite el acceso total a cualquier cuenta de correo del sistema. Úsala con extrema precaución.",
+      "understood": "ENTENDIDO"
+    },
+    "terms": {
+      "title": "Aceptación de Términos",
+      "status": "Status de Aceptación",
+      "accepted": "Aceptado",
+      "legacy": "Usuario Anterior (Legado)",
+      "legacy_desc": "No existe un registro técnico de la fecha de aceptación para esta cuenta, probablemente porque fue creada antes de implementar este sistema de tracking.",
+      "close": "Cerrar",
+      "force_success": "Se ha forzado la aceptación de condiciones para todos los clientes.",
+      "force_title": "Gestión de Condiciones Legales",
+      "force_subtitle": "Forzar Actualización de Condiciones Generales",
+      "force_desc": "Utiliza esta herramienta únicamente cuando hayas modificado las Condiciones de Uso o la Política de Privacidad de QuickTrace. Al activar esta opción, todos los clientes activos recibirán un aviso bloqueante la próxima vez que inicien sesión y no podrán continuar usando la plataforma hasta que confirmen haber leído y aceptado las nuevas condiciones.",
+      "force_btn": "Informar de cambio de condiciones",
+      "force_confirm_title": "¿Estás completamente seguro?",
+      "force_confirm_desc": "Esta acción interrumpirá el flujo normal de trabajo de todos tus clientes la próxima vez que entren a la aplicación. Asegúrate de que los textos legales en quicktrace.es ya están actualizados antes de proceder.",
+      "force_btn_confirm": "Sí, Forzar Actualización Ahora",
+      "force_processing": "Procesando a todos los usuarios...",
+      "accepted_date_label": "FECHA DE ACEPTACIÓN"
+    }
   }
 }

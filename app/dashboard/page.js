@@ -341,20 +341,20 @@ export default function ClientDashboard() {
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm("¿Seguro que quieres cancelar la renovación automática? Mantendrás el plan hasta el final del periodo.")) return;
+    if (!confirm(t('profile.cancel_confirm'))) return;
     
     try {
       const res = await fetch("/api/stripe/cancel", { method: "POST" });
       const data = await res.json();
       if (data.success) {
-        alert("Suscripción cancelada correctamente.");
+        alert(t('profile.cancel_success'));
         fetchProfile();
       } else {
         alert(data.error);
       }
     } catch (error) {
       console.error("Error cancelling subscription:", error);
-      alert("Error al procesar la cancelación.");
+      alert(t('profile.cancel_error'));
     }
   };
 
@@ -672,7 +672,7 @@ export default function ClientDashboard() {
   const handleSubmitGoods = async (e) => {
     e.preventDefault();
     if (!goodsForm.productName || !goodsForm.date) {
-      alert("Producto y fecha son obligatorios");
+      alert(t('alerts.product_date_required'));
       return;
     }
 
@@ -709,9 +709,9 @@ export default function ClientDashboard() {
         let errorMsg = errorData.error || t('alerts.request_error');
         
         if (res.status === 413) {
-          errorMsg = "Error: El archivo de foto/albarán adjunto es demasiado grande. Por favor, sube una imagen menos pesada o baja la resolución (Máx 4.5 MB).";
+          errorMsg = t('alerts.file_too_large');
         } else if (errorData.details) {
-          errorMsg += `\nDetalles técnicos: ${errorData.details}`;
+          errorMsg += `\n${t('common.technical_details')}${errorData.details}`;
         }
         
         alert(errorMsg);

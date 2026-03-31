@@ -13,8 +13,10 @@ import {
 import { signOut } from "next-auth/react";
 
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/I18nContext";
 
 export default function AdminDashboard() {
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState("create"); // "create", "list", or "plans"
   const [clients, setClients] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -208,7 +210,7 @@ export default function AdminDashboard() {
       if (data.error) {
         setMessage({ type: 'error', text: data.error });
       } else {
-        setMessage({ type: 'success', text: "Cliente creado correctamente" });
+        setMessage({ type: 'success', text: t('admin.create.success') });
         setFormData({
           email: "", password: "", name: "", razonSocial: "", nif: "", phone: "",
           urlClientify: "",
@@ -218,7 +220,7 @@ export default function AdminDashboard() {
         if (activeTab === "list") fetchClients();
       }
     } catch (error) {
-      setMessage({ type: 'error', text: "Error de conexión con el servidor" });
+      setMessage({ type: 'error', text: t('auth.error_generic') });
     } finally {
       setLoading(false);
     }
@@ -324,7 +326,7 @@ export default function AdminDashboard() {
             <Image src="/images/logo.jpg" alt="Logo" fill style={{ objectFit: 'contain' }} />
           </div>
           <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
-            Administración
+            {t('admin.header.title')}
           </h1>
         </div>
         <button 
@@ -350,33 +352,33 @@ export default function AdminDashboard() {
               <Image src="/images/logo.jpg" alt="Logo" fill style={{ objectFit: 'contain' }} />
             </div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-              QT Admin
+              {t('admin.sidebar.title') || "QT Admin"}
             </h1>
           </div>
 
           <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
             <SidebarBtn 
-              icon={<UserPlus size={20} />} label="Crear Cliente" 
+              icon={<UserPlus size={20} />} label={t('admin.sidebar.create_client')} 
               active={activeTab === 'create'} onClick={() => { setActiveTab('create'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             <SidebarBtn 
-              icon={<Users size={20} />} label="Ver Clientes" 
+              icon={<Users size={20} />} label={t('admin.sidebar.view_clients')} 
               active={activeTab === 'list'} onClick={() => { setActiveTab('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             <SidebarBtn 
-              icon={<FileText size={20} />} label="Planes de Precios" 
+              icon={<FileText size={20} />} label={t('admin.sidebar.pricing_plans')} 
               active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             <SidebarBtn 
-              icon={<CheckSquare size={20} />} label="Cambio Condiciones" 
+              icon={<CheckSquare size={20} />} label={t('admin.sidebar.terms_change')} 
               active={activeTab === 'terms'} onClick={() => { setActiveTab('terms'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             <SidebarBtn 
-              icon={<Tag size={20} />} label="Cupones" 
+              icon={<Tag size={20} />} label={t('admin.sidebar.coupons')} 
               active={activeTab === 'coupons'} onClick={() => { setActiveTab('coupons'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             <SidebarBtn 
-              icon={<Globe size={20} />} label="Afiliados" 
+              icon={<Globe size={20} />} label={t('admin.sidebar.affiliates')} 
               active={activeTab === 'affiliates'} onClick={() => { setActiveTab('affiliates'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
           </nav>
@@ -385,8 +387,8 @@ export default function AdminDashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--corp-sand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>F</div>
               <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>Fernando Admin</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Administrador</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>{t('admin.sidebar.admin_name') || "Fernando Admin"}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('admin.sidebar.admin_role') || "Administrador"}</div>
               </div>
             </div>
             
@@ -394,13 +396,13 @@ export default function AdminDashboard() {
               onClick={() => setShowMasterPass(true)}
               style={{ width: '100%', background: 'rgba(66, 98, 22, 0.1)', border: '1px solid var(--corp-green)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.5rem' }}
             >
-              <ShieldCheck size={16} /> Contraseña Maestra
+              <ShieldCheck size={16} /> {t('admin.sidebar.master_pass')}
             </button>
             <button 
               onClick={() => signOut({ callbackUrl: '/login' })}
               style={{ width: '100%', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700' }}
             >
-              <LogOut size={16} /> Salir
+              <LogOut size={16} /> {t('admin.sidebar.logout')}
             </button>
           </div>
         </aside>
@@ -414,7 +416,7 @@ export default function AdminDashboard() {
             >
               <Menu size={20} />
             </button>
-            {!isSidebarOpen && <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)' }}>Panel Administrativo</h2>}
+            {!isSidebarOpen && <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)' }}>{t('admin.header.subtitle')}</h2>}
           </div>
 
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -424,7 +426,7 @@ export default function AdminDashboard() {
                 <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
                     <UserPlus size={24} color="var(--corp-green)" />
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Nueva Cuenta de Cliente</h2>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{t('admin.create.title')}</h2>
                   </div>
 
                   {message.text && (
@@ -440,37 +442,37 @@ export default function AdminDashboard() {
 
                   <form onSubmit={handleCreateClient} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                      <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Datos de Acceso</h3></div>
-                      <div><label className="label">Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="input-field" required /></div>
-                      <div><label className="label">Contraseña</label><input type="password" name="password" value={formData.password} onChange={handleChange} className="input-field" required /></div>
-                      <div style={{ gridColumn: '1 / -1' }}><label className="label">Nombre Responsable</label><input type="text" name="name" value={formData.name} onChange={handleChange} className="input-field" required /></div>
+                      <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">{t('admin.create.access_data')}</h3></div>
+                      <div><label className="label">{t('auth.email')}</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="input-field" required /></div>
+                      <div><label className="label">{t('auth.password')}</label><input type="password" name="password" value={formData.password} onChange={handleChange} className="input-field" required /></div>
+                      <div style={{ gridColumn: '1 / -1' }}><label className="label">{t('profile.person_name')}</label><input type="text" name="name" value={formData.name} onChange={handleChange} className="input-field" required /></div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                      <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Datos Fiscales</h3></div>
-                      <div><label className="label">Razón Social</label><input type="text" name="razonSocial" value={formData.razonSocial} onChange={handleChange} className="input-field" required /></div>
-                      <div><label className="label">NIF / CIF</label><input type="text" name="nif" value={formData.nif} onChange={handleChange} className="input-field" required /></div>
-                      <div><label className="label">Teléfono</label><input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" /></div>
+                      <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">{t('admin.create.fiscal_data')}</h3></div>
+                      <div><label className="label">{t('profile.business_name')}</label><input type="text" name="razonSocial" value={formData.razonSocial} onChange={handleChange} className="input-field" required /></div>
+                      <div><label className="label">{t('profile.vat_nif')}</label><input type="text" name="nif" value={formData.nif} onChange={handleChange} className="input-field" required /></div>
+                      <div><label className="label">{t('profile.phone')}</label><input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" /></div>
                       <div><label className="label">URL Clientify</label><input type="url" name="urlClientify" value={formData.urlClientify} onChange={handleChange} className="input-field" /></div>
-                      <div><label className="label">Nombre Persona</label><input type="text" name="personName" value={formData.personName} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">{t('admin.create.person_name') || t('profile.person_name')}</label><input type="text" name="personName" value={formData.personName} onChange={handleChange} className="input-field" /></div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                      <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Dirección y Localización</h3></div>
-                      <div style={{ gridColumn: '1 / -1' }}><label className="label">Dirección</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="input-field" /></div>
-                      <div><label className="label">Código Postal</label><input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} className="input-field" /></div>
-                      <div><label className="label">Ciudad</label><input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field" /></div>
-                      <div><label className="label">Provincia</label><input type="text" name="province" value={formData.province} onChange={handleChange} className="input-field" /></div>
-                      <div><label className="label">País</label><input type="text" name="country" value={formData.country} onChange={handleChange} className="input-field" /></div>
+                      <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">{t('admin.create.address_data')}</h3></div>
+                      <div style={{ gridColumn: '1 / -1' }}><label className="label">{t('profile.address')}</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">{t('profile.postal_code')}</label><input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">{t('profile.city')}</label><input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">{t('profile.province')}</label><input type="text" name="province" value={formData.province} onChange={handleChange} className="input-field" /></div>
+                      <div><label className="label">{t('profile.country')}</label><input type="text" name="country" value={formData.country} onChange={handleChange} className="input-field" /></div>
                     </div>
 
                     <div>
-                      <h3 className="section-title">Plan de Precios</h3>
+                      <h3 className="section-title">{t('admin.create.pricing_plan')}</h3>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                         <div>
-                          <label className="label">Seleccionar Plan</label>
+                          <label className="label">{t('admin.create.select_plan')}</label>
                           <select name="planId" value={formData.planId} onChange={handleChange} className="input-field" required>
-                            <option value="">Selecciona un plan...</option>
+                            <option value="">{t('admin.create.select_plan_placeholder') || "Selecciona un plan..."}</option>
                             {plans.map(plan => (
                               <option key={plan.id} value={plan.id}>{plan.name}</option>
                             ))}
@@ -481,16 +483,16 @@ export default function AdminDashboard() {
 
                     <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2.5rem', display: 'flex', justifyContent: 'flex-end' }}>
                       <button type="submit" className="btn-primary" disabled={loading} style={{ minWidth: '200px' }}>
-                        {loading ? "Procesando..." : "Crear Cliente Ahora"}
+                        {loading ? t('common.loading') : t('admin.create.submit')}
                       </button>
                     </div>
                   </form>
                 </section>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <SummaryCard title="Cuentas Activas" icons={<Users size={20} />} stats={[
-                    { label: "Clientes", val: clients.filter(c => c.clientProfile?.accountType === 'cliente').length },
-                    { label: "Demos", val: clients.filter(c => c.clientProfile?.accountType === 'demo').length || 0 }
+                  <SummaryCard title={t('admin.create.active_accounts')} icons={<Users size={20} />} stats={[
+                    { label: t('admin.create.clients'), val: clients.filter(c => c.clientProfile?.accountType === 'cliente').length },
+                    { label: t('admin.create.demos'), val: clients.filter(c => c.clientProfile?.accountType === 'demo').length || 0 }
                   ]} />
                   <InstructionsCard />
                 </div>
@@ -502,7 +504,7 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Users size={24} color="var(--corp-green)" />
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Gestión de Clientes</h2>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{t('admin.list.title')}</h2>
                   </div>
                   <button 
                     onClick={fetchClients}
@@ -515,7 +517,7 @@ export default function AdminDashboard() {
                     }}
                   >
                     <RefreshCw size={16} style={{ animation: listLoading ? 'spin 1s linear infinite' : 'none' }} />
-                    Refrescar
+                    {t('admin.list.refresh')}
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -527,9 +529,9 @@ export default function AdminDashboard() {
                       value={planFilter}
                       onChange={(e) => setPlanFilter(e.target.value)}
                     >
-                      <option value="">Todos los planes</option>
+                      <option value="">{t('admin.list.all_plans')}</option>
                       {plans.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                      <option value="SIN PLAN">Sin Plan</option>
+                      <option value="SIN PLAN">{t('admin.list.no_plan')}</option>
                     </select>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -539,16 +541,16 @@ export default function AdminDashboard() {
                       value={itemsPerPage}
                       onChange={(e) => setItemsPerPage(Number(e.target.value))}
                     >
-                      <option value={20}>20 por pág</option>
-                      <option value={50}>50 por pág</option>
-                      <option value={100}>100 por pág</option>
+                      <option value={20}>{t('admin.list.per_page', { count: 20 })}</option>
+                      <option value={50}>{t('admin.list.per_page', { count: 50 })}</option>
+                      <option value={100}>{t('admin.list.per_page', { count: 100 })}</option>
                     </select>
                   </div>
                   <div style={{ position: 'relative', width: '250px' }}>
                     <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                     <input 
                       type="text" 
-                      placeholder="Buscar por nombre o nif..." 
+                      placeholder={t('admin.list.search_placeholder')} 
                       className="input-field" 
                       style={{ paddingLeft: '2.75rem' }} 
                       value={searchTerm}
@@ -567,22 +569,22 @@ export default function AdminDashboard() {
                       <thead>
                         <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
                           <th onClick={() => handleSort('name')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            Cliente / Responsable {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                            {t('admin.list.col_client')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
                           <th onClick={() => handleSort('plan')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            Plan {sortConfig.key === 'plan' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                            {t('admin.list.col_plan')} {sortConfig.key === 'plan' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
                           <th onClick={() => handleSort('recipes')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            Recetas (Uso) {sortConfig.key === 'recipes' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                            {t('admin.list.col_recipes')} {sortConfig.key === 'recipes' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
                           <th onClick={() => handleSort('created')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            Registro {sortConfig.key === 'created' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                            {t('admin.list.col_registered')} {sortConfig.key === 'created' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
                           <th onClick={() => handleSort('login')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            Últ. Login {sortConfig.key === 'login' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                            {t('admin.list.col_last_login')} {sortConfig.key === 'login' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
                           <th onClick={() => handleSort('renewal')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            Renovación {sortConfig.key === 'renewal' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                            {t('admin.list.col_renewal')} {sortConfig.key === 'renewal' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
                           <th style={{ padding: '1rem', textAlign: 'right' }}></th>
                         </tr>
@@ -591,7 +593,7 @@ export default function AdminDashboard() {
                         {currentClients.map((client) => (
                           <tr key={client.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
                             <td style={{ padding: '1.25rem 1rem' }}>
-                              <div style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || 'Sin Razón Social'}</div>
+                              <div style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{client.email}</div>
                             </td>
                             <td style={{ padding: '1.25rem 1rem' }}>
@@ -601,17 +603,17 @@ export default function AdminDashboard() {
                                 color: '#15803d',
                                 textTransform: 'uppercase'
                               }}>
-                                {client.clientProfile?.plan?.name || "SIN PLAN"}
+                                {client.clientProfile?.plan?.name || t('admin.list.sin_plan_badge')}
                               </span>
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '600' }}>
                               {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
-                              {client.createdAt ? new Date(client.createdAt).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                              {client.createdAt ? new Date(client.createdAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
-                              {client.lastLogin ? new Date(client.lastLogin).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span style={{ color: '#94a3b8' }}>-</span>}
+                              {client.lastLogin ? new Date(client.lastLogin).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span style={{ color: '#94a3b8' }}>-</span>}
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
                               {client.clientProfile?.stripeCurrentPeriodEnd ? (
@@ -653,7 +655,11 @@ export default function AdminDashboard() {
                   {totalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, processedClients.length)} de {processedClients.length} clientes
+                        {t('admin.list.showing_info', { 
+                          start: (currentPage - 1) * itemsPerPage + 1, 
+                          end: Math.min(currentPage * itemsPerPage, processedClients.length), 
+                          total: processedClients.length 
+                        })}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
@@ -661,14 +667,14 @@ export default function AdminDashboard() {
                           disabled={currentPage === 1}
                           style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', background: 'white', borderRadius: '0.5rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
                         >
-                          Anterior
+                          {t('common.previous')}
                         </button>
                         <button
                           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                           disabled={currentPage === totalPages}
                           style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', background: 'white', borderRadius: '0.5rem', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
                         >
-                          Siguiente
+                          {t('common.next')}
                         </button>
                       </div>
                     </div>
@@ -677,7 +683,7 @@ export default function AdminDashboard() {
               )}
             </section>
           ) : activeTab === "terms" ? (
-            <AdminTermsTab onUpdateSuccess={() => setMessage({ type: 'success', text: 'Se ha forzado la aceptación de condiciones para todos los clientes.' })} />
+            <AdminTermsTab onUpdateSuccess={() => setMessage({ type: 'success', text: t('admin.terms.force_success') || 'Se ha forzado la aceptación de condiciones para todos los clientes.' })} />
           ) : activeTab === "affiliates" ? (
             <AffiliatesTab 
               affiliates={affiliates} 
@@ -728,31 +734,31 @@ export default function AdminDashboard() {
             }}
           >
             <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', fontSize: '0.7rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Acciones: {activeMenu.clientProfile?.razonSocial}
+              {t('admin.actions.title')}: {activeMenu.clientProfile?.razonSocial}
             </div>
-            <MenuBtn icon={<Edit size={16} />} text="Editar Cliente" onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile } }); setActiveMenu(null); }} />
+            <MenuBtn icon={<Edit size={16} />} text={t('admin.actions.edit')} onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile } }); setActiveMenu(null); }} />
             <MenuBtn
               icon={<Plus size={16} />}
-              text="Añadir Receta"
+              text={t('admin.actions.add_recipe')}
               disabled={(activeMenu.clientProfile?._count?.recipes || 0) >= (activeMenu.clientProfile?.accountType === 'demo' ? 3 : activeMenu.clientProfile?.recetasContratadas)}
               onClick={() => { setAddRecipeModal(activeMenu.clientProfile); setActiveMenu(null); }}
             />
-            <MenuBtn icon={<ChefHat size={16} />} text="Gestionar Recetas" onClick={() => { setManageRecipesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
-            <MenuBtn icon={<CheckSquare size={16} />} text="Zonas de limpieza" onClick={() => { setManageCleaningZonesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
-            <MenuBtn icon={<Thermometer size={16} />} text="Temperatura de cámaras" onClick={() => { setManageChambersModal(activeMenu.clientProfile); setActiveMenu(null); }} />
-            <MenuBtn icon={<RefreshCw size={16} />} text="Sincronizar con Stripe" onClick={() => handleResyncStripe(activeMenu.id)} />
-            <MenuBtn icon={<UserPlus size={16} />} text="Sincronizar con Clientify" onClick={() => handleSyncClientify(activeMenu.id)} />
+            <MenuBtn icon={<ChefHat size={16} />} text={t('admin.actions.manage_recipes')} onClick={() => { setManageRecipesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
+            <MenuBtn icon={<CheckSquare size={16} />} text={t('admin.actions.cleaning_zones')} onClick={() => { setManageCleaningZonesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
+            <MenuBtn icon={<Thermometer size={16} />} text={t('admin.actions.chambers')} onClick={() => { setManageChambersModal(activeMenu.clientProfile); setActiveMenu(null); }} />
+            <MenuBtn icon={<RefreshCw size={16} />} text={t('admin.actions.sync_stripe')} onClick={() => handleResyncStripe(activeMenu.id)} />
+            <MenuBtn icon={<UserPlus size={16} />} text={t('admin.actions.sync_clientify')} onClick={() => handleSyncClientify(activeMenu.id)} />
             <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
                <MenuBtn 
                 icon={<FileText size={16} />} 
-                text="Ver aceptación de condiciones" 
+                text={t('admin.actions.view_terms')} 
                 onClick={() => { setTermsModal(activeMenu); setActiveMenu(null); }} 
               />
             </div>
             <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
               <MenuBtn 
                 icon={<Trash2 size={16} />} 
-                text="ELIMINAR CLIENTE" 
+                text={t('admin.actions.delete_client')} 
                 danger 
                 onClick={() => handleDeleteClient(activeMenu)} 
               />
@@ -763,32 +769,32 @@ export default function AdminDashboard() {
 
       {/* MODALS */}
       {editClientModal && (
-        <Modal title="Editar Cliente" onClose={() => setEditClientModal(null)}>
+        <Modal title={t('admin.actions.edit')} onClose={() => setEditClientModal(null)}>
           <form onSubmit={handleUpdateClient} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-              <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Datos de Acceso</h3></div>
+              <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">{t('admin.create.access_data')}</h3></div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label className="label">Email</label>
+                <label className="label">{t('auth.email')}</label>
                 <input type="email" className="input-field" value={editClientModal.form.email} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, email: e.target.value}})} required />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label className="label">Nombre Responsable</label>
+                <label className="label">{t('profile.person_name')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.name} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, name: e.target.value}})} required />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-              <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Datos Fiscales</h3></div>
+              <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">{t('admin.create.fiscal_data')}</h3></div>
               <div>
-                <label className="label">Razón Social</label>
+                <label className="label">{t('profile.business_name')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.razonSocial} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, razonSocial: e.target.value}})} required />
               </div>
               <div>
-                <label className="label">NIF / CIF</label>
+                <label className="label">{t('profile.vat_nif')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.nif} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, nif: e.target.value}})} required />
               </div>
               <div>
-                <label className="label">Teléfono</label>
+                <label className="label">{t('profile.phone')}</label>
                 <input type="tel" className="input-field" value={editClientModal.form.phone || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, phone: e.target.value}})} />
               </div>
               <div>
@@ -796,99 +802,67 @@ export default function AdminDashboard() {
                 <input type="url" className="input-field" value={editClientModal.form.urlClientify || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, urlClientify: e.target.value}})} />
               </div>
               <div>
-                <label className="label">Nombre Persona</label>
+                <label className="label">{t('admin.create.person_name') || t('profile.person_name')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.personName || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, personName: e.target.value}})} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-              <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">Dirección y Localización</h3></div>
+              <div style={{ gridColumn: '1 / -1' }}><h3 className="section-title">{t('admin.create.address_data')}</h3></div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label className="label">Dirección</label>
+                <label className="label">{t('profile.address')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.address || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, address: e.target.value}})} />
               </div>
               <div>
-                <label className="label">Código Postal</label>
+                <label className="label">{t('profile.postal_code')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.postalCode || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, postalCode: e.target.value}})} />
               </div>
               <div>
-                <label className="label">Ciudad</label>
+                <label className="label">{t('profile.city')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.city || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, city: e.target.value}})} />
               </div>
               <div>
-                <label className="label">Provincia</label>
+                <label className="label">{t('profile.province')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.province || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, province: e.target.value}})} />
               </div>
               <div>
-                <label className="label">País</label>
+                <label className="label">{t('profile.country')}</label>
                 <input type="text" className="input-field" value={editClientModal.form.country || ""} onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, country: e.target.value}})} />
               </div>
             </div>
 
             <div>
-              <h3 className="section-title">Configuración de suscripción (Stripe)</h3>
+              <h3 className="section-title">{t('admin.edit.stripe_config') || "Stripe Config"}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                 <div>
-                  <label className="label">Plan asignado</label>
+                  <label className="label">{t('admin.edit.assigned_plan') || "Plan"}</label>
                   <select 
                     className="input-field" 
                     value={editClientModal.form.planId || ""} 
                     onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, planId: e.target.value}})}
                   >
-                    <option value="">Selecciona un plan...</option>
+                    <option value="">{t('admin.create.select_plan_placeholder') || "Selecciona un plan..."}</option>
                     {plans.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Próxima Renovación</label>
+                  <label className="label">{t('admin.list.col_renewal')}</label>
                   <input 
                     type="text" 
                     className="input-field" 
                     value={editClientModal.form.stripeCurrentPeriodEnd || ""} 
                     onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, stripeCurrentPeriodEnd: e.target.value}})} 
-                    placeholder="YYYY-MM-DD o formato texto..."
-                  />
-                  {editClientModal.form.stripeCurrentPeriodEnd && (
-                    <div style={{ fontSize: '0.75rem', color: '#166534', marginTop: '0.25rem', fontWeight: '600' }}>
-                      {(() => {
-                        try {
-                          const d = new Date(editClientModal.form.stripeCurrentPeriodEnd);
-                          return !isNaN(d.getTime()) ? `Vista local: ${d.toLocaleDateString()}` : "Formato de texto libre";
-                        } catch (e) {
-                          return "Texto libre";
-                        }
-                      })()}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label className="label">ID Cliente Stripe</label>
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    value={editClientModal.form.stripeCustomerId || ""} 
-                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, stripeCustomerId: e.target.value}})} 
-                    placeholder="cus_..."
-                  />
-                </div>
-                <div>
-                  <label className="label">ID Suscripción Stripe</label>
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    value={editClientModal.form.stripeSubscriptionId || ""} 
-                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, stripeSubscriptionId: e.target.value}})} 
-                    placeholder="sub_..."
+                    placeholder="YYYY-MM-DD..."
                   />
                 </div>
               </div>
             </div>
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-              <button type="button" className="btn-secondary" onClick={() => setEditClientModal(null)} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '600' }}>Cancelar</button>
-              <button type="submit" className="btn-primary" disabled={loading} style={{ minWidth: '200px' }}>{loading ? "Guardando..." : "Guardar Cambios"}</button>
+              <button type="button" className="btn-secondary" onClick={() => setEditClientModal(null)}>{t('common.cancel')}</button>
+              <button type="submit" className="btn-primary" disabled={loading} style={{ minWidth: '200px' }}>{loading ? t('common.loading') : t('common.save')}</button>
             </div>
           </form>
         </Modal>
@@ -911,7 +885,7 @@ export default function AdminDashboard() {
       )}
 
       {termsModal && (
-        <Modal title="Aceptación de Términos" onClose={() => setTermsModal(null)}>
+        <Modal title={t('admin.terms.title')} onClose={() => setTermsModal(null)}>
           <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -919,7 +893,7 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
-                  {termsModal.clientProfile?.razonSocial || termsModal.name || 'Cliente'}
+                  {termsModal.clientProfile?.razonSocial || termsModal.name || t('admin.create.clients')}
                 </h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>{termsModal.email}</p>
               </div>
@@ -927,21 +901,21 @@ export default function AdminDashboard() {
 
             <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>
               <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '700' }}>
-                Status de Aceptación
+                {t('admin.terms.status')}
               </h4>
               
-              {termsModal.termsAcceptedAt ? (
+              {termsModal.termsAcceptedAt || termsModal.clientProfile?.acceptedTermsAt ? (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-                    <CheckSquare size={18} /> Aceptado
+                    <CheckSquare size={18} /> {t('admin.terms.accepted')}
                   </div>
                   <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.95rem' }}>
-                    El usuario ha leído y aceptado las Condiciones de Uso y la Política de Privacidad de QuickTrace.
+                    {t('admin.terms.accepted_desc') || "El usuario ha leído y aceptado las Condiciones de Uso y la Política de Privacidad de QuickTrace."}
                   </p>
                   <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
-                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Fecha y hora de registro:</span>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>{t('admin.terms.accepted_date_label')}:</span>
                     <strong style={{ color: 'var(--text-main)' }}>
-                      {new Date(termsModal.termsAcceptedAt).toLocaleString('es-ES', { 
+                      {new Date(termsModal.termsAcceptedAt || termsModal.clientProfile?.acceptedTermsAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { 
                         weekday: 'long', year: 'numeric', month: 'long', 
                         day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' 
                       })}
@@ -951,10 +925,10 @@ export default function AdminDashboard() {
               ) : (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ca8a04', fontWeight: '700', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-                    <AlertCircle size={18} /> Usuario Anterior (Legado)
+                    <AlertCircle size={18} /> {t('admin.terms.legacy')}
                   </div>
                   <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.95rem' }}>
-                    No existe un registro técnico de la fecha de aceptación para esta cuenta, probablemente porque fue creada antes de implementar este sistema de tracking.
+                    {t('admin.terms.legacy_desc')}
                   </p>
                 </div>
               )}
@@ -962,7 +936,7 @@ export default function AdminDashboard() {
             
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem' }}>
               <button onClick={() => setTermsModal(null)} className="btn-primary" style={{ padding: '0.75rem 2rem' }}>
-                Cerrar
+                {t('admin.terms.close')}
               </button>
             </div>
           </div>
@@ -970,13 +944,13 @@ export default function AdminDashboard() {
       )}
 
       {showMasterPass && (
-        <Modal title="Llave Maestra del Sistema" onClose={() => setShowMasterPass(false)}>
+        <Modal title={t('admin.master_pass.title')} onClose={() => setShowMasterPass(false)}>
           <div style={{ textAlign: 'center', padding: '1rem' }}>
             <div style={{ width: '60px', height: '60px', background: 'rgba(66, 98, 22, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <ShieldCheck size={32} color="var(--corp-green)" />
             </div>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-              Esta contraseña permite el acceso total a cualquier cuenta de correo del sistema. Úsala con extrema precaución.
+              {t('admin.master_pass.desc')}
             </p>
             <div style={{ 
               background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '2px dashed var(--corp-green)',
@@ -990,7 +964,7 @@ export default function AdminDashboard() {
               className="btn-primary"
               style={{ marginTop: '2rem', width: '100%' }}
             >
-              ENTENDIDO
+              {t('admin.master_pass.understood')}
             </button>
           </div>
         </Modal>
@@ -1089,23 +1063,25 @@ function SummaryCard({ title, icons, stats }) {
 }
 
 function InstructionsCard() {
+  const { t } = useI18n();
   return (
     <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(66, 98, 22, 0.05), white)', borderLeft: '4px solid var(--corp-green)' }}>
-      <h3 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '0.75rem', color: 'var(--corp-green)' }}>Instrucciones Pro</h3>
+      <h3 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '0.75rem', color: 'var(--corp-green)' }}>{t('admin.create.instructions_title')}</h3>
       <ul style={{ padding: 0, margin: 0, listStyle: 'none', fontSize: '0.85rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-        <li>• La contraseña debe ser segura pero fácil de recordar para el cliente.</li>
-        <li>• El NIF se utilizará para la facturación automática.</li>
-        <li>• Los planes definen los límites y módulos activos.</li>
+        <li>• {t('admin.create.instruction_1')}</li>
+        <li>• {t('admin.create.instruction_2')}</li>
+        <li>• {t('admin.create.instruction_3')}</li>
       </ul>
     </div>
   );
 }
 
 function PlansTab({ plans, loading, onRefresh }) {
+  const { t } = useI18n();
   const [showPlanModal, setShowPlanModal] = useState(null); // { mode: 'create' | 'edit', plan?: any }
 
   const handleDeletePlan = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar este plan? Solo podrás hacerlo si no hay clientes usándolo.")) return;
+    if (!confirm(t('admin.plans.delete_confirm'))) return;
     try {
       const res = await fetch(`/api/admin/plans/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -1122,14 +1098,14 @@ function PlansTab({ plans, loading, onRefresh }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <FileText size={24} color="var(--corp-green)" />
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Planes de Precios</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{t('admin.plans.title')}</h2>
         </div>
         <button 
           onClick={() => setShowPlanModal({ mode: 'create' })}
           className="btn-primary" 
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          <Plus size={18} /> Nuevo Plan
+          <Plus size={18} /> {t('admin.plans.new_plan')}
         </button>
       </div>
 
@@ -1151,34 +1127,34 @@ function PlansTab({ plans, loading, onRefresh }) {
 
               <div style={{ marginBottom: '1rem' }}>
                 <span style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--corp-green)' }}>{plan.priceYearly}€</span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>/ año</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>/ {t('common.year') || 'año'}</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Recetas:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.recipesLimit || "Ilimitadas"}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('common.recipes')}:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.recipesLimit || t('admin.plans.unlimited') || "Ilimitadas"}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Elaboraciones:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.elaborationsLimit || "Ilimitadas"}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('common.elaborations')}:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.elaborationsLimit || t('admin.plans.unlimited') || "Ilimitadas"}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasCleaning ? 1 : 0.5 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Limpieza:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.hasCleaning ? (plan.cleaningLimit || "Ilimitado") : "No disponible"}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('admin.plans.cleaning') || "Limpieza"}:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasCleaning ? (plan.cleaningLimit || t('admin.plans.unlimited') || "Ilimitado") : (t('admin.plans.not_available') || "No disponible")}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasGoods ? 1 : 0.5 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Mercancías:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.hasGoods ? (plan.goodsLimit || "Ilimitado") : "No disponible"}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('admin.plans.goods') || "Mercancías"}:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasGoods ? (plan.goodsLimit || t('admin.plans.unlimited') || "Ilimitado") : (t('admin.plans.not_available') || "No disponible")}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', opacity: plan.hasTemperatures ? 1 : 0.5 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Temperaturas:</span>
-                  <span style={{ fontWeight: '700' }}>{plan.hasTemperatures ? (plan.temperaturesLimit || "Ilimitado") : "No disponible"}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('admin.plans.temperatures') || "Temperaturas"}:</span>
+                  <span style={{ fontWeight: '700' }}>{plan.hasTemperatures ? (plan.temperaturesLimit || t('admin.plans.unlimited') || "Ilimitado") : (t('admin.plans.not_available') || "No disponible")}</span>
                 </div>
               </div>
 
               <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px dashed #e2e8f0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                {plan._count?.clients || 0} clientes activos
+                {t('admin.plans.active_clients', { count: plan._count?.clients || 0 })}
               </div>
             </div>
           ))}
@@ -1268,36 +1244,36 @@ function PlanModal({ mode, plan, onClose, onRefresh }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div>
-            <label className="label">Límite Recetas (vacío = ∞)</label>
+            <label className="label">{t('admin.plans.recipes_limit')}</label>
             <input type="number" className="input-field" value={formData.recipesLimit} onChange={(e) => setFormData({...formData, recipesLimit: e.target.value})} />
           </div>
           <div>
-            <label className="label">Límite Elaboraciones (vacío = ∞)</label>
+            <label className="label">{t('admin.plans.elaborations_limit')}</label>
             <input type="number" className="input-field" value={formData.elaborationsLimit} onChange={(e) => setFormData({...formData, elaborationsLimit: e.target.value})} />
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
-          <h4 style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)' }}>MÓDULOS DE HIGIENE</h4>
+          <h4 style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)' }}>{t('admin.plans.hygiene_modules')}</h4>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center' }}>
-            <Checkbox label="Registros de Limpieza" checked={formData.hasCleaning} onChange={(e) => setFormData({...formData, hasCleaning: e.target.checked})} heavy />
+            <Checkbox label={t('admin.plans.cleaning')} checked={formData.hasCleaning} onChange={(e) => setFormData({...formData, hasCleaning: e.target.checked})} heavy />
             {formData.hasCleaning && (
-              <input type="number" className="input-field" value={formData.cleaningLimit} onChange={(e) => setFormData({...formData, cleaningLimit: e.target.value})} placeholder="Límite registros..." />
+              <input type="number" className="input-field" value={formData.cleaningLimit} onChange={(e) => setFormData({...formData, cleaningLimit: e.target.value})} placeholder={t('admin.plans.cleaning_limit')} />
             )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center' }}>
-            <Checkbox label="Entradas de Mercancías" checked={formData.hasGoods} onChange={(e) => setFormData({...formData, hasGoods: e.target.checked})} heavy />
+            <Checkbox label={t('admin.plans.goods')} checked={formData.hasGoods} onChange={(e) => setFormData({...formData, hasGoods: e.target.checked})} heavy />
             {formData.hasGoods && (
-              <input type="number" className="input-field" value={formData.goodsLimit} onChange={(e) => setFormData({...formData, goodsLimit: e.target.value})} placeholder="Límite registros..." />
+              <input type="number" className="input-field" value={formData.goodsLimit} onChange={(e) => setFormData({...formData, goodsLimit: e.target.value})} placeholder={t('admin.plans.cleaning_limit')} />
             )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center' }}>
-            <Checkbox label="Control de Temperatura" checked={formData.hasTemperatures} onChange={(e) => setFormData({...formData, hasTemperatures: e.target.checked})} heavy />
+            <Checkbox label={t('admin.plans.temperatures')} checked={formData.hasTemperatures} onChange={(e) => setFormData({...formData, hasTemperatures: e.target.checked})} heavy />
             {formData.hasTemperatures && (
-              <input type="number" className="input-field" value={formData.temperaturesLimit} onChange={(e) => setFormData({...formData, temperaturesLimit: e.target.value})} placeholder="Límite registros..." />
+              <input type="number" className="input-field" value={formData.temperaturesLimit} onChange={(e) => setFormData({...formData, temperaturesLimit: e.target.value})} placeholder={t('admin.plans.cleaning_limit')} />
             )}
           </div>
         </div>
@@ -1401,7 +1377,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (recipeForm.ingredients.some(ing => !ing.name.trim())) {
-      alert("Todos los ingredientes deben tener nombre.");
+      alert(t('admin.recipes.all_ingredients_required'));
       return;
     }
 
@@ -1425,23 +1401,23 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
         alert(data.error);
       }
     } catch (error) {
-       alert("Error al guardar receta");
+       alert(t('admin.recipes.save_error'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal title={recipeToEdit ? `Editar Receta: ${recipeToEdit.name}` : `Añadir Receta a ${profile.razonSocial}`} onClose={onClose}>
+    <Modal title={recipeToEdit ? t('admin.recipes.edit_title', { name: recipeToEdit.name }) : t('admin.recipes.add_title', { name: profile.razonSocial })} onClose={onClose}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div>
-          <label className="label">Nombre de la Receta</label>
+          <label className="label">{t('admin.recipes.name_label')}</label>
           <input type="text" className="input-field" value={recipeForm.name} onChange={(e) => setRecipeForm({...recipeForm, name: e.target.value})} placeholder="Pavo con arroz..." required />
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="label" style={{ margin: 0 }}>Ingredientes</label>
+            <label className="label" style={{ margin: 0 }}>{t('admin.recipes.ingredients_label')}</label>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -1450,7 +1426,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
                 <div key={idx} className="glass-card" style={{ padding: '1rem', background: '#f8fafc', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
                     <div>
-                      <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>NOMBRE</label>
+                      <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>{t('admin.recipes.ingredient_name')}</label>
                       <input 
                         type="text" 
                         className="input-field" 
@@ -1474,7 +1450,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
                           </label>
                           <button 
                             type="button" 
-                            onClick={() => alert("Selecciona esta casilla si quieres que este ingrediente salga con otro texto en la etiqueta. Por ejemplo si usas un mix de especias ya preparado y quieres que en la etiqueta salga todas las especias que contiene el mix.")}
+                            onClick={() => alert(t('admin.recipes.expand_info'))}
                             style={{ background: '#e2e8f0', border: 'none', color: '#475569', cursor: 'pointer', width: '16px', height: '16px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                             title="Información"
                           >
@@ -1533,7 +1509,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
                         onChange={(e) => handleIngredientChange(idx, 'loteMandatory', e.target.checked)} 
                         style={{ width: '16px', height: '16px', accentColor: 'var(--corp-green)' }}
                       />
-                      <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Lote obligatorio</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>{t('admin.recipes.lote_mandatory')}</span>
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                       <input 
@@ -1542,7 +1518,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
                         onChange={(e) => handleIngredientChange(idx, 'quantityMandatory', e.target.checked)} 
                         style={{ width: '16px', height: '16px', accentColor: 'var(--corp-green)' }}
                       />
-                      <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Cantidad obligatoria</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>{t('admin.recipes.quantity_mandatory')}</span>
                     </label>
                   </div>
                 </div>
@@ -1555,7 +1531,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
               className="btn-secondary"
               style={{ alignSelf: 'center', padding: '0.5rem 1.25rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' }}
             >
-              <Plus size={14} /> AÑADIR OTRO
+              <Plus size={14} /> {t('admin.recipes.add_another')}
             </button>
           </div>
         </div>
@@ -1565,7 +1541,7 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
           background: (profile._count.recipes >= (profile.accountType === 'demo' ? 3 : profile.recetasContratadas)) && !recipeToEdit ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.05)', 
           borderRadius: '0.5rem', fontSize: '0.8rem', color: (profile._count.recipes >= (profile.accountType === 'demo' ? 3 : profile.recetasContratadas)) && !recipeToEdit ? '#ef4444' : 'var(--text-muted)' 
         }}>
-          {recipeToEdit ? "Editando receta existente." : `Uso de quota: ${profile._count.recipes} / ${profile.accountType === 'demo' ? 3 : profile.recetasContratadas} recetas.`}
+          {recipeToEdit ? t('admin.recipes.editing_existing') : t('admin.recipes.quota_usage', { used: profile._count.recipes, limit: profile.accountType === 'demo' ? 3 : profile.recetasContratadas })}
         </div>
 
         <button 
@@ -1597,12 +1573,12 @@ function ManageRecipesModal({ profile, onClose, onRefresh }) {
   useEffect(() => { fetchRecipes(); }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm("¿Seguro que quieres borrar esta receta?")) return;
+    if (!confirm(t('common.confirm_delete'))) return;
     try {
       await fetch(`/api/admin/recipes/delete/${id}`, { method: 'DELETE' });
       if (onRefresh) onRefresh();
       fetchRecipes();
-    } catch (e) { alert("Error al borrar"); }
+    } catch (e) { alert(t('common.error_generic')); }
   };
 
   if (editRecipe) {
@@ -1616,18 +1592,18 @@ function ManageRecipesModal({ profile, onClose, onRefresh }) {
   }
 
   return (
-    <Modal title={`Recetas de ${profile.razonSocial}`} onClose={onClose}>
+    <Modal title={t('admin.recipes.manage_title', { name: profile.razonSocial })} onClose={onClose}>
       {loading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" /></div>
       ) : recipes.length === 0 ? (
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No hay recetas creadas.</p>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{t('common.no_data')}</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {recipes.map(recipe => (
             <div key={recipe.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
               <div>
                 <div style={{ fontWeight: '800', color: 'var(--text-main)' }}>{recipe.name}</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{recipe.ingredients.length} Ingredientes detectados</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{recipe.ingredients.length} {t('common.ingredients' || 'Ingredientes')}</div>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button 
@@ -1652,6 +1628,7 @@ function ManageRecipesModal({ profile, onClose, onRefresh }) {
 }
 
 function ManageCleaningZonesModal({ profile, onClose }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [zones, setZones] = useState([]);
@@ -1723,7 +1700,7 @@ function ManageCleaningZonesModal({ profile, onClose }) {
   };
 
   const handleDeleteZone = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar esta zona de limpieza?")) return;
+    if (!confirm(t('common.confirm_delete'))) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/cleaning-zones?id=${id}`, { method: "DELETE" });
@@ -1741,7 +1718,7 @@ function ManageCleaningZonesModal({ profile, onClose }) {
   };
 
   return (
-    <Modal title={`Gestionar Zonas de Limpieza: ${profile.razonSocial}`} onClose={onClose}>
+    <Modal title={t('admin.cleaning.manage_title', { name: profile.razonSocial })} onClose={onClose}>
       {initialLoading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" color="var(--corp-green)" size={32} /></div>
       ) : (
@@ -1751,22 +1728,22 @@ function ManageCleaningZonesModal({ profile, onClose }) {
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Nueva zona (ej. Planta 1, Baños...)" 
+              placeholder={t('admin.cleaning.placeholder')} 
               value={newZoneName}
               onChange={(e) => setNewZoneName(e.target.value)}
               disabled={loading}
               style={{ margin: 0 }}
             />
             <button type="submit" className="btn-primary" disabled={loading || !newZoneName.trim()} style={{ whiteSpace: 'nowrap', padding: '0 1.5rem' }}>
-              AÑADIR ZONA
+              {t('admin.cleaning.new_zone')}
             </button>
           </form>
 
           {/* Listado de Zonas */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Zonas Actuales ({zones.length})</h4>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.cleaning.current_zones', { count: zones.length })}</h4>
             {zones.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '0.75rem', border: '1px dashed var(--border)' }}>No hay zonas configuradas.</p>
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '0.75rem', border: '1px dashed var(--border)' }}>{t('common.no_data')}</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {zones.map(zone => (
@@ -1816,6 +1793,7 @@ function ManageCleaningZonesModal({ profile, onClose }) {
   );
 }
 function ManageChambersModal({ profile, onClose }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [chambers, setChambers] = useState([]);
@@ -1887,7 +1865,7 @@ function ManageChambersModal({ profile, onClose }) {
   };
 
   const handleDeleteChamber = async (id) => {
-    if (!confirm("¿Seguro que quieres eliminar esta cámara?")) return;
+    if (!confirm(t('common.confirm_delete'))) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/chambers?id=${id}`, { method: "DELETE" });
@@ -1895,17 +1873,17 @@ function ManageChambersModal({ profile, onClose }) {
       if (data.success) {
         fetchChambers();
       } else {
-        alert(data.error || "Error al eliminar cámara");
+        alert(data.error || t('common.error_generic'));
       }
     } catch (error) {
-      alert("Error de conexión");
+      alert(t('auth.error_generic'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal title={`Gestionar Cámaras: ${profile.razonSocial}`} onClose={onClose}>
+    <Modal title={t('admin.chambers.manage_title', { name: profile.razonSocial })} onClose={onClose}>
       {initialLoading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" color="var(--corp-green)" size={32} /></div>
       ) : (
@@ -1914,21 +1892,21 @@ function ManageChambersModal({ profile, onClose }) {
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Nueva cámara (ej. Cámara Frío 1, Congelador...)" 
+              placeholder={t('admin.chambers.placeholder')} 
               value={newChamberName}
               onChange={(e) => setNewChamberName(e.target.value)}
               disabled={loading}
               style={{ margin: 0 }}
             />
             <button type="submit" className="btn-primary" disabled={loading || !newChamberName.trim()} style={{ whiteSpace: 'nowrap', padding: '0 1.5rem' }}>
-              AÑADIR CÁMARA
+              {t('admin.chambers.new_chamber')}
             </button>
           </form>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cámaras Actuales ({chambers.length})</h4>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.chambers.current_chambers', { count: chambers.length })}</h4>
             {chambers.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '0.75rem', border: '1px dashed var(--border)' }}>No hay cámaras configuradas.</p>
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '0.75rem', border: '1px dashed var(--border)' }}>{t('common.no_data')}</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {chambers.map(chamber => (
@@ -1979,6 +1957,7 @@ function ManageChambersModal({ profile, onClose }) {
 }
 
 function AdminTermsTab({ onUpdateSuccess }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -1989,12 +1968,13 @@ function AdminTermsTab({ onUpdateSuccess }) {
       const data = await res.json();
       if (data.success) {
         onUpdateSuccess();
+        alert(t('admin.terms.force_success'));
         setShowConfirm(false);
       } else {
         alert(data.error);
       }
     } catch (e) {
-      alert("Error al forzar actualización de condiciones.");
+      alert(t('common.error_generic'));
     } finally {
       setLoading(false);
     }
@@ -2004,15 +1984,15 @@ function AdminTermsTab({ onUpdateSuccess }) {
     <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
         <FileText size={24} color="var(--corp-green)" />
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Gestión de Condiciones Legales</h2>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{t('admin.terms.force_title')}</h2>
       </div>
 
       <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '1rem', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>
-          Forzar Actualización de Condiciones Generales
+          {t('admin.terms.force_subtitle')}
         </h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem', maxWidth: '800px' }}>
-          Utiliza esta herramienta únicamente cuando hayas modificado las Condiciones de Uso o la Política de Privacidad de QuickTrace. Al activar esta opción, <strong>todos los clientes activos</strong> recibirán un aviso bloqueante la próxima vez que inicien sesión y no podrán continuar usando la plataforma hasta que confirmen haber leído y aceptado las nuevas condiciones.
+          {t('admin.terms.force_desc')}
         </p>
         
         {!showConfirm ? (
@@ -2021,15 +2001,15 @@ function AdminTermsTab({ onUpdateSuccess }) {
             className="btn-primary" 
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ea580c' }}
           >
-            <AlertCircle size={18} /> Informar de cambio de condiciones
+            <AlertCircle size={18} /> {t('admin.terms.force_btn')}
           </button>
         ) : (
           <div style={{ background: '#fff7ed', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #fdba74', animation: 'fadeIn 0.3s ease' }}>
             <h4 style={{ color: '#c2410c', fontWeight: '800', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <AlertCircle size={18} /> ¿Estás completamente seguro?
+              <AlertCircle size={18} /> {t('admin.terms.force_confirm_title')}
             </h4>
             <p style={{ color: '#9a3412', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '800px' }}>
-              Esta acción interrumpirá el flujo normal de trabajo de todos tus clientes la próxima vez que entren a la aplicación. Asegúrate de que los textos legales en quicktrace.es ya están actualizados antes de proceder.
+              {t('admin.terms.force_confirm_desc')}
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button 
@@ -2038,7 +2018,7 @@ function AdminTermsTab({ onUpdateSuccess }) {
                 style={{ background: 'white', color: '#64748b' }}
                 disabled={loading}
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button 
                 onClick={handleForceUpdate}
@@ -2046,7 +2026,7 @@ function AdminTermsTab({ onUpdateSuccess }) {
                 style={{ background: '#ea580c' }}
                 disabled={loading}
               >
-                {loading ? "Procesando a todos los usuarios..." : "Sí, Forzar Actualización Ahora"}
+                {loading ? t('admin.terms.force_processing') : t('admin.terms.force_btn_confirm')}
               </button>
             </div>
           </div>
@@ -2059,33 +2039,34 @@ function AdminTermsTab({ onUpdateSuccess }) {
 
 
 function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
+  const { t } = useI18n();
   return (
     <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
         <Globe size={24} color="var(--corp-green)" />
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Gestión de Afiliados</h2>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{t('admin.affiliates.title')}</h2>
       </div>
 
       {loading ? (
         <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
       ) : affiliates.length === 0 ? (
-        <p style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>No hay usuarios apuntados al programa de afiliados.</p>
+        <p style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>{t('admin.affiliate.no_referrals_desc')}</p>
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Usuario / Email</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Enlace</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Saldo Pendiente</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>Acciones</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>{t('admin.affiliates.col_email')}</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>{t('admin.affiliates.col_link')}</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('admin.affiliates.col_balance')}</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {affiliates.map((aff) => (
                 <tr key={aff.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '1.25rem 1rem' }}>
-                    <div style={{ fontWeight: '700', color: '#1e293b' }}>{aff.clientProfile?.razonSocial || 'Sin Razón Social'}</div>
+                    <div style={{ fontWeight: '700', color: '#1e293b' }}>{aff.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{aff.email}</div>
                   </td>
                   <td style={{ padding: '1.25rem 1rem' }}>
@@ -2104,14 +2085,14 @@ function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
                         className="btn-primary"
                         style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', opacity: aff.pendingCommission <= 0 ? 0.5 : 1 }}
                       >
-                        Registrar liquidación
+                        {t('admin.affiliates.register_settlement')}
                       </button>
                       <button 
                         onClick={() => onViewDetails(aff.id)}
                         className="btn-secondary"
                         style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'white' }}
                       >
-                        <Search size={14} /> Ver detalles
+                        <Search size={14} /> {t('admin.affiliates.details')}
                       </button>
                     </div>
                   </td>
@@ -2126,23 +2107,24 @@ function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
 }
 
 function AffiliateDetailsModal({ details, loading, onClose }) {
+  const { t } = useI18n();
   return (
-    <Modal title="Detalles del Afiliado" onClose={onClose} width="950px">
+    <Modal title={t('admin.affiliates.details')} onClose={onClose} width="950px">
       {loading || !details ? (
         <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
             <div className="glass-card" style={{ padding: '1.5rem', background: '#f1f5f9' }}>
-              <h4 style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>Total Generado</h4>
+              <h4 style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>{t('admin.affiliates.col_total')}</h4>
               <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)' }}>{details.totalGenerated.toFixed(2)} €</div>
             </div>
             <div className="glass-card" style={{ padding: '1.5rem', background: '#fef2f2' }}>
-              <h4 style={{ fontSize: '0.7rem', color: '#991b1b', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>Total Liquidado</h4>
+              <h4 style={{ fontSize: '0.7rem', color: '#991b1b', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>{t('admin.affiliates.settled_total')}</h4>
               <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#dc2626' }}>{details.totalSettled.toFixed(2)} €</div>
             </div>
             <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', border: '1px solid var(--corp-green)' }}>
-              <h4 style={{ fontSize: '0.7rem', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>Saldo Pendiente</h4>
+              <h4 style={{ fontSize: '0.7rem', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '800' }}>{t('admin.affiliates.col_balance')}</h4>
               <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--corp-green)' }}>{details.pendingCommission.toFixed(2)} €</div>
             </div>
           </div>
@@ -2151,17 +2133,17 @@ function AffiliateDetailsModal({ details, loading, onClose }) {
             {/* Referrals List */}
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Users size={18} /> Recomendados ({details.referrals.length})
+                <Users size={18} /> {t('admin.affiliates.referrals', { count: details.referrals.length })}
               </h3>
               {details.referrals.length === 0 ? (
-                <p style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sin recomendaciones todavía.</p>
+                <p style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('admin.affiliates.no_referrals')}</p>
               ) : (
                 <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <tr>
-                        <th style={{ padding: '0.75rem', textAlign: 'left' }}>Cliente</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Comisión</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('admin.create.clients')}</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>{t('affiliate.commission_column')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2183,17 +2165,17 @@ function AffiliateDetailsModal({ details, loading, onClose }) {
             {/* Settlements History */}
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <RefreshCw size={18} /> Historial de Pagos ({details.settlements.length})
+                <RefreshCw size={18} /> {t('admin.affiliates.payment_history', { count: details.settlements.length })}
               </h3>
               {details.settlements.length === 0 ? (
-                <p style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>No hay liquidaciones registradas.</p>
+                <p style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('admin.affiliates.no_settlements')}</p>
               ) : (
                 <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <tr>
-                        <th style={{ padding: '0.75rem', textAlign: 'left' }}>Fecha</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Cantidad</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('common.date')}</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>{t('common.amount')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2201,7 +2183,7 @@ function AffiliateDetailsModal({ details, loading, onClose }) {
                         <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td style={{ padding: '0.75rem' }}>
                             <div style={{ fontWeight: '600' }}>{new Date(s.date).toLocaleDateString()}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.notes || 'Liquidación'}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.notes || t('affiliate.settlements_header')}</div>
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '700', color: '#dc2626' }}>-{s.amount.toFixed(2)}€</td>
                         </tr>
@@ -2219,6 +2201,7 @@ function AffiliateDetailsModal({ details, loading, onClose }) {
 }
 
 function SettleCommissionsModal({ affiliate, onClose, onSuccess }) {
+  const { t } = useI18n();
   const [amount, setAmount] = useState(affiliate.pending);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -2250,7 +2233,7 @@ function SettleCommissionsModal({ affiliate, onClose, onSuccess }) {
         setShowConfirm(false);
       }
     } catch (e) {
-      alert("Error al registrar liquidación");
+      alert(t('common.error_generic'));
       setShowConfirm(false);
     } finally {
       setLoading(false);
@@ -2258,15 +2241,15 @@ function SettleCommissionsModal({ affiliate, onClose, onSuccess }) {
   };
 
   return (
-    <Modal title={`Registrar Liquidación: ${affiliate.email}`} onClose={onClose}>
+    <Modal title={t('admin.affiliates.settle_title', { email: affiliate.email })} onClose={onClose}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div style={{ background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--corp-green)', textAlign: 'center' }}>
-          <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Comisiones Pendientes</h4>
+          <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('admin.affiliates.pending_commissions')}</h4>
           <div style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--corp-green)' }}>{affiliate.pending.toFixed(2)} €</div>
         </div>
 
         <div>
-          <label className="label">Cantidad a liquidar (€)</label>
+          <label className="label">{t('admin.affiliates.amount_to_settle')}</label>
           <input 
             type="number" 
             step="0.01" 
@@ -2280,18 +2263,18 @@ function SettleCommissionsModal({ affiliate, onClose, onSuccess }) {
           />
           {parseFloat(amount) > parseFloat(affiliate.pending) && (
             <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>
-              La cantidad no puede superar el saldo pendiente.
+              {t('admin.affiliates.limit_error')}
             </div>
           )}
         </div>
 
         <div>
-           <label className="label">Notas / Referencia de transferencia</label>
+           <label className="label">{t('admin.affiliates.notes_label')}</label>
            <textarea 
              className="input-field" 
              value={notes} 
              onChange={(e) => setNotes(e.target.value)}
-             placeholder="Ej: Transferencia bancaria realizada el 25/03"
+             placeholder={t('affiliate.settlements_header')}
              style={{ minHeight: '80px', paddingTop: '0.75rem' }}
            />
         </div>
@@ -2299,21 +2282,21 @@ function SettleCommissionsModal({ affiliate, onClose, onSuccess }) {
         {showConfirm && (
           <div style={{ background: '#fff7ed', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #fdba74', animation: 'fadeIn 0.2s ease' }}>
             <p style={{ color: '#9a3412', fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-              ¿Seguro que vas a liquidar {parseFloat(amount).toFixed(2)} € para este afiliado?
+              {t('admin.affiliates.confirm_settlement', { amount: parseFloat(amount).toFixed(2) })}
             </p>
-            <p style={{ color: '#9a3412', fontSize: '0.8rem' }}>Esta acción restará la cantidad del saldo pendiente permanentemente.</p>
+            <p style={{ color: '#9a3412', fontSize: '0.8rem' }}>{t('admin.affiliates.confirm_settlement_desc')}</p>
           </div>
         )}
 
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button type="button" onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+          <button type="button" onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>{t('common.cancel')}</button>
           <button 
             type="submit" 
             className="btn-primary" 
             disabled={loading || amount <= 0 || parseFloat(amount) > parseFloat(affiliate.pending)}
             style={{ flex: 2, background: showConfirm ? '#ea580c' : 'var(--corp-green)' }}
           >
-            {loading ? "Procesando..." : showConfirm ? "SÍ, CONFIRMAR LIQUIDACIÓN" : "REGISTRAR PAGO AHORA"}
+            {loading ? t('common.loading') : showConfirm ? t('admin.affiliates.settle_btn_confirm') : t('admin.affiliates.settle_btn_now')}
           </button>
         </div>
       </form>
