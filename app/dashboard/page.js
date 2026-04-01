@@ -1453,8 +1453,8 @@ export default function ClientDashboard() {
           doc.setFont("helvetica", "bold");
           doc.text(label, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(String(value), 70, currentY);
-          currentY += 10;
+          doc.text(String(value), 90, currentY);
+          currentY += 7;
         });
 
         // Imagen del albarán
@@ -1536,26 +1536,26 @@ export default function ClientDashboard() {
         doc.setFont("helvetica", "bold");
         doc.text(t('dashboard.elaboration_recipe_header') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(el.recipe?.name || "N/A", 70, currentY);
-        currentY += 10;
+        doc.text(el.recipe?.name || "N/A", 90, currentY);
+        currentY += 7;
 
         doc.setFont("helvetica", "bold");
         doc.text(t('dashboard.lote') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(el.name || "N/A", 70, currentY);
-        currentY += 10;
+        doc.text(el.name || "N/A", 90, currentY);
+        currentY += 7;
 
         doc.setFont("helvetica", "bold");
         doc.text(t('traceability_form.label_made_by'), 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(el.personName || "N/A", 70, currentY);
-        currentY += 10;
+        doc.text(el.personName || "N/A", 90, currentY);
+        currentY += 7;
 
         doc.setFont("helvetica", "bold");
         doc.text(t('traceability_form.label_date') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(new Date(el.date).toLocaleString(), 70, currentY);
-        currentY += 10;
+        doc.text(new Date(el.date).toLocaleString(), 90, currentY);
+        currentY += 7;
 
         const expLabel = el.recipe?.expiryType === "BEST_BEFORE" 
           ? t('traceability_form.label_best_before') 
@@ -1563,8 +1563,8 @@ export default function ClientDashboard() {
         doc.setFont("helvetica", "bold");
         doc.text(expLabel + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(new Date(el.expirationDate).toLocaleDateString(), 70, currentY);
-        currentY += 10;
+        doc.text(new Date(el.expirationDate).toLocaleDateString(), 90, currentY);
+        currentY += 7;
 
         // Alérgenos
         const allergensList = (el.recipe?.allergens || [])
@@ -1574,31 +1574,31 @@ export default function ClientDashboard() {
         doc.setFont("helvetica", "bold");
         doc.text(t('allergens.title') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(allergensList || t('modals.none'), 70, currentY);
-        currentY += 10;
+        doc.text(allergensList || t('modals.none'), 90, currentY);
+        currentY += 7;
 
         if (el.workshopTemp) {
           doc.setFont("helvetica", "bold");
           doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.workshopTemp, 70, currentY);
-          currentY += 10;
+          doc.text(el.workshopTemp, 90, currentY);
+          currentY += 7;
         }
 
         if (el.dryingRoomIn) {
           doc.setFont("helvetica", "bold");
           doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.dryingRoomIn, 70, currentY);
-          currentY += 10;
+          doc.text(el.dryingRoomIn, 90, currentY);
+          currentY += 7;
         }
 
         if (el.dryingRoomOut) {
           doc.setFont("helvetica", "bold");
           doc.text((t('traceability_form.label_drying_out') || "Salida secadero") + ":", 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.dryingRoomOut, 70, currentY);
-          currentY += 10;
+          doc.text(el.dryingRoomOut, 90, currentY);
+          currentY += 7;
         }
 
         currentY += 10; // Extra spacing
