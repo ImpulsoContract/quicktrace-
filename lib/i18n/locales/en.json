@@ -87,7 +87,7 @@
     "error_invalid": "Invalid credentials. Please try again.",
     "error_generic": "An error occurred while trying to log in.",
     "logout": "Logout",
-    "backtologin": "Back to login"
+    "back_to_login": "Back to login"
   },
   "sidebar": {
     "traceability": "Traceability",
@@ -376,7 +376,10 @@
     "success_desc": "We have sent a verification link to <strong>{email}</strong>. Please check your email to set your password and activate your account.",
     "back_to_login": "Back to Login",
     "error_processing": "Error processing registration",
-    "error_connection": "Server connection error"
+    "error_connection": "Server connection error",
+    "terms_text": "I have read and accept the {terms} and the {privacy}.",
+    "terms_link": "Terms of Use",
+    "privacy_link": "Privacy Policy"
   },
   "forgot_password": {
     "title": "Recover Password",

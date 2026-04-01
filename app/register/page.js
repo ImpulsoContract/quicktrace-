@@ -166,7 +166,34 @@ export default function RegisterPage() {
                 style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', marginTop: '0.2rem' }}
               />
               <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                He leído y acepto las <a href="https://quicktrace.es/condiciones-de-uso/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '600', textDecoration: 'none' }}>Condiciones de Uso</a> y la <a href="https://quicktrace.es/politica-privacidad/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '600', textDecoration: 'none' }}>Política de Privacidad</a>.
+                {t('register.terms_text')
+                  .split('{terms}')
+                  .map((part, index) => {
+                    if (index === 0) {
+                      const [beforePrivacy, afterPrivacy] = part.split('{privacy}');
+                      return (
+                        <span key={index}>
+                          {beforePrivacy}
+                          <a href="https://quicktrace.es/politica-privacidad/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '600', textDecoration: 'none' }}>{t('register.privacy_link')}</a>
+                          {afterPrivacy}
+                        </span>
+                      );
+                    }
+                    const [beforePrivacy, afterPrivacy] = part.split('{privacy}');
+                    return (
+                      <span key={index}>
+                        <a href="https://quicktrace.es/condiciones-de-uso/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '600', textDecoration: 'none' }}>{t('register.terms_link')}</a>
+                        {beforePrivacy}
+                        {afterPrivacy && (
+                          <>
+                            <a href="https://quicktrace.es/politica-privacidad/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--corp-green)', fontWeight: '600', textDecoration: 'none' }}>{t('register.privacy_link')}</a>
+                            {afterPrivacy}
+                          </>
+                        )}
+                      </span>
+                    );
+                  })
+                }
               </span>
             </label>
           </div>

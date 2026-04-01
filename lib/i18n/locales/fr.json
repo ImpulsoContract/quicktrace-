@@ -87,7 +87,7 @@
     "error_invalid": "Identifiants invalides. Veuillez réessayer.",
     "error_generic": "Une erreur est survenue lors de la tentative de connexion.",
     "logout": "Déconnexion",
-    "backtologin": "Retour à la connexion"
+    "back_to_login": "Retour à la connexion"
   },
   "sidebar": {
     "traceability": "Traçabilité",
@@ -376,7 +376,10 @@
     "success_desc": "Nous avons envoyé un lien de vérification à <strong>{email}</strong>. Veuillez consulter votre courrier pour définir votre mot de passe et activer votre compte.",
     "back_to_login": "Retour à la Connexion",
     "error_processing": "Erreur lors du traitement de l'inscription",
-    "error_connection": "Erreur de connexion avec le serveur"
+    "error_connection": "Erreur de connexion avec le serveur",
+    "terms_text": "J'ai lu et j'accepte les {terms} et la {privacy}.",
+    "terms_link": "Conditions d'Utilisation",
+    "privacy_link": "Politique de Confidentialité"
   },
   "forgot_password": {
     "title": "Récupérer le Mot de Passe",

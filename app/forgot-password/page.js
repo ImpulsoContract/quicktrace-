@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
             <p style={{ color: 'var(--text-main)', fontWeight: '600', marginBottom: '1rem' }}>{t('forgot_password.success_title')}</p>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>{t('forgot_password.success_desc')}</p>
             <Link href="/login" style={{ color: 'var(--corp-green)', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <ArrowLeft size={18} /> {t('forgot_password.cancel').replace('Cancelar y volver', t('auth.back_to_login') || 'Volver al Login')}
+              <ArrowLeft size={18} /> {t('auth.back_to_login')}
             </Link>
           </div>
         ) : (

@@ -87,7 +87,7 @@
     "error_invalid": "Credenciales inválidas. Por favor, inténtalo de nuevo.",
     "error_generic": "Ha ocurrido un error al intentar iniciar sesión.",
     "logout": "Cerrar Sesión",
-    "backtologin": "Volver al login"
+    "back_to_login": "Volver al login"
   },
   "sidebar": {
     "traceability": "Trazabilidad",
@@ -376,7 +376,10 @@
     "success_desc": "Hemos enviado un enlace de verificación a <strong>{email}</strong>. Por favor, revisa tu correo para establecer tu contraseña y activar tu cuenta.",
     "back_to_login": "Volver al Login",
     "error_processing": "Error al procesar el registro",
-    "error_connection": "Error de conexión con el servidor"
+    "error_connection": "Error de conexión con el servidor",
+    "terms_text": "He leído y acepto las {terms} y la {privacy}.",
+    "terms_link": "Condiciones de Uso",
+    "privacy_link": "Política de Privacidad"
   },
   "forgot_password": {
     "title": "Recuperar Contraseña",

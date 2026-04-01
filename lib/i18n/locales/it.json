@@ -87,7 +87,7 @@
     "error_invalid": "Credenziali non valide. Riprova.",
     "error_generic": "Si è verificato un errore durante il tentativo di accesso.",
     "logout": "Chiudi sessione",
-    "backtologin": "Torna al login"
+    "back_to_login": "Torna al login"
   },
   "sidebar": {
     "traceability": "Tracciabilità",
@@ -376,7 +376,10 @@
     "success_desc": "Abbiamo inviato un link di verifica a <strong>{email}</strong>. Per favore, controlla la tua posta per impostare la password e attivare l'account.",
     "back_to_login": "Torna al Login",
     "error_processing": "Errore durante l'elaborazione della registrazione",
-    "error_connection": "Errore di connessione con il server"
+    "error_connection": "Errore di connessione con il server",
+    "terms_text": "Ho letto e accetto le {terms} e la {privacy}.",
+    "terms_link": "Condizioni d'Uso",
+    "privacy_link": "Informativa sulla Privacy"
   },
   "forgot_password": {
     "title": "Recupera Password",
