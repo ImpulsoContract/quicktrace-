@@ -75,9 +75,12 @@ export async function POST(req) {
 
     const baseUrl = process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
 
+    const isUpdate = !!clientProfile.stripeSubscriptionId;
+
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: clientProfile.stripeCustomerId || undefined,
       customer_email: clientProfile.stripeCustomerId ? undefined : session.user.email,
+      subscription: isUpdate ? clientProfile.stripeSubscriptionId : undefined,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${baseUrl}/dashboard/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -92,12 +95,23 @@ export async function POST(req) {
         userId: String(session.user.id),
         planId: plan.id,
       },
-      subscription_data: {
-        metadata: {
-          userId: String(session.user.id),
-          planId: plan.id,
+      // Si es una actualización de suscripción, usamos subscription_update en lugar de subscription_data
+      ...(isUpdate ? {
+        subscription_update: {
+          proration_behavior: 'always_invoice', // Forzamos el prorrateo e invoice inmediato
+          metadata: {
+            userId: String(session.user.id),
+            planId: plan.id,
+          }
         }
-      }
+      } : {
+        subscription_data: {
+          metadata: {
+            userId: String(session.user.id),
+            planId: plan.id,
+          }
+        }
+      })
     });
 
     return NextResponse.json({ url: checkoutSession.url });
