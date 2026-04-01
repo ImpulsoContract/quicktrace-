@@ -306,6 +306,7 @@
     "temp_saved": "Registro de temperatura guardado correctamente",
     "temp_updated": "Registro actualizado correctamente",
     "delete_confirm_temp": "¿Seguro que quieres eliminar este registro de temperatura?",
+    "water_saved": "Registro de agua guardado correctamente",
     "goods_saved": "Entrada guardada correctamente",
     "goods_updated": "Entrada actualizada correctamente",
     "delete_confirm_goods": "¿Seguro que quieres eliminar esta entrada de mercancía?",

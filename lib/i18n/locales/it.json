@@ -306,6 +306,7 @@
     "temp_saved": "Record di temperatura salvato correttamente",
     "temp_updated": "Record aggiornato correttamente",
     "delete_confirm_temp": "Sei sicuro di voler eliminare questo record di temperatura?",
+    "water_saved": "Registrazione dell'acqua salvata correttamente",
     "goods_saved": "Entrata salvata correttamente",
     "goods_updated": "Entrata aggiornata correttamente",
     "delete_confirm_goods": "Sei sicuro di voler eliminare questa entrata merce?",

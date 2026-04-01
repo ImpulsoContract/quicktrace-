@@ -306,6 +306,7 @@
     "temp_saved": "Enregistrement de température sauvegardé avec succès",
     "temp_updated": "Enregistrement mis à jour avec succès",
     "delete_confirm_temp": "Êtes-vous sûr de vouloir supprimer cet enregistrement de température ?",
+    "water_saved": "Enregistrement de l'eau sauvegardé avec succès",
     "goods_saved": "Entrée enregistrée avec succès",
     "goods_updated": "Entrée mise à jour avec succès",
     "delete_confirm_goods": "Êtes-vous sûr de vouloir supprimer cette entrée de marchandise ?",

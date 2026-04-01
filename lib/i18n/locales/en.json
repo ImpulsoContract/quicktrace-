@@ -306,6 +306,7 @@
     "temp_saved": "Temperature record saved successfully",
     "temp_updated": "Temperature record updated successfully",
     "delete_confirm_temp": "Are you sure you want to delete this temperature record?",
+    "water_saved": "Water record saved successfully",
     "goods_saved": "Goods entry saved successfully",
     "goods_updated": "Goods entry updated successfully",
     "delete_confirm_goods": "Are you sure you want to delete this goods receipt?",
