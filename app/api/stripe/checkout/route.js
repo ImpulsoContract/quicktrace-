@@ -79,10 +79,38 @@ export async function POST(req) {
 
     const isUpdate = !!clientProfile.stripeSubscriptionId;
 
+    if (isUpdate) {
+      // Optamos por el Billing Portal para actualizaciones. Es MUCHO más robusto y maneja prorrateo automáticamente.
+      console.log(`[Stripe] Creating Billing Portal update session for subscription ${clientProfile.stripeSubscriptionId}`);
+      
+      const subscription = await stripe.subscriptions.retrieve(clientProfile.stripeSubscriptionId);
+      const subscriptionItemId = subscription.items.data[0].id;
+
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: clientProfile.stripeCustomerId,
+        return_url: `${baseUrl}/dashboard/plans`,
+        flow_data: {
+          type: "subscription_update_confirm",
+          subscription_update_confirm: {
+            subscription: clientProfile.stripeSubscriptionId,
+            items: [
+              {
+                id: subscriptionItemId,
+                price: priceId,
+                quantity: 1,
+              },
+            ],
+          },
+        },
+      });
+
+      return NextResponse.json({ url: portalSession.url });
+    }
+
+    // Flujo para NUEVAS suscripciones (Checkout normal)
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: clientProfile.stripeCustomerId || undefined,
       customer_email: clientProfile.stripeCustomerId ? undefined : session.user.email,
-      subscription: isUpdate ? clientProfile.stripeSubscriptionId : undefined,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${baseUrl}/dashboard/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -97,23 +125,12 @@ export async function POST(req) {
         userId: String(session.user.id),
         planId: plan.id,
       },
-      // Si es una actualización de suscripción, usamos subscription_update en lugar de subscription_data
-      ...(isUpdate ? {
-        subscription_update: {
-          proration_behavior: 'always_invoice', // Forzamos el prorrateo e invoice inmediato
-          metadata: {
-            userId: String(session.user.id),
-            planId: plan.id,
-          }
+      subscription_data: {
+        metadata: {
+          userId: String(session.user.id),
+          planId: plan.id,
         }
-      } : {
-        subscription_data: {
-          metadata: {
-            userId: String(session.user.id),
-            planId: plan.id,
-          }
-        }
-      })
+      }
     });
 
     return NextResponse.json({ url: checkoutSession.url });
