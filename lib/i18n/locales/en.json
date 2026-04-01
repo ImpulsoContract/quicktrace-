@@ -173,7 +173,9 @@
     "save_entry": "Save",
     "invoice": "Invoice",
     "video_help": "Video help",
-    "configure_labels": "Configure labels"
+    "configure_labels": "Configure labels",
+    "upload_photo": "Upload Delivery Note Photo",
+    "photo_format": "Take a photo or choose a file"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -186,8 +188,6 @@
     "date_time": "Record Date and Time",
     "select_zones": "Select Cleaned Zones",
     "no_zones_config": "No zones configured.",
-    "upload_photo": "Upload Delivery Note Photo",
-    "photo_format": "Take a photo or choose a file",
     "save_entry": "SAVE ENTRY",
     "new_entry": "NEW ENTRY",
     "chambers": "CHAMBERS",
@@ -459,6 +459,7 @@
     "temp": "Transport / Mfg. Temperature",
     "end_date": "End Date",
     "type_and_origin": "Type and origin",
+    "quantity": "Quantity",
     "upload_file": "Upload image..."
   },
   "plans": {

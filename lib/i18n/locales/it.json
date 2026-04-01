@@ -173,7 +173,9 @@
     "save_entry": "Salva",
     "invoice": "Fattura",
     "video_help": "Video aiuto",
-    "configure_labels": "Configura etichette"
+    "configure_labels": "Configura etichette",
+    "upload_photo": "Carica foto DDT",
+    "photo_format": "Scatta una foto o seleziona un file"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",
@@ -186,8 +188,6 @@
     "date_time": "Data e ora del record",
     "select_zones": "Seleziona le zone pulite",
     "no_zones_config": "Nessuna zona configurata.",
-    "upload_photo": "Carica foto DDT",
-    "photo_format": "Scatta una foto o seleziona un file",
     "save_entry": "SALVA ENTRATA",
     "new_entry": "NUOVA ENTRATA",
     "chambers": "CELLE",
@@ -459,6 +459,7 @@
     "temp": "Temp. Trasporto / Fabb.",
     "end_date": "Data di fine",
     "type_and_origin": "Tipo e provenienza",
+    "quantity": "Quantità",
     "upload_file": "Carica immagine..."
   },
   "plans": {

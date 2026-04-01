@@ -173,7 +173,9 @@
     "save_entry": "Enregistrer",
     "invoice": "Facture",
     "video_help": "Aide vidéo",
-    "configure_labels": "Configurer étiquettes"
+    "configure_labels": "Configurer étiquettes",
+    "upload_photo": "Charger photo du bon",
+    "photo_format": "Prenez une photo ou sélectionnez un fichier"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",
@@ -186,8 +188,6 @@
     "date_time": "Date et heure de l'enregistrement",
     "select_zones": "Sélectionnez les zones nettoyées",
     "no_zones_config": "Aucune zone configurée.",
-    "upload_photo": "Charger photo du bon",
-    "photo_format": "Prenez une photo ou sélectionnez un fichier",
     "save_entry": "ENREGISTRER ENTRÉE",
     "new_entry": "NOUVELLE ENTRÉE",
     "chambers": "CHAMBRES",
@@ -459,6 +459,7 @@
     "temp": "Temp. Transport / Fab.",
     "end_date": "Date de fin",
     "type_and_origin": "Type et provenance",
+    "quantity": "Quantité",
     "upload_file": "Télécharger l'image..."
   },
   "plans": {

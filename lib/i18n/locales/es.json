@@ -173,7 +173,9 @@
     "save_entry": "Guardar",
     "invoice": "Factura",
     "video_help": "Video ayuda",
-    "configure_labels": "Configurar etiquetas"
+    "configure_labels": "Configurar etiquetas",
+    "upload_photo": "Subir foto del albarán",
+    "photo_format": "Haz una foto o selecciona un archivo"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -186,8 +188,6 @@
     "date_time": "Fecha y hora del registro",
     "select_zones": "Selecciona las zonas limpiadas",
     "no_zones_config": "No hay zonas configuradas.",
-    "upload_photo": "Subir foto del albarán",
-    "photo_format": "Haz una foto o selecciona un archivo",
     "save_entry": "GUARDAR ENTRADA",
     "new_entry": "NUEVA ENTRADA",
     "chambers": "CÁMARAS",
@@ -459,6 +459,7 @@
     "temp": "Temperatura Transporte / Fab.",
     "end_date": "Fecha de finalización",
     "type_and_origin": "Tipo y procedencia",
+    "quantity": "Cantidad",
     "upload_file": "Subir imagen..."
   },
   "plans": {
