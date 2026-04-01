@@ -13,7 +13,9 @@ export async function POST(req) {
     return NextResponse.json({ error: "Stripe connection error" }, { status: 500 });
   }
 
-  const stripe = new Stripe(stripeKey);
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: "2024-04-10",
+  });
 
   try {
     const session = await getServerSession(authOptions);

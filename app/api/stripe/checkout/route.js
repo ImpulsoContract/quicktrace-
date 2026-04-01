@@ -18,7 +18,9 @@ export async function POST(req) {
     return NextResponse.json({ error: "Configuración incompleta: STRIPE_SECRET_KEY no está definida." }, { status: 500 });
   }
 
-  const stripe = new Stripe(stripeKey);
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: "2024-04-10",
+  });
 
   try {
     const session = await getServerSession(authOptions);

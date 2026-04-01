@@ -8,7 +8,9 @@ import { assignClientifyTagByEmail } from "@/lib/clientify";
 export const dynamic = "force-dynamic";
 
 export async function POST(req) {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2024-04-10",
+  });
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const body = await req.text();
   const sig = headers().get("stripe-signature");
