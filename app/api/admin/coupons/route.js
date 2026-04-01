@@ -55,7 +55,9 @@ export async function POST(req) {
     if (!stripeKey) {
       return NextResponse.json({ error: "Falta configuración de Stripe" }, { status: 500 });
     }
-    const stripe = new Stripe(stripeKey);
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2024-04-10",
+    });
 
     // Get Target Products for Stripe constraints
     const eligibleProducts = new Set();
@@ -169,7 +171,9 @@ export async function PATCH(req) {
 
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (stripeKey && coupon.stripePromoCodeId) {
-      const stripe = new Stripe(stripeKey);
+      const stripe = new Stripe(stripeKey, {
+        apiVersion: "2024-04-10",
+      });
       try {
         await stripe.promotionCodes.update(coupon.stripePromoCodeId, {
           active: !!active
