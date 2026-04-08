@@ -5057,7 +5057,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                       providerId: foundProvider ? foundProvider.id : null
                     });
                   }} 
-                  placeholder={t('goods_receipt_form.provider_placeholder') || "Escribe o selecciona un proveedor"}
+                  placeholder={t('goods_receipt_form.provider_placeholder')}
                   style={{ paddingLeft: '3rem' }}
                 />
                 <datalist id="providers-list">

@@ -476,6 +476,7 @@
     "product": "Product",
     "provider": "Provider",
     "select_provider": "Select provider...",
+    "provider_placeholder": "Type or select a provider",
     "invoice_number": "Invoice number",
     "temp": "Transport / Mfg. Temperature",
     "end_date": "End Date",

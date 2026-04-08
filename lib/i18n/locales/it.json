@@ -476,6 +476,7 @@
     "product": "Prodotto",
     "provider": "Fornitore",
     "select_provider": "Seleziona fornitore...",
+    "provider_placeholder": "Scrivi o seleziona un fornitore",
     "invoice_number": "Numero fattura",
     "temp": "Temp. Trasporto / Fabb.",
     "end_date": "Data di fine",

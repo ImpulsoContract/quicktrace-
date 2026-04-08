@@ -476,6 +476,7 @@
     "product": "Producto",
     "provider": "Proveedor",
     "select_provider": "Seleccionar proveedor...",
+    "provider_placeholder": "Escribe o selecciona un proveedor",
     "invoice_number": "Número de factura",
     "temp": "Temperatura Transporte / Fab.",
     "end_date": "Fecha de finalización",
