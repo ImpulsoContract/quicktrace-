@@ -206,6 +206,10 @@ export default function ClientDashboard() {
     values: {} // { chamberId: value }
   });
 
+  // Provider Receipts View State
+  const [isProviderReceiptsModalOpen, setIsProviderReceiptsModalOpen] = useState(false);
+  const [selectedProviderForReceipts, setSelectedProviderForReceipts] = useState(null);
+
   // Goods Receipt Form State
   const [goodsForm, setGoodsForm] = useState({
     providerName: "",
@@ -627,6 +631,11 @@ export default function ClientDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewProviderReceipts = (provider) => {
+    setSelectedProviderForReceipts(provider);
+    setIsProviderReceiptsModalOpen(true);
   };
 
   const handleCreateChamber = async (name) => {
@@ -2872,6 +2881,9 @@ export default function ClientDashboard() {
                           {provider.nif && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>NIF: {provider.nif}</div>}
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => handleViewProviderReceipts(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                            <FileText size={16} /> {t('dashboard.view_delivery_notes') || "Ver albaranes"}
+                          </button>
                           <button onClick={() => handleEditProvider(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Edit size={16} /></button>
                           <button onClick={() => handleDeleteProvider(provider.id)} style={{ background: 'none', border: '1px solid var(--border)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Trash2 size={16} /></button>
                         </div>
@@ -4778,6 +4790,87 @@ export default function ClientDashboard() {
                   {loading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('dashboard.generate_report')}</>}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isProviderReceiptsModalOpen && selectedProviderForReceipts && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '800px', width: '95%', padding: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                  <Truck color="var(--corp-green)" />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>
+                  {t('dashboard.provider_receipts_header').replace('{name}', selectedProviderForReceipts.name)}
+                </h2>
+              </div>
+              <button 
+                onClick={() => {
+                  setIsProviderReceiptsModalOpen(false);
+                  setSelectedProviderForReceipts(null);
+                }}
+                className="btn-icon"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {(() => {
+                const filteredReceipts = goodsReceipts.filter(r => 
+                  r.providerId === selectedProviderForReceipts.id || 
+                  (!r.providerId && r.providerName === selectedProviderForReceipts.name)
+                );
+
+                if (filteredReceipts.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '3rem' }}>
+                      <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_receipts_for_provider')}</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('dashboard.date')}</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('goods_receipt_form.product')}</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('dashboard.lote')}</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('goods_receipt_form.quantity')}</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('dashboard.actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredReceipts.map(receipt => (
+                        <tr key={receipt.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '1rem' }}>{new Date(receipt.date).toLocaleDateString()}</td>
+                          <td style={{ padding: '1rem', fontWeight: '700' }}>{receipt.productName}</td>
+                          <td style={{ padding: '1rem' }}>{receipt.lote}</td>
+                          <td style={{ padding: '1rem' }}>{receipt.quantity}</td>
+                          <td style={{ padding: '1rem' }}>
+                            {receipt.deliveryNoteImage ? (
+                              <button 
+                                onClick={() => window.open(receipt.deliveryNoteImage, '_blank')}
+                                className="btn-secondary"
+                                style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                              >
+                                {t('dashboard.view_note')}
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
           </div>
         </div>
