@@ -9,7 +9,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function RegisterPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -40,7 +40,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, referralCode })
+        body: JSON.stringify({ ...formData, referralCode, locale })
       });
       const data = await res.json();
 

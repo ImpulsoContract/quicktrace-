@@ -85,7 +85,8 @@ export async function POST(req) {
       deliveryNoteImage,
       manufacturingTemp,
       endDate,
-      typeAndOrigin
+      typeAndOrigin,
+      providerId
     } = body;
 
     if (!productName || !date) {
@@ -104,6 +105,7 @@ export async function POST(req) {
         manufacturingTemp,
         endDate,
         typeAndOrigin,
+        providerId: providerId ? parseInt(providerId) : null,
         clientProfileId: profile.id
       }
     });
@@ -142,7 +144,8 @@ export async function PATCH(req) {
       deliveryNoteImage,
       manufacturingTemp,
       endDate,
-      typeAndOrigin
+      typeAndOrigin,
+      providerId
     } = body;
 
     if (!id || !productName || !date) {
@@ -164,7 +167,8 @@ export async function PATCH(req) {
         deliveryNoteImage,
         manufacturingTemp,
         endDate,
-        typeAndOrigin
+        typeAndOrigin,
+        providerId: providerId ? parseInt(providerId) : null
       }
     });
 

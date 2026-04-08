@@ -23,6 +23,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lastLogin DateTime?
+  lastLoginLanguage String?
   termsAcceptedAt DateTime?
   pendingTermsUpdate Boolean @default(false)
 
@@ -86,6 +87,25 @@ model ClientProfile {
   waterMeasurements     WaterMeasurement[]
   payments              Payment[]
   affiliateSettlements  AffiliateSettlement[]
+  providers             Provider[]
+}
+
+model Provider {
+  id                Int           @id @default(autoincrement())
+  name              String
+  nif               String?
+  rgs               String?       // Registro General Sanitario
+  phone             String?
+  address           String?       @db.Text
+  products          String?       @db.Text
+
+  clientProfileId   Int
+  clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  
+  goodsReceipts     GoodsReceipt[]
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
 
 model AffiliateSettlement {
@@ -320,6 +340,9 @@ model GoodsReceipt {
   clientProfileId   Int
   clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
   
+  providerId        Int?
+  provider          Provider?     @relation(fields: [providerId], references: [id], onDelete: SetNull)
+
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 }

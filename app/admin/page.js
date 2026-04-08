@@ -613,7 +613,16 @@ export default function AdminDashboard() {
                               {client.createdAt ? new Date(client.createdAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
-                              {client.lastLogin ? new Date(client.lastLogin).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span style={{ color: '#94a3b8' }}>-</span>}
+                              {client.lastLogin ? (
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span>{new Date(client.lastLogin).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                  {client.lastLoginLanguage && (
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--corp-green)', fontWeight: '700', textTransform: 'uppercase' }}>
+                                      {client.lastLoginLanguage}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : <span style={{ color: '#94a3b8' }}>-</span>}
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
                               {client.clientProfile?.stripeCurrentPeriodEnd ? (

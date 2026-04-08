@@ -101,6 +101,14 @@ export default function ClientDashboard() {
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [editingGoodsReceipt, setEditingGoodsReceipt] = useState(null);
   const [editingWaterMeasurement, setEditingWaterMeasurement] = useState(null);
+  
+  const [providers, setProviders] = useState([]);
+  const [isProvidersModalOpen, setIsProvidersModalOpen] = useState(false);
+  const [editingProvider, setEditingProvider] = useState(null);
+  const [providersForm, setProvidersForm] = useState({
+    name: "", nif: "", rgs: "", phone: "", address: "", products: ""
+  });
+
   const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
   const [cleaningExportDates, setCleaningExportDates] = useState({ from: "", to: "" });
   const [isTempExportModalOpen, setIsTempExportModalOpen] = useState(false);
@@ -201,6 +209,7 @@ export default function ClientDashboard() {
   // Goods Receipt Form State
   const [goodsForm, setGoodsForm] = useState({
     providerName: "",
+    providerId: null,
     productName: "",
     lote: "",
     invoiceNumber: "",
@@ -236,6 +245,7 @@ export default function ClientDashboard() {
       fetchTempRecords();
       fetchGoodsReceipts();
       fetchWaterMeasurements();
+      fetchProviders();
       fetchProfile();
     }
   }, [status]);
@@ -391,6 +401,78 @@ export default function ClientDashboard() {
     setIsRecipeManageModalOpen(true);
   };
 
+  const fetchProviders = async () => {
+    try {
+      const res = await fetch("/api/client/providers");
+      const data = await res.json();
+      if (!data.error) setProviders(data);
+    } catch (error) {
+      console.error("Error fetching providers:", error);
+    }
+  };
+
+  const handleSubmitProvider = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const url = editingProvider ? `/api/client/providers/${editingProvider.id}` : "/api/client/providers";
+      const method = editingProvider ? "PATCH" : "POST";
+      
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(providersForm)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(editingProvider ? t('alerts.provider_updated') || "Proveedor actualizado" : t('alerts.provider_saved') || "Proveedor guardado");
+        setIsProvidersModalOpen(false);
+        setEditingProvider(null);
+        setProvidersForm({ name: "", nif: "", rgs: "", phone: "", address: "", products: "" });
+        fetchProviders();
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (error) {
+      console.error("Error saving provider:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditProvider = (provider) => {
+    setEditingProvider(provider);
+    setProvidersForm({
+      name: provider.name,
+      nif: provider.nif || "",
+      rgs: provider.rgs || "",
+      phone: provider.phone || "",
+      address: provider.address || "",
+      products: provider.products || ""
+    });
+    setIsProvidersModalOpen(true);
+  };
+
+  const handleDeleteProvider = async (id) => {
+    if (!confirm(t('alerts.delete_confirm_provider') || "¿Estás seguro de que quieres eliminar este proveedor?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/client/providers/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchProviders();
+      } else {
+        const data = await res.json();
+        alert(data.error || t('alerts.delete_error'));
+      }
+    } catch (error) {
+      console.error("Error deleting provider:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteRecipe = async (id) => {
     if (!confirm(t('alerts.delete_confirm_recipe'))) return;
     
@@ -540,6 +622,82 @@ export default function ClientDashboard() {
       if (!data.error) setWaterMeasurements(data);
     } catch (error) {
       console.error("Error fetching water:", error);
+    }
+  };
+
+  const fetchProviders = async () => {
+    try {
+      const res = await fetch("/api/client/providers");
+      const data = await res.json();
+      if (!data.error) setProviders(data);
+    } catch (error) {
+      console.error("Error fetching providers:", error);
+    }
+  };
+
+  const handleSubmitProvider = async (e) => {
+    e.preventDefault();
+    if (!providersForm.name) {
+      alert(t('alerts.name_required') || "El nombre es obligatorio");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const url = editingProvider ? `/api/client/providers/${editingProvider.id}` : "/api/client/providers";
+      const method = editingProvider ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(providersForm)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(editingProvider ? t('alerts.provider_updated') : t('alerts.provider_saved'));
+        setIsProvidersModalOpen(false);
+        setEditingProvider(null);
+        setProvidersForm({ name: "", nif: "", rgs: "", phone: "", address: "", products: "" });
+        fetchProviders();
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (error) {
+      console.error("Error saving provider:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditProvider = (provider) => {
+    setEditingProvider(provider);
+    setProvidersForm({
+      name: provider.name,
+      nif: provider.nif || "",
+      rgs: provider.rgs || "",
+      phone: provider.phone || "",
+      address: provider.address || "",
+      products: provider.products || ""
+    });
+    setIsProvidersModalOpen(true);
+  };
+
+  const handleDeleteProvider = async (id) => {
+    if (!confirm(t('alerts.delete_confirm_provider') || "¿Estás seguro de eliminar este proveedor?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/client/providers/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        fetchProviders();
+      } else {
+        alert(data.error || t('alerts.delete_error'));
+      }
+    } catch (error) {
+      console.error("Error deleting provider:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -693,6 +851,7 @@ export default function ClientDashboard() {
         setEditingGoodsReceipt(null);
         setGoodsForm({
           providerName: "",
+          providerId: null,
           productName: "",
           lote: "",
           invoiceNumber: "",
@@ -2166,6 +2325,12 @@ export default function ClientDashboard() {
                 onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
+            <SidebarBtn 
+              icon={<Truck size={20} />} 
+              label={t('sidebar.providers') || "Proveedores"} 
+              active={activeTab === "proveedores"} 
+              onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
           </nav>
 
           <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
@@ -2738,6 +2903,80 @@ export default function ClientDashboard() {
                       </button>
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'proveedores' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.providers') || "Proveedores"}</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.providers_info') || "Gestiona tu lista de proveedores habituales"}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    setEditingProvider(null);
+                    setProvidersForm({ name: "", nif: "", rgs: "", phone: "", address: "", products: "" });
+                    setIsProvidersModalOpen(true);
+                  }}
+                  className="btn-primary" 
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                >
+                  <Plus size={18} /> {t('dashboard.add_provider') || "Añadir proveedor"}
+                </button>
+              </header>
+
+              {providers.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                    <Truck size={40} color="var(--border)" />
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_providers') || "No tienes proveedores"}</h3>
+                  <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_providers_info') || "Añade tu primer proveedor para tenerlo disponible al recibir mercancías."}</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+                  {providers.map(provider => (
+                    <div key={provider.id} className="glass-card" style={{ padding: '1.5rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{provider.name}</h4>
+                          {provider.nif && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>NIF: {provider.nif}</div>}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => handleEditProvider(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Edit size={16} /></button>
+                          <button onClick={() => handleDeleteProvider(provider.id)} style={{ background: 'none', border: '1px solid var(--border)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                        </div>
+                      </div>
+                      
+                      <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+                        {provider.rgs && (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>RGS:</span>
+                            <span>{provider.rgs}</span>
+                          </div>
+                        )}
+                        {provider.phone && (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>Tel:</span>
+                            <span>{provider.phone}</span>
+                          </div>
+                        )}
+                        {provider.address && (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>Dir:</span>
+                            <span style={{ whiteSpace: 'pre-wrap' }}>{provider.address}</span>
+                          </div>
+                        )}
+                        {provider.products && (
+                          <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('dashboard.provider_products_label') || "Productos que sirve"}</div>
+                            <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{provider.products}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -4109,6 +4348,21 @@ export default function ClientDashboard() {
           loading={loading}
           isEditing={!!editingGoodsReceipt}
           onImageChange={handleImageChange}
+          providers={providers}
+        />
+      )}
+
+      {isProvidersModalOpen && (
+        <ProviderModal 
+          onClose={() => {
+            setIsProvidersModalOpen(false);
+            setEditingProvider(null);
+          }}
+          onSubmit={handleSubmitProvider}
+          formData={providersForm}
+          setFormData={setProvidersForm}
+          loading={loading}
+          isEditing={!!editingProvider}
         />
       )}
 
@@ -4691,7 +4945,7 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
   );
 }
 
-function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange }) {
+function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers }) {
   const { t } = useI18n();
   return (
     <div className="modal-overlay">
@@ -4729,12 +4983,26 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                 <Truck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
                 <input 
                   type="text" 
+                  list="providers-list"
                   className="input-field" 
                   value={formData.providerName} 
-                  onChange={(e) => setFormData({...formData, providerName: e.target.value})} 
-                  placeholder=""
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const foundProvider = providers.find(p => p.name === val);
+                    setFormData({
+                      ...formData, 
+                      providerName: val,
+                      providerId: foundProvider ? foundProvider.id : null
+                    });
+                  }} 
+                  placeholder={t('goods_receipt_form.provider_placeholder') || "Escribe o selecciona un proveedor"}
                   style={{ paddingLeft: '3rem' }}
                 />
+                <datalist id="providers-list">
+                  {providers.map(p => (
+                    <option key={p.id} value={p.name} />
+                  ))}
+                </datalist>
               </div>
             </div>
             <div className="form-group">
@@ -6181,6 +6449,95 @@ function TemperatureExportModal({ onClose, onGenerate, dates, setDates }) {
             {t('dashboard.generate_report')}
           </button>
         </footer>
+      </div>
+    </div>
+  );
+}
+
+function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+  const { t } = useI18n();
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '650px' }}>
+        <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+              {isEditing ? t('dashboard.edit_provider') || "Editar proveedor" : t('dashboard.add_provider') || "Añadir proveedor"}
+            </h2>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}><X size={24} /></button>
+        </header>
+
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div>
+              <label className="label">{t('providers.name') || "Nombre"} <span style={{color:'#ef4444'}}>*</span></label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.name} 
+                onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                required 
+              />
+            </div>
+            <div>
+              <label className="label">{t('providers.nif') || "NIF"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.nif} 
+                onChange={(e) => setFormData({...formData, nif: e.target.value})} 
+              />
+            </div>
+            <div>
+              <label className="label">{t('providers.rgs') || "RGS"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.rgs} 
+                onChange={(e) => setFormData({...formData, rgs: e.target.value})} 
+              />
+            </div>
+            <div>
+              <label className="label">{t('providers.phone') || "Teléfono"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.phone} 
+                onChange={(e) => setFormData({...formData, phone: e.target.value})} 
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="label">{t('providers.address') || "Dirección"}</label>
+            <textarea 
+              className="input-field" 
+              rows="3"
+              value={formData.address} 
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              style={{ resize: 'vertical' }}
+            />
+          </div>
+
+          <div>
+            <label className="label">{t('providers.products') || "Productos que sirve"}</label>
+            <textarea 
+              className="input-field" 
+              rows="3"
+              value={formData.products} 
+              onChange={(e) => setFormData({...formData, products: e.target.value})}
+              style={{ resize: 'vertical' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1 }}>{t('common.cancel')}</button>
+            <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2 }}>
+              {loading ? <Loader2 className="animate-spin" size={20} /> : t('common.save')}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

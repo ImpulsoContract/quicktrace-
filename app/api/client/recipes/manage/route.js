@@ -89,6 +89,16 @@ export async function POST(req) {
       }
     });
 
+    // Tag first recipe in Clientify
+    if (currentCount === 0) {
+      try {
+        const { assignClientifyTagByEmail } = await import("@/lib/clientify");
+        await assignClientifyTagByEmail(session.user.email, "quicktrace con receta");
+      } catch (err) {
+        console.error("[Clientify Sync] Error tagging first recipe:", err);
+      }
+    }
+
     return NextResponse.json({ success: true, recipe });
   } catch (error) {
     console.error("Error creating recipe by client:", error);

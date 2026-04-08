@@ -75,7 +75,7 @@ export async function POST(req) {
           });
           
           // Asignar etiqueta en Clientify
-          await assignClientifyTagByEmail(profile.user.email, "cliente quicktrace");
+          await assignClientifyTagByEmail(profile.user.email, "quicktrace cliente");
         }
       }
       break;
@@ -200,7 +200,7 @@ export async function POST(req) {
         
         if (profile) {
           // Asignar etiqueta en Clientify por cada pago verificado
-          await assignClientifyTagByEmail(profile.user.email, "cliente quicktrace");
+          await assignClientifyTagByEmail(profile.user.email, "quicktrace cliente");
 
           // REGISTRAR PAGO EN NUESTRA BASE DE DATOS
           try {

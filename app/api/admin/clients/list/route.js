@@ -18,6 +18,7 @@ export async function GET() {
         email: true,
         createdAt: true,
         lastLogin: true,
+        lastLoginLanguage: true,
         termsAcceptedAt: true,
         clientProfile: {
           include: {
