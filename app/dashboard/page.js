@@ -4853,17 +4853,37 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1rem' }}>{receipt.lote}</td>
                           <td style={{ padding: '1rem' }}>{receipt.quantity}</td>
                           <td style={{ padding: '1rem' }}>
-                            {receipt.deliveryNoteImage ? (
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              {receipt.deliveryNoteImage && (
+                                <button 
+                                  onClick={() => window.open(receipt.deliveryNoteImage, '_blank')}
+                                  className="btn-secondary"
+                                  style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                  title={t('dashboard.view_note')}
+                                >
+                                  <FileText size={14} />
+                                </button>
+                              )}
                               <button 
-                                onClick={() => window.open(receipt.deliveryNoteImage, '_blank')}
+                                onClick={() => {
+                                  setIsProviderReceiptsModalOpen(false);
+                                  handleEditGoods(receipt);
+                                }}
                                 className="btn-secondary"
-                                style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                                style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', color: 'var(--corp-green)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                title={t('common.edit')}
                               >
-                                {t('dashboard.view_note')}
+                                <Edit size={14} />
                               </button>
-                            ) : (
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>-</span>
-                            )}
+                              <button 
+                                onClick={() => handleDeleteGoods(receipt.id)}
+                                className="btn-secondary"
+                                style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                title={t('common.delete')}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
