@@ -3079,9 +3079,30 @@ export default function ClientDashboard() {
                             {new Date(receipt.date).toLocaleDateString()}
                           </div>
                           <h4 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>{receipt.productName}</h4>
-                          <p style={{ fontSize: '1rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Truck size={16} /> {receipt.providerName || 'Sin proveedor'}
-                          </p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <p style={{ fontSize: '1rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                              <Truck size={16} /> {receipt.providerName || 'Sin proveedor'}
+                            </p>
+                            {(() => {
+                              const matchingProvider = providers.find(p => p.id === receipt.providerId || (receipt.providerName && p.name === receipt.providerName));
+                              if (matchingProvider) {
+                                return (
+                                  <button 
+                                    onClick={() => handleViewProviderReceipts(matchingProvider)}
+                                    style={{ 
+                                      background: 'none', border: 'none', padding: 0, 
+                                      color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '800',
+                                      textDecoration: 'underline', cursor: 'pointer', textAlign: 'left',
+                                      display: 'flex', alignItems: 'center', gap: '0.25rem'
+                                    }}
+                                  >
+                                    <FileText size={12} /> {t('dashboard.view_delivery_notes')}
+                                  </button>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.75rem' }}>
                           <button 
