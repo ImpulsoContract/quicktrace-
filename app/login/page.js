@@ -10,7 +10,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function LoginPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +27,7 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email,
         password,
-        locale: useI18n().locale,
+        locale: locale,
         redirect: false,
       });
 
