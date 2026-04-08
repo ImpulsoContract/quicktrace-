@@ -2878,11 +2878,11 @@ export default function ClientDashboard() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                         <div>
                           <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{provider.name}</h4>
-                          {provider.nif && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>NIF: {provider.nif}</div>}
+                          {provider.nif && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{t('providers.list_nif')}: {provider.nif}</div>}
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <button onClick={() => handleViewProviderReceipts(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                            <FileText size={16} /> {t('dashboard.view_delivery_notes') || "Ver albaranes"}
+                            <FileText size={16} /> {t('dashboard.view_delivery_notes')}
                           </button>
                           <button onClick={() => handleEditProvider(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Edit size={16} /></button>
                           <button onClick={() => handleDeleteProvider(provider.id)} style={{ background: 'none', border: '1px solid var(--border)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Trash2 size={16} /></button>
@@ -2892,25 +2892,25 @@ export default function ClientDashboard() {
                       <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
                         {provider.rgs && (
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>RGS:</span>
+                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_rgs')}:</span>
                             <span>{provider.rgs}</span>
                           </div>
                         )}
                         {provider.phone && (
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>Tel:</span>
+                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_phone')}:</span>
                             <span>{provider.phone}</span>
                           </div>
                         )}
                         {provider.address && (
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>Dir:</span>
+                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_address')}:</span>
                             <span style={{ whiteSpace: 'pre-wrap' }}>{provider.address}</span>
                           </div>
                         )}
                         {provider.products && (
                           <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('dashboard.provider_products_label') || "Productos que sirve"}</div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('providers.products')}</div>
                             <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{provider.products}</div>
                           </div>
                         )}
@@ -6524,7 +6524,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-              {isEditing ? t('dashboard.edit_provider') || "Editar proveedor" : t('dashboard.add_provider') || "Añadir proveedor"}
+              {isEditing ? t('dashboard.edit_provider') : t('dashboard.add_provider')}
             </h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}><X size={24} /></button>
@@ -6533,7 +6533,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div>
-              <label className="label">{t('providers.name') || "Nombre"} <span style={{color:'#ef4444'}}>*</span></label>
+              <label className="label">{t('providers.name')} <span style={{color:'#ef4444'}}>*</span></label>
               <input 
                 type="text" 
                 className="input-field" 
@@ -6543,7 +6543,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
               />
             </div>
             <div>
-              <label className="label">{t('providers.nif') || "NIF"}</label>
+              <label className="label">{t('providers.nif')}</label>
               <input 
                 type="text" 
                 className="input-field" 
@@ -6552,7 +6552,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
               />
             </div>
             <div>
-              <label className="label">{t('providers.rgs') || "RGS"}</label>
+              <label className="label">{t('providers.rgs')}</label>
               <input 
                 type="text" 
                 className="input-field" 
@@ -6561,7 +6561,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
               />
             </div>
             <div>
-              <label className="label">{t('providers.phone') || "Teléfono"}</label>
+              <label className="label">{t('providers.phone')}</label>
               <input 
                 type="text" 
                 className="input-field" 
@@ -6572,7 +6572,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
           </div>
 
           <div>
-            <label className="label">{t('providers.address') || "Dirección"}</label>
+            <label className="label">{t('providers.address')}</label>
             <textarea 
               className="input-field" 
               rows="3"
@@ -6583,7 +6583,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
           </div>
 
           <div>
-            <label className="label">{t('providers.products') || "Productos que sirve"}</label>
+            <label className="label">{t('providers.products')}</label>
             <textarea 
               className="input-field" 
               rows="3"

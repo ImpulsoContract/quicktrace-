@@ -121,6 +121,7 @@
     "new_goods_entry": "NUOVA ENTRATA",
     "providers_info": "Gestisci il tuo elenco di fornitori abituali",
     "add_provider": "Aggiungi fornitore",
+    "edit_provider": "Modifica fornitore",
     "view_delivery_notes": "Vedi DDT",
     "provider_receipts_header": "Documenti di trasporto di {name}",
     "no_receipts_for_provider": "Nessun DDT registrato per questo fornitore.",
@@ -751,5 +752,18 @@
       "force_processing": "Elaborazione di tutti gli utenti...",
       "accepted_date_label": "DATA DI ACCETTAZIONE"
     }
+  },
+  "providers": {
+    "name": "Nome",
+    "nif": "P.IVA / Codice Fiscale",
+    "rgs": "Registro Sanitario (RGS)",
+    "phone": "Telefono",
+    "address": "Indirizzo",
+    "products": "Prodotti forniti",
+    "list_nif": "P.IVA",
+    "list_rgs": "RGS",
+    "list_phone": "Tel",
+    "list_address": "Ind",
+    "list_products": "Prodotti"
   }
 }

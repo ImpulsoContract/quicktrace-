@@ -121,6 +121,7 @@
     "new_goods_entry": "NUEVA ENTRADA",
     "providers_info": "Gestiona tu lista de proveedores habituales",
     "add_provider": "Añadir proveedor",
+    "edit_provider": "Editar proveedor",
     "view_delivery_notes": "Ver albaranes",
     "provider_receipts_header": "Albaranes de {name}",
     "no_receipts_for_provider": "No hay albaranes registrados para este proveedor.",
@@ -751,5 +752,18 @@
       "force_processing": "Procesando a todos los usuarios...",
       "accepted_date_label": "FECHA DE ACEPTACIÓN"
     }
+  },
+  "providers": {
+    "name": "Nombre",
+    "nif": "NIF",
+    "rgs": "RGS",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "products": "Productos que sirve",
+    "list_nif": "NIF",
+    "list_rgs": "RGS",
+    "list_phone": "Tel",
+    "list_address": "Dir",
+    "list_products": "Productos"
   }
 }

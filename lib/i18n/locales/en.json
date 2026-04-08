@@ -121,6 +121,7 @@
     "new_goods_entry": "ADD ENTRY",
     "providers_info": "Manage your list of regular providers",
     "add_provider": "Add provider",
+    "edit_provider": "Edit provider",
     "view_delivery_notes": "View notes",
     "provider_receipts_header": "Delivery notes for {name}",
     "no_receipts_for_provider": "No delivery notes recorded for this provider.",
@@ -751,5 +752,18 @@
       "force_processing": "Processing all users...",
       "accepted_date_label": "ACCEPTANCE DATE"
     }
+  },
+  "providers": {
+    "name": "Name",
+    "nif": "Tax ID / NIF",
+    "rgs": "Health Registry (RGS)",
+    "phone": "Phone",
+    "address": "Address",
+    "products": "Products served",
+    "list_nif": "NIF",
+    "list_rgs": "RGS",
+    "list_phone": "Tel",
+    "list_address": "Addr",
+    "list_products": "Products"
   }
 }

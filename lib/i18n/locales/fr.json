@@ -121,6 +121,7 @@
     "new_goods_entry": "NOUVELLE ENTRÉE",
     "providers_info": "Gérez votre liste de fournisseurs habituels",
     "add_provider": "Ajouter un fournisseur",
+    "edit_provider": "Modifier le fournisseur",
     "view_delivery_notes": "Voir bons",
     "provider_receipts_header": "Bons de livraison de {name}",
     "no_receipts_for_provider": "Aucun bon de livraison enregistré pour ce fournisseur.",
@@ -751,5 +752,18 @@
       "force_processing": "Traitement de tous les utilisateurs...",
       "accepted_date_label": "DATE D'ACCEPTATION"
     }
+  },
+  "providers": {
+    "name": "Nom",
+    "nif": "NIF / TVA",
+    "rgs": "Registre Sanitaire (RGS)",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "products": "Produits servis",
+    "list_nif": "NIF",
+    "list_rgs": "RGS",
+    "list_phone": "Tél",
+    "list_address": "Adr",
+    "list_products": "Produits"
   }
 }
