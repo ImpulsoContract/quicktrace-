@@ -2100,6 +2100,9 @@ function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
                     <div style={{ fontWeight: '700', color: '#1e293b' }}>{aff.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{aff.email}</div>
                   </td>
+                  <td style={{ padding: '1.25rem 1rem' }}>
+                    <code style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.85rem' }}>
+                      {aff.clientProfile?.referralCode}
                     </code>
                   </td>
                   <td style={{ padding: '1.25rem 1rem', textAlign: 'center' }}>
