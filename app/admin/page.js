@@ -583,6 +583,9 @@ export default function AdminDashboard() {
                           <th onClick={() => handleSort('login')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
                             {t('admin.list.col_last_login')} {sortConfig.key === 'login' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
+                          <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Origen
+                          </th>
                           <th onClick={() => handleSort('renewal')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
                             {t('admin.list.col_renewal')} {sortConfig.key === 'renewal' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
@@ -623,6 +626,24 @@ export default function AdminDashboard() {
                                   )}
                                 </div>
                               ) : <span style={{ color: '#94a3b8' }}>-</span>}
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.8rem' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <span style={{
+                                  padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: '800', width: 'fit-content',
+                                  background: client.clientProfile?.origin === 'META' ? '#dbeafe' : client.clientProfile?.origin === 'AFFILIATE' ? '#fde68a' : '#f1f5f9',
+                                  color: client.clientProfile?.origin === 'META' ? '#1e40af' : client.clientProfile?.origin === 'AFFILIATE' ? '#92400e' : '#64748b',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  {client.clientProfile?.origin || 'DIRECT'}
+                                </span>
+                                {client.clientProfile?.origin === 'META' && (
+                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', lineHeight: '1.2' }}>
+                                    <div style={{ fontWeight: '600' }}>C: {client.clientProfile.utmCampaign || '-'}</div>
+                                    <div>A: {client.clientProfile.utmContent || '-'}</div>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
                               {client.clientProfile?.stripeCurrentPeriodEnd ? (

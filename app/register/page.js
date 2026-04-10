@@ -20,7 +20,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [referralCode, setReferralCode] = useState("");
+  const [utmData, setUtmData] = useState({
+    utmSource: "",
+    utmMedium: "",
+    utmCampaign: "",
+    utmContent: ""
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -28,6 +33,14 @@ export default function RegisterPage() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
       if (ref) setReferralCode(ref);
+
+      // Capture UTMs
+      setUtmData({
+        utmSource: params.get("utm_source") || "",
+        utmMedium: params.get("utm_medium") || "",
+        utmCampaign: params.get("utm_campaign") || "",
+        utmContent: params.get("utm_content") || ""
+      });
     }
   }, []);
 
@@ -40,7 +53,12 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, referralCode, locale })
+        body: JSON.stringify({ 
+          ...formData, 
+          referralCode, 
+          locale,
+          ...utmData
+        })
       });
       const data = await res.json();
 

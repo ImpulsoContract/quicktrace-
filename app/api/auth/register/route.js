@@ -8,7 +8,10 @@ import { headers } from "next/headers";
 
 export async function POST(req) {
   try {
-    const { name, email, razonSocial, phone, termsAccepted, referralCode, locale } = await req.json();
+    const { 
+      name, email, razonSocial, phone, termsAccepted, referralCode, locale,
+      utmSource, utmMedium, utmCampaign, utmContent 
+    } = await req.json();
     const headersList = headers();
 
     if (!name || !email || !razonSocial || !phone) {
@@ -76,7 +79,12 @@ export async function POST(req) {
           accountType: demoPlan ? demoPlan.name : "DEMO",
           recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
           canManageRecipes: true,
-          referredById: referrer ? referrer.id : undefined
+          referredById: referrer ? referrer.id : undefined,
+          origin: referrer ? 'AFFILIATE' : (utmSource === 'meta' ? 'META' : 'DIRECT'),
+          utmSource: utmSource || null,
+          utmMedium: utmMedium || null,
+          utmCampaign: utmCampaign || null,
+          utmContent: utmContent || null
         }
       });
     });

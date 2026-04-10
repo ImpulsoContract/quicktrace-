@@ -23,6 +23,11 @@ export async function GET() {
         clientProfile: {
           include: {
             plan: true,
+            origin: true,
+            utmSource: true,
+            utmMedium: true,
+            utmCampaign: true,
+            utmContent: true,
             _count: {
               select: { recipes: true }
             }

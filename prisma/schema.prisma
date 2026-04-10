@@ -75,6 +75,13 @@ model ClientProfile {
   referredBy            ClientProfile?  @relation("Referrals", fields: [referredById], references: [id])
   referrals             ClientProfile[] @relation("Referrals")
 
+  // Origin / UTM Tracking
+  origin                String?  @default("DIRECT")
+  utmSource             String?
+  utmMedium             String?
+  utmCampaign           String?
+  utmContent            String?
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
