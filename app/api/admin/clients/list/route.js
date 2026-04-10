@@ -21,13 +21,21 @@ export async function GET() {
         lastLoginLanguage: true,
         termsAcceptedAt: true,
         clientProfile: {
-          include: {
-            plan: true,
+          select: {
+            id: true,
+            razonSocial: true,
+            nif: true,
+            phone: true,
+            personName: true,
+            accountType: true,
+            recetasContratadas: true,
+            stripeCurrentPeriodEnd: true,
             origin: true,
             utmSource: true,
             utmMedium: true,
             utmCampaign: true,
             utmContent: true,
+            plan: true,
             _count: {
               select: { recipes: true }
             }
