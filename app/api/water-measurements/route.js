@@ -85,7 +85,8 @@ export async function POST(req) {
       odor,
       flavor,
       color,
-      responsible
+      responsible,
+      receiptImage
     } = body;
 
     if (!date || chlorine === undefined) {
@@ -102,6 +103,7 @@ export async function POST(req) {
         flavor: !!flavor,
         color: !!color,
         responsible,
+        receiptImage,
         clientProfileId: profile.id
       }
     });
@@ -138,7 +140,8 @@ export async function PATCH(req) {
       odor,
       flavor,
       color,
-      responsible
+      responsible,
+      receiptImage
     } = body;
 
     if (!id || !date || chlorine === undefined) {
@@ -158,7 +161,8 @@ export async function PATCH(req) {
         odor: !!odor,
         flavor: !!flavor,
         color: !!color,
-        responsible
+        responsible,
+        receiptImage
       }
     });
 

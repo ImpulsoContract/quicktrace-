@@ -232,7 +232,8 @@ export default function ClientDashboard() {
     odor: false,
     flavor: false,
     color: false,
-    responsible: ""
+    responsible: "",
+    receiptImage: ""
   });
 
   // Bulk Selection State
@@ -867,6 +868,17 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleWaterImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setWaterForm({ ...waterForm, receiptImage: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmitWater = async (e) => {
     e.preventDefault();
     if (!waterForm.date || waterForm.chlorine === "") {
@@ -897,7 +909,8 @@ export default function ClientDashboard() {
           odor: false,
           flavor: false,
           color: false,
-          responsible: ""
+          responsible: "",
+          receiptImage: ""
         });
         fetchWaterMeasurements();
       } else {
@@ -922,7 +935,8 @@ export default function ClientDashboard() {
       odor: !!measurement.odor,
       flavor: !!measurement.flavor,
       color: !!measurement.color,
-      responsible: measurement.responsible || ""
+      responsible: measurement.responsible || "",
+      receiptImage: measurement.receiptImage || ""
     });
     setIsWaterModalOpen(true);
   };
@@ -3628,6 +3642,7 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.chlorine') || "Cloro"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('water.table_checks')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.responsible') || "Responsable"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('water.receipt') || "Recibo"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
@@ -3646,6 +3661,17 @@ export default function ClientDashboard() {
                               </div>
                             </td>
                             <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{m.responsible || '-'}</td>
+                            <td style={{ padding: '1.5rem 2rem', textAlign: 'center' }}>
+                              {m.receiptImage && (
+                                <button 
+                                  onClick={() => setViewingImage(m.receiptImage)}
+                                  style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0ea5e9', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                  title={t('common.view_image') || "Ver imagen"}
+                                >
+                                  <Camera size={16} />
+                                </button>
+                              )}
+                            </td>
                             <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                 <button 
@@ -4296,6 +4322,7 @@ export default function ClientDashboard() {
           setFormData={setWaterForm}
           loading={loading}
           isEditing={!!editingWaterMeasurement}
+          onImageChange={handleWaterImageChange}
         />
       )}
 
@@ -6605,7 +6632,7 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
   );
 }
 
-function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange }) {
   const { t } = useI18n();
   
   return (
@@ -6701,6 +6728,56 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
                 </div>
               </div>
             ))}
+          </div>
+
+          <div>
+            <label className="label">{t('water.receipt_photo') || "Foto del recibo (opcional)"}</label>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div 
+                onClick={() => document.getElementById('water-receipt-upload').click()}
+                style={{ 
+                  flex: 1, 
+                  height: '100px', 
+                  border: '2px dashed var(--border)', 
+                  borderRadius: '1rem', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer',
+                  background: 'white',
+                  transition: 'all 0.2s',
+                  color: 'var(--text-muted)'
+                }}
+                onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.color = 'var(--corp-green)'; }}
+                onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+              >
+                {formData.receiptImage ? (
+                  <img src={formData.receiptImage} alt="Recibo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <>
+                    <Camera size={24} />
+                    <span style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>{t('common.upload_image')}</span>
+                  </>
+                )}
+              </div>
+              {formData.receiptImage && (
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, receiptImage: ""})}
+                  style={{ padding: '0.5rem', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}
+                >
+                  <Trash2 size={20} />
+                </button>
+              )}
+            </div>
+            <input 
+              id="water-receipt-upload"
+              type="file" 
+              accept="image/*" 
+              onChange={onImageChange} 
+              style={{ display: 'none' }} 
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>

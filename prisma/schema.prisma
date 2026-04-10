@@ -357,6 +357,7 @@ model WaterMeasurement {
   flavor            Boolean       @default(false)
   color             Boolean       @default(false)
   responsible       String?
+  receiptImage      String?       // Base64 or URL
   
   clientProfileId   Int
   clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
