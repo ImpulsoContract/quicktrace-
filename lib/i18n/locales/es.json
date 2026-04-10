@@ -41,7 +41,9 @@
     "year": "año",
     "recipes": "Recetas",
     "elaborations": "Elaboraciones",
-    "ingredients": "Ingredientes"
+    "ingredients": "Ingredientes",
+    "view_image": "Ver imagen",
+    "upload_image": "Subir imagen"
   },
   "profile": {
     "title": "Perfil",
@@ -578,7 +580,9 @@
     "table_chlorine": "Cloro",
     "table_checks": "Controles (T/O/S/C)",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "receipt": "Recibo",
+    "receipt_photo": "Foto del recibo (opcional)"
   },
   "admin": {
     "sidebar": {
