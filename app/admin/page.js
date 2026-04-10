@@ -2088,6 +2088,7 @@ function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
               <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>{t('admin.affiliates.col_email')}</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>{t('admin.affiliates.col_link')}</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('admin.affiliates.col_referrals')}</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('admin.affiliates.col_balance')}</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
               </tr>
@@ -2099,10 +2100,19 @@ function AffiliatesTab({ affiliates, loading, onViewDetails, onSettle }) {
                     <div style={{ fontWeight: '700', color: '#1e293b' }}>{aff.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{aff.email}</div>
                   </td>
-                  <td style={{ padding: '1.25rem 1rem' }}>
-                    <code style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.85rem' }}>
-                      {aff.clientProfile?.referralCode}
                     </code>
+                  </td>
+                  <td style={{ padding: '1.25rem 1rem', textAlign: 'center' }}>
+                    <span style={{ 
+                      background: 'rgba(59, 130, 246, 0.1)', 
+                      color: '#2563eb', 
+                      padding: '0.3rem 0.6rem', 
+                      borderRadius: '0.5rem', 
+                      fontWeight: '800', 
+                      fontSize: '0.85rem' 
+                    }}>
+                      {aff.referralCount || 0}
+                    </span>
                   </td>
                   <td style={{ padding: '1.25rem 1rem', textAlign: 'right', fontWeight: '700', color: aff.pendingCommission > 0 ? 'var(--corp-green)' : 'var(--text-muted)' }}>
                     {aff.pendingCommission.toFixed(2)} €

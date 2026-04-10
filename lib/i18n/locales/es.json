@@ -712,6 +712,7 @@
       "col_email": "Usuario / Email",
       "col_link": "Enlace",
       "col_code": "Código",
+      "col_referrals": "Recomendados",
       "col_balance": "Balance Pendiente",
       "col_total": "Total Generado",
       "settle": "Liquidar",

@@ -712,6 +712,7 @@
       "col_email": "User / Email",
       "col_link": "Link",
       "col_code": "Code",
+      "col_referrals": "Referrals",
       "col_balance": "Pending Balance",
       "col_total": "Total Generated",
       "settle": "Settle",

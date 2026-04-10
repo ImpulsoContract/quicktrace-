@@ -92,9 +92,11 @@ export async function GET() {
         createdAt: aff.createdAt,
         clientProfile: {
           ...aff.clientProfile,
-          pendingCommission: totalGeneratedReal - settled
+          pendingCommission: totalGeneratedReal - settled,
+          referralCount: aff.clientProfile.referrals.length
         },
-        pendingCommission: totalGeneratedReal - settled
+        pendingCommission: totalGeneratedReal - settled,
+        referralCount: aff.clientProfile.referrals.length
       };
     }));
 
