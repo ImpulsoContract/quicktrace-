@@ -380,7 +380,8 @@
     "water_limit_reached": "You have reached the water measurement limit for your plan.",
     "product_date_required": "Product and date are required",
     "file_too_large": "Error: The attached file is too large. Please upload smaller image or lower the resolution (Max 4.5 MB).",
-    "prices_saved": "Prices saved successfully"
+    "prices_saved": "Prices saved successfully",
+    "delete_confirm_worker": "Are you sure you want to delete this worker?"
   },
   "affiliate": {
     "sidebar_link": "Earn money with Quicktrace",

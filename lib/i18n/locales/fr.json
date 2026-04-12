@@ -369,7 +369,8 @@
     "water_updated": "Mesure de l'eau mise à jour",
     "water_limit_reached": "Vous avez atteint la limite de mesures d'eau pour votre plan.",
     "product_date_required": "Le produit et la date sont obligatoires",
-    "file_too_large": "Erreur : Le fichier joint est trop volumineux. Veuillez télécharger une image plus petite ou diminuer la résolution (Max 4.5 MB)."
+    "file_too_large": "Erreur : Le fichier joint est trop volumineux. Veuillez télécharger une image plus petite ou diminuer la résolution (Max 4.5 MB).",
+    "delete_confirm_worker": "Êtes-vous sûr de vouloir supprimer ce travailleur ?"
   },
   "affiliate": {
     "sidebar_link": "Gagnez de l'argent avec Quicktrace",

@@ -380,7 +380,8 @@
     "water_limit_reached": "Has alcanzado el límite de mediciones de agua para tu plan.",
     "product_date_required": "Producto y fecha son obligatorios",
     "file_too_large": "Error: El archivo de foto/albarán adjunto es demasiado grande. Por favor, sube una imagen menos pesada o baja la resolución (Máx 4.5 MB).",
-    "prices_saved": "Precios guardados correctamente"
+    "prices_saved": "Precios guardados correctamente",
+    "delete_confirm_worker": "¿Seguro que quieres eliminar este trabajador?"
   },
   "affiliate": {
     "sidebar_link": "Gana dinero con Quicktrace",

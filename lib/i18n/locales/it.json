@@ -369,7 +369,8 @@
     "water_updated": "Misurazione acqua aggiornata",
     "water_limit_reached": "Hai raggiunto il limite di misurazioni acqua per il tuo piano.",
     "product_date_required": "Prodotto e data sono obbligatori",
-    "file_too_large": "Errore: Il file allegato è troppo grande. Si prega di caricare un'immagine più piccola o abbassare la risoluzione (Max 4.5 MB)."
+    "file_too_large": "Errore: Il file allegato è troppo grande. Si prega di caricare un'immagine più piccola o abbassare la risoluzione (Max 4.5 MB).",
+    "delete_confirm_worker": "Sei sicuro di voler eliminare questo lavoratore ?"
   },
   "affiliate": {
     "sidebar_link": "Guadagna con Quicktrace",

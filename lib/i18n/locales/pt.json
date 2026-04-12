@@ -380,7 +380,8 @@
     "water_limit_reached": "Atingiu o limite de medições de água para o seu plano.",
     "product_date_required": "Produto e data são obrigatórios",
     "file_too_large": "Erro: O ficheiro de foto/guia de remessa anexado é demasiado grande. Por favor, carregue uma imagem menos pesada o reduza a resolução (Máx. 4.5 MB).",
-    "prices_saved": "Preços guardados com sucesso"
+    "prices_saved": "Preços guardados com sucesso",
+    "delete_confirm_worker": "Tem certeza que deseja eliminar este trabalhador?"
   },
   "affiliate": {
     "sidebar_link": "Ganhe dinheiro com o Quicktrace",
