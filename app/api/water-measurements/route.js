@@ -5,16 +5,17 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  try {
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasWater) {
+    return NextResponse.json({ error: "No tienes permiso para acceder a agua" }, { status: 403 });
+  }
 
-    if (!profile) {
+  try {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
@@ -22,7 +23,7 @@ export async function GET(req) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const where = { clientProfileId: profile.id };
+    const where = { clientProfileId: profileId };
     
     if (startDate || endDate) {
       where.date = {};
@@ -43,19 +44,24 @@ export async function GET(req) {
     return NextResponse.json(measurements);
   } catch (error) {
     console.error("Error fetching water measurements:", error);
-    return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasWater) {
+    return NextResponse.json({ error: "No tienes permiso para registrar mediciones de agua" }, { status: 403 });
+  }
+
   try {
+    const profileId = session.user.profileId;
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) },
+      where: { id: profileId },
       include: { 
         plan: true,
         _count: { select: { waterMeasurements: true } }
@@ -117,19 +123,16 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasWater) {
+    return NextResponse.json({ error: "No tienes permiso para modificar mediciones de agua" }, { status: 403 });
+  }
+
   try {
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
-      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
-    }
-
+    const profileId = session.user.profileId;
     const body = await req.json();
     const { 
       id,
@@ -151,7 +154,7 @@ export async function PATCH(req) {
     const measurement = await prisma.waterMeasurement.update({
       where: { 
         id: parseInt(id),
-        clientProfileId: profile.id
+        clientProfileId: profileId
       },
       data: {
         date: new Date(date),
@@ -175,8 +178,12 @@ export async function PATCH(req) {
 
 export async function DELETE(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (session.user.role === "WORKER") {
+    return NextResponse.json({ error: "No tienes permisos para eliminar registros" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -199,18 +206,15 @@ export async function DELETE(req) {
   }
 
   try {
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
     const deleteResult = await prisma.waterMeasurement.deleteMany({
       where: { 
         id: { in: idsToDelete },
-        clientProfileId: profile.id
+        clientProfileId: profileId
       }
     });
     return NextResponse.json({ success: true, count: deleteResult.count });

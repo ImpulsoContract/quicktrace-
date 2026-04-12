@@ -69,7 +69,8 @@
     "cancellation_notice": "Al cancelar la suscripción, mantendrás tus beneficios hasta el final del periodo de facturación actual. Después, tu cuenta volverá al plan Demo.",
     "cancel_confirm": "¿Seguro que quieres cancelar la renovación automática? Mantendrás el plan hasta el final del periodo.",
     "cancel_success": "Suscripción cancelada correctamente.",
-    "cancel_error": "Error al procesar la cancelación."
+    "cancel_error": "Error al procesar la cancelación.",
+    "terms_link": "Condiciones de uso de Quicktrace"
   },
   "auth": {
     "welcome": "Bienvenido de nuevo",
@@ -165,7 +166,10 @@
     "elaboration_name_header": "Nombre Elaboración",
     "elaboration_date_header": "Fecha",
     "elaboration_recipe_header": "Receta",
+    "cost_header": "Coste de las materias primas",
+    "assign_costs_link": "Asigna el coste a cada materia prima",
     "recipe_filter": "Filtrar por Receta",
+    "workers": "Trabajadores",
     "all_recipes": "Todas las recetas",
     "traceability_report": "Informe de trazabilidad",
     "generate_report": "Generar Informe",
@@ -177,17 +181,23 @@
     "generate_cleaning_report": "Generar informe de limpieza",
     "temp_report": "Informe de temperaturas",
     "generate_temp_report": "Generar informe de temperaturas",
+    "water_report": "Informe de Control de Aguas",
+    "generate_water_report": "Sacar un informe",
+    "provider_list_report": "Listado de Proveedores",
+    "generate_provider_list": "Sacar un listado",
     "recipe_manage_desc": "Configura tus recetas.",
     "new_record": "Nuevo Registro de Limpieza.",
     "manage_recipes": "Recetas contratadas",
     "showing_info": "Mostrando {start} - {end} de {total} elaboraciones",
+    "showing_last_10": "Mostrando las últimas 10 entradas registradas",
     "delivery_note_photo": "Puedes adjuntar una foto del albarán",
     "save_entry": "Guardar",
     "invoice": "Factura",
     "video_help": "Video ayuda",
     "configure_labels": "Configurar etiquetas",
     "upload_photo": "Subir foto del albarán",
-    "photo_format": "Haz una foto o selecciona un archivo"
+    "photo_format": "Haz una foto o selecciona un archivo",
+    "ingredient_costs_btn": "Precios de coste de cada mercancía"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -304,7 +314,29 @@
       "healthRegistry": "Registro sanitario"
     },
     "drag_elements": "Arrastra elementos aquí",
-    "none": "Ninguno"
+    "none": "Ninguno",
+    "ingredient_costs_header": "Precios de Coste de Materias Primas",
+    "ingredient_costs_desc": "Añade aquí los precios de coste de este momento para saber luego el precio de coste de las materias primas en cada elaboración. Si una materia prima te aparece varias veces, es porque la tienes con diferentes unidades de medida en cada receta. Fíjate bien en la unidad de medida de cada materia prima para añadir el precio de coste. Por ejemplo, si una materia prima es el arroz, fíjate si tienes que poner el precio de un gramo o de un kilo.",
+    "ingredient_column": "Ingrediente y Unidad",
+    "recipes_column": "Recetas que lo usan",
+    "cost_price_column": "Precio de Coste (por unidad)",
+    "workers": {
+      "title": "Gestión de Trabajadores",
+      "subtitle": "Crea y gestiona los accesos de tu personal.",
+      "add_btn": "Añadir Trabajador",
+      "name": "Nombre",
+      "user": "Usuario/Email",
+      "permissions": "Permisos",
+      "no_workers": "No has añadido ningún trabajador todavía.",
+      "add_title": "Nuevo Trabajador",
+      "edit_title": "Editar Trabajador",
+      "name_lbl": "Nombre completo",
+      "user_lbl": "Usuario / Email",
+      "password_lbl": "Contraseña",
+      "password_edit_lbl": "Contraseña (dejar en blanco para no cambiar)",
+      "permissions_lbl": "Permisos de acceso",
+      "create_btn": "Crear Trabajador"
+    }
   },
   "alerts": {
     "missing_data": "Faltan datos obligatorios:",
@@ -346,7 +378,8 @@
     "water_updated": "Medición de agua actualizada",
     "water_limit_reached": "Has alcanzado el límite de mediciones de agua para tu plan.",
     "product_date_required": "Producto y fecha son obligatorios",
-    "file_too_large": "Error: El archivo de foto/albarán adjunto es demasiado grande. Por favor, sube una imagen menos pesada o baja la resolución (Máx 4.5 MB)."
+    "file_too_large": "Error: El archivo de foto/albarán adjunto es demasiado grande. Por favor, sube una imagen menos pesada o baja la resolución (Máx 4.5 MB).",
+    "prices_saved": "Precios guardados correctamente"
   },
   "affiliate": {
     "sidebar_link": "Gana dinero con Quicktrace",
@@ -501,6 +534,7 @@
     "goods": "Entradas Mercancías",
     "temperatures": "Control Temperatura",
     "water": "Mediciones de Agua",
+    "providers": "Gestión de proveedores",
     "unlimited": "Ilimitadas",
     "unlimited_feature": "Ilimitado",
     "current_plan": "Plan Actual",
@@ -582,7 +616,8 @@
     "yes": "Sí",
     "no": "No",
     "receipt": "Recibo",
-    "receipt_photo": "Foto del recibo (opcional)"
+    "receipt_photo": "Foto del recibo (opcional)",
+    "generate_report": "Sacar un informe"
   },
   "admin": {
     "sidebar": {
@@ -770,6 +805,9 @@
     "list_rgs": "RGS",
     "list_phone": "Tel",
     "list_address": "Dir",
-    "list_products": "Productos"
+    "list_products": "Productos",
+    "restricted_title": "Esta sección solo es para usuario con un plan de pago.",
+    "restricted_desc": "En esta sección podrás dar de alta a todos tus proveedores con todos sus datos y utilizar esta información en la entrada de mercancías entre otra funcionalidades",
+    "view_plans": "Consulta aquí los planes de Quicktrace"
   }
 }

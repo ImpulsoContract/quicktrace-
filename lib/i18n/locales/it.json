@@ -69,7 +69,8 @@
     "cancellation_notice": "Annullando l'abbonamento, manterrai i tuoi vantaggi fino alla fine del periodo di fatturazione corrente. Successivamente, il tuo account tornerà al piano Demo.",
     "cancel_confirm": "Sei sicuro di voler annullare il rinnovo automatico? Manterrai il piano fino alla fine del periodo.",
     "cancel_success": "Abbonamento annullato correttamente.",
-    "cancel_error": "Errore durante l'elaborazione dell'annullamento."
+    "cancel_error": "Errore durante l'elaborazione dell'annullamento.",
+    "terms_link": "Condizioni d'uso di Quicktrace"
   },
   "auth": {
     "welcome": "Bentornato",
@@ -177,6 +178,10 @@
     "generate_cleaning_report": "Genera report pulizia",
     "temp_report": "Report temperature",
     "generate_temp_report": "Genera report temperature",
+    "water_report": "Rapporto Controllo Acqua",
+    "generate_water_report": "Genera rapporto",
+    "provider_list_report": "Elenco Fornitori",
+    "generate_provider_list": "Genera elenco",
     "recipe_manage_desc": "Configura le tue ricette.",
     "new_record": "Nuovo Record di Pulizia.",
     "manage_recipes": "Ricette contrattate",
@@ -501,6 +506,7 @@
     "goods": "Entrate Merci",
     "temperatures": "Controllo Temperatura",
     "water": "Misurazioni Acqua",
+    "providers": "Gestione dei fornitori",
     "unlimited": "Illimitate",
     "unlimited_feature": "Illimitato",
     "current_plan": "Piano Attuale",
@@ -582,7 +588,8 @@
     "yes": "Sì",
     "no": "No",
     "receipt": "Ricevuta",
-    "receipt_photo": "Foto della ricevuta (opzionale)"
+    "receipt_photo": "Foto della ricevuta (opzionale)",
+    "generate_report": "Genera rapporto"
   },
   "admin": {
     "sidebar": {
@@ -770,6 +777,9 @@
     "list_rgs": "RGS",
     "list_phone": "Tel",
     "list_address": "Ind",
-    "list_products": "Prodotti"
+    "list_products": "Prodotti",
+    "restricted_title": "Questa sezione è solo per gli utenti con un piano a pagamento.",
+    "restricted_desc": "In questa sezione puoi registrare tutti i tuoi fornitori con tutti i loro dati e utilizzare queste informazioni nelle entrate merce tra le altre funzionalità.",
+    "view_plans": "Controlla i piani Quicktrace qui"
   }
 }

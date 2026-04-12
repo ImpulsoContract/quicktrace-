@@ -5,8 +5,12 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasTemperatures) {
+    return NextResponse.json({ error: "No tienes permiso para acceder a temperaturas" }, { status: 403 });
   }
 
   try {
@@ -14,15 +18,12 @@ export async function GET(req) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
-    const where = { clientProfileId: profile.id };
+    const where = { clientProfileId: profileId };
 
     if (startDate || endDate) {
       where.date = {};
@@ -57,13 +58,18 @@ export async function GET(req) {
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasTemperatures) {
+    return NextResponse.json({ error: "No tienes permiso para registrar temperaturas" }, { status: 403 });
+  }
+
   try {
+    const profileId = session.user.profileId;
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) },
+      where: { id: profileId },
       include: { 
         plan: true,
         _count: { select: { temperatureRecords: true } }
@@ -109,14 +115,23 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasTemperatures) {
+    return NextResponse.json({ error: "No tienes permiso para modificar temperaturas" }, { status: 403 });
   }
 
   try {
     const { id, date, values } = await req.json();
     if (!id || !date || !values) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+
+    const existing = await prisma.temperatureRecord.findUnique({ where: { id: parseInt(id) } });
+    if (!existing || existing.clientProfileId !== session.user.profileId) {
+      return NextResponse.json({ error: "No autorizado o no encontrado" }, { status: 403 });
     }
 
     const record = await prisma.temperatureRecord.update({
@@ -142,8 +157,12 @@ export async function PATCH(req) {
 
 export async function DELETE(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (session.user.role === "WORKER") {
+    return NextResponse.json({ error: "No tienes permisos para eliminar registros" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -166,18 +185,15 @@ export async function DELETE(req) {
   }
 
   try {
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
     const deleteResult = await prisma.temperatureRecord.deleteMany({
       where: { 
         id: { in: idsToDelete },
-        clientProfileId: profile.id
+        clientProfileId: profileId
       }
     });
     return NextResponse.json({ success: true, count: deleteResult.count });

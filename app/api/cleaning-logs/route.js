@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 export async function GET(req) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
@@ -15,15 +15,12 @@ export async function GET(req) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
-    const where = { clientProfileId: profile.id };
+    const where = { clientProfileId: profileId };
 
     if (startDate || endDate) {
       where.date = {};
@@ -59,13 +56,14 @@ export async function GET(req) {
 export async function POST(req) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   try {
+    const profileId = session.user.profileId;
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) },
+      where: { id: profileId },
       include: { 
         plan: true,
         _count: { select: { cleaningLogs: true } }
@@ -113,7 +111,7 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
@@ -121,6 +119,11 @@ export async function PATCH(req) {
     const { id, personName, date, selectedZones } = await req.json();
     if (!id || !personName || !date || !Array.isArray(selectedZones)) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+
+    const currentLog = await prisma.cleaningLog.findUnique({ where: { id: parseInt(id) } });
+    if (!currentLog || currentLog.clientProfileId !== session.user.profileId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     // Update the log and its zones relation
@@ -147,8 +150,12 @@ export async function PATCH(req) {
 
 export async function DELETE(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (session.user.role === "WORKER") {
+    return NextResponse.json({ error: "No tienes permisos para eliminar registros" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -164,27 +171,22 @@ export async function DELETE(req) {
         idsToDelete = body.ids.map(id => parseInt(id));
       }
     }
-  } catch (e) {
-    // Body might be empty
-  }
+  } catch (e) {}
 
   if (idsToDelete.length === 0) {
     return NextResponse.json({ error: "IDs requeridos" }, { status: 400 });
   }
 
   try {
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
     const deleteResult = await prisma.cleaningLog.deleteMany({
       where: { 
         id: { in: idsToDelete },
-        clientProfileId: profile.id
+        clientProfileId: profileId
       }
     });
     return NextResponse.json({ success: true, count: deleteResult.count });

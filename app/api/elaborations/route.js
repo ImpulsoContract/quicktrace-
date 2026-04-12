@@ -7,7 +7,13 @@ import { toTitleCase } from "@/lib/utils";
 export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasTraceability) {
+      return NextResponse.json({ error: "No tienes permiso para acceder a trazabilidad" }, { status: 403 });
+    }
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -19,18 +25,14 @@ export async function GET(req) {
 
     const skip = (page - 1) * limit;
 
-    // Buscar el perfil del cliente asociado al usuario de la sesión usando el ID
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
     const where = {
       recipe: {
-        clientProfileId: profile.id
+        clientProfileId: profileId
       }
     };
 
@@ -96,14 +98,20 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasTraceability) {
+      return NextResponse.json({ error: "No tienes permiso para registrar elaboraciones" }, { status: 403 });
+    }
 
     const data = await req.json();
     const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut } = data;
 
-    // Buscar el perfil del cliente
+    const profileId = session.user.profileId;
     const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) },
+      where: { id: profileId },
       include: { plan: true }
     });
 
@@ -112,7 +120,7 @@ export async function POST(req) {
     }
 
     if (!profile.plan) {
-      return NextResponse.json({ error: "No tienes un plan asignado. Contacta con soporte." }, { status: 403 });
+      return NextResponse.json({ error: "No tienes un plan asignado." }, { status: 403 });
     }
 
     // Check limits
@@ -128,7 +136,7 @@ export async function POST(req) {
 
     if (limit !== null && currentCount >= limit) {
       return NextResponse.json({ 
-        error: `Límite alcanzado. Tu plan '${profile.plan.name}' permite ${limit} elaboraciones y ya has creado ${currentCount}.` 
+        error: `Límite alcanzado.` 
       }, { status: 403 });
     }
 
@@ -140,6 +148,24 @@ export async function POST(req) {
     if (!recipe || recipe.clientProfileId !== profile.id) {
       return NextResponse.json({ error: "Receta no encontrada o no pertenece al cliente" }, { status: 403 });
     }
+
+    // Calculate Cost Price
+    const existingPrices = await prisma.ingredientPrice.findMany({
+      where: { clientProfileId: profile.id }
+    });
+
+    const priceMap = {};
+    existingPrices.forEach(p => {
+      priceMap[`${p.name.toLowerCase()}_${p.unit.toLowerCase()}`] = p.price;
+    });
+
+    let totalCost = 0;
+    ingredients.forEach(ing => {
+      const lookupKey = `${ing.name.toLowerCase()}_${ing.unit.toLowerCase()}`;
+      const price = priceMap[lookupKey] || 0;
+      const amount = parseFloat(ing.realAmount.toString().replace(',', '.')) || 0;
+      totalCost += amount * price;
+    });
 
     const elaboration = await prisma.elaboration.create({
       data: {
@@ -153,6 +179,7 @@ export async function POST(req) {
         workshopTemp: data.workshopTemp,
         quantityProduced: data.quantityProduced,
         netWeight: data.netWeight,
+        costPrice: totalCost,
         ingredients: {
           create: ingredients.map(ing => ({
             name: toTitleCase(ing.name),
@@ -178,18 +205,20 @@ export async function POST(req) {
 export async function PATCH(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasTraceability) {
+      return NextResponse.json({ error: "No tienes permiso para modificar elaboraciones" }, { status: 403 });
+    }
 
     const data = await req.json();
     const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, ingredients } = data;
 
     if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    const profileId = session.user.profileId;
 
     // Verify ownership
     const existing = await prisma.elaboration.findUnique({
@@ -197,9 +226,19 @@ export async function PATCH(req) {
       include: { recipe: true }
     });
 
-    if (!existing || existing.recipe.clientProfileId !== profile.id) {
+    if (!existing || existing.recipe.clientProfileId !== profileId) {
       return NextResponse.json({ error: "No autorizado o no encontrado" }, { status: 403 });
     }
+
+    // Calculate Cost Price
+    const existingPrices = await prisma.ingredientPrice.findMany({
+      where: { clientProfileId: profileId }
+    });
+
+    const priceMap = {};
+    existingPrices.forEach(p => {
+      priceMap[`${p.name.toLowerCase()}_${p.unit.toLowerCase()}`] = p.price;
+    });
 
     const updateData = {
       name,
@@ -214,6 +253,15 @@ export async function PATCH(req) {
     };
 
     if (ingredients) {
+      let totalCost = 0;
+      ingredients.forEach(ing => {
+        const lookupKey = `${ing.name.toLowerCase()}_${ing.unit.toLowerCase()}`;
+        const price = priceMap[lookupKey] || 0;
+        const amount = parseFloat(ing.realAmount.toString().replace(',', '.')) || 0;
+        totalCost += amount * price;
+      });
+      updateData.costPrice = totalCost;
+
       updateData.ingredients = {
         deleteMany: {},
         create: ingredients.map(ing => ({
@@ -240,10 +288,17 @@ export async function PATCH(req) {
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
+
 export async function DELETE(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER") {
+      return NextResponse.json({ error: "No tienes permisos para eliminar registros" }, { status: 403 });
+    }
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -263,21 +318,14 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "IDs requeridos" }, { status: 400 });
     }
 
-    // Buscar el perfil del cliente
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
-      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
-    }
+    const profileId = session.user.profileId;
 
     // Delete records that belong to the client
     const deleteResult = await prisma.elaboration.deleteMany({
       where: {
         id: { in: idsToDelete },
         recipe: {
-          clientProfileId: profile.id
+          clientProfileId: profileId
         }
       }
     });

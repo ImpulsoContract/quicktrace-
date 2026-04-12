@@ -226,6 +226,7 @@ export default function PlansPage() {
                   <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={plan.goodsLimit} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Thermometer size={18}/>} label={t('plans.temperatures')} active={plan.hasTemperatures} limit={plan.temperaturesLimit} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Droplets size={18}/>} label={t('plans.water')} active={plan.hasWater} limit={plan.waterLimit} t={t} showAsterisk={true} />
+                  <FeatureToggle icon={<Package size={18}/>} label={t('plans.providers')} active={plan.hasProviders} t={t} />
                 </div>
 
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.25rem', lineHeight: '1.4' }}>

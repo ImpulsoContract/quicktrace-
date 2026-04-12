@@ -8,245 +8,251 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  role      String   @default("CLIENT") // ADMIN, CLIENT
-  
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String
+  name     String?
+  role     String  @default("CLIENT") // ADMIN, CLIENT
+
   emailVerified            Boolean   @default(false)
   verificationToken        String?
   verificationTokenExpires DateTime?
   resetPasswordToken       String?
   resetPasswordExpires     DateTime?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lastLogin DateTime?
-  lastLoginLanguage String?
-  termsAcceptedAt DateTime?
-  pendingTermsUpdate Boolean @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastLogin          DateTime?
+  lastLoginLanguage  String?
+  termsAcceptedAt    DateTime?
+  pendingTermsUpdate Boolean   @default(false)
 
   clientProfile ClientProfile?
+  worker        Worker?
 }
 
 model ClientProfile {
-  id                     Int      @id @default(autoincrement())
-  userId                 Int      @unique
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  razonSocial            String
-  nif                    String
-  phone                  String?
-  urlClientify           String?
-  personName             String?
-  
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  razonSocial  String
+  nif          String
+  phone        String?
+  urlClientify String?
+  personName   String?
+
   // Invoice/Profile Info
-  address                String?
-  postalCode             String?
-  city                   String?
-  province               String?
-  country                String? @default("España")
-  
+  address    String?
+  postalCode String?
+  city       String?
+  province   String?
+  country    String? @default("España")
+
   // New Plan System
-  planId                String?
-  plan                  PricingPlan? @relation(fields: [planId], references: [id])
-  
+  planId String?
+  plan   PricingPlan? @relation(fields: [planId], references: [id])
+
   // Campos de Stripe
-  stripeCustomerId       String?   @unique
-  stripeSubscriptionId   String?   @unique
-  stripePriceId          String?
-  stripeCurrentPeriodEnd String?
+  stripeCustomerId        String? @unique
+  stripeSubscriptionId    String? @unique
+  stripePriceId           String?
+  stripeCurrentPeriodEnd  String?
   stripeCancelAtPeriodEnd Boolean @default(false)
-  
+
   // Old fields (to be deprecated after migration)
-  accountType           String   @default("DEMO") 
-  recetasContratadas     Int      @default(3)
-  
-  canManageRecipes      Boolean  @default(true)
-  labelConfig           Json?    @default("{}")
+  accountType        String @default("DEMO")
+  recetasContratadas Int    @default(3)
+
+  canManageRecipes Boolean @default(true)
+  labelConfig      Json?   @default("{}")
 
   // Referrals / Affiliates
-  referralCode          String?  @unique
-  isAffiliate           Boolean  @default(false)
-  affiliateAcceptedAt   DateTime?
-  
-  referredById          Int?
-  referredBy            ClientProfile?  @relation("Referrals", fields: [referredById], references: [id])
-  referrals             ClientProfile[] @relation("Referrals")
+  referralCode        String?   @unique
+  isAffiliate         Boolean   @default(false)
+  affiliateAcceptedAt DateTime?
+
+  referredById Int?
+  referredBy   ClientProfile?  @relation("Referrals", fields: [referredById], references: [id])
+  referrals    ClientProfile[] @relation("Referrals")
 
   // Origin / UTM Tracking
-  origin                String?  @default("DIRECT")
-  utmSource             String?
-  utmMedium             String?
-  utmCampaign           String?
-  utmContent            String?
+  origin      String? @default("DIRECT")
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  recipes               Recipe[]
-  cleaningZones         CleaningZone[]
-  cleaningLogs          CleaningLog[]
-  chambers              Chamber[]
-  temperatureRecords    TemperatureRecord[]
-  goodsReceipts         GoodsReceipt[]
-  waterMeasurements     WaterMeasurement[]
-  payments              Payment[]
-  affiliateSettlements  AffiliateSettlement[]
-  providers             Provider[]
+  recipes              Recipe[]
+  cleaningZones        CleaningZone[]
+  cleaningLogs         CleaningLog[]
+  chambers             Chamber[]
+  temperatureRecords   TemperatureRecord[]
+  goodsReceipts        GoodsReceipt[]
+  waterMeasurements    WaterMeasurement[]
+  payments             Payment[]
+  affiliateSettlements AffiliateSettlement[]
+  providers            Provider[]
+  ingredientPrices     IngredientPrice[]
+  workers              Worker[]
 }
 
 model Provider {
-  id                Int           @id @default(autoincrement())
-  name              String
-  nif               String?
-  rgs               String?       // Registro General Sanitario
-  phone             String?
-  address           String?       @db.Text
-  products          String?       @db.Text
+  id       Int     @id @default(autoincrement())
+  name     String
+  nif      String?
+  rgs      String? // Registro General Sanitario
+  phone    String?
+  address  String? @db.Text
+  products String? @db.Text
 
-  clientProfileId   Int
-  clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  goodsReceipts     GoodsReceipt[]
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  goodsReceipts GoodsReceipt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AffiliateSettlement {
-  id                Int           @id @default(autoincrement())
-  clientProfileId   Int
-  clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  amount            Float
-  date              DateTime      @default(now())
-  notes             String?
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id              Int           @id @default(autoincrement())
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  amount Float
+  date   DateTime @default(now())
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clientProfileId])
 }
 
 model PricingPlan {
-  id                String          @id @default(cuid())
-  name              String          @unique
-  priceMonthly      Float           @default(0)
-  priceYearly       Float           @default(0)
+  id                   String  @id @default(cuid())
+  name                 String  @unique
+  priceMonthly         Float   @default(0)
+  priceYearly          Float   @default(0)
   stripePriceIdMonthly String?
   stripePriceIdYearly  String?
-  
+
   // Legacy field
-  stripePriceId     String?         // Will be migrated to stripePriceIdYearly
-  
-  recipesLimit      Int?            // null = ilimitadas
+  stripePriceId String? // Will be migrated to stripePriceIdYearly
+
+  recipesLimit      Int? // null = ilimitadas
   elaborationsLimit Int?
-  
-  hasCleaning       Boolean         @default(false)
-  cleaningLimit     Int?
-  
-  hasGoods          Boolean         @default(false)
-  goodsLimit        Int?
-  
-  hasTemperatures   Boolean         @default(false)
+
+  hasCleaning   Boolean @default(false)
+  cleaningLimit Int?
+
+  hasGoods   Boolean @default(false)
+  goodsLimit Int?
+
+  hasTemperatures   Boolean @default(false)
   temperaturesLimit Int?
-  
-  hasWater          Boolean         @default(false)
-  waterLimit        Int?
-  
-  clients           ClientProfile[]
-  discountCoupons   DiscountCoupon[]
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+
+  hasWater   Boolean @default(false)
+  waterLimit Int?
+
+  hasProviders Boolean @default(false)
+
+  clients         ClientProfile[]
+  discountCoupons DiscountCoupon[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model DiscountCoupon {
-  id                 String   @id @default(cuid())
-  code               String   @unique
-  percentage         Int
-  duration           String   // ONCE, REPEATING, FOREVER
-  durationInMonths   Int?
-  stripeCouponId     String?  @unique
-  stripePromoCodeId  String?  @unique
-  active             Boolean  @default(true)
-  createdAt          DateTime @default(now())
-  
-  plans              PricingPlan[]
+  id                String   @id @default(cuid())
+  code              String   @unique
+  percentage        Int
+  duration          String // ONCE, REPEATING, FOREVER
+  durationInMonths  Int?
+  stripeCouponId    String?  @unique
+  stripePromoCodeId String?  @unique
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  plans PricingPlan[]
 }
 
 model Recipe {
-  id              Int          @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   name            String
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  ingredients     Ingredient[]
-  elaborations    Elaboration[]
-  
-  lotesMandatory      Boolean  @default(false)
-  quantitiesMandatory   Boolean  @default(false)
-  expiryDays            Int?     @default(0)
-  expiryType            String?  @default("EXPIRATION") // EXPIRATION, BEST_BEFORE
-  hasDryingRoom         Boolean  @default(false)
-  elaborationInstructions String?
-  conservationInstructions String?
-  hasBarcode            Boolean  @default(false)
-  barcode               String?
-  
-  // Nutritional info
-  energyValue           String?
-  fats                  String?
-  saturatedFats         String?
-  carbohydrates         String?
-  sugars                String?
-  proteins              String?
-  salt                  String?
-  
-  allergens             String[]     @default([])
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  ingredients  Ingredient[]
+  elaborations Elaboration[]
+
+  lotesMandatory           Boolean @default(false)
+  quantitiesMandatory      Boolean @default(false)
+  expiryDays               Int?    @default(0)
+  expiryType               String? @default("EXPIRATION") // EXPIRATION, BEST_BEFORE
+  hasDryingRoom            Boolean @default(false)
+  elaborationInstructions  String?
+  conservationInstructions String?
+  hasBarcode               Boolean @default(false)
+  barcode                  String?
+
+  // Nutritional info
+  energyValue   String?
+  fats          String?
+  saturatedFats String?
+  carbohydrates String?
+  sugars        String?
+  proteins      String?
+  salt          String?
+
+  allergens String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Ingredient {
-  id        Int      @id @default(autoincrement())
-  recipeId  Int
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  
-  name      String
-  amount    String
-  unit      String
-  
-  loteMandatory     Boolean  @default(false)
-  quantityMandatory Boolean  @default(false)
-  
-  expandItem        Boolean  @default(false)
-  expandedText      String?
-  
+  id       Int    @id @default(autoincrement())
+  recipeId Int
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  name   String
+  amount String
+  unit   String
+
+  loteMandatory     Boolean @default(false)
+  quantityMandatory Boolean @default(false)
+
+  expandItem   Boolean @default(false)
+  expandedText String?
+
   createdAt DateTime @default(now())
 }
 
 model Elaboration {
-  id        Int      @id @default(autoincrement())
-  name      String
-  date      DateTime @default(now())
-  
-  recipeId  Int
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  
-  personName      String?
-  expirationDate  DateTime?
-  dryingRoomIn    String?
-  dryingRoomOut   String?
-  workshopTemp    String?
-  
+  id   Int      @id @default(autoincrement())
+  name String
+  date DateTime @default(now())
+
+  recipeId Int
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  personName     String?
+  expirationDate DateTime?
+  dryingRoomIn   String?
+  dryingRoomOut  String?
+  workshopTemp   String?
+
   ingredients ElaborationIngredient[]
-  
+
   quantityProduced String?
   netWeight        String?
-  
+  costPrice        Float?  @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -255,13 +261,13 @@ model ElaborationIngredient {
   id            Int         @id @default(autoincrement())
   elaborationId Int
   elaboration   Elaboration @relation(fields: [elaborationId], references: [id], onDelete: Cascade)
-  
-  name          String
-  lote          String?
-  realAmount    String
-  unit          String
-  
-  createdAt     DateTime    @default(now())
+
+  name       String
+  lote       String?
+  realAmount String
+  unit       String
+
+  createdAt DateTime @default(now())
 }
 
 model CleaningZone {
@@ -269,11 +275,11 @@ model CleaningZone {
   name            String
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  logs            CleaningLogZone[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+
+  logs CleaningLogZone[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CleaningLog {
@@ -282,11 +288,11 @@ model CleaningLog {
   date            DateTime      @default(now())
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  zones           CleaningLogZone[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+
+  zones CleaningLogZone[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CleaningLogZone {
@@ -303,11 +309,11 @@ model Chamber {
   name            String
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  values          TemperatureValue[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+
+  values TemperatureValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TemperatureRecord {
@@ -315,11 +321,11 @@ model TemperatureRecord {
   date            DateTime      @default(now())
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  values          TemperatureValue[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+
+  values TemperatureValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TemperatureValue {
@@ -332,59 +338,98 @@ model TemperatureValue {
 }
 
 model GoodsReceipt {
-  id                Int           @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   providerName      String?
   productName       String
   lote              String?
   invoiceNumber     String?
   quantity          String?
-  date              DateTime      @default(now())
-  deliveryNoteImage String?       // Base64 or URL
-  manufacturingTemp String?       // Optional manufacturing temperature
-  endDate           String?       // Optional end date text field
-  typeAndOrigin     String?       // Optional type and origin field
-  
-  clientProfileId   Int
-  clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  providerId        Int?
-  provider          Provider?     @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  date              DateTime @default(now())
+  deliveryNoteImage String? // Base64 or URL
+  manufacturingTemp String? // Optional manufacturing temperature
+  endDate           String? // Optional end date text field
+  typeAndOrigin     String? // Optional type and origin field
 
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  providerId Int?
+  provider   Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model WaterMeasurement {
-  id                Int           @id @default(autoincrement())
-  date              DateTime      @default(now())
-  samplingPoint     String?
-  chlorine          String        // Chlorine (mg/liter)
-  turbidity         Boolean       @default(false)
-  odor              Boolean       @default(false)
-  flavor            Boolean       @default(false)
-  color             Boolean       @default(false)
-  responsible       String?
-  receiptImage      String?       // Base64 or URL
-  
-  clientProfileId   Int
-  clientProfile     ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id            Int      @id @default(autoincrement())
+  date          DateTime @default(now())
+  samplingPoint String?
+  chlorine      String // Chlorine (mg/liter)
+  turbidity     Boolean  @default(false)
+  odor          Boolean  @default(false)
+  flavor        Boolean  @default(false)
+  color         Boolean  @default(false)
+  responsible   String?
+  receiptImage  String? // Base64 or URL
+
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clientProfileId])
 }
 
 model Payment {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  stripeInvoiceId String? @unique
+  amount          Float
+  currency        String  @default("eur")
+  status          String // paid, open, etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientProfileId])
+}
+
+model IngredientPrice {
+  id              Int           @id @default(autoincrement())
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  name  String
+  unit  String
+  price Float  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientProfileId, name, unit])
+  @@index([clientProfileId])
+}
+
+model Worker {
+  id              Int           @id @default(autoincrement())
+  userId          Int           @unique
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
   
-  stripeInvoiceId String?  @unique
-  amount          Float
-  currency        String   @default("eur")
-  status          String   // paid, open, etc.
+  name            String
   
+  // Permissions
+  hasTraceability Boolean @default(false)
+  hasCleaning     Boolean @default(false)
+  hasTemperatures Boolean @default(false)
+  hasWater        Boolean @default(false)
+  hasGoods        Boolean @default(false)
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

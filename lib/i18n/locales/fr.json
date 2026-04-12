@@ -69,7 +69,8 @@
     "cancellation_notice": "En résiliant l'abonnement, vous conserverez vos avantages jusqu'à la fin de la période de facturation en cours. Ensuite, votre compte repassera au plan Demo.",
     "cancel_confirm": "Êtes-vous sûr de vouloir annuler le renouvellement automatique ? Vous conserverez le plan jusqu'à la fin de la période.",
     "cancel_success": "Abonnement annulé avec succès.",
-    "cancel_error": "Erreur lors du traitement de la résiliation."
+    "cancel_error": "Erreur lors du traitement de la résiliation.",
+    "terms_link": "Conditions d'utilisation de Quicktrace"
   },
   "auth": {
     "welcome": "Bon retour parmi nous",
@@ -177,6 +178,10 @@
     "generate_cleaning_report": "Générer rapport nettoyage",
     "temp_report": "Rapport températures",
     "generate_temp_report": "Générer rapport températures",
+    "water_report": "Rapport de Contrôle de l'Eau",
+    "generate_water_report": "Générer le rapport",
+    "provider_list_report": "Liste des Fournisseurs",
+    "generate_provider_list": "Générer la liste",
     "recipe_manage_desc": "Configurez vos recettes.",
     "new_record": "Nouvel enregistrement de nettoyage.",
     "manage_recipes": "Recettes contractées",
@@ -501,6 +506,7 @@
     "goods": "Entrées Marchandises",
     "temperatures": "Contrôle Température",
     "water": "Mesures de l'Eau",
+    "providers": "Gestion des fournisseurs",
     "unlimited": "Illimitées",
     "unlimited_feature": "Illimité",
     "current_plan": "Plan Actuel",
@@ -582,7 +588,8 @@
     "yes": "Oui",
     "no": "Non",
     "receipt": "Reçu",
-    "receipt_photo": "Photo du reçu (optionnel)"
+    "receipt_photo": "Photo du reçu (optionnel)",
+    "generate_report": "Générer le rapport"
   },
   "admin": {
     "sidebar": {
@@ -770,6 +777,9 @@
     "list_rgs": "RGS",
     "list_phone": "Tél",
     "list_address": "Adr",
-    "list_products": "Produits"
+    "list_products": "Produits",
+    "restricted_title": "Cette section est réservée aux utilisateurs disposant d'un abonnement payant.",
+    "restricted_desc": "Dans cette section, vous pouvez enregistrer tous vos fournisseurs avec toutes leurs données et utiliser ces informations dans les réceptions de marchandises, entre autres fonctionnalités.",
+    "view_plans": "Consultez les forfaits Quicktrace ici"
   }
 }

@@ -69,7 +69,8 @@
     "cancellation_notice": "By cancelling the subscription, you will keep your benefits until the end of the current billing period. Afterwards, your account will return to the Demo plan.",
     "cancel_confirm": "Are you sure you want to cancel the automatic renewal? You will keep the plan until the end of the period.",
     "cancel_success": "Subscription cancelled successfully.",
-    "cancel_error": "Error processing the cancellation."
+    "cancel_error": "Error processing the cancellation.",
+    "terms_link": "Quicktrace Terms of Use"
   },
   "auth": {
     "welcome": "Welcome Back",
@@ -165,7 +166,10 @@
     "elaboration_name_header": "Production Name",
     "elaboration_date_header": "Date",
     "elaboration_recipe_header": "Recipe",
+    "cost_header": "Raw material cost",
+    "assign_costs_link": "Assign cost to each raw material",
     "recipe_filter": "Filter by Recipe",
+    "workers": "Workers",
     "all_recipes": "All recipes",
     "traceability_report": "Traceability Report",
     "generate_report": "Generate Report",
@@ -177,17 +181,23 @@
     "generate_cleaning_report": "Generate cleaning report",
     "temp_report": "Temperature report",
     "generate_temp_report": "Generate temperature report",
+    "water_report": "Water Control Report",
+    "generate_water_report": "Generate report",
+    "provider_list_report": "Provider List",
+    "generate_provider_list": "Generate list",
     "recipe_manage_desc": "Manage your recipes.",
     "new_record": "New Cleaning Record.",
     "manage_recipes": "Recipes",
     "showing_info": "Showing {start} - {end} of {total} productions",
+    "showing_last_10": "Showing the last 10 entries recorded",
     "delivery_note_photo": "You can attach a photo of the delivery note",
     "save_entry": "Save",
     "invoice": "Invoice",
     "video_help": "Video help",
     "configure_labels": "Configure labels",
     "upload_photo": "Upload Delivery Note Photo",
-    "photo_format": "Take a photo or choose a file"
+    "photo_format": "Take a photo or choose a file",
+    "ingredient_costs_btn": "Raw material cost prices"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -304,7 +314,29 @@
       "healthRegistry": "Health registry"
     },
     "drag_elements": "Drag elements here",
-    "none": "None"
+    "none": "None",
+    "ingredient_costs_header": "Raw Material Cost Prices",
+    "ingredient_costs_desc": "Add the current cost prices here to later know the price of raw materials in each production. If a raw material appears several times, it is because you have it with different units of measure in each recipe. Look closely at the unit of measure of each raw material to add the cost price. For example, if a raw material is rice, check if you need to set the price for one gram or one kilogram.",
+    "ingredient_column": "Ingredient and Unit",
+    "recipes_column": "Recipes using it",
+    "cost_price_column": "Cost Price (per unit)",
+    "workers": {
+      "title": "Worker Management",
+      "subtitle": "Create and manage access for your staff.",
+      "add_btn": "Add Worker",
+      "name": "Name",
+      "user": "User/Email",
+      "permissions": "Permissions",
+      "no_workers": "You haven't added any workers yet.",
+      "add_title": "New Worker",
+      "edit_title": "Edit Worker",
+      "name_lbl": "Full Name",
+      "user_lbl": "User / Email",
+      "password_lbl": "Password",
+      "password_edit_lbl": "Password (leave blank for no change)",
+      "permissions_lbl": "Access Permissions",
+      "create_btn": "Create Worker"
+    }
   },
   "alerts": {
     "missing_data": "Missing mandatory data:",
@@ -346,7 +378,8 @@
     "water_updated": "Water measurement updated",
     "water_limit_reached": "You have reached the water measurement limit for your plan.",
     "product_date_required": "Product and date are required",
-    "file_too_large": "Error: The attached file is too large. Please upload smaller image or lower the resolution (Max 4.5 MB)."
+    "file_too_large": "Error: The attached file is too large. Please upload smaller image or lower the resolution (Max 4.5 MB).",
+    "prices_saved": "Prices saved successfully"
   },
   "affiliate": {
     "sidebar_link": "Earn money with Quicktrace",
@@ -501,6 +534,7 @@
     "goods": "Goods Receipt",
     "temperatures": "Temperature Control",
     "water": "Water Measurements",
+    "providers": "Provider management",
     "unlimited": "Unlimited",
     "unlimited_feature": "Unlimited",
     "current_plan": "Current Plan",
@@ -582,7 +616,8 @@
     "yes": "Yes",
     "no": "No",
     "receipt": "Receipt",
-    "receipt_photo": "Receipt photo (optional)"
+    "receipt_photo": "Receipt photo (optional)",
+    "generate_report": "Generate report"
   },
   "admin": {
     "sidebar": {
@@ -770,6 +805,9 @@
     "list_rgs": "RGS",
     "list_phone": "Tel",
     "list_address": "Addr",
-    "list_products": "Products"
+    "list_products": "Products",
+    "restricted_title": "This section is only for users with a paid plan.",
+    "restricted_desc": "In this section you can register all your providers with all their data and use this information in goods receipts among other features.",
+    "view_plans": "Check Quicktrace plans here"
   }
 }

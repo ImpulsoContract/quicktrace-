@@ -10,7 +10,7 @@ import {
   Plus, Brush, User, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
-  Droplets, Waves
+  Droplets, Waves, DollarSign
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -241,6 +241,37 @@ export default function ClientDashboard() {
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [bulkDeletePhase, setBulkDeletePhase] = useState(1); // 1 or 2 (double confirm)
 
+  // Report Modals State
+  const [isWaterExportModalOpen, setIsWaterExportModalOpen] = useState(false);
+  const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState(false);
+  const [isIngredientCostsModalOpen, setIsIngredientCostsModalOpen] = useState(false);
+  const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
+  const [workers, setWorkers] = useState([]);
+  const [editingWorker, setEditingWorker] = useState(null);
+  const [workerForm, setWorkerForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    permissions: {
+      hasTraceability: false,
+      hasCleaning: false,
+      hasTemperatures: false,
+      hasWater: false,
+      hasGoods: false
+    }
+  });
+  const [ingredientPrices, setIngredientPrices] = useState([]);
+  const [waterReportDates, setWaterReportDates] = useState({ 
+    from: new Date().toISOString().slice(0, 10), 
+    to: new Date().toISOString().slice(0, 10) 
+  });
+
+  useEffect(() => {
+    if (isIngredientCostsModalOpen) {
+      fetchIngredientPrices();
+    }
+  }, [isIngredientCostsModalOpen]);
+
   useEffect(() => {
     if (status === "authenticated") {
       fetchRecipes();
@@ -248,12 +279,17 @@ export default function ClientDashboard() {
       fetchCleaningLogs();
       fetchChambers();
       fetchTempRecords();
-      fetchGoodsReceipts();
       fetchWaterMeasurements();
       fetchProviders();
       fetchProfile();
     }
   }, [status]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchGoodsReceipts(goodsFilters);
+    }
+  }, [status, goodsFilters]);
 
   useEffect(() => {
     // Clear selection when changing tabs
@@ -538,9 +574,136 @@ export default function ClientDashboard() {
     }
   };
 
-  const fetchGoodsReceipts = async () => {
+  const fetchIngredientPrices = async () => {
     try {
-      const res = await fetch("/api/goods-receipts");
+      const res = await fetch("/api/ingredient-prices");
+      const data = await res.json();
+      if (!data.error) setIngredientPrices(data);
+    } catch (error) {
+      console.error("Error fetching ingredient prices:", error);
+    }
+  };
+
+  const handleSaveIngredientPrices = async (pricesToSave) => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/ingredient-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pricesToSave)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(t('alerts.prices_saved') || "Precios guardados correctamente");
+        setIsIngredientCostsModalOpen(false);
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (error) {
+      console.error("Error saving ingredient prices:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'trabajadores' && session?.user?.role === "CLIENT") {
+      fetchWorkers();
+    }
+  }, [activeTab, session]);
+
+  const fetchWorkers = async () => {
+    try {
+      const res = await fetch('/api/workers');
+      const data = await res.json();
+      setWorkers(data);
+    } catch (error) {
+      console.error("Error fetching workers:", error);
+    }
+  };
+
+  const handleCreateWorker = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch('/api/workers', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(workerForm)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsWorkerModalOpen(false);
+        fetchWorkers();
+        setWorkerForm({
+          name: '', email: '', password: '', 
+          permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false }
+        });
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error("Error creating worker:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateWorker = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/workers/${editingWorker.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: workerForm.name,
+          password: workerForm.password || undefined,
+          permissions: workerForm.permissions
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsWorkerModalOpen(false);
+        setEditingWorker(null);
+        fetchWorkers();
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error("Error updating worker:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteWorker = async (id) => {
+    if (!confirm(t('alerts.delete_confirm_worker') || "¿Seguro que quieres eliminar este trabajador?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/workers/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchWorkers();
+      } else {
+        const data = await res.json();
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error("Error deleting worker:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchGoodsReceipts = async (filters = null) => {
+    try {
+      let url = "/api/goods-receipts";
+      if (filters && (filters.startDate || filters.endDate)) {
+        const query = new URLSearchParams(filters).toString();
+        url += `?${query}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
       if (!data.error) setGoodsReceipts(data);
     } catch (error) {
@@ -800,7 +963,7 @@ export default function ClientDashboard() {
           endDate: "",
           typeAndOrigin: ""
         });
-        fetchGoodsReceipts();
+        fetchGoodsReceipts(goodsFilters);
       } else {
         const errorData = await res.json().catch(() => ({}));
         let errorMsg = errorData.error || t('alerts.request_error');
@@ -845,7 +1008,7 @@ export default function ClientDashboard() {
       const res = await fetch(`/api/goods-receipts?id=${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        fetchGoodsReceipts();
+        fetchGoodsReceipts(goodsFilters);
       } else {
         alert(data.error || t('alerts.delete_error'));
       }
@@ -1206,6 +1369,151 @@ export default function ClientDashboard() {
     }
   };
 
+  const generateWaterReportPDF = async (dates) => {
+    try {
+      const { from, to } = dates;
+      const res = await fetch(`/api/water-measurements?startDate=${from}&endDate=${to}`);
+      const measurements = await res.json();
+      
+      if (measurements.length === 0) {
+        alert(t('dashboard.no_records_range') || "No hay registros en este rango");
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      for (let i = 0; i < measurements.length; i++) {
+        const m = measurements[i];
+        if (i > 0) doc.addPage();
+
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(66, 98, 22);
+        doc.text(t('dashboard.water_report') || "REGISTRO DE CONTROL DE AGUAS", 14, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 30);
+        doc.text(`${t('common.date')}: ${new Date(m.date).toLocaleString()}`, 14, 38);
+        
+        // Content
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.setFont(undefined, 'bold');
+        doc.text(`${t('water.sampling_point')}:`, 14, 48);
+        doc.setFont(undefined, 'normal');
+        doc.text(m.samplingPoint || '-', 60, 48);
+
+        doc.setFont(undefined, 'bold');
+        doc.text(`${t('water.chlorine')}:`, 14, 56);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${m.chlorine} mg/l`, 60, 56);
+
+        // Checks
+        doc.setFont(undefined, 'bold');
+        doc.text(`${t('water.table_checks')}:`, 14, 64);
+        doc.setFont(undefined, 'normal');
+        
+        // Format checks for the document
+        const checkO = `${t('water.odor')}: ${m.odor ? t('water.yes') : t('water.no')}`;
+        const checkT = `${t('water.turbidity')}: ${m.turbidity ? t('water.yes') : t('water.no')}`;
+        const checkF = `${t('water.flavor')}: ${m.flavor ? t('water.yes') : t('water.no')}`;
+        const checkC = `${t('water.color')}: ${m.color ? t('water.yes') : t('water.no')}`;
+        
+        doc.text(`${checkT}  |  ${checkO}`, 60, 64);
+        doc.text(`${checkF}  |  ${checkC}`, 60, 70);
+
+        doc.setFont(undefined, 'bold');
+        doc.text(`${t('water.responsible')}:`, 14, 80);
+        doc.setFont(undefined, 'normal');
+        doc.text(m.responsible || '-', 60, 80);
+
+        // Image
+        if (m.receiptImage) {
+          doc.setFont(undefined, 'bold');
+          doc.text(`${t('water.receipt')}:`, 14, 92);
+          try {
+            // We assume receiptImage is a base64 or a valid URL accessible to jsPDF
+            doc.addImage(m.receiptImage, 'JPEG', 14, 98, 180, 140);
+          } catch (e) {
+            console.error("Error adding image to PDF:", e);
+          }
+        }
+
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 14, doc.internal.pageSize.height - 10);
+        doc.text(`Página ${i + 1} de ${measurements.length}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+      }
+
+      doc.save(`Informe_Control_Agua_${from}_${to}.pdf`);
+      setIsWaterExportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating water report:", error);
+      alert(t('alerts.request_error'));
+    }
+  };
+
+  const generateProvidersPDF = () => {
+    try {
+      if (providers.length === 0) {
+        alert(t('dashboard.no_data') || "No hay datos disponibles");
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(66, 98, 22);
+      doc.text(t('dashboard.provider_list_report') || "LISTADO DE PROVEEDORES", 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 30);
+      doc.text(`${t('common.date')}: ${new Date().toLocaleDateString()}`, 14, 35);
+      
+      // Table
+      const tableColumn = [
+        t('modals.provider_name'),
+        t('modals.provider_nif'),
+        t('modals.provider_rgs'),
+        t('modals.provider_phone'),
+        t('modals.provider_address'),
+        t('modals.provider_products')
+      ];
+      
+      const tableRows = providers.map(p => [
+        p.name,
+        p.nif || '-',
+        p.rgs || '-',
+        p.phone || '-',
+        p.address || '-',
+        p.products || '-'
+      ]);
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 45,
+        theme: 'striped',
+        headStyles: { fillColor: [66, 98, 22], textColor: [255, 255, 255] },
+        styles: { fontSize: 8, cellPadding: 2 },
+        alternateRowStyles: { fillColor: [245, 247, 240] },
+        didDrawPage: (data) => {
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 14, doc.internal.pageSize.height - 10);
+        }
+      });
+
+      doc.save(`Listado_Proveedores_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (error) {
+      console.error("Error generating providers report:", error);
+      alert(t('alerts.request_error'));
+    }
+  };
 
   const generateLabelPDF = (elaboration) => {
     const config = mergeLabelConfig(profile?.labelConfig);
@@ -1964,7 +2272,7 @@ export default function ClientDashboard() {
       if (activeTab === "historial") fetchElaborations();
       else if (activeTab === "limpieza") fetchCleaningLogs();
       else if (activeTab === "temperaturas") fetchTempRecords();
-      else if (activeTab === "entradas") fetchGoodsReceipts();
+      else if (activeTab === "entradas") fetchGoodsReceipts(goodsFilters);
       else if (activeTab === "agua") fetchWaterMeasurements();
       
       fetchProfile(); // Update usage limits
@@ -2225,26 +2533,40 @@ export default function ClientDashboard() {
 
           <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
             {session?.user?.role === "CLIENT" && (
-              <SidebarBtn 
-                icon={<ChefHat size={20} />} 
-                label={t('sidebar.manage_recipes')} 
-                active={activeTab === "gestionar-recetas"} 
-                onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-              />
+              <>
+                <SidebarBtn 
+                  icon={<ChefHat size={20} />} 
+                  label={t('sidebar.manage_recipes')} 
+                  active={activeTab === "gestionar-recetas"} 
+                  onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+                <SidebarBtn 
+                  icon={<Users size={20} />} 
+                  label={t('sidebar.workers') || "Trabajadores"} 
+                  active={activeTab === "trabajadores"} 
+                  onClick={() => { setActiveTab("trabajadores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+              </>
             )}
-            <SidebarBtn 
-              icon={<ClipboardList size={20} />} 
-              label={t('sidebar.traceability')} 
-              active={activeTab === 'trazabilidad'} 
-              onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-            />
-            <SidebarBtn 
-              icon={<History size={20} />} 
-              label={t('sidebar.history')} 
-              active={activeTab === "historial"} 
-              onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-            />
-            {profile?.plan?.hasCleaning && (
+
+            {(session?.user?.role === "CLIENT" || session?.user?.role === "ADMIN" || session?.user?.permissions?.hasTraceability) && (
+              <>
+                <SidebarBtn 
+                  icon={<ClipboardList size={20} />} 
+                  label={t('sidebar.traceability')} 
+                  active={activeTab === 'trazabilidad'} 
+                  onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+                <SidebarBtn 
+                  icon={<History size={20} />} 
+                  label={t('sidebar.history')} 
+                  active={activeTab === "historial"} 
+                  onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+              </>
+            )}
+
+            {(profile?.plan?.hasCleaning || session?.user?.role === "ADMIN") && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasCleaning) && (
               <SidebarBtn 
                 icon={<Brush size={20} />} 
                 label={t('sidebar.cleaning')} 
@@ -2252,7 +2574,8 @@ export default function ClientDashboard() {
                 onClick={() => { setActiveTab("limpieza"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
-            {profile?.plan?.hasTemperatures && (
+
+            {(profile?.plan?.hasTemperatures || session?.user?.role === "ADMIN") && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasTemperatures) && (
               <SidebarBtn 
                 icon={<Thermometer size={20} />} 
                 label={t('sidebar.temperatures')} 
@@ -2260,7 +2583,8 @@ export default function ClientDashboard() {
                 onClick={() => { setActiveTab("temperaturas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
-            {profile?.plan?.hasWater && (
+
+            {(profile?.plan?.hasWater || session?.user?.role === "ADMIN") && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasWater) && (
               <SidebarBtn 
                 icon={<Waves size={20} />} 
                 label={t('sidebar.water') || "Agua"} 
@@ -2268,7 +2592,8 @@ export default function ClientDashboard() {
                 onClick={() => { setActiveTab("agua"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
-            {profile?.plan?.hasGoods && (
+
+            {(profile?.plan?.hasGoods || session?.user?.role === "ADMIN") && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasGoods) && (
               <SidebarBtn 
                 icon={<Truck size={20} />} 
                 label={t('sidebar.goods')} 
@@ -2276,12 +2601,15 @@ export default function ClientDashboard() {
                 onClick={() => { setActiveTab("entradas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
-            <SidebarBtn 
-              icon={<Truck size={20} />} 
-              label={t('sidebar.providers') || "Proveedores"} 
-              active={activeTab === "proveedores"} 
-              onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-            />
+
+            {(session?.user?.role !== "WORKER") && (
+              <SidebarBtn 
+                icon={<Truck size={20} />} 
+                label={t('sidebar.providers') || "Proveedores"} 
+                active={activeTab === "proveedores"} 
+                onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
           </nav>
 
           <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
@@ -2783,6 +3111,17 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_title')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <span>{t('dashboard.cost_header')}</span>
+                              <span 
+                                onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
+                                style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                              >
+                                {t('dashboard.assign_costs_link')}
+                              </span>
+                            </div>
+                          </th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
@@ -2800,6 +3139,9 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.date || el.createdAt).toLocaleDateString()}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--corp-green)' }}>{el.name}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
+                          <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                            {el.costPrice ? `${el.costPrice.toFixed(2)} €` : '-'}
+                          </td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                               <button 
@@ -2859,79 +3201,120 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'proveedores' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
-              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.providers') || "Proveedores"}</h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.providers_info') || "Gestiona tu lista de proveedores habituales"}</p>
-                </div>
-                <button 
-                  onClick={() => {
-                    setEditingProvider(null);
-                    setProvidersForm({ name: "", nif: "", rgs: "", phone: "", address: "", products: "" });
-                    setIsProvidersModalOpen(true);
-                  }}
-                  className="btn-primary" 
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
-                >
-                  <Plus size={18} /> {t('dashboard.add_provider') || "Añadir proveedor"}
-                </button>
-              </header>
-
-              {providers.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
-                  <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-                    <Truck size={40} color="var(--border)" />
+              {!profile?.plan?.hasProviders ? (
+                <div style={{ 
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+                  minHeight: '60vh', textAlign: 'center', padding: '2rem', background: 'white', 
+                  borderRadius: '2rem', border: '1px solid var(--border)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)'
+                }}>
+                  <div style={{ 
+                    width: '100px', height: '100px', background: 'rgba(66, 98, 22, 0.05)', 
+                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    marginBottom: '2rem', border: '1px solid rgba(66, 98, 22, 0.1)'
+                  }}>
+                    <Truck size={48} color="var(--corp-green)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_providers') || "No tienes proveedores"}</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_providers_info') || "Añade tu primer proveedor para tenerlo disponible al recibir mercancías."}</p>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '1rem', maxWidth: '600px', lineHeight: '1.2' }}>
+                    {t('providers.restricted_title')}
+                  </h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '650px', marginBottom: '2.5rem', lineHeight: '1.6' }} dangerouslySetInnerHTML={{ __html: t('providers.restricted_desc') }} />
+                  <Link 
+                    href="/dashboard/plans" 
+                    className="btn-primary" 
+                    style={{ 
+                      padding: '1rem 2rem', fontSize: '1rem', fontWeight: '800', 
+                      display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none'
+                    }}
+                  >
+                    <Crown size={20} /> {t('providers.view_plans')}
+                  </Link>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                  {providers.map(provider => (
-                    <div key={provider.id} className="glass-card" style={{ padding: '1.5rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <div>
-                          <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{provider.name}</h4>
-                          {provider.nif && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{t('providers.list_nif')}: {provider.nif}</div>}
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button onClick={() => handleViewProviderReceipts(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                            <FileText size={16} /> {t('dashboard.view_delivery_notes')}
-                          </button>
-                          <button onClick={() => handleEditProvider(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Edit size={16} /></button>
-                          <button onClick={() => handleDeleteProvider(provider.id)} style={{ background: 'none', border: '1px solid var(--border)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                        </div>
-                      </div>
-                      
-                      <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-                        {provider.rgs && (
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_rgs')}:</span>
-                            <span>{provider.rgs}</span>
-                          </div>
-                        )}
-                        {provider.phone && (
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_phone')}:</span>
-                            <span>{provider.phone}</span>
-                          </div>
-                        )}
-                        {provider.address && (
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_address')}:</span>
-                            <span style={{ whiteSpace: 'pre-wrap' }}>{provider.address}</span>
-                          </div>
-                        )}
-                        {provider.products && (
-                          <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('providers.products')}</div>
-                            <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{provider.products}</div>
-                          </div>
-                        )}
-                      </div>
+                <>
+                  <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.providers') || "Proveedores"}</h2>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.providers_info') || "Gestiona tu lista de proveedores habituales"}</p>
                     </div>
-                  ))}
-                </div>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <button 
+                        onClick={generateProvidersPDF}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      >
+                        <FileText size={18} /> {t('dashboard.generate_provider_list') || "Sacar un listado"}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setEditingProvider(null);
+                          setProvidersForm({ name: "", nif: "", rgs: "", phone: "", address: "", products: "" });
+                          setIsProvidersModalOpen(true);
+                        }}
+                        className="btn-primary" 
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      >
+                        <Plus size={18} /> {t('dashboard.add_provider') || "Añadir proveedor"}
+                      </button>
+                    </div>
+                  </header>
+
+                  {providers.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                      <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                        <Truck size={40} color="var(--border)" />
+                      </div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_providers') || "No tienes proveedores"}</h3>
+                      <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_providers_info') || "Añade tu primer proveedor para tenerlo disponible al recibir mercancías."}</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+                      {providers.map(provider => (
+                        <div key={provider.id} className="glass-card" style={{ padding: '1.5rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                            <div>
+                              <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{provider.name}</h4>
+                              {provider.nif && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{t('providers.list_nif')}: {provider.nif}</div>}
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button onClick={() => handleViewProviderReceipts(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                <FileText size={16} /> {t('dashboard.view_delivery_notes')}
+                              </button>
+                              <button onClick={() => handleEditProvider(provider)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Edit size={16} /></button>
+                              <button onClick={() => handleDeleteProvider(provider.id)} style={{ background: 'none', border: '1px solid var(--border)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                            </div>
+                          </div>
+                          
+                          <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+                            {provider.rgs && (
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_rgs')}:</span>
+                                <span>{provider.rgs}</span>
+                              </div>
+                            )}
+                            {provider.phone && (
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_phone')}:</span>
+                                <span>{provider.phone}</span>
+                              </div>
+                            )}
+                            {provider.address && (
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <span style={{ fontWeight: '700', color: 'var(--text-muted)', minWidth: '40px' }}>{t('providers.list_address')}:</span>
+                                <span style={{ whiteSpace: 'pre-wrap' }}>{provider.address}</span>
+                              </div>
+                            )}
+                            {provider.products && (
+                              <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('providers.products')}</div>
+                                <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{provider.products}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ) : activeTab === 'entradas' ? (
@@ -2962,28 +3345,35 @@ export default function ClientDashboard() {
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
+                    <button
+                      onClick={() => setIsIngredientCostsModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                    >
+                      <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
+                    </button>
                     <button 
                       onClick={() => {
                         setEditingGoodsReceipt(null);
                         setGoodsForm({
                           providerName: "",
-                        productName: "",
-                        lote: "",
-                        invoiceNumber: "",
-                        quantity: "",
-                        date: new Date().toISOString().slice(0, 16),
-                        deliveryNoteImage: ""
-                      });
-                      setIsGoodsModalOpen(true);
-                    }}
-                    className="btn-primary" 
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
-                  >
-                    <Package size={18} /> {t('dashboard.new_goods_entry')}
-                  </button>
+                          productName: "",
+                          lote: "",
+                          invoiceNumber: "",
+                          quantity: "",
+                          date: new Date().toISOString().slice(0, 16),
+                          deliveryNoteImage: ""
+                        });
+                        setIsGoodsModalOpen(true);
+                      }}
+                      className="btn-primary" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <Package size={18} /> {t('dashboard.new_goods_entry')}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </header>
+              </header>
 
               <div 
                 className="glass-card" 
@@ -3016,38 +3406,48 @@ export default function ClientDashboard() {
                   >
                     {t('dashboard.cancel')}
                   </button>
-                  {goodsReceipts.length > 0 && goodsFilters.startDate && goodsFilters.endDate && (
+                  {goodsReceipts.length > 0 && (
                     <button 
-                      onClick={() => toggleSelectAll(goodsReceipts.filter(r => {
-                        const date = new Date(r.date);
-                        const start = new Date(goodsFilters.startDate);
-                        const end = new Date(goodsFilters.endDate);
-                        end.setHours(23, 59, 59, 999);
-                        return date >= start && date <= end;
-                      }))}
+                      onClick={() => {
+                        const filtered = goodsReceipts.filter(r => {
+                          if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
+                          const date = new Date(r.date);
+                          const start = new Date(goodsFilters.startDate);
+                          const end = new Date(goodsFilters.endDate);
+                          end.setHours(23, 59, 59, 999);
+                          return date >= start && date <= end;
+                        });
+                        toggleSelectAll(filtered);
+                      }}
                       className="btn-secondary"
                       style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                     >
-                      {goodsReceipts.filter(r => {
-                        const date = new Date(r.date);
-                        const start = new Date(goodsFilters.startDate);
-                        const end = new Date(goodsFilters.endDate);
-                        end.setHours(23, 59, 59, 999);
-                        return date >= start && date <= end;
-                      }).every(r => selectedRecords.includes(r.id)) ? t('bulk_actions.deselect_all') || "Deseleccionar todos" : t('bulk_actions.select_all') || "Seleccionar todos"}
+                      {(() => {
+                        const filtered = goodsReceipts.filter(r => {
+                          if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
+                          const date = new Date(r.date);
+                          const start = new Date(goodsFilters.startDate);
+                          const end = new Date(goodsFilters.endDate);
+                          end.setHours(23, 59, 59, 999);
+                          return date >= start && date <= end;
+                        });
+                        return filtered.every(r => selectedRecords.includes(r.id)) ? t('bulk_actions.deselect_all') || "Deseleccionar todos" : t('bulk_actions.select_all') || "Seleccionar todos";
+                      })()}
                     </button>
                   )}
                 </div>
 
-              {(!goodsFilters.startDate || !goodsFilters.endDate) ? (
-                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-                    <Calendar size={40} color="var(--border)" />
-                  </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{t('sidebar.goods')}</h3>
-                  <p>{t('dashboard.history_info')}</p>
+              {(!goodsFilters.startDate || !goodsFilters.endDate) && goodsReceipts.length > 0 && (
+                <div style={{ padding: '0.75rem 1.25rem', background: 'rgba(66, 98, 22, 0.05)', borderRadius: '1rem', marginBottom: '1.5rem', border: '1px solid rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <Zap size={18} color="var(--corp-green)" />
+                  <span style={{ fontSize: '0.95rem', color: 'var(--corp-green)', fontWeight: '800' }}>
+                    {t('dashboard.showing_last_10') || "Mostrando las últimas 10 entradas registradas"}
+                  </span>
                 </div>
-              ) : goodsReceipts.filter(r => {
+              )}
+
+              {goodsReceipts.filter(r => {
+                if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
                 const date = new Date(r.date);
                 const start = new Date(goodsFilters.startDate);
                 const end = new Date(goodsFilters.endDate);
@@ -3065,6 +3465,7 @@ export default function ClientDashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
                   {goodsReceipts
                     .filter(r => {
+                      if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
                       const date = new Date(r.date);
                       const start = new Date(goodsFilters.startDate);
                       const end = new Date(goodsFilters.endDate);
@@ -3362,12 +3763,14 @@ export default function ClientDashboard() {
                               >
                                 <Edit size={16} />
                               </button>
-                              <button 
-                                onClick={() => handleDeleteCleaning(log.id)}
-                                style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                              {session?.user?.role !== "WORKER" && (
+                                <button 
+                                  onClick={() => handleDeleteCleaning(log.id)}
+                                  style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -3571,12 +3974,14 @@ export default function ClientDashboard() {
                               >
                                 <Edit size={16} />
                               </button>
-                              <button 
-                                onClick={() => handleDeleteTemp(record.id)}
-                                style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                              {session?.user?.role !== "WORKER" && (
+                                <button 
+                                  onClick={() => handleDeleteTemp(record.id)}
+                                  style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -3600,6 +4005,13 @@ export default function ClientDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('water.description') || "Registra y gestiona las mediciones de calidad del agua."}</p>
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                      onClick={() => setIsWaterExportModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <FileText size={18} /> {t('water.generate_report') || "Sacar un informe"}
+                    </button>
                     <button 
                       onClick={() => {
                         setEditingWaterMeasurement(null);
@@ -3680,12 +4092,14 @@ export default function ClientDashboard() {
                                 >
                                   <Edit size={16} />
                                 </button>
-                                <button 
-                                  onClick={() => handleDeleteWater(m.id)}
-                                  style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
+                                {session?.user?.role !== "WORKER" && (
+                                  <button 
+                                    onClick={() => handleDeleteWater(m.id)}
+                                    style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -3694,6 +4108,98 @@ export default function ClientDashboard() {
                     </table>
                 </div>
               )}
+            </div>
+          ) : activeTab === 'trabajadores' ? (
+            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+                <div>
+                  <h1 style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{t('workers.title') || "Gestión de Trabajadores"}</h1>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('workers.subtitle') || "Crea y gestiona los accesos de tu personal."}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    setEditingWorker(null);
+                    setWorkerForm({
+                      name: '', email: '', password: '', 
+                      permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false }
+                    });
+                    setIsWorkerModalOpen(true);
+                  }}
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.8rem 1.5rem' }}
+                >
+                  <UserPlus size={20} /> {t('workers.add_btn') || "Añadir Trabajador"}
+                </button>
+              </div>
+
+              <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                    <tr>
+                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.name') || "Nombre"}</th>
+                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.user') || "Usuario/Email"}</th>
+                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.permissions') || "Permisos"}</th>
+                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {workers.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                          {t('workers.no_workers') || "No has añadido ningún trabajador todavía."}
+                        </td>
+                      </tr>
+                    ) : (
+                      workers.map(worker => (
+                        <tr key={worker.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover-row">
+                          <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{worker.name}</td>
+                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{worker.user?.email}</td>
+                          <td style={{ padding: '1.5rem 2rem' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              {worker.hasTraceability && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#ecfdf5', color: '#059669', fontSize: '0.7rem', fontWeight: '700' }}>Trazabilidad</span>}
+                              {worker.hasCleaning && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#eff6ff', color: '#2563eb', fontSize: '0.7rem', fontWeight: '700' }}>Limpieza</span>}
+                              {worker.hasTemperatures && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fef2f2', color: '#dc2626', fontSize: '0.7rem', fontWeight: '700' }}>Temperaturas</span>}
+                              {worker.hasWater && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#f0f9ff', color: '#0ea5e9', fontSize: '0.7rem', fontWeight: '700' }}>Agua</span>}
+                              {worker.hasGoods && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fefce8', color: '#ca8a04', fontSize: '0.7rem', fontWeight: '700' }}>Mercancías</span>}
+                            </div>
+                          </td>
+                          <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                              <button 
+                                onClick={() => {
+                                  setEditingWorker(worker);
+                                  setWorkerForm({
+                                    name: worker.name,
+                                    email: worker.user?.email,
+                                    password: '',
+                                    permissions: {
+                                      hasTraceability: worker.hasTraceability,
+                                      hasCleaning: worker.hasCleaning,
+                                      hasTemperatures: worker.hasTemperatures,
+                                      hasWater: worker.hasWater,
+                                      hasGoods: worker.hasGoods
+                                    }
+                                  });
+                                  setIsWorkerModalOpen(true);
+                                }}
+                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteWorker(worker.id)}
+                                style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : activeTab === 'gestionar-recetas' ? (
             <div>
@@ -4168,8 +4674,19 @@ export default function ClientDashboard() {
                       <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {t('traceability_form.elaboration_title')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                       <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th onClick={() => handleSort('costPrice')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <span>{t('dashboard.cost_header')} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</span>
+                          <span 
+                            onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
+                            style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                          >
+                            {t('dashboard.assign_costs_link')}
+                          </span>
+                        </div>
                       </th>
                       <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
                     </tr>
@@ -4186,19 +4703,34 @@ export default function ClientDashboard() {
                             {elab.recipe.name}
                           </span>
                         </td>
+                        <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>
+                          {elab.costPrice ? `${elab.costPrice.toFixed(2)} €` : '-'}
+                        </td>
                         <td style={{ padding: '1.25rem 1.5rem' }}>
-                          <button 
-                            onClick={() => handleEditElaboration(elab)}
-                            style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
-                          >
-                            {t('dashboard.modify')}
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              onClick={() => handleEditElaboration(elab)}
+                              style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              {t('dashboard.modify')}
+                            </button>
+                            {session?.user?.role !== "WORKER" && (
+                              <button 
+                                onClick={() => handleDeleteElaboration(elab.id)}
+                                className="btn-secondary"
+                                style={{ color: '#ef4444', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                                title={t('common.delete')}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
                     {sortedElaborations.length === 0 && (
                       <tr>
-                        <td colSpan="4" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <td colSpan="5" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                           {t('dashboard.no_elaborations_recorded')}
                         </td>
                       </tr>
@@ -4325,7 +4857,15 @@ export default function ClientDashboard() {
           onImageChange={handleWaterImageChange}
         />
       )}
-
+      
+      {isWaterExportModalOpen && (
+        <WaterExportModal 
+          onClose={() => setIsWaterExportModalOpen(false)}
+          onGenerate={generateWaterReportPDF}
+          dates={waterReportDates}
+          setDates={setWaterReportDates}
+        />
+      )}
 
       {isGoodsModalOpen && (
         <GoodsReceiptModal 
@@ -4339,6 +4879,16 @@ export default function ClientDashboard() {
           providers={providers}
         />
       )}
+
+      {isIngredientCostsModalOpen && (
+        <IngredientCostModal 
+          onClose={() => setIsIngredientCostsModalOpen(false)}
+          onSave={handleSaveIngredientPrices}
+          ingredientPrices={ingredientPrices}
+          loading={loading}
+        />
+      )}
+
 
       {isProvidersModalOpen && (
         <ProviderModal 
@@ -4782,6 +5332,113 @@ export default function ClientDashboard() {
         </div>
       )}
 
+      {isWorkerModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '95%', padding: '2.5rem', position: 'relative' }}>
+            <button 
+              onClick={() => setIsWorkerModalOpen(false)}
+              className="btn-icon"
+              style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              <X size={24} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+              <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                <Users color="var(--corp-green)" />
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>
+                {editingWorker ? t('workers.edit_title') : t('workers.add_title')}
+              </h2>
+            </div>
+
+            <form onSubmit={editingWorker ? handleUpdateWorker : handleCreateWorker} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label className="label">{t('workers.name_lbl')}</label>
+                <input 
+                  type="text" 
+                  className="input-field"
+                  required
+                  value={workerForm.name}
+                  onChange={(e) => setWorkerForm({...workerForm, name: e.target.value})}
+                  placeholder="Ej: Juan Pérez"
+                />
+              </div>
+              <div>
+                <label className="label">{t('workers.user_lbl')}</label>
+                <input 
+                  type="email" 
+                  className="input-field"
+                  required
+                  disabled={editingWorker}
+                  value={workerForm.email}
+                  onChange={(e) => setWorkerForm({...workerForm, email: e.target.value})}
+                  placeholder="usuario@empresa.com"
+                />
+              </div>
+              <div>
+                <label className="label">
+                  {editingWorker ? t('workers.password_edit_lbl') : t('workers.password_lbl')}
+                </label>
+                <input 
+                  type="password" 
+                  className="input-field"
+                  required={!editingWorker}
+                  value={workerForm.password}
+                  onChange={(e) => setWorkerForm({...workerForm, password: e.target.value})}
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+
+              <div>
+                <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>{t('workers.permissions_lbl')}</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                  {[
+                    { id: 'hasTraceability', label: t('sidebar.traceability') },
+                    { id: 'hasCleaning', label: t('sidebar.cleaning') },
+                    { id: 'hasTemperatures', label: t('sidebar.temperatures') },
+                    { id: 'hasWater', label: t('sidebar.water') },
+                    { id: 'hasGoods', label: t('sidebar.goods') },
+                  ].map(perm => (
+                    <label key={perm.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={workerForm.permissions[perm.id]}
+                        onChange={(e) => setWorkerForm({
+                          ...workerForm, 
+                          permissions: { ...workerForm.permissions, [perm.id]: e.target.checked }
+                        })}
+                        style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  type="button"
+                  className="btn-secondary" 
+                  onClick={() => setIsWorkerModalOpen(false)}
+                  style={{ flex: 1 }}
+                >
+                  {t('dashboard.cancel')}
+                </button>
+                <button 
+                  type="submit"
+                  className="btn-primary" 
+                  disabled={loading}
+                  style={{ flex: 2 }}
+                >
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : (editingWorker ? t('common.save') : t('workers.create_btn'))}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {isGoodsReportModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
@@ -4923,14 +5580,16 @@ export default function ClientDashboard() {
                               >
                                 <Edit size={14} />
                               </button>
-                              <button 
-                                onClick={() => handleDeleteGoods(receipt.id)}
-                                className="btn-secondary"
-                                style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                                title={t('common.delete')}
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                              {session?.user?.role !== "WORKER" && (
+                                <button 
+                                  onClick={() => handleDeleteGoods(receipt.id)}
+                                  className="btn-secondary"
+                                  style={{ color: '#ef4444', fontSize: '0.75rem', padding: '0.4rem 0.6rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                  title={t('common.delete')}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -5029,6 +5688,119 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function IngredientCostModal({ onClose, onSave, ingredientPrices, loading }) {
+  const { t, locale } = useI18n();
+  const [localPrices, setLocalPrices] = useState([]);
+
+  useEffect(() => {
+    if (ingredientPrices) {
+      setLocalPrices(ingredientPrices.map(item => ({ ...item })));
+    }
+  }, [ingredientPrices]);
+
+  const handlePriceChange = (index, value) => {
+    const updated = [...localPrices];
+    updated[index].price = value;
+    setLocalPrices(updated);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '900px', width: '95%', padding: '2rem', position: 'relative' }}>
+        <button 
+          onClick={onClose} 
+          style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+        >
+          <X size={24} />
+        </button>
+
+        <div className="modal-header" style={{ display: 'block' }}>
+          <h2 className="modal-title" style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '0.75rem' }}>
+            {t('modals.ingredient_costs_header')}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
+            {t('modals.ingredient_costs_desc')}
+          </p>
+        </div>
+        
+        <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto', marginTop: '1.5rem' }}>
+          <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
+            <thead className="table-header">
+              <tr>
+                <th className="table-header-cell" style={{ background: 'var(--bg-light)', borderRadius: '8px 0 0 8px' }}>
+                  {t('modals.ingredient_column') || "Ingrediente"}
+                </th>
+                <th className="table-header-cell" style={{ background: 'var(--bg-light)' }}>
+                  {t('modals.recipes_column') || "Recetas"}
+                </th>
+                <th className="table-header-cell" style={{ background: 'var(--bg-light)', borderRadius: '0 8px 8px 0', textAlign: 'right' }}>
+                  {t('modals.cost_price_column') || "Precio"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {localPrices.length === 0 ? (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                    {t('dashboard.no_records') || "No hay ingredientes configurados en tus recetas."}
+                  </td>
+                </tr>
+              ) : (
+                localPrices.map((item, index) => (
+                  <tr key={index} className="table-row" style={{ background: 'white', border: '1px solid var(--border-color)' }}>
+                    <td className="table-cell" style={{ borderLeft: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontWeight: 600 }}>{item.name}</span>
+                        <span style={{ opacity: 0.7, fontSize: '0.75rem' }}>{item.unit}</span>
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {item.recipes.join(', ')}
+                      </div>
+                    </td>
+                    <td className="table-cell" style={{ textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                        <input 
+                          type="text"
+                          className="input"
+                          style={{ width: '120px', textAlign: 'right', padding: '0.5rem' }}
+                          value={item.price}
+                          onChange={(e) => handlePriceChange(index, e.target.value)}
+                          placeholder="0.00"
+                        />
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>€</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', marginTop: '2rem', paddingTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+          <button 
+            onClick={onClose} 
+            className="btn-secondary" 
+            style={{ padding: '0.75rem 2rem' }}
+          >
+            {t('common.cancel') || "Cancelar"}
+          </button>
+          <button 
+            onClick={() => onSave(localPrices)} 
+            className="btn-primary" 
+            disabled={loading}
+            style={{ padding: '0.75rem 2rem', background: 'var(--primary)' }}
+          >
+            {loading ? <Loader2 className="animate-spin" size={20} /> : (t('common.save') || "Guardar")}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -5321,6 +6093,26 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
               <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem' }}>
                 {loading ? <Loader2 className="animate-spin" size={20} /> : t('common.save')}
               </button>
+              
+              <a 
+                href="https://quicktrace.es/condiciones-de-uso/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  display: 'block', 
+                  textAlign: 'center', 
+                  marginTop: '1.5rem', 
+                  fontSize: '0.85rem', 
+                  color: 'var(--text-muted)',
+                  textDecoration: 'none',
+                  fontWeight: '600',
+                  transition: 'color 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.color = 'var(--corp-green)'}
+                onMouseOut={e => e.currentTarget.style.color = 'var(--text-muted)'}
+              >
+                {t('profile.terms_link')}
+              </a>
             </form>
           </section>
 
@@ -6787,6 +7579,55 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function WaterExportModal({ onClose, onGenerate, dates, setDates }) {
+  const { t } = useI18n();
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '400px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>{t('dashboard.water_report') || "Informe de Control de Aguas"}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <X size={24} />
+          </button>
+        </header>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label className="input-label">{t('common.from')}</label>
+            <input 
+              type="date" 
+              className="input-field"
+              value={dates.from}
+              onChange={(e) => setDates({ ...dates, from: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="input-label">{t('common.to')}</label>
+            <input 
+              type="date" 
+              className="input-field"
+              value={dates.to}
+              onChange={(e) => setDates({ ...dates, to: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <footer style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+          <button onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
+          <button 
+            onClick={() => onGenerate(dates)} 
+            className="btn-primary"
+            disabled={!dates.from || !dates.to}
+          >
+            {t('dashboard.generate_report')}
+          </button>
+        </footer>
       </div>
     </div>
   );

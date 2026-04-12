@@ -12,7 +12,8 @@ async function main() {
     where: { name: 'Demo' },
     update: {
       waterLimit: 20,
-      hasWater: true
+      hasWater: true,
+      hasProviders: false
     },
     create: {
       name: 'Demo',
@@ -26,13 +27,14 @@ async function main() {
       temperaturesLimit: 10,
       hasWater: true,
       waterLimit: 20,
+      hasProviders: false,
     },
   });
 
   // Otros planes (Básico, Premium, Gold)
   const basicoPlan = await prisma.pricingPlan.upsert({
     where: { name: 'Básico' },
-    update: { waterLimit: 250, hasWater: true },
+    update: { waterLimit: 250, hasWater: true, hasProviders: true },
     create: {
       name: 'Básico',
       priceMonthly: 19,
@@ -47,12 +49,13 @@ async function main() {
       temperaturesLimit: 250,
       hasWater: true,
       waterLimit: 250,
+      hasProviders: true,
     }
   });
 
   const premiumPlan = await prisma.pricingPlan.upsert({
     where: { name: 'Premium' },
-    update: { waterLimit: 1000, hasWater: true },
+    update: { waterLimit: 1000, hasWater: true, hasProviders: true },
     create: {
       name: 'Premium',
       priceMonthly: 39,
@@ -67,12 +70,13 @@ async function main() {
       temperaturesLimit: 1000,
       hasWater: true,
       waterLimit: 1000,
+      hasProviders: true,
     }
   });
 
   const goldPlan = await prisma.pricingPlan.upsert({
     where: { name: 'Gold' },
-    update: { waterLimit: 5000, hasWater: true },
+    update: { waterLimit: 5000, hasWater: true, hasProviders: true },
     create: {
       name: 'Gold',
       priceMonthly: 69,
@@ -87,6 +91,7 @@ async function main() {
       temperaturesLimit: 5000,
       hasWater: true,
       waterLimit: 5000,
+      hasProviders: true,
     }
   });
 
