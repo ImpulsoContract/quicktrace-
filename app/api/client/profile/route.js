@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   try {
-    const profile = await prisma.clientProfile.findUnique({
+    let profile = await prisma.clientProfile.findUnique({
       where: { id: session.user.profileId },
       include: { plan: true }
     });
