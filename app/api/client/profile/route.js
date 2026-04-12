@@ -7,13 +7,13 @@ import Stripe from "stripe";
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   try {
-    let profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) },
+    const profile = await prisma.clientProfile.findUnique({
+      where: { id: session.user.profileId },
       include: { plan: true }
     });
 

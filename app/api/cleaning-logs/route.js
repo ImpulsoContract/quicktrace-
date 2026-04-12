@@ -10,6 +10,10 @@ export async function GET(req) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasCleaning) {
+    return NextResponse.json({ error: "No tienes permiso para acceder a registros de limpieza" }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const startDate = searchParams.get("startDate");
@@ -58,6 +62,10 @@ export async function POST(req) {
 
   if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasCleaning) {
+    return NextResponse.json({ error: "No tienes permiso para registrar limpieza" }, { status: 403 });
   }
 
   try {
@@ -113,6 +121,10 @@ export async function PATCH(req) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasCleaning) {
+    return NextResponse.json({ error: "No tienes permiso para modificar limpieza" }, { status: 403 });
   }
 
   try {

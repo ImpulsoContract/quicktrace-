@@ -14,7 +14,7 @@ export default withAuth(
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    if ((isClientPage || isClientApi) && token?.role !== "CLIENT" && token?.role !== "ADMIN") {
+    if ((isClientPage || isClientApi) && token?.role !== "CLIENT" && token?.role !== "ADMIN" && token?.role !== "WORKER") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
   },

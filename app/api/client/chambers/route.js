@@ -5,21 +5,23 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CLIENT") {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  try {
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasTemperatures) {
+    return NextResponse.json({ error: "No tienes permiso para acceder a cámaras" }, { status: 403 });
+  }
 
-    if (!profile) {
+  try {
+    const profileId = session.user.profileId;
+
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
     const chambers = await prisma.chamber.findMany({
-      where: { clientProfileId: profile.id },
+      where: { clientProfileId: profileId },
       orderBy: { name: 'asc' }
     });
 

@@ -6,16 +6,20 @@ import { authOptions } from "@/lib/auth";
 export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-    if (!profile) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasTraceability) {
+      return NextResponse.json({ error: "No tienes permiso para acceder a precios de coste" }, { status: 403 });
+    }
+
+    const profileId = session.user.profileId;
+    if (!profileId) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
 
     // Fetch all recipes with their ingredients
     const recipes = await prisma.recipe.findMany({
-      where: { clientProfileId: profile.id },
+      where: { clientProfileId: profileId },
       include: { ingredients: true }
     });
 

@@ -6,22 +6,23 @@ import { authOptions } from "@/lib/auth";
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: parseInt(session.user.id) },
-      include: { clientProfile: true }
-    });
+  if (session.user.role === "WORKER" && !session.user.permissions?.hasGoods) {
+    return NextResponse.json({ error: "No tienes permiso para acceder a proveedores" }, { status: 403 });
+  }
 
-    if (!user || !user.clientProfile) {
+  try {
+    const profileId = session.user.profileId;
+
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
     const providers = await prisma.provider.findMany({
-      where: { clientProfileId: user.clientProfile.id },
+      where: { clientProfileId: profileId },
       orderBy: { name: 'asc' }
     });
 
