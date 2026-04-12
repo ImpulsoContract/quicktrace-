@@ -7,7 +7,7 @@ import {
   Search, ClipboardList, Clock,
   ArrowLeft, Save, Beaker, Menu,
   ChevronRight, Loader2, AlertCircle, Trash2,
-  Plus, Brush, User, Calendar, Edit, Thermometer,
+  Plus, Brush, User, Users, UserPlus, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign
