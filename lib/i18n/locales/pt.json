@@ -319,24 +319,24 @@
     "ingredient_costs_desc": "Adicione aqui os preços de custo atuais para saber depois o preço de custo das matérias-primas em cada elaboração. Se uma matéria-prima aparecer várias vezes, é porque você a possui com diferentes unidades de medida em cada receita. Preste muita atenção na unidade de medida de cada matéria-prima para adicionar o preço de custo. Por exemplo, se uma matéria-prima for arroz, verifique se você deve colocar o preço de um grama ou de um quilo.",
     "ingredient_column": "Ingrediente e Unidade",
     "recipes_column": "Receitas que o utilizam",
-    "cost_price_column": "Preço de Custo (por unidade)",
-    "workers": {
-      "title": "Gestão de Trabalhadores",
-      "subtitle": "Crie e gira os acessos do seu pessoal.",
-      "add_btn": "Adicionar Trabalhador",
-      "name": "Nome",
-      "user": "Utilizador/Email",
-      "permissions": "Permissões",
-      "no_workers": "Ainda não adicionou nenhum trabalhador.",
-      "add_title": "Novo Trabalhador",
-      "edit_title": "Editar Trabalhador",
-      "name_lbl": "Nome completo",
-      "user_lbl": "Utilizador / Email",
-      "password_lbl": "Palavra-passe",
-      "password_edit_lbl": "Palavra-passe (deixar em branco para não mudar)",
-      "permissions_lbl": "Permissões de acesso",
-      "create_btn": "Criar Trabalhador"
-    }
+    "cost_price_column": "Preço de Custo (por unidade)"
+  },
+  "workers": {
+    "title": "Gestão de Trabalhadores",
+    "subtitle": "Crie e gira os acessos do seu pessoal.",
+    "add_btn": "Adicionar Trabalhador",
+    "name": "Nome",
+    "user": "Utilizador/Email",
+    "permissions": "Permissões",
+    "no_workers": "Ainda não adicionou nenhum trabalhador.",
+    "add_title": "Novo Trabalhador",
+    "edit_title": "Editar Trabalhador",
+    "name_lbl": "Nome completo",
+    "user_lbl": "Utilizador / Email",
+    "password_lbl": "Palavra-passe",
+    "password_edit_lbl": "Palavra-passe (deixar em branco para não mudar)",
+    "permissions_lbl": "Permissões de acesso",
+    "create_btn": "Criar Trabalhador"
   },
   "alerts": {
     "missing_data": "Faltam dados obrigatórios:",
