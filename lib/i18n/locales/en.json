@@ -319,7 +319,7 @@
     "ingredient_costs_desc": "Add the current cost prices here to later know the price of raw materials in each production. If a raw material appears several times, it is because you have it with different units of measure in each recipe. Look closely at the unit of measure of each raw material to add the cost price. For example, if a raw material is rice, check if you need to set the price for one gram or one kilogram.",
     "ingredient_column": "Ingredient and Unit",
     "recipes_column": "Recipes using it",
-    "cost_price_column": "Cost Price (per unit)",
+    "cost_price_column": "Cost Price (per unit)"
   },
   "workers": {
     "title": "Worker Management",

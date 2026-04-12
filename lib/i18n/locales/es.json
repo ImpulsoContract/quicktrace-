@@ -319,7 +319,7 @@
     "ingredient_costs_desc": "Añade aquí los precios de coste de este momento para saber luego el precio de coste de las materias primas en cada elaboración. Si una materia prima te aparece varias veces, es porque la tienes con diferentes unidades de medida en cada receta. Fíjate bien en la unidad de medida de cada materia prima para añadir el precio de coste. Por ejemplo, si una materia prima es el arroz, fíjate si tienes que poner el precio de un gramo o de un kilo.",
     "ingredient_column": "Ingrediente y Unidad",
     "recipes_column": "Recetas que lo usan",
-    "cost_price_column": "Precio de Coste (por unidad)",
+    "cost_price_column": "Precio de Coste (por unidad)"
   },
   "workers": {
     "title": "Gestión de Trabajadores",
