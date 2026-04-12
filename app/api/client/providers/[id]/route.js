@@ -36,7 +36,9 @@ export async function PATCH(req, { params }) {
         rgs: body.rgs,
         phone: body.phone,
         address: body.address,
-        products: body.products
+        products: body.products,
+        merchantTypes: body.merchantTypes !== undefined ? body.merchantTypes : undefined
+      }
       }
     });
 

@@ -96,7 +96,8 @@ export async function POST(req) {
       manufacturingTemp,
       endDate,
       typeAndOrigin,
-      providerId
+      providerId,
+      merchantTypes
     } = body;
 
     if (!productName || !date) {
@@ -115,6 +116,7 @@ export async function POST(req) {
         manufacturingTemp,
         endDate,
         typeAndOrigin,
+        merchantTypes: merchantTypes || [],
         providerId: providerId ? parseInt(providerId) : null,
         clientProfileId: profile.id
       }
@@ -152,7 +154,8 @@ export async function PATCH(req) {
       manufacturingTemp,
       endDate,
       typeAndOrigin,
-      providerId
+      providerId,
+      merchantTypes
     } = body;
 
     if (!id || !productName || !date) {
@@ -175,6 +178,7 @@ export async function PATCH(req) {
         manufacturingTemp,
         endDate,
         typeAndOrigin,
+        merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
         providerId: providerId ? parseInt(providerId) : null
       }
     });

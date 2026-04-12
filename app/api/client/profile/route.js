@@ -83,7 +83,8 @@ export async function PATCH(request) {
       city,
       province,
       country,
-      labelConfig
+      labelConfig,
+      merchantTypes
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -99,6 +100,7 @@ export async function PATCH(request) {
         province: province !== undefined ? province : undefined,
         country: country !== undefined ? country : undefined,
         labelConfig: labelConfig !== undefined ? labelConfig : undefined,
+        merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
       },
       include: { plan: true }
     });

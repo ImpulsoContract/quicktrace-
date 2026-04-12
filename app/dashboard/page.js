@@ -106,7 +106,7 @@ export default function ClientDashboard() {
   const [isProvidersModalOpen, setIsProvidersModalOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState(null);
   const [providersForm, setProvidersForm] = useState({
-    name: "", nif: "", rgs: "", phone: "", address: "", products: ""
+    name: "", nif: "", rgs: "", phone: "", address: "", products: "", merchantTypes: []
   });
 
   const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
@@ -222,7 +222,8 @@ export default function ClientDashboard() {
     deliveryNoteImage: "",
     manufacturingTemp: "",
     endDate: "",
-    typeAndOrigin: ""
+    typeAndOrigin: "",
+    merchantTypes: []
   });
   const [waterForm, setWaterForm] = useState({
     date: new Date().toISOString().slice(0, 16),
@@ -752,7 +753,7 @@ export default function ClientDashboard() {
         alert(editingProvider ? t('alerts.provider_updated') : t('alerts.provider_saved'));
         setIsProvidersModalOpen(false);
         setEditingProvider(null);
-        setProvidersForm({ name: "", nif: "", rgs: "", phone: "", address: "", products: "" });
+        setProvidersForm({ name: "", nif: "", rgs: "", phone: "", address: "", products: "", merchantTypes: [] });
         fetchProviders();
       } else {
         alert(data.error || t('alerts.request_error'));
@@ -773,7 +774,8 @@ export default function ClientDashboard() {
       rgs: provider.rgs || "",
       phone: provider.phone || "",
       address: provider.address || "",
-      products: provider.products || ""
+      products: provider.products || "",
+      merchantTypes: provider.merchantTypes || []
     });
     setIsProvidersModalOpen(true);
   };
@@ -961,7 +963,8 @@ export default function ClientDashboard() {
           deliveryNoteImage: "",
           manufacturingTemp: "",
           endDate: "",
-          typeAndOrigin: ""
+          typeAndOrigin: "",
+          merchantTypes: []
         });
         fetchGoodsReceipts(goodsFilters);
       } else {
@@ -996,7 +999,8 @@ export default function ClientDashboard() {
       deliveryNoteImage: receipt.deliveryNoteImage || "",
       manufacturingTemp: receipt.manufacturingTemp || "",
       endDate: receipt.endDate || "",
-      typeAndOrigin: receipt.typeAndOrigin || ""
+      typeAndOrigin: receipt.typeAndOrigin || "",
+      merchantTypes: receipt.merchantTypes || []
     });
     setIsGoodsModalOpen(true);
   };
@@ -3111,17 +3115,19 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_title')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span>{t('dashboard.cost_header')}</span>
-                              <span 
-                                onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
-                                style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
-                              >
-                                {t('dashboard.assign_costs_link')}
-                              </span>
-                            </div>
-                          </th>
+                          {session?.user?.role !== "WORKER" && (
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <span>{t('dashboard.cost_header')}</span>
+                                <span 
+                                  onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
+                                  style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                                >
+                                  {t('dashboard.assign_costs_link')}
+                                </span>
+                              </div>
+                            </th>
+                          )}
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
@@ -3139,9 +3145,11 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.date || el.createdAt).toLocaleDateString()}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--corp-green)' }}>{el.name}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
-                            {el.costPrice ? `${el.costPrice.toFixed(2)} €` : '-'}
-                          </td>
+                          {session?.user?.role !== "WORKER" && (
+                            <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                              {el.costPrice ? `${el.costPrice.toFixed(2)} €` : '-'}
+                            </td>
+                          )}
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                               <button 
@@ -4877,6 +4885,7 @@ export default function ClientDashboard() {
           isEditing={!!editingGoodsReceipt}
           onImageChange={handleImageChange}
           providers={providers}
+          allMerchantTypes={profile?.merchantTypes || []}
         />
       )}
 
@@ -4901,6 +4910,7 @@ export default function ClientDashboard() {
           setFormData={setProvidersForm}
           loading={loading}
           isEditing={!!editingProvider}
+          allMerchantTypes={profile?.merchantTypes || []}
         />
       )}
 
@@ -5806,7 +5816,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, loading }) {
   );
 }
 
-function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers }) {
+function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers, allMerchantTypes = [] }) {
   const { t } = useI18n();
   return (
     <div className="modal-overlay">
@@ -5853,7 +5863,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                     setFormData({
                       ...formData, 
                       providerName: val,
-                      providerId: foundProvider ? foundProvider.id : null
+                      providerId: foundProvider ? foundProvider.id : null,
+                      merchantTypes: foundProvider ? (foundProvider.merchantTypes || []) : formData.merchantTypes
                     });
                   }} 
                   placeholder={t('goods_receipt_form.provider_placeholder')}
@@ -5941,6 +5952,31 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
             </div>
           </div>
 
+          {allMerchantTypes.length > 0 && (
+            <div className="form-group">
+              <label className="label" style={{ marginBottom: '0.75rem', display: 'block' }}>{t('modals.merchant_types')}</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                {allMerchantTypes.map((type, idx) => (
+                  <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input 
+                      type="checkbox" 
+                      style={{ cursor: 'pointer' }}
+                      checked={formData.merchantTypes?.includes(type)}
+                      onChange={(e) => {
+                        const current = formData.merchantTypes || [];
+                        const next = e.target.checked 
+                          ? [...current, type]
+                          : current.filter(t => t !== type);
+                        setFormData({ ...formData, merchantTypes: next });
+                      }}
+                    />
+                    <span style={{ color: 'var(--text-main)', fontWeight: '500' }}>{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="form-group">
             <label className="label">{t('dashboard.delivery_note_photo')}</label>
             <div style={{ 
@@ -6004,10 +6040,12 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
     postalCode: profile?.postalCode || "",
     city: profile?.city || "",
     province: profile?.province || "",
-    country: profile?.country || "España"
+    country: profile?.country || "España",
+    merchantTypes: profile?.merchantTypes || []
   });
   const [loading, setLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [newMerchantType, setNewMerchantType] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -6027,6 +6065,26 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddMerchantType = () => {
+    if (!newMerchantType.trim()) return;
+    if (formData.merchantTypes.includes(newMerchantType.trim())) {
+      setNewMerchantType("");
+      return;
+    }
+    setFormData({
+      ...formData,
+      merchantTypes: [...formData.merchantTypes, newMerchantType.trim()]
+    });
+    setNewMerchantType("");
+  };
+
+  const handleRemoveMerchantType = (typeToRemove) => {
+    setFormData({
+      ...formData,
+      merchantTypes: formData.merchantTypes.filter(t => t !== typeToRemove)
+    });
   };
 
   const isDemo = !profile?.planId || profile?.plan?.name?.toUpperCase() === "DEMO";
@@ -6185,6 +6243,63 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
                     </>
                   )
                 )}
+              </div>
+            </div>
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: '2rem 0 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)' }}>
+              <Package size={20} /> {t('modals.merchant_types')}
+            </h3>
+            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                {t('modals.merchant_types_desc')}
+              </p>
+              
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder={t('modals.new_merchant_type_placeholder')}
+                  value={newMerchantType}
+                  onChange={e => setNewMerchantType(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleAddMerchantType())}
+                />
+                <button 
+                  type="button"
+                  onClick={handleAddMerchantType}
+                  className="btn-primary"
+                  style={{ width: 'auto', padding: '0 1rem', whiteSpace: 'nowrap' }}
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {formData.merchantTypes.map((type, idx) => (
+                  <div 
+                    key={idx}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.5rem', 
+                      padding: '0.25rem 0.75rem', 
+                      background: 'white', 
+                      borderRadius: '2rem', 
+                      border: '1px solid var(--border)',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      color: 'var(--text-main)'
+                    }}
+                  >
+                    <span>{type}</span>
+                    <button 
+                      type="button"
+                      onClick={() => handleRemoveMerchantType(type)}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, display: 'flex' }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
@@ -7335,7 +7450,7 @@ function TemperatureExportModal({ onClose, onGenerate, dates, setDates }) {
   );
 }
 
-function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, allMerchantTypes = [] }) {
   const { t } = useI18n();
   return (
     <div className="modal-overlay">
@@ -7405,12 +7520,37 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
             <label className="label">{t('providers.products')}</label>
             <textarea 
               className="input-field" 
-              rows="3"
+              rows="2"
               value={formData.products} 
               onChange={(e) => setFormData({...formData, products: e.target.value})}
               style={{ resize: 'vertical' }}
             />
           </div>
+
+          {allMerchantTypes.length > 0 && (
+            <div>
+              <label className="label" style={{ marginBottom: '0.75rem', display: 'block' }}>{t('modals.merchant_types')}</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                {allMerchantTypes.map((type, idx) => (
+                  <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input 
+                      type="checkbox" 
+                      style={{ cursor: 'pointer' }}
+                      checked={formData.merchantTypes?.includes(type)}
+                      onChange={(e) => {
+                        const current = formData.merchantTypes || [];
+                        const next = e.target.checked 
+                          ? [...current, type]
+                          : current.filter(t => t !== type);
+                        setFormData({ ...formData, merchantTypes: next });
+                      }}
+                    />
+                    <span style={{ color: 'var(--text-main)', fontWeight: '500' }}>{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
             <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1 }}>{t('common.cancel')}</button>

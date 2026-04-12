@@ -41,7 +41,7 @@ export async function POST(req) {
   }
 
   try {
-    const { name, nif, rgs, phone, address, products } = await req.json();
+    const { name, nif, rgs, phone, address, products, merchantTypes } = await req.json();
 
     if (!name) {
       return NextResponse.json({ error: "El nombre es obligatorio" }, { status: 400 });
@@ -64,6 +64,7 @@ export async function POST(req) {
         phone,
         address,
         products,
+        merchantTypes: merchantTypes || [],
         clientProfileId: user.clientProfile.id
       }
     });
