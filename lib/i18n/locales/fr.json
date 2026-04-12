@@ -102,6 +102,7 @@
     "water": "Eau",
     "manage_recipes": "Mes Recettes",
     "plan": "PLAN",
+    "workers": "Travailleurs",
     "logout": "Déconnexion"
   },
   "dashboard": {
@@ -310,6 +311,23 @@
     },
     "drag_elements": "Faites glisser des éléments ici",
     "none": "Aucun"
+  },
+  "workers": {
+    "title": "Gestion des Travailleurs",
+    "subtitle": "Créez et gérez les accès de votre personnel.",
+    "add_btn": "Ajouter un Travailleur",
+    "name": "Nom",
+    "user": "Utilisateur/Email",
+    "permissions": "Permissions",
+    "no_workers": "Vous n'avez pas encore ajouté de travailleurs.",
+    "add_title": "Nouveau Travailleur",
+    "edit_title": "Modifier le Travailleur",
+    "name_lbl": "Nom complet",
+    "user_lbl": "Utilisateur / Email",
+    "password_lbl": "Mot de passe",
+    "password_edit_lbl": "Mot de passe (laisser vide pour ne pas changer)",
+    "permissions_lbl": "Permissions d'accès",
+    "create_btn": "Créer un Travailleur"
   },
   "alerts": {
     "missing_data": "Données obligatoires manquantes :",

@@ -102,6 +102,7 @@
     "water": "Acqua",
     "manage_recipes": "Le mie Ricette",
     "plan": "PIANO",
+    "workers": "Lavoratori",
     "logout": "Chiudi sessione"
   },
   "dashboard": {
@@ -310,6 +311,23 @@
     },
     "drag_elements": "Trascina elementi qui",
     "none": "Nessuno"
+  },
+  "workers": {
+    "title": "Gestione dei Lavoratori",
+    "subtitle": "Crea e gestisci gli accessi del tuo personale.",
+    "add_btn": "Aggiungi Lavoratore",
+    "name": "Nome",
+    "user": "Utente/Email",
+    "permissions": "Permessi",
+    "no_workers": "Non hai ancora aggiunto lavoratori.",
+    "add_title": "Nuovo Lavoratore",
+    "edit_title": "Modifica Lavoratore",
+    "name_lbl": "Nome completo",
+    "user_lbl": "Utente / Email",
+    "password_lbl": "Password",
+    "password_edit_lbl": "Password (lasciare vuoto per non cambiare)",
+    "permissions_lbl": "Permessi di accesso",
+    "create_btn": "Crea Lavoratore"
   },
   "alerts": {
     "missing_data": "Mancano dati obbligatori:",
