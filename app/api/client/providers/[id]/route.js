@@ -39,7 +39,6 @@ export async function PATCH(req, { params }) {
         products: body.products,
         merchantTypes: body.merchantTypes !== undefined ? body.merchantTypes : undefined
       }
-      }
     });
 
     return NextResponse.json({ success: true, data: updatedProvider });
