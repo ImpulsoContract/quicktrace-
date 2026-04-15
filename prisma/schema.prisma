@@ -99,6 +99,9 @@ model ClientProfile {
   ingredientPrices     IngredientPrice[]
   workers              Worker[]
   merchantTypes        String[]          @default([])
+  currency                   String            @default("EUR")
+  laborCostHourlyRate        Float?            @default(0)
+  isPreparationTimeMandatory Boolean           @default(false)
 }
 
 model Provider {
@@ -253,7 +256,9 @@ model Elaboration {
 
   quantityProduced String?
   netWeight        String?
-  costPrice        Float?  @default(0)
+  costPrice            Float?            @default(0)
+  preparationTime      String?
+  laborCostHourlyRate  Float?            @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

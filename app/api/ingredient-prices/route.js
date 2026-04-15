@@ -25,7 +25,7 @@ export async function GET(req) {
 
     // Fetch existing prices
     const existingPrices = await prisma.ingredientPrice.findMany({
-      where: { clientProfileId: profile.id }
+      where: { clientProfileId: profileId }
     });
 
     // Group ingredients by Name and Unit

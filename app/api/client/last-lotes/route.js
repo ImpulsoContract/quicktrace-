@@ -8,23 +8,18 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.email || session.user.email },
-      include: { clientProfile: true }
-    });
-
-    if (!user || user.role !== "CLIENT" || !user.clientProfile) {
-      return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
+    if (!session || !session.user.profileId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
+
+    const profileId = session.user.profileId;
 
     // Fetch all ingredients from all elaborations of this client
     const elabIngredients = await prisma.elaborationIngredient.findMany({
       where: {
         elaboration: {
           recipe: {
-            clientProfileId: user.clientProfile.id
+            clientProfileId: profileId
           }
         }
       },

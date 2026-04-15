@@ -84,7 +84,10 @@ export async function PATCH(request) {
       province,
       country,
       labelConfig,
-      merchantTypes
+      merchantTypes,
+      currency,
+      laborCostHourlyRate,
+      isPreparationTimeMandatory
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -101,6 +104,9 @@ export async function PATCH(request) {
         country: country !== undefined ? country : undefined,
         labelConfig: labelConfig !== undefined ? labelConfig : undefined,
         merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
+        currency: currency !== undefined ? currency : undefined,
+        laborCostHourlyRate: laborCostHourlyRate !== undefined ? laborCostHourlyRate : undefined,
+        isPreparationTimeMandatory: isPreparationTimeMandatory !== undefined ? isPreparationTimeMandatory : undefined
       },
       include: { plan: true }
     });

@@ -26,6 +26,7 @@ export default function RegisterPage() {
     utmCampaign: "",
     utmContent: ""
   });
+  const [referralCode, setReferralCode] = useState("");
   const router = useRouter();
 
   useEffect(() => {

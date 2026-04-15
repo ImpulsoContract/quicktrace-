@@ -107,7 +107,7 @@ export async function POST(req) {
     }
 
     const data = await req.json();
-    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut } = data;
+    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime } = data;
 
     const profileId = session.user.profileId;
     const profile = await prisma.clientProfile.findUnique({
@@ -179,6 +179,8 @@ export async function POST(req) {
         workshopTemp: data.workshopTemp,
         quantityProduced: data.quantityProduced,
         netWeight: data.netWeight,
+        preparationTime: data.preparationTime,
+        laborCostHourlyRate: profile.laborCostHourlyRate || 0,
         costPrice: totalCost,
         ingredients: {
           create: ingredients.map(ing => ({
@@ -214,7 +216,7 @@ export async function PATCH(req) {
     }
 
     const data = await req.json();
-    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, ingredients } = data;
+    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, preparationTime, ingredients } = data;
 
     if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
@@ -250,6 +252,7 @@ export async function PATCH(req) {
       workshopTemp,
       quantityProduced,
       netWeight,
+      preparationTime,
     };
 
     if (ingredients) {

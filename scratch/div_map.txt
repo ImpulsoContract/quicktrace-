@@ -1,0 +1,1007 @@
+Line 2689: +1 -0 | <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+Line 2691: +0 -1 | </div>
+Line 2696: +1 -0 | <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
+Line 2698: +1 -0 | <div className="mobile-header" style={{ padding: '1rem 1.5rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
+Line 2699: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+Line 2700: +1 -0 | <div style={{ position: 'relative', width: '28px', height: '28px' }}>
+Line 2702: +0 -1 | </div>
+Line 2706: +0 -1 | </div>
+Line 2713: +0 -1 | </div>
+Line 2716: +1 -0 | <div style={{ display: 'flex', minHeight: '100vh', overflowX: 'hidden' }} className="flex-responsive">
+Line 2726: +1 -0 | <div className="desktop-logo" style={{ padding: '2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+Line 2727: +1 -0 | <div style={{ position: 'relative', width: '32px', height: '32px' }}>
+Line 2730: +0 -1 | </div>
+Line 2734: +0 -1 | </div>
+Line 2825: +1 -0 | <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
+Line 2827: +0 -1 | </div>
+Line 2829: +1 -0 | <div
+Line 2838: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+Line 2839: +1 -0 | <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--corp-green)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 'bold' }}>
+Line 2841: +0 -1 | </div>
+Line 2842: +1 -0 | <div style={{ overflow: 'hidden' }}>
+Line 2843: +1 -1 | <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile?.personName || session?.user?.name}</div>
+Line 2844: +1 -1 | <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800' }}>{t('sidebar.plan')} {profile?.plan?.name || '...'}</div>
+Line 2845: +0 -1 | </div>
+Line 2846: +0 -1 | </div>
+Line 2848: +1 -0 | <div style={{ padding: '0 1.5rem 1rem' }}>
+Line 2863: +0 -1 | </div>
+Line 2865: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 2872: +0 -1 | </div>
+Line 2873: +0 -1 | </div>
+Line 2880: +1 -0 | <div className="desktop-only" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+Line 2888: +0 -1 | </div>
+Line 2891: +1 -0 | <div style={{ maxWidth: '850px', margin: '0 auto' }}>
+Line 2902: +1 -0 | <div style={{ color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
+Line 2904: +0 -1 | </div>
+Line 2909: +1 -0 | <div>
+Line 2920: +0 -1 | </div>
+Line 2922: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+Line 2924: +1 -0 | <div>
+Line 2933: +0 -1 | </div>
+Line 2935: +1 -0 | <div>
+Line 2944: +0 -1 | </div>
+Line 2945: +1 -0 | <div>
+Line 2954: +0 -1 | </div>
+Line 2955: +1 -0 | <div>
+Line 2963: +0 -1 | </div>
+Line 2964: +1 -0 | <div>
+Line 2972: +0 -1 | </div>
+Line 2974: +1 -0 | <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', background: 'var(--bg-main)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+Line 2975: +1 -0 | <div>
+Line 2983: +0 -1 | </div>
+Line 2984: +1 -0 | <div>
+Line 2992: +0 -1 | </div>
+Line 2993: +0 -1 | </div>
+Line 2995: +1 -0 | <div>
+Line 3003: +0 -1 | </div>
+Line 3004: +1 -0 | <div>
+Line 3015: +0 -1 | </div>
+Line 3016: +0 -1 | </div>
+Line 3018: +1 -0 | <div>
+Line 3019: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+Line 3023: +1 -0 | <div style={{ display: 'flex', gap: '0.75rem' }}>
+Line 3046: +0 -1 | </div>
+Line 3047: +0 -1 | </div>
+Line 3049: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 3051: +1 -0 | <div key={ing.id} style={{
+Line 3055: +1 -0 | <div style={{ flex: 1 }}>
+Line 3056: +1 -1 | <div style={{ fontSize: '1rem', fontWeight: '700' }}>{ing.name}</div>
+Line 3057: +1 -1 | <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('traceability_form.theoretical_amount')}: {ing.amount} {ing.unit}</div>
+Line 3058: +0 -1 | </div>
+Line 3059: +1 -0 | <div>
+Line 3072: +0 -1 | </div>
+Line 3073: +1 -0 | <div>
+Line 3086: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+Line 3097: +0 -1 | </div>
+Line 3098: +0 -1 | </div>
+Line 3099: +0 -1 | </div>
+Line 3101: +0 -1 | </div>
+Line 3102: +0 -1 | </div>
+Line 3104: +1 -0 | <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+Line 3108: +0 -1 | </div>
+Line 3111: +0 -1 | </div>
+Line 3113: +1 -0 | <div>
+Line 3115: +1 -0 | <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+Line 3122: +0 -1 | </div>
+Line 3127: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '2px dashed var(--border)', borderRadius: '1.5rem' }}>
+Line 3128: +1 -0 | <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 3130: +0 -1 | </div>
+Line 3135: +1 -0 | <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+Line 3149: +0 -1 | </div>
+Line 3150: +0 -1 | </div>
+Line 3152: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+Line 3154: +1 -0 | <div
+Line 3167: +1 -0 | <div
+Line 3172: +0 -1 | </div>
+Line 3173: +0 -1 | </div>
+Line 3175: +0 -1 | </div>
+Line 3177: +0 -1 | </div>
+Line 3179: +1 -0 | <div>
+Line 3181: +1 -0 | <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+Line 3182: +1 -0 | <div>
+Line 3185: +0 -1 | </div>
+Line 3186: +1 -0 | <div className="action-buttons-mobile" style={{ display: 'flex', gap: '0.75rem' }}>
+Line 3208: +0 -1 | </div>
+Line 3209: +0 -1 | </div>
+Line 3212: +1 -0 | <div
+Line 3219: +1 -0 | <div>
+Line 3221: +1 -0 | <div style={{ position: 'relative' }}>
+Line 3234: +0 -1 | </div>
+Line 3235: +0 -1 | </div>
+Line 3237: +1 -0 | <div>
+Line 3253: +0 -1 | </div>
+Line 3255: +1 -0 | <div>
+Line 3267: +0 -1 | </div>
+Line 3269: +1 -0 | <div>
+Line 3281: +0 -1 | </div>
+Line 3283: +1 -0 | <div>
+Line 3298: +0 -1 | </div>
+Line 3309: +0 -1 | </div>
+Line 3314: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+Line 3316: +0 -1 | </div>
+Line 3318: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+Line 3319: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 3324: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+Line 3332: +0 -1 | </div>
+Line 3341: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+Line 3349: +0 -1 | </div>
+Line 3385: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+Line 3404: +0 -1 | </div>
+Line 3410: +0 -1 | </div>
+Line 3413: +1 -0 | <div style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderTop: '1px solid var(--border)' }}>
+Line 3414: +1 -0 | <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+Line 3419: +0 -1 | </div>
+Line 3420: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 3437: +0 -1 | </div>
+Line 3438: +0 -1 | </div>
+Line 3439: +0 -1 | </div>
+Line 3441: +0 -1 | </div>
+Line 3443: +1 -0 | <div style={{ animation: 'fadeIn 0.5s ease' }}>
+Line 3445: +1 -0 | <div style={{
+Line 3450: +1 -0 | <div style={{
+Line 3456: +0 -1 | </div>
+Line 3471: +0 -1 | </div>
+Line 3475: +1 -0 | <div>
+Line 3478: +0 -1 | </div>
+Line 3479: +1 -0 | <div style={{ display: 'flex', gap: '1rem' }}>
+Line 3498: +0 -1 | </div>
+Line 3501: +1 -0 | <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center', background: 'white', padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--border)' }}>
+Line 3502: +1 -0 | <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.5rem' }}>
+Line 3504: +0 -1 | </div>
+Line 3542: +0 -1 | </div>
+Line 3545: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+Line 3546: +1 -0 | <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 3548: +0 -1 | </div>
+Line 3551: +0 -1 | </div>
+Line 3553: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+Line 3557: +1 -0 | <div key={provider.id} className="glass-card" style={{ padding: '1.5rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 3558: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+Line 3559: +1 -0 | <div>
+Line 3561: +1 -1 | {provider.nif && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{t('providers.list_nif')}: {provider.nif}</div>}
+Line 3562: +0 -1 | </div>
+Line 3563: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 3569: +0 -1 | </div>
+Line 3570: +0 -1 | </div>
+Line 3572: +1 -0 | <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+Line 3574: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 3577: +0 -1 | </div>
+Line 3580: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 3583: +0 -1 | </div>
+Line 3586: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 3589: +0 -1 | </div>
+Line 3592: +1 -0 | <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+Line 3593: +1 -1 | <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('providers.products')}</div>
+Line 3594: +1 -1 | <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{provider.products}</div>
+Line 3595: +0 -1 | </div>
+Line 3599: +1 -0 | <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+Line 3605: +0 -1 | </div>
+Line 3607: +0 -1 | </div>
+Line 3608: +0 -1 | </div>
+Line 3610: +0 -1 | </div>
+Line 3614: +0 -1 | </div>
+Line 3616: +1 -0 | <div style={{ animation: 'fadeIn 0.5s ease' }}>
+Line 3618: +1 -0 | <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+Line 3625: +0 -1 | </div>
+Line 3626: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+Line 3628: +1 -0 | <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+Line 3669: +0 -1 | </div>
+Line 3670: +0 -1 | </div>
+Line 3673: +1 -0 | <div
+Line 3680: +1 -0 | <div style={{ flex: 1, minWidth: '200px' }}>
+Line 3688: +0 -1 | </div>
+Line 3689: +1 -0 | <div style={{ flex: 1, minWidth: '200px' }}>
+Line 3697: +0 -1 | </div>
+Line 3698: +1 -0 | <div style={{ flex: 1, minWidth: '200px' }}>
+Line 3710: +0 -1 | </div>
+Line 3752: +0 -1 | </div>
+Line 3755: +1 -0 | <div style={{ padding: '0.75rem 1.25rem', background: 'rgba(66, 98, 22, 0.05)', borderRadius: '1rem', marginBottom: '1.5rem', border: '1px solid rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+Line 3760: +0 -1 | </div>
+Line 3774: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '2px dashed var(--border)' }}>
+Line 3775: +1 -0 | <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 3777: +0 -1 | </div>
+Line 3780: +0 -1 | </div>
+Line 3782: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+Line 3796: +1 -0 | <div key={receipt.id} className="glass-card" style={{
+Line 3802: +1 -0 | <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 10, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'white', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+Line 3810: +0 -1 | </div>
+Line 3811: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+Line 3812: +1 -0 | <div>
+Line 3813: +1 -0 | <div style={{ fontSize: '0.8rem', color: 'var(--corp-green)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+Line 3815: +0 -1 | </div>
+Line 3817: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+Line 3840: +0 -1 | </div>
+Line 3841: +0 -1 | </div>
+Line 3842: +1 -0 | <div style={{ display: 'flex', gap: '0.75rem' }}>
+Line 3855: +0 -1 | </div>
+Line 3856: +0 -1 | </div>
+Line 3859: +1 -0 | <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '-0.25rem', marginBottom: '0.5rem' }}>
+Line 3865: +0 -1 | </div>
+Line 3867: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', fontSize: '0.9rem', border: '1px solid var(--border)' }}>
+Line 3868: +1 -0 | <div>
+Line 3871: +0 -1 | </div>
+Line 3872: +1 -0 | <div>
+Line 3875: +0 -1 | </div>
+Line 3876: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+Line 3879: +0 -1 | </div>
+Line 3881: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', gridColumn: 'span 2' }}>
+Line 3882: +1 -1 | {receipt.manufacturingTemp && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.temp')}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.manufacturingTemp}</span></div>}
+Line 3883: +1 -1 | {receipt.endDate && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.end_date') || "Fecha finalización"}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.endDate}</span></div>}
+Line 3884: +1 -1 | {receipt.typeAndOrigin && <div><span className="info-label" style={{display:'inline-block', marginRight:'0.5rem'}}>{t('goods_receipt_form.type_and_origin') || "Tipo y procedencia"}:</span> <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.typeAndOrigin}</span></div>}
+Line 3885: +0 -1 | </div>
+Line 3887: +0 -1 | </div>
+Line 3889: +1 -0 | <div
+Line 3894: +0 -1 | </div>
+Line 3896: +0 -1 | </div>
+Line 3898: +0 -1 | </div>
+Line 3900: +0 -1 | </div>
+Line 3902: +1 -0 | <div>
+Line 3904: +1 -0 | <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+Line 3911: +0 -1 | </div>
+Line 3912: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+Line 3914: +0 -1 | </div>
+Line 3917: +1 -0 | <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'flex-end' }}>
+Line 3954: +0 -1 | </div>
+Line 3956: +1 -0 | <div
+Line 3963: +1 -0 | <div style={{ flex: 1, minWidth: '200px' }}>
+Line 3971: +0 -1 | </div>
+Line 3972: +1 -0 | <div style={{ flex: 1, minWidth: '200px' }}>
+Line 3980: +0 -1 | </div>
+Line 3987: +0 -1 | </div>
+Line 3990: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
+Line 3991: +1 -0 | <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 3993: +0 -1 | </div>
+Line 3996: +0 -1 | </div>
+Line 4004: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem' }}>
+Line 4005: +1 -0 | <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 4007: +0 -1 | </div>
+Line 4010: +0 -1 | </div>
+Line 4012: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+Line 4013: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 4018: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+Line 4038: +0 -1 | </div>
+Line 4041: +1 -1 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><User size={16} /> Persona</div>
+Line 4044: +1 -1 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={16} /> Fecha y Hora</div>
+Line 4081: +1 -0 | <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+Line 4087: +0 -1 | </div>
+Line 4090: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+Line 4105: +0 -1 | </div>
+Line 4111: +0 -1 | </div>
+Line 4112: +0 -1 | </div>
+Line 4114: +0 -1 | </div>
+Line 4116: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+Line 4118: +1 -0 | <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+Line 4125: +0 -1 | </div>
+Line 4126: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+Line 4128: +1 -0 | <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+Line 4164: +0 -1 | </div>
+Line 4165: +0 -1 | </div>
+Line 4168: +1 -0 | <div
+Line 4175: +1 -0 | <div style={{ flex: 1, minWidth: '200px' }}>
+Line 4183: +0 -1 | </div>
+Line 4184: +1 -0 | <div style={{ flex: 1, minWidth: '200px' }}>
+Line 4192: +0 -1 | </div>
+Line 4199: +0 -1 | </div>
+Line 4202: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
+Line 4203: +1 -0 | <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 4205: +0 -1 | </div>
+Line 4208: +0 -1 | </div>
+Line 4216: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem' }}>
+Line 4217: +1 -0 | <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 4219: +0 -1 | </div>
+Line 4222: +0 -1 | </div>
+Line 4224: +1 -0 | <div className="glass-card" style={{ background: 'white', border: '1px solid var(--border)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
+Line 4229: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+Line 4249: +0 -1 | </div>
+Line 4302: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+Line 4317: +0 -1 | </div>
+Line 4323: +0 -1 | </div>
+Line 4325: +0 -1 | </div>
+Line 4327: +1 -0 | <div style={{ animation: 'fadeIn 0.5s ease' }}>
+Line 4329: +1 -0 | <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+Line 4336: +0 -1 | </div>
+Line 4337: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+Line 4339: +1 -0 | <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+Line 4367: +0 -1 | </div>
+Line 4368: +0 -1 | </div>
+Line 4372: +1 -0 | <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
+Line 4373: +1 -0 | <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 4375: +0 -1 | </div>
+Line 4378: +0 -1 | </div>
+Line 4380: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+Line 4381: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 4401: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+Line 4406: +0 -1 | </div>
+Line 4421: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+Line 4436: +0 -1 | </div>
+Line 4442: +0 -1 | </div>
+Line 4443: +0 -1 | </div>
+Line 4445: +0 -1 | </div>
+Line 4447: +1 -0 | <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+Line 4448: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+Line 4449: +1 -0 | <div>
+Line 4452: +0 -1 | </div>
+Line 4467: +0 -1 | </div>
+Line 4469: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+Line 4470: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 4493: +1 -0 | <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+Line 4499: +0 -1 | </div>
+Line 4502: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+Line 4530: +0 -1 | </div>
+Line 4537: +0 -1 | </div>
+Line 4538: +0 -1 | </div>
+Line 4539: +0 -1 | </div>
+Line 4541: +1 -0 | <div>
+Line 4543: +1 -0 | <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+Line 4550: +0 -1 | </div>
+Line 4551: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
+Line 4553: +1 -0 | <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+Line 4589: +0 -1 | </div>
+Line 4590: +0 -1 | </div>
+Line 4593: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
+Line 4595: +1 -0 | <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '2px dashed var(--border)', borderRadius: '1.5rem' }}>
+Line 4630: +0 -1 | </div>
+Line 4633: +1 -0 | <div key={recipe.id} className="glass-card" style={{ padding: '2rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+Line 4634: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+Line 4635: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+Line 4636: +1 -0 | <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+Line 4638: +0 -1 | </div>
+Line 4639: +1 -0 | <div>
+Line 4642: +0 -1 | </div>
+Line 4643: +0 -1 | </div>
+Line 4644: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 4657: +0 -1 | </div>
+Line 4658: +0 -1 | </div>
+Line 4667: +0 -1 | </div>
+Line 4670: +0 -1 | </div>
+Line 4671: +0 -1 | </div>
+Line 4679: +1 -0 | <div style={{ animation: 'fadeIn 0.5s ease' }}>
+Line 4690: +1 -0 | <div className="glass-card" style={{ maxWidth: '700px', margin: '0 auto', background: 'white', padding: '3rem', textAlign: 'center' }}>
+Line 4691: +1 -0 | <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem' }}>
+Line 4693: +0 -1 | </div>
+Line 4699: +1 -0 | <div style={{ textAlign: 'left', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2.5rem' }}>
+Line 4714: +0 -1 | </div>
+Line 4724: +0 -1 | </div>
+Line 4726: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+Line 4728: +1 -0 | <div className="glass-card" style={{ background: 'white', padding: '2rem', border: '2px solid var(--corp-green)' }}>
+Line 4732: +1 -0 | <div style={{ display: 'flex', gap: '1rem' }}>
+Line 4750: +0 -1 | </div>
+Line 4751: +0 -1 | </div>
+Line 4754: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+Line 4755: +1 -0 | <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+Line 4757: +0 -1 | </div>
+Line 4759: +1 -1 | <div style={{ padding: '4rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+Line 4761: +1 -0 | <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+Line 4765: +0 -1 | </div>
+Line 4767: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 4783: +1 -1 | <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.razonSocial || 'Empresa pendiente'}</div>
+Line 4795: +0 -1 | </div>
+Line 4797: +0 -1 | </div>
+Line 4800: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden', marginTop: '2.5rem' }}>
+Line 4801: +1 -0 | <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+Line 4803: +0 -1 | </div>
+Line 4805: +1 -1 | <div style={{ padding: '4rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
+Line 4807: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 4832: +1 -1 | <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{pay.clientProfile?.razonSocial}</div>
+Line 4848: +0 -1 | </div>
+Line 4850: +0 -1 | </div>
+Line 4853: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden', marginTop: '2.5rem' }}>
+Line 4854: +1 -0 | <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+Line 4856: +0 -1 | </div>
+Line 4857: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 4881: +1 -0 | <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>
+Line 4883: +0 -1 | </div>
+Line 4895: +0 -1 | </div>
+Line 4896: +0 -1 | </div>
+Line 4899: +1 -0 | <div style={{ marginTop: '3rem', padding: '2rem', background: '#f8fafc', borderRadius: '1.5rem', border: '1px solid var(--border)', textAlign: 'center' }}>
+Line 4903: +1 -0 | <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '0.5rem' }}>
+Line 4905: +0 -1 | </div>
+Line 4929: +0 -1 | </div>
+Line 4930: +0 -1 | </div>
+Line 4932: +0 -1 | </div>
+Line 4934: +1 -0 | <div>
+Line 4940: +1 -0 | <div
+Line 4947: +1 -0 | <div>
+Line 4949: +1 -0 | <div style={{ position: 'relative' }}>
+Line 4959: +0 -1 | </div>
+Line 4960: +0 -1 | </div>
+Line 4962: +1 -0 | <div>
+Line 4971: +0 -1 | </div>
+Line 4973: +1 -0 | <div>
+Line 4982: +0 -1 | </div>
+Line 4984: +1 -0 | <div>
+Line 5000: +0 -1 | </div>
+Line 5002: +1 -0 | <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+Line 5012: +0 -1 | </div>
+Line 5013: +0 -1 | </div>
+Line 5015: +1 -0 | <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+Line 5016: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 5030: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+Line 5038: +0 -1 | </div>
+Line 5073: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 5090: +0 -1 | </div>
+Line 5103: +0 -1 | </div>
+Line 5107: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 2rem', borderTop: '1px solid var(--border)', background: '#f8fafc' }}>
+Line 5108: +1 -0 | <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+Line 5113: +0 -1 | </div>
+Line 5114: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+Line 5122: +1 -0 | <div style={{ display: 'flex', gap: '0.25rem' }}>
+Line 5144: +0 -1 | </div>
+Line 5152: +0 -1 | </div>
+Line 5153: +0 -1 | </div>
+Line 5155: +0 -1 | </div>
+Line 5156: +0 -1 | </div>
+Line 5159: +0 -1 | </div>
+Line 5285: +1 -0 | <div
+Line 5289: +1 -0 | <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }} onClick={e => e.stopPropagation()}>
+Line 5297: +0 -1 | </div>
+Line 5298: +0 -1 | </div>
+Line 5522: +1 -0 | <div className="modal-overlay">
+Line 5523: +1 -0 | <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', textAlign: 'center' }}>
+Line 5524: +1 -0 | <div style={{ background: '#fef2f2', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+Line 5526: +0 -1 | </div>
+Line 5539: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 5554: +0 -1 | </div>
+Line 5556: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 5557: +1 -0 | <div style={{ padding: '1rem', background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '0.75rem', marginBottom: '1rem' }}>
+Line 5562: +0 -1 | </div>
+Line 5583: +0 -1 | </div>
+Line 5585: +0 -1 | </div>
+Line 5586: +0 -1 | </div>
+Line 5591: +1 -0 | <div style={{
+Line 5598: +1 -0 | <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
+Line 5600: +0 -1 | </div>
+Line 5601: +1 -0 | <div style={{ height: '1.5rem', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
+Line 5615: +0 -1 | </div>
+Line 5619: +1 -0 | <div
+Line 5627: +1 -0 | <div
+Line 5637: +1 -0 | <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+Line 5646: +0 -1 | </div>
+Line 5647: +0 -1 | </div>
+Line 5648: +0 -1 | </div>
+Line 5652: +1 -0 | <div className="modal-overlay">
+Line 5653: +1 -0 | <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
+Line 5654: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+Line 5655: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+Line 5656: +1 -0 | <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+Line 5658: +0 -1 | </div>
+Line 5660: +0 -1 | </div>
+Line 5668: +0 -1 | </div>
+Line 5670: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+Line 5671: +1 -0 | <div>
+Line 5679: +0 -1 | </div>
+Line 5680: +1 -0 | <div>
+Line 5688: +0 -1 | </div>
+Line 5690: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+Line 5706: +0 -1 | </div>
+Line 5707: +0 -1 | </div>
+Line 5708: +0 -1 | </div>
+Line 5709: +0 -1 | </div>
+Line 5713: +1 -0 | <div className="modal-overlay">
+Line 5714: +1 -0 | <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '95%', padding: '2.5rem', position: 'relative' }}>
+Line 5723: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+Line 5724: +1 -0 | <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+Line 5726: +0 -1 | </div>
+Line 5730: +0 -1 | </div>
+Line 5733: +1 -0 | <div>
+Line 5743: +0 -1 | </div>
+Line 5744: +1 -0 | <div>
+Line 5755: +0 -1 | </div>
+Line 5756: +1 -0 | <div>
+Line 5768: +0 -1 | </div>
+Line 5770: +1 -0 | <div>
+Line 5772: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+Line 5793: +0 -1 | </div>
+Line 5794: +0 -1 | </div>
+Line 5796: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+Line 5813: +0 -1 | </div>
+Line 5815: +0 -1 | </div>
+Line 5816: +0 -1 | </div>
+Line 5820: +1 -0 | <div className="modal-overlay">
+Line 5821: +1 -0 | <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
+Line 5822: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+Line 5823: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+Line 5824: +1 -0 | <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+Line 5826: +0 -1 | </div>
+Line 5828: +0 -1 | </div>
+Line 5836: +0 -1 | </div>
+Line 5838: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+Line 5839: +1 -0 | <div>
+Line 5847: +0 -1 | </div>
+Line 5848: +1 -0 | <div>
+Line 5856: +0 -1 | </div>
+Line 5858: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+Line 5874: +0 -1 | </div>
+Line 5875: +0 -1 | </div>
+Line 5876: +0 -1 | </div>
+Line 5877: +0 -1 | </div>
+Line 5881: +1 -0 | <div className="modal-overlay">
+Line 5882: +1 -0 | <div className="modal-content glass-card" style={{ maxWidth: '800px', width: '95%', padding: '2.5rem' }}>
+Line 5883: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+Line 5884: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+Line 5885: +1 -0 | <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+Line 5887: +0 -1 | </div>
+Line 5891: +0 -1 | </div>
+Line 5902: +0 -1 | </div>
+Line 5904: +1 -0 | <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+Line 5913: +1 -0 | <div style={{ textAlign: 'center', padding: '3rem' }}>
+Line 5915: +0 -1 | </div>
+Line 5920: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 5939: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+Line 5971: +0 -1 | </div>
+Line 5977: +0 -1 | </div>
+Line 5980: +0 -1 | </div>
+Line 5981: +0 -1 | </div>
+Line 5982: +0 -1 | </div>
+Line 5985: +0 -1 | </div>
+Line 6001: +1 -0 | <div className="modal-overlay">
+Line 6002: +1 -0 | <div className="modal-content" style={{ maxWidth: '600px' }}>
+Line 6004: +1 -0 | <div>
+Line 6011: +0 -1 | </div>
+Line 6016: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+Line 6017: +1 -0 | <div>
+Line 6027: +0 -1 | </div>
+Line 6028: +1 -0 | <div>
+Line 6037: +0 -1 | </div>
+Line 6038: +0 -1 | </div>
+Line 6040: +1 -0 | <div>
+Line 6047: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+Line 6059: +0 -1 | </div>
+Line 6061: +0 -1 | </div>
+Line 6063: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+Line 6068: +0 -1 | </div>
+Line 6070: +0 -1 | </div>
+Line 6071: +0 -1 | </div>
+Line 6126: +1 -0 | <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '800px', paddingBottom: '4rem' }}>
+Line 6133: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+Line 6136: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+Line 6139: +0 -1 | </div>
+Line 6141: +1 -0 | <div className="form-group">
+Line 6144: +1 -0 | <div style={{ marginBottom: '1.5rem' }}>
+Line 6145: +1 -0 | <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+Line 6147: +0 -1 | </div>
+Line 6148: +1 -0 | <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+Line 6172: +0 -1 | </div>
+Line 6173: +0 -1 | </div>
+Line 6175: +1 -0 | <div style={{ width: '100%' }}>
+Line 6176: +1 -0 | <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+Line 6178: +0 -1 | </div>
+Line 6194: +0 -1 | </div>
+Line 6195: +0 -1 | </div>
+Line 6197: +1 -0 | <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+Line 6198: +1 -0 | <div style={{
+Line 6212: +0 -1 | </div>
+Line 6213: +0 -1 | </div>
+Line 6214: +1 -0 | <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+Line 6223: +0 -1 | </div>
+Line 6228: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+Line 6231: +0 -1 | </div>
+Line 6233: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+Line 6234: +1 -0 | <div>
+Line 6238: +1 -0 | <div style={{ position: 'relative' }}>
+Line 6250: +0 -1 | </div>
+Line 6254: +1 -0 | <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', gap: '0.75rem' }}>
+Line 6259: +0 -1 | </div>
+Line 6260: +0 -1 | </div>
+Line 6262: +1 -0 | <div>
+Line 6267: +1 -0 | <div style={{ position: 'relative', width: '48px', height: '24px', background: isPreparationTimeMandatory ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+Line 6268: +1 -0 | <div style={{ position: 'absolute', left: isPreparationTimeMandatory ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+Line 6269: +0 -1 | </div>
+Line 6281: +0 -1 | </div>
+Line 6282: +0 -1 | </div>
+Line 6284: +1 -0 | <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+Line 6285: +1 -0 | <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+Line 6287: +0 -1 | </div>
+Line 6288: +0 -1 | </div>
+Line 6290: +1 -0 | <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+Line 6299: +0 -1 | </div>
+Line 6304: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+Line 6307: +0 -1 | </div>
+Line 6313: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+Line 6329: +0 -1 | </div>
+Line 6331: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+Line 6333: +1 -0 | <div
+Line 6356: +0 -1 | </div>
+Line 6359: +1 -0 | <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
+Line 6361: +0 -1 | </div>
+Line 6363: +0 -1 | </div>
+Line 6365: +1 -0 | <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+Line 6366: +1 -0 | <div style={{
+Line 6380: +0 -1 | </div>
+Line 6381: +0 -1 | </div>
+Line 6382: +1 -0 | <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+Line 6391: +0 -1 | </div>
+Line 6395: +1 -0 | <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+Line 6404: +0 -1 | </div>
+Line 6405: +0 -1 | </div>
+Line 6406: +0 -1 | </div>
+Line 6427: +1 -0 | <div className="modal-overlay">
+Line 6428: +1 -0 | <div className="modal-content" style={{ maxWidth: '900px', width: '95%', padding: '2rem', position: 'relative' }}>
+Line 6436: +1 -0 | <div className="modal-header" style={{ display: 'block' }}>
+Line 6443: +0 -1 | </div>
+Line 6445: +1 -0 | <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto', marginTop: '1.5rem' }}>
+Line 6446: +1 -0 | <div style={{ overflowX: 'auto' }}>
+Line 6472: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column' }}>
+Line 6475: +0 -1 | </div>
+Line 6478: +1 -0 | <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+Line 6480: +0 -1 | </div>
+Line 6483: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+Line 6493: +0 -1 | </div>
+Line 6500: +0 -1 | </div>
+Line 6501: +0 -1 | </div>
+Line 6503: +1 -0 | <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', marginTop: '2rem', paddingTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+Line 6519: +0 -1 | </div>
+Line 6520: +0 -1 | </div>
+Line 6521: +0 -1 | </div>
+Line 6528: +1 -0 | <div className="modal-overlay">
+Line 6529: +1 -0 | <div className="modal-content" style={{ maxWidth: '750px' }}>
+Line 6531: +1 -0 | <div>
+Line 6536: +0 -1 | </div>
+Line 6541: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+Line 6542: +1 -0 | <div className="form-group">
+Line 6544: +1 -0 | <div style={{ position: 'relative' }}>
+Line 6555: +0 -1 | </div>
+Line 6556: +0 -1 | </div>
+Line 6557: +1 -0 | <div className="form-group">
+Line 6559: +1 -0 | <div style={{ position: 'relative' }}>
+Line 6584: +0 -1 | </div>
+Line 6585: +0 -1 | </div>
+Line 6586: +1 -0 | <div className="form-group">
+Line 6588: +1 -0 | <div style={{ position: 'relative' }}>
+Line 6598: +0 -1 | </div>
+Line 6599: +0 -1 | </div>
+Line 6600: +1 -0 | <div className="form-group">
+Line 6609: +0 -1 | </div>
+Line 6610: +1 -0 | <div className="form-group">
+Line 6619: +0 -1 | </div>
+Line 6621: +1 -0 | <div className="form-group">
+Line 6629: +0 -1 | </div>
+Line 6631: +1 -0 | <div className="form-group">
+Line 6639: +0 -1 | </div>
+Line 6640: +1 -0 | <div className="form-group">
+Line 6648: +0 -1 | </div>
+Line 6649: +1 -0 | <div className="form-group">
+Line 6658: +0 -1 | </div>
+Line 6659: +0 -1 | </div>
+Line 6662: +1 -0 | <div className="form-group">
+Line 6664: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+Line 6682: +0 -1 | </div>
+Line 6683: +0 -1 | </div>
+Line 6686: +1 -0 | <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+Line 6710: +0 -1 | </div>
+Line 6712: +1 -0 | <div className="form-group">
+Line 6714: +1 -0 | <div style={{
+Line 6725: +1 -0 | <div style={{ position: 'relative', width: '100%', height: '200px' }}>
+Line 6734: +0 -1 | </div>
+Line 6736: +1 -0 | <div onClick={() => document.getElementById('imageInput').click()}>
+Line 6740: +0 -1 | </div>
+Line 6749: +0 -1 | </div>
+Line 6750: +0 -1 | </div>
+Line 6752: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+Line 6757: +0 -1 | </div>
+Line 6759: +0 -1 | </div>
+Line 6760: +0 -1 | </div>
+Line 6804: +1 -0 | <div className="modal-overlay">
+Line 6805: +1 -0 | <div className="modal-content" style={{ maxWidth: '800px' }}>
+Line 6807: +1 -0 | <div>
+Line 6812: +0 -1 | </div>
+Line 6816: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+Line 6822: +1 -0 | <div className="form-group">
+Line 6825: +0 -1 | </div>
+Line 6826: +1 -0 | <div className="form-group">
+Line 6829: +0 -1 | </div>
+Line 6830: +1 -0 | <div className="form-group">
+Line 6833: +0 -1 | </div>
+Line 6834: +1 -0 | <div className="form-group">
+Line 6837: +0 -1 | </div>
+Line 6838: +1 -0 | <div className="form-group">
+Line 6841: +0 -1 | </div>
+Line 6842: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+Line 6843: +1 -0 | <div className="form-group">
+Line 6846: +0 -1 | </div>
+Line 6847: +1 -0 | <div className="form-group">
+Line 6850: +0 -1 | </div>
+Line 6851: +0 -1 | </div>
+Line 6852: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+Line 6853: +1 -0 | <div className="form-group">
+Line 6856: +0 -1 | </div>
+Line 6857: +1 -0 | <div className="form-group">
+Line 6860: +0 -1 | </div>
+Line 6861: +0 -1 | </div>
+Line 6892: +1 -0 | <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc' }}>
+Line 6893: +1 -1 | <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>{t('profile.current_plan_label')}</div>
+Line 6894: +1 -1 | <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '1.5rem' }}>{profile?.plan?.name || "DEMO"}</div>
+Line 6897: +1 -0 | <div style={{
+Line 6901: +1 -1 | <div style={{ marginBottom: '0.5rem' }}>{t('profile.next_renewal')}:</div>
+Line 6902: +1 -0 | <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+Line 6904: +0 -1 | </div>
+Line 6905: +0 -1 | </div>
+Line 6908: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 6915: +1 -0 | <div style={{ marginTop: '1rem', padding: '1rem', background: '#fff7ed', borderRadius: '1rem', border: '1px solid #fdba74', textAlign: 'left' }}>
+Line 6922: +0 -1 | </div>
+Line 6949: +1 -0 | <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '1rem', border: '1px dashed #3b82f6', textAlign: 'left' }}>
+Line 6953: +0 -1 | </div>
+Line 6957: +0 -1 | </div>
+Line 6958: +0 -1 | </div>
+Line 6961: +0 -1 | </div>
+Line 6962: +0 -1 | </div>
+Line 6963: +0 -1 | </div>
+Line 6973: +1 -0 | <div style={{
+Line 6978: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+Line 6982: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+Line 6987: +1 -0 | <div style={{ width: '60px', height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+Line 6988: +1 -0 | <div style={{ width: `${percentage}%`, height: '100%', background: isCapped ? '#ef4444' : 'var(--corp-green)', transition: 'width 0.5s ease' }} />
+Line 6989: +0 -1 | </div>
+Line 6991: +0 -1 | </div>
+Line 6992: +0 -1 | </div>
+Line 7003: +0 -1 | </div>
+Line 7066: +1 -0 | <div className="modal-overlay">
+Line 7067: +1 -0 | <div className="modal-content" style={{ maxWidth: '600px' }}>
+Line 7069: +1 -0 | <div>
+Line 7076: +0 -1 | </div>
+Line 7081: +1 -0 | <div className="form-group">
+Line 7093: +0 -1 | </div>
+Line 7095: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 7096: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+Line 7107: +0 -1 | </div>
+Line 7108: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+Line 7110: +1 -0 | <div key={chamber.id} className="form-group" style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+Line 7112: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+Line 7124: +0 -1 | </div>
+Line 7125: +0 -1 | </div>
+Line 7127: +0 -1 | </div>
+Line 7133: +0 -1 | </div>
+Line 7135: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+Line 7140: +0 -1 | </div>
+Line 7142: +0 -1 | </div>
+Line 7143: +0 -1 | </div>
+Line 7151: +1 -0 | <div className="modal-overlay">
+Line 7152: +1 -0 | <div className="modal-content" style={{ maxWidth: '850px' }}>
+Line 7154: +1 -0 | <div>
+Line 7159: +0 -1 | </div>
+Line 7164: +1 -0 | <div>
+Line 7175: +0 -1 | </div>
+Line 7177: +1 -0 | <div>
+Line 7190: +0 -1 | </div>
+Line 7192: +1 -0 | <div>
+Line 7203: +0 -1 | </div>
+Line 7205: +1 -0 | <div>
+Line 7206: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+Line 7208: +0 -1 | </div>
+Line 7210: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 7212: +1 -0 | <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 2fr auto', gap: '1rem', alignItems: 'center', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+Line 7213: +1 -0 | <div>
+Line 7217: +1 -0 | <div style={{ marginTop: '0.5rem' }}>
+Line 7218: +1 -0 | <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+Line 7236: +0 -1 | </div>
+Line 7247: +0 -1 | </div>
+Line 7248: +0 -1 | </div>
+Line 7249: +1 -0 | <div>
+Line 7252: +0 -1 | </div>
+Line 7253: +1 -0 | <div>
+Line 7256: +0 -1 | </div>
+Line 7257: +1 -0 | <div style={{ display: 'flex', gap: '1rem' }}>
+Line 7266: +0 -1 | </div>
+Line 7272: +0 -1 | </div>
+Line 7282: +0 -1 | </div>
+Line 7284: +1 -0 | <div style={{ marginTop: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(66, 98, 22, 0.15)' }}>
+Line 7292: +1 -0 | <div>
+Line 7299: +0 -1 | </div>
+Line 7301: +0 -1 | </div>
+Line 7303: +1 -0 | <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+Line 7304: +1 -0 | <div style={{ marginBottom: '1.5rem' }}>
+Line 7317: +0 -1 | </div>
+Line 7319: +1 -0 | <div>
+Line 7332: +0 -1 | </div>
+Line 7333: +0 -1 | </div>
+Line 7335: +1 -0 | <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+Line 7336: +1 -0 | <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+Line 7338: +0 -1 | </div>
+Line 7339: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+Line 7340: +1 -0 | <div>
+Line 7343: +0 -1 | </div>
+Line 7344: +1 -0 | <div>
+Line 7347: +0 -1 | </div>
+Line 7348: +1 -0 | <div>
+Line 7351: +0 -1 | </div>
+Line 7352: +1 -0 | <div>
+Line 7355: +0 -1 | </div>
+Line 7356: +1 -0 | <div>
+Line 7359: +0 -1 | </div>
+Line 7360: +1 -0 | <div>
+Line 7363: +0 -1 | </div>
+Line 7364: +1 -0 | <div>
+Line 7367: +0 -1 | </div>
+Line 7368: +0 -1 | </div>
+Line 7369: +0 -1 | </div>
+Line 7371: +1 -0 | <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+Line 7372: +1 -0 | <div style={{ marginBottom: '1.5rem' }}>
+Line 7377: +0 -1 | </div>
+Line 7378: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+Line 7395: +0 -1 | </div>
+Line 7396: +0 -1 | </div>
+Line 7398: +1 -0 | <div style={{ marginTop: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(66, 98, 22, 0.15)' }}>
+Line 7419: +1 -0 | <div style={{ flex: 1 }}>
+Line 7424: +1 -0 | <div style={{ marginTop: '1rem' }} onClick={e => e.preventDefault()}>
+Line 7435: +0 -1 | </div>
+Line 7437: +0 -1 | </div>
+Line 7439: +0 -1 | </div>
+Line 7440: +0 -1 | </div>
+Line 7442: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+Line 7447: +0 -1 | </div>
+Line 7449: +0 -1 | </div>
+Line 7450: +0 -1 | </div>
+Line 7475: +1 -0 | <div className="modal-overlay">
+Line 7476: +1 -0 | <div className="modal-content" style={{ maxWidth: '600px' }}>
+Line 7478: +1 -0 | <div>
+Line 7481: +0 -1 | </div>
+Line 7489: +1 -0 | <div style={{ display: 'flex', gap: '1rem' }}>
+Line 7499: +0 -1 | </div>
+Line 7502: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+Line 7504: +1 -0 | <div key={chamber.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1rem' }}>
+Line 7520: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 7533: +0 -1 | </div>
+Line 7536: +0 -1 | </div>
+Line 7539: +1 -0 | <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
+Line 7541: +0 -1 | </div>
+Line 7543: +0 -1 | </div>
+Line 7544: +0 -1 | </div>
+Line 7545: +0 -1 | </div>
+Line 7570: +1 -0 | <div className="modal-overlay">
+Line 7571: +1 -0 | <div className="modal-content" style={{ maxWidth: '600px' }}>
+Line 7573: +1 -0 | <div>
+Line 7576: +0 -1 | </div>
+Line 7584: +1 -0 | <div style={{ display: 'flex', gap: '1rem' }}>
+Line 7594: +0 -1 | </div>
+Line 7597: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+Line 7599: +1 -0 | <div key={zone.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1rem' }}>
+Line 7615: +1 -0 | <div style={{ display: 'flex', gap: '0.5rem' }}>
+Line 7628: +0 -1 | </div>
+Line 7631: +0 -1 | </div>
+Line 7634: +1 -0 | <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
+Line 7636: +0 -1 | </div>
+Line 7638: +0 -1 | </div>
+Line 7639: +0 -1 | </div>
+Line 7640: +0 -1 | </div>
+Line 7718: +1 -0 | <div className="modal-overlay">
+Line 7719: +1 -0 | <div className="modal-content" style={{ maxWidth: '850px' }}>
+Line 7737: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+Line 7738: +1 -0 | <div style={{ maxWidth: '100%', maxHeight: '150px', overflow: 'hidden', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white' }}>
+Line 7740: +0 -1 | </div>
+Line 7741: +1 -0 | <div style={{ display: 'flex', gap: '1rem' }}>
+Line 7761: +0 -1 | </div>
+Line 7762: +0 -1 | </div>
+Line 7806: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+Line 7807: +1 -0 | <div>
+Line 7815: +0 -1 | </div>
+Line 7816: +1 -0 | <div>
+Line 7824: +0 -1 | </div>
+Line 7825: +0 -1 | </div>
+Line 7834: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+Line 7842: +1 -0 | <div>
+Line 7845: +0 -1 | </div>
+Line 7855: +1 -0 | <div>
+Line 7858: +0 -1 | </div>
+Line 7861: +1 -0 | <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px dashed var(--border)' }}>
+Line 7872: +1 -0 | <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+Line 7874: +0 -1 | </div>
+Line 7875: +0 -1 | </div>
+Line 7876: +0 -1 | </div>
+Line 7905: +1 -0 | <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', overflowX: 'auto', paddingBottom: '1rem' }}>
+Line 7908: +1 -0 | <div
+Line 7916: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+Line 7918: +1 -0 | <div
+Line 7925: +0 -1 | </div>
+Line 7928: +1 -1 | <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>{t('modals.none')}</div>
+Line 7930: +0 -1 | </div>
+Line 7931: +0 -1 | </div>
+Line 7934: +1 -0 | <div
+Line 7942: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+Line 7944: +1 -0 | <div
+Line 7951: +1 -0 | <div style={{ display: 'flex', gap: '0.25rem' }}>
+Line 7955: +0 -1 | </div>
+Line 7956: +0 -1 | </div>
+Line 7959: +1 -1 | <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>{t('modals.drag_elements')}</div>
+Line 7961: +0 -1 | </div>
+Line 7962: +0 -1 | </div>
+Line 7966: +1 -0 | <div
+Line 7974: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+Line 7976: +1 -0 | <div
+Line 7983: +1 -0 | <div style={{ display: 'flex', gap: '0.25rem' }}>
+Line 7987: +0 -1 | </div>
+Line 7988: +0 -1 | </div>
+Line 7991: +1 -1 | <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>{t('modals.drag_elements')}</div>
+Line 7993: +0 -1 | </div>
+Line 7994: +0 -1 | </div>
+Line 7996: +0 -1 | </div>
+Line 8019: +0 -1 | </div>
+Line 8020: +0 -1 | </div>
+Line 8028: +1 -0 | <div className="modal-overlay">
+Line 8029: +1 -0 | <div className="modal-content" style={{ maxWidth: '400px' }}>
+Line 8037: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+Line 8038: +1 -0 | <div>
+Line 8046: +0 -1 | </div>
+Line 8047: +1 -0 | <div>
+Line 8055: +0 -1 | </div>
+Line 8056: +0 -1 | </div>
+Line 8068: +0 -1 | </div>
+Line 8069: +0 -1 | </div>
+Line 8077: +1 -0 | <div className="modal-overlay">
+Line 8078: +1 -0 | <div className="modal-content" style={{ maxWidth: '400px' }}>
+Line 8086: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+Line 8087: +1 -0 | <div>
+Line 8095: +0 -1 | </div>
+Line 8096: +1 -0 | <div>
+Line 8104: +0 -1 | </div>
+Line 8105: +0 -1 | </div>
+Line 8117: +0 -1 | </div>
+Line 8118: +0 -1 | </div>
+Line 8125: +1 -0 | <div className="modal-overlay">
+Line 8126: +1 -0 | <div className="modal-content" style={{ maxWidth: '650px' }}>
+Line 8128: +1 -0 | <div>
+Line 8132: +0 -1 | </div>
+Line 8137: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+Line 8138: +1 -0 | <div>
+Line 8147: +0 -1 | </div>
+Line 8148: +1 -0 | <div>
+Line 8156: +0 -1 | </div>
+Line 8157: +1 -0 | <div>
+Line 8165: +0 -1 | </div>
+Line 8166: +1 -0 | <div>
+Line 8174: +0 -1 | </div>
+Line 8175: +0 -1 | </div>
+Line 8177: +1 -0 | <div>
+Line 8186: +0 -1 | </div>
+Line 8188: +1 -0 | <div>
+Line 8197: +0 -1 | </div>
+Line 8200: +1 -0 | <div>
+Line 8202: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+Line 8220: +0 -1 | </div>
+Line 8221: +0 -1 | </div>
+Line 8224: +1 -0 | <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+Line 8248: +0 -1 | </div>
+Line 8250: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+Line 8255: +0 -1 | </div>
+Line 8257: +0 -1 | </div>
+Line 8258: +0 -1 | </div>
+Line 8266: +1 -0 | <div className="modal-overlay">
+Line 8267: +1 -0 | <div className="modal-content" style={{ maxWidth: '600px' }}>
+Line 8269: +1 -0 | <div>
+Line 8274: +0 -1 | </div>
+Line 8279: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+Line 8280: +1 -0 | <div>
+Line 8289: +0 -1 | </div>
+Line 8290: +1 -0 | <div>
+Line 8299: +0 -1 | </div>
+Line 8300: +0 -1 | </div>
+Line 8302: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+Line 8303: +1 -0 | <div>
+Line 8314: +0 -1 | </div>
+Line 8315: +1 -0 | <div>
+Line 8324: +0 -1 | </div>
+Line 8325: +0 -1 | </div>
+Line 8327: +1 -0 | <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+Line 8334: +1 -0 | <div key={field.id}>
+Line 8336: +1 -0 | <div style={{ display: 'flex', gap: '1.5rem' }}>
+Line 8355: +0 -1 | </div>
+Line 8356: +0 -1 | </div>
+Line 8358: +0 -1 | </div>
+Line 8360: +1 -0 | <div>
+Line 8362: +1 -0 | <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+Line 8363: +1 -0 | <div
+Line 8390: +0 -1 | </div>
+Line 8400: +0 -1 | </div>
+Line 8408: +0 -1 | </div>
+Line 8410: +1 -0 | <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+Line 8415: +0 -1 | </div>
+Line 8417: +0 -1 | </div>
+Line 8418: +0 -1 | </div>
+Line 8426: +1 -0 | <div className="modal-overlay">
+Line 8427: +1 -0 | <div className="modal-content" style={{ maxWidth: '400px' }}>
+Line 8435: +1 -0 | <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+Line 8436: +1 -0 | <div>
+Line 8444: +0 -1 | </div>
+Line 8445: +1 -0 | <div>
+Line 8453: +0 -1 | </div>
+Line 8454: +0 -1 | </div>
+Line 8466: +0 -1 | </div>
+Line 8467: +0 -1 | </div>

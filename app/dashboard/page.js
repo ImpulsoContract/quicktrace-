@@ -22,6 +22,184 @@ import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
+const ALL_CURRENCIES = [
+  { code: "EUR", symbol: "€" },
+  { code: "USD", symbol: "$" },
+  { code: "GBP", symbol: "£" },
+  { code: "AED", symbol: "د.إ" },
+  { code: "AFN", symbol: "؋" },
+  { code: "ALL", symbol: "L" },
+  { code: "AMD", symbol: "֏" },
+  { code: "ANG", symbol: "ƒ" },
+  { code: "AOA", symbol: "Kz" },
+  { code: "ARS", symbol: "$" },
+  { code: "AUD", symbol: "$" },
+  { code: "AWG", symbol: "ƒ" },
+  { code: "AZN", symbol: "₼" },
+  { code: "BAM", symbol: "KM" },
+  { code: "BBD", symbol: "$" },
+  { code: "BDT", symbol: "৳" },
+  { code: "BGN", symbol: "лв" },
+  { code: "BHD", symbol: ".د.ب" },
+  { code: "BIF", symbol: "FBu" },
+  { code: "BMD", symbol: "$" },
+  { code: "BND", symbol: "$" },
+  { code: "BOB", symbol: "$b" },
+  { code: "BRL", symbol: "R$" },
+  { code: "BSD", symbol: "$" },
+  { code: "BTN", symbol: "Nu." },
+  { code: "BWP", symbol: "P" },
+  { code: "BYN", symbol: "Br" },
+  { code: "BZD", symbol: "BZ$" },
+  { code: "CAD", symbol: "$" },
+  { code: "CDF", symbol: "FC" },
+  { code: "CHF", symbol: "CHF" },
+  { code: "CLP", symbol: "$" },
+  { code: "CNY", symbol: "¥" },
+  { code: "COP", symbol: "$" },
+  { code: "CRC", symbol: "₡" },
+  { code: "CUC", symbol: "$" },
+  { code: "CUP", symbol: "₱" },
+  { code: "CVE", symbol: "$" },
+  { code: "CZK", symbol: "Kč" },
+  { code: "DJF", symbol: "Fdj" },
+  { code: "DKK", symbol: "kr" },
+  { code: "DOP", symbol: "RD$" },
+  { code: "DZD", symbol: "دج" },
+  { code: "EGP", symbol: "£" },
+  { code: "ERN", symbol: "Nfk" },
+  { code: "ETB", symbol: "Br" },
+  { code: "FJD", symbol: "$" },
+  { code: "FKP", symbol: "£" },
+  { code: "GEL", symbol: "₾" },
+  { code: "GGP", symbol: "£" },
+  { code: "GHS", symbol: "GH₵" },
+  { code: "GIP", symbol: "£" },
+  { code: "GMD", symbol: "D" },
+  { code: "GNF", symbol: "FG" },
+  { code: "GTQ", symbol: "Q" },
+  { code: "GYD", symbol: "$" },
+  { code: "HKD", symbol: "$" },
+  { code: "HNL", symbol: "L" },
+  { code: "HRK", symbol: "kn" },
+  { code: "HTG", symbol: "G" },
+  { code: "HUF", symbol: "Ft" },
+  { code: "IDR", symbol: "Rp" },
+  { code: "ILS", symbol: "₪" },
+  { code: "IMP", symbol: "£" },
+  { code: "INR", symbol: "₹" },
+  { code: "IQD", symbol: "ع.د" },
+  { code: "IRR", symbol: "﷼" },
+  { code: "ISK", symbol: "kr" },
+  { code: "JEP", symbol: "£" },
+  { code: "JMD", symbol: "J$" },
+  { code: "JOD", symbol: "JD" },
+  { code: "JPY", symbol: "¥" },
+  { code: "KES", symbol: "KSh" },
+  { code: "KGS", symbol: "лв" },
+  { code: "KHR", symbol: "៛" },
+  { code: "KMF", symbol: "CF" },
+  { code: "KPW", symbol: "₩" },
+  { code: "KRW", symbol: "₩" },
+  { code: "KWD", symbol: "KD" },
+  { code: "KYD", symbol: "$" },
+  { code: "KZT", symbol: "лв" },
+  { code: "LAK", symbol: "₭" },
+  { code: "LBP", symbol: "£" },
+  { code: "LKR", symbol: "₨" },
+  { code: "LRD", symbol: "$" },
+  { code: "LSL", symbol: "L" },
+  { code: "LYD", symbol: "LD" },
+  { code: "MAD", symbol: "MAD" },
+  { code: "MDL", symbol: "lei" },
+  { code: "MGA", symbol: "Ar" },
+  { code: "MKD", symbol: "den" },
+  { code: "MMK", symbol: "K" },
+  { code: "MNT", symbol: "₮" },
+  { code: "MOP", symbol: "MOP$" },
+  { code: "MRU", symbol: "UM" },
+  { code: "MUR", symbol: "₨" },
+  { code: "MVR", symbol: "Rf" },
+  { code: "MWK", symbol: "MK" },
+  { code: "MXN", symbol: "$" },
+  { code: "MYR", symbol: "RM" },
+  { code: "MZN", symbol: "MT" },
+  { code: "NAD", symbol: "$" },
+  { code: "NGN", symbol: "₦" },
+  { code: "NIO", symbol: "C$" },
+  { code: "NOK", symbol: "kr" },
+  { code: "NPR", symbol: "₨" },
+  { code: "NZD", symbol: "$" },
+  { code: "OMR", symbol: "﷼" },
+  { code: "PAB", symbol: "B/." },
+  { code: "PEN", symbol: "S/." },
+  { code: "PGK", symbol: "K" },
+  { code: "PHP", symbol: "₱" },
+  { code: "PKR", symbol: "₨" },
+  { code: "PLN", symbol: "zł" },
+  { code: "PYG", symbol: "Gs" },
+  { code: "QAR", symbol: "﷼" },
+  { code: "RON", symbol: "lei" },
+  { code: "RSD", symbol: "Дин." },
+  { code: "RUB", symbol: "₽" },
+  { code: "RWF", symbol: "R₣" },
+  { code: "SAR", symbol: "﷼" },
+  { code: "SBD", symbol: "$" },
+  { code: "SCR", symbol: "₨" },
+  { code: "SDG", symbol: "ج.س." },
+  { code: "SEK", symbol: "kr" },
+  { code: "SGD", symbol: "$" },
+  { code: "SHP", symbol: "£" },
+  { code: "SLL", symbol: "Le" },
+  { code: "SOS", symbol: "S" },
+  { code: "SRD", symbol: "$" },
+  { code: "SSP", symbol: "£" },
+  { code: "STN", symbol: "Db" },
+  { code: "SVC", symbol: "$" },
+  { code: "SYP", symbol: "£" },
+  { code: "SZL", symbol: "E" },
+  { code: "THB", symbol: "฿" },
+  { code: "TJS", symbol: "SM" },
+  { code: "TMT", symbol: "T" },
+  { code: "TND", symbol: "DT" },
+  { code: "TOP", symbol: "T$" },
+  { code: "TRY", symbol: "₺" },
+  { code: "TTD", symbol: "TT$" },
+  { code: "TWD", symbol: "NT$" },
+  { code: "TZS", symbol: "TSh" },
+  { code: "UAH", symbol: "₴" },
+  { code: "UGX", symbol: "USh" },
+  { code: "UYU", symbol: "$U" },
+  { code: "UZS", symbol: "лв" },
+  { code: "VES", symbol: "Bs." },
+  { code: "VND", symbol: "₫" },
+  { code: "VUV", symbol: "VT" },
+  { code: "WST", symbol: "WS$" },
+  { code: "XAF", symbol: "FCFA" },
+  { code: "XCD", symbol: "$" },
+  { code: "XOF", symbol: "CFA" },
+  { code: "XPF", symbol: "₣" },
+  { code: "YER", symbol: "﷼" },
+  { code: "ZAR", symbol: "R" },
+  { code: "ZMW", symbol: "ZK" },
+  { code: "ZWL", symbol: "$" }
+];
+
+const formatPrice = (amount, currencyCode = "EUR", locale = "es-ES") => {
+  if (amount === undefined || amount === null) return "-";
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  } catch (e) {
+    // Fallback if currency code is invalid or not supported
+    return `${parseFloat(amount).toFixed(2)} ${currencyCode}`;
+  }
+};
+
 const DEFAULT_LABEL_CONFIG = {
   headerImage: null,
   healthRegistry: "",
@@ -126,7 +304,8 @@ export default function ClientDashboard() {
   });
   const [cleaningFilters, setCleaningFilters] = useState({ startDate: "", endDate: "" });
   const [tempFilters, setTempFilters] = useState({ startDate: "", endDate: "" });
-  const [goodsFilters, setGoodsFilters] = useState({ startDate: "", endDate: "" });
+  const [goodsFilters, setGoodsFilters] = useState({ startDate: "", endDate: "", merchantType: "" });
+  const [providerMerchantTypeFilter, setProviderMerchantTypeFilter] = useState("");
   const [totalElabs, setTotalElabs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -188,6 +367,7 @@ export default function ClientDashboard() {
     dryingRoomIn: "",
     dryingRoomOut: "",
     workshopTemp: "",
+    preparationTime: "",
     quantityProduced: "",
     netWeight: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
@@ -1200,6 +1380,7 @@ export default function ClientDashboard() {
       dryingRoomIn: elab.dryingRoomIn || "",
       dryingRoomOut: elab.dryingRoomOut || "",
       workshopTemp: elab.workshopTemp || "",
+      preparationTime: elab.preparationTime || "",
       quantityProduced: elab.quantityProduced || "",
       netWeight: elab.netWeight || "",
       ingredientes: initialIngredientes
@@ -1225,22 +1406,28 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleUpdateLabelConfig = async (newConfig) => {
+  const handleUpdateProfile = async (updates) => {
+    setLoading(true);
     try {
       const res = await fetch("/api/client/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ labelConfig: newConfig })
+        body: JSON.stringify(updates)
       });
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
+        if (updates.currency) {
+          alert(t('business_config.save_success'));
+        }
         return true;
       }
       return false;
     } catch (error) {
-      console.error("Error updating label config:", error);
+      console.error("Error updating profile:", error);
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -2160,6 +2347,16 @@ export default function ClientDashboard() {
       
       const method = editingElaboration ? "PATCH" : "POST";
 
+      if (profile?.isPreparationTimeMandatory && !elaboracionForm.preparationTime) {
+        alert(t('business_config.mandatory_prep_time_error'));
+        return;
+      }
+
+      if (!elaboracionForm.titulo) {
+        alert(t('alerts.missing_title'));
+        return;
+      }
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -2172,6 +2369,7 @@ export default function ClientDashboard() {
           dryingRoomIn: elaboracionForm.dryingRoomIn,
           dryingRoomOut: elaboracionForm.dryingRoomOut,
           workshopTemp: elaboracionForm.workshopTemp,
+          preparationTime: elaboracionForm.preparationTime,
           quantityProduced: elaboracionForm.quantityProduced,
           netWeight: elaboracionForm.netWeight,
           ingredients: ingredientsData
@@ -2607,12 +2805,20 @@ export default function ClientDashboard() {
             )}
 
             {(session?.user?.role !== "WORKER") && (
-              <SidebarBtn 
-                icon={<Truck size={20} />} 
-                label={t('sidebar.providers') || "Proveedores"} 
-                active={activeTab === "proveedores"} 
-                onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-              />
+              <>
+                <SidebarBtn 
+                  icon={<Truck size={20} />} 
+                  label={t('sidebar.providers') || "Proveedores"} 
+                  active={activeTab === "proveedores"} 
+                  onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+                <SidebarBtn 
+                  icon={<Settings size={20} />} 
+                  label={t('sidebar.business_config') || "Configuración del negocio"}
+                  active={activeTab === "configuracion"} 
+                  onClick={() => { setActiveTab("configuracion"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+              </>
             )}
           </nav>
 
@@ -2794,6 +3000,18 @@ export default function ClientDashboard() {
                         value={elaboracionForm.workshopTemp} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, workshopTemp: e.target.value})} 
                       />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.preparation_time') || "Tiempo que se ha tardado en hacer esta elaboración"}</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.preparationTime} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, preparationTime: e.target.value})} 
+                      />
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                        {t('traceability_form.preparation_time_help')}
+                      </p>
                     </div>
                   </div>
 
@@ -3098,7 +3316,8 @@ export default function ClientDashboard() {
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                       <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                         <tr>
                           <th style={{ padding: '0.75rem 1rem', width: '60px', textAlign: 'center', borderRight: '1px solid var(--border)', background: '#f1f5f9' }}>
@@ -3115,18 +3334,22 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_title')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.elaboration_prep_time_header')}</th>
                           {session?.user?.role !== "WORKER" && (
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span>{t('dashboard.cost_header')}</span>
-                                <span 
-                                  onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
-                                  style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
-                                >
-                                  {t('dashboard.assign_costs_link')}
-                                </span>
-                              </div>
-                            </th>
+                            <>
+                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                  <span>{t('dashboard.cost_header')}</span>
+                                  <span 
+                                    onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
+                                    style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                                  >
+                                    {t('dashboard.assign_costs_link')}
+                                  </span>
+                                </div>
+                              </th>
+                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.labor_cost_header')}</th>
+                            </>
                           )}
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
@@ -3145,10 +3368,18 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.date || el.createdAt).toLocaleDateString()}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--corp-green)' }}>{el.name}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
+                          <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>{el.preparationTime ? `${el.preparationTime} min` : '-'}</td>
                           {session?.user?.role !== "WORKER" && (
-                            <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
-                              {el.costPrice ? `${el.costPrice.toFixed(2)} €` : '-'}
-                            </td>
+                            <>
+                              <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                                {el.costPrice ? formatPrice(el.costPrice, profile?.currency, locale) : '-'}
+                              </td>
+                              <td style={{ padding: '1.5rem 2rem', fontWeight: '800', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
+                                {el.preparationTime && (el.laborCostHourlyRate || 0) > 0
+                                  ? formatPrice((parseFloat(el.preparationTime.replace(',', '.')) / 60) * el.laborCostHourlyRate, profile?.currency, locale)
+                                  : formatPrice(0, profile?.currency, locale)}
+                              </td>
+                            </>
                           )}
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -3176,6 +3407,7 @@ export default function ClientDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
 
                   {/* Pagination Controls */}
                   <div style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderTop: '1px solid var(--border)' }}>
@@ -3266,6 +3498,49 @@ export default function ClientDashboard() {
                     </div>
                   </header>
 
+                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center', background: 'white', padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.5rem' }}>
+                      {t('dashboard.filter_by_type')}:
+                    </div>
+                    <button 
+                      onClick={() => setProviderMerchantTypeFilter("")}
+                      style={{
+                        padding: '0.5rem 1.25rem',
+                        borderRadius: '2rem',
+                        fontSize: '0.85rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        border: '1px solid',
+                        background: !providerMerchantTypeFilter ? 'var(--corp-green)' : 'white',
+                        color: !providerMerchantTypeFilter ? 'white' : 'var(--text-main)',
+                        borderColor: !providerMerchantTypeFilter ? 'var(--corp-green)' : 'var(--border)'
+                      }}
+                    >
+                      {t('common.all')}
+                    </button>
+                    {(profile?.merchantTypes || []).map((type, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setProviderMerchantTypeFilter(type)}
+                        style={{
+                          padding: '0.5rem 1.25rem',
+                          borderRadius: '2rem',
+                          fontSize: '0.85rem',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          border: '1px solid',
+                          background: providerMerchantTypeFilter === type ? 'var(--corp-green)' : 'white',
+                          color: providerMerchantTypeFilter === type ? 'white' : 'var(--text-main)',
+                          borderColor: providerMerchantTypeFilter === type ? 'var(--corp-green)' : 'var(--border)'
+                        }}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+
                   {providers.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
                       <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
@@ -3276,7 +3551,9 @@ export default function ClientDashboard() {
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                      {providers.map(provider => (
+                      {providers
+                        .filter(p => !providerMerchantTypeFilter || (p.merchantTypes && p.merchantTypes.includes(providerMerchantTypeFilter)))
+                        .map(provider => (
                         <div key={provider.id} className="glass-card" style={{ padding: '1.5rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                             <div>
@@ -3315,6 +3592,16 @@ export default function ClientDashboard() {
                               <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('providers.products')}</div>
                                 <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{provider.products}</div>
+                              </div>
+                            )}
+
+                            {provider.merchantTypes && provider.merchantTypes.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                                {provider.merchantTypes.map((type, tIdx) => (
+                                  <span key={tIdx} style={{ fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', padding: '0.2rem 0.6rem', borderRadius: '0.5rem', border: '1px solid rgba(66, 98, 22, 0.1)' }}>
+                                    {type}
+                                  </span>
+                                ))}
                               </div>
                             )}
                           </div>
@@ -3408,8 +3695,21 @@ export default function ClientDashboard() {
                     onChange={(e) => setGoodsFilters({...goodsFilters, endDate: e.target.value})}
                   />
                 </div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.filter_by_type')}</label>
+                  <select 
+                    className="input-field"
+                    value={goodsFilters.merchantType}
+                    onChange={(e) => setGoodsFilters({...goodsFilters, merchantType: e.target.value})}
+                  >
+                    <option value="">{t('common.all')}</option>
+                    {(profile?.merchantTypes || []).map((type, idx) => (
+                      <option key={idx} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
                   <button 
-                    onClick={() => setGoodsFilters({ startDate: "", endDate: "" })}
+                    onClick={() => setGoodsFilters({ startDate: "", endDate: "", merchantType: "" })}
                     style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
                   >
                     {t('dashboard.cancel')}
@@ -3418,12 +3718,15 @@ export default function ClientDashboard() {
                     <button 
                       onClick={() => {
                         const filtered = goodsReceipts.filter(r => {
-                          if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
-                          const date = new Date(r.date);
-                          const start = new Date(goodsFilters.startDate);
-                          const end = new Date(goodsFilters.endDate);
-                          end.setHours(23, 59, 59, 999);
-                          return date >= start && date <= end;
+                          if (goodsFilters.startDate && goodsFilters.endDate) {
+                            const date = new Date(r.date);
+                            const start = new Date(goodsFilters.startDate);
+                            const end = new Date(goodsFilters.endDate);
+                            end.setHours(23, 59, 59, 999);
+                            if (date < start || date > end) return false;
+                          }
+                          if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
+                          return true;
                         });
                         toggleSelectAll(filtered);
                       }}
@@ -3432,12 +3735,15 @@ export default function ClientDashboard() {
                     >
                       {(() => {
                         const filtered = goodsReceipts.filter(r => {
-                          if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
-                          const date = new Date(r.date);
-                          const start = new Date(goodsFilters.startDate);
-                          const end = new Date(goodsFilters.endDate);
-                          end.setHours(23, 59, 59, 999);
-                          return date >= start && date <= end;
+                          if (goodsFilters.startDate && goodsFilters.endDate) {
+                            const date = new Date(r.date);
+                            const start = new Date(goodsFilters.startDate);
+                            const end = new Date(goodsFilters.endDate);
+                            end.setHours(23, 59, 59, 999);
+                            if (date < start || date > end) return false;
+                          }
+                          if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
+                          return true;
                         });
                         return filtered.every(r => selectedRecords.includes(r.id)) ? t('bulk_actions.deselect_all') || "Deseleccionar todos" : t('bulk_actions.select_all') || "Seleccionar todos";
                       })()}
@@ -3455,12 +3761,15 @@ export default function ClientDashboard() {
               )}
 
               {goodsReceipts.filter(r => {
-                if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
-                const date = new Date(r.date);
-                const start = new Date(goodsFilters.startDate);
-                const end = new Date(goodsFilters.endDate);
-                end.setHours(23, 59, 59, 999);
-                return date >= start && date <= end;
+                if (goodsFilters.startDate && goodsFilters.endDate) {
+                  const date = new Date(r.date);
+                  const start = new Date(goodsFilters.startDate);
+                  const end = new Date(goodsFilters.endDate);
+                  end.setHours(23, 59, 59, 999);
+                  if (date < start || date > end) return false;
+                }
+                if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
+                return true;
               }).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '2px dashed var(--border)' }}>
                   <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
@@ -3473,12 +3782,15 @@ export default function ClientDashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
                   {goodsReceipts
                     .filter(r => {
-                      if (!goodsFilters.startDate || !goodsFilters.endDate) return true;
-                      const date = new Date(r.date);
-                      const start = new Date(goodsFilters.startDate);
-                      const end = new Date(goodsFilters.endDate);
-                      end.setHours(23, 59, 59, 999);
-                      return date >= start && date <= end;
+                      if (goodsFilters.startDate && goodsFilters.endDate) {
+                        const date = new Date(r.date);
+                        const start = new Date(goodsFilters.startDate);
+                        const end = new Date(goodsFilters.endDate);
+                        end.setHours(23, 59, 59, 999);
+                        if (date < start || date > end) return false;
+                      }
+                      if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
+                      return true;
                     })
                     .map(receipt => (
                     <div key={receipt.id} className="glass-card" style={{ 
@@ -3542,6 +3854,16 @@ export default function ClientDashboard() {
                           </button>
                         </div>
                       </div>
+
+                      {receipt.merchantTypes && receipt.merchantTypes.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '-0.25rem', marginBottom: '0.5rem' }}>
+                          {receipt.merchantTypes.map((type, tIdx) => (
+                            <span key={tIdx} style={{ fontSize: '0.6rem', fontWeight: '800', textTransform: 'uppercase', background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6', padding: '0.15rem 0.5rem', borderRadius: '0.4rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+                              {type}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', fontSize: '0.9rem', border: '1px solid var(--border)' }}>
                         <div>
                           <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('dashboard.lote')}</span>
@@ -3688,103 +4010,105 @@ export default function ClientDashboard() {
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                      <tr>
-                        <th style={{ padding: '0.75rem 1rem', width: '60px', textAlign: 'center', borderRight: '1px solid var(--border)', background: '#f1f5f9' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '800' }}>SEL.</span>
-                            <input 
-                              type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
-                              checked={cleaningLogs.length > 0 && cleaningLogs.filter(log => {
-                                const date = new Date(log.date);
-                                const start = new Date(cleaningFilters.startDate);
-                                const end = new Date(cleaningFilters.endDate);
-                                end.setHours(23, 59, 59, 999);
-                                return date >= start && date <= end;
-                              }).every(log => selectedRecords.includes(log.id))}
-                              onChange={() => toggleSelectAll(cleaningLogs.filter(log => {
-                                const date = new Date(log.date);
-                                const start = new Date(cleaningFilters.startDate);
-                                const end = new Date(cleaningFilters.endDate);
-                                end.setHours(23, 59, 59, 999);
-                                return date >= start && date <= end;
-                              }))}
-                            />
-                          </div>
-                        </th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><User size={16} /> Persona</div>
-                        </th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={16} /> Fecha y Hora</div>
-                        </th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          Zonas Limpiadas
-                        </th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cleaningLogs
-                        .filter(log => {
-                          const date = new Date(log.date);
-                          const start = new Date(cleaningFilters.startDate);
-                          const end = new Date(cleaningFilters.endDate);
-                          end.setHours(23, 59, 59, 999);
-                          return date >= start && date <= end;
-                        })
-                        .map(log => (
-                        <tr key={log.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : 'white' }}>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center', borderRight: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : '#f8fafc' }}>
-                            <input 
-                              type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem', display: 'block', margin: '0 auto' }}
-                              checked={selectedRecords.includes(log.id)}
-                              onChange={() => toggleSelectRecord(log.id)}
-                            />
-                          </td>
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{log.personName}</td>
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>
-                            {new Date(log.date).toLocaleString('es-ES', { 
-                              day: '2-digit', month: '2-digit', year: 'numeric',
-                              hour: '2-digit', minute: '2-digit'
-                            })}
-                          </td>
-                          <td style={{ padding: '1.5rem 2rem' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                              {log.zones.map(z => (
-                                <span key={z.cleaningZone?.id || Math.random()} style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '2rem', fontSize: '0.8rem', fontWeight: '600', border: '1px solid rgba(66, 98, 22, 0.2)' }}>
-                                  {z.cleaningZone?.name || 'Zona eliminada'}
-                                </span>
-                              ))}
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                        <tr>
+                          <th style={{ padding: '0.75rem 1rem', width: '60px', textAlign: 'center', borderRight: '1px solid var(--border)', background: '#f1f5f9' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '800' }}>SEL.</span>
+                              <input 
+                                type="checkbox" 
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
+                                checked={cleaningLogs.length > 0 && cleaningLogs.filter(log => {
+                                  const date = new Date(log.date);
+                                  const start = new Date(cleaningFilters.startDate);
+                                  const end = new Date(cleaningFilters.endDate);
+                                  end.setHours(23, 59, 59, 999);
+                                  return date >= start && date <= end;
+                                }).every(log => selectedRecords.includes(log.id))}
+                                onChange={() => toggleSelectAll(cleaningLogs.filter(log => {
+                                  const date = new Date(log.date);
+                                  const start = new Date(cleaningFilters.startDate);
+                                  const end = new Date(cleaningFilters.endDate);
+                                  end.setHours(23, 59, 59, 999);
+                                  return date >= start && date <= end;
+                                }))}
+                              />
                             </div>
-                          </td>
-                          <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                              <button 
-                                onClick={() => handleEditCleaning(log)}
-                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Edit size={16} />
-                              </button>
-                              {session?.user?.role !== "WORKER" && (
-                                <button 
-                                  onClick={() => handleDeleteCleaning(log.id)}
-                                  style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              )}
-                            </div>
-                          </td>
+                          </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><User size={16} /> Persona</div>
+                          </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={16} /> Fecha y Hora</div>
+                          </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Zonas Limpiadas
+                          </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
+                            Acciones
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {cleaningLogs
+                          .filter(log => {
+                            const date = new Date(log.date);
+                            const start = new Date(cleaningFilters.startDate);
+                            const end = new Date(cleaningFilters.endDate);
+                            end.setHours(23, 59, 59, 999);
+                            return date >= start && date <= end;
+                          })
+                          .map(log => (
+                          <tr key={log.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : 'white' }}>
+                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', borderRight: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : '#f8fafc' }}>
+                              <input 
+                                type="checkbox" 
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem', display: 'block', margin: '0 auto' }}
+                                checked={selectedRecords.includes(log.id)}
+                                onChange={() => toggleSelectRecord(log.id)}
+                              />
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{log.personName}</td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>
+                              {new Date(log.date).toLocaleString('es-ES', { 
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              })}
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem' }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                {log.zones.map(z => (
+                                  <span key={z.cleaningZone?.id || Math.random()} style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '2rem', fontSize: '0.8rem', fontWeight: '600', border: '1px solid rgba(66, 98, 22, 0.2)' }}>
+                                    {z.cleaningZone?.name || 'Zona eliminada'}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                <button 
+                                  onClick={() => handleEditCleaning(log)}
+                                  style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                {session?.user?.role !== "WORKER" && (
+                                  <button 
+                                    onClick={() => handleDeleteCleaning(log.id)}
+                                    style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -3898,7 +4222,7 @@ export default function ClientDashboard() {
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', border: '1px solid var(--border)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                     <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                       <tr>
                         <th style={{ padding: '0.75rem 1rem', width: '60px', textAlign: 'center', borderRight: '1px solid var(--border)', background: '#f1f5f9' }}>
@@ -4054,7 +4378,8 @@ export default function ClientDashboard() {
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
                       <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                         <tr>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
@@ -4114,6 +4439,7 @@ export default function ClientDashboard() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -4141,24 +4467,25 @@ export default function ClientDashboard() {
               </div>
 
               <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                    <tr>
-                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.name') || "Nombre"}</th>
-                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.user') || "Usuario/Email"}</th>
-                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.permissions') || "Permisos"}</th>
-                      <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {workers.length === 0 ? (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                       <tr>
-                        <td colSpan="4" style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                          {t('workers.no_workers') || "No has añadido ningún trabajador todavía."}
-                        </td>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.name') || "Nombre"}</th>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.user') || "Usuario/Email"}</th>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.permissions') || "Permisos"}</th>
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                       </tr>
-                    ) : (
-                      workers.map(worker => (
+                    </thead>
+                    <tbody>
+                      {workers.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            {t('workers.no_workers') || "No has añadido ningún trabajador todavía."}
+                          </td>
+                        </tr>
+                      ) : (
+                        workers.map(worker => (
                         <tr key={worker.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover-row">
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{worker.name}</td>
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{worker.user?.email}</td>
@@ -4209,6 +4536,7 @@ export default function ClientDashboard() {
                 </table>
               </div>
             </div>
+          </div>
           ) : activeTab === 'gestionar-recetas' ? (
             <div>
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
@@ -4341,6 +4669,12 @@ export default function ClientDashboard() {
                 )}
               </div>
             </div>
+          ) : activeTab === 'configuracion' ? (
+            <BusinessConfigView 
+              profile={profile}
+              onUpdate={handleUpdateProfile}
+              loading={loading}
+            />
           ) : activeTab === 'afiliados' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
               <header style={{ marginBottom: '2rem' }}>
@@ -4430,33 +4764,35 @@ export default function ClientDashboard() {
                         <p>{t('affiliate.no_referrals_desc')}</p>
                       </div>
                     ) : (
-                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                          <tr>
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.table_user')}</th>
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('affiliate.table_paid') || 'Total Pagado'}</th>
-                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('affiliate.commission_column')}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {affiliateData.referrals.map(ref => (
-                            <tr key={ref.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(ref.createdAt).toLocaleDateString()}</td>
-                              <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                                {ref.user?.email}
-                                <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.razonSocial || 'Empresa pendiente'}</div>
-                              </td>
-                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right', fontWeight: '600' }}>
-                                {(ref.totalPaidFromStripe || 0).toFixed(2)} €
-                              </td>
-                              <td style={{ padding: '1.5rem 2rem', textAlign: 'right', fontWeight: '800', color: 'var(--corp-green)' }}>
-                                {(ref.commission || 0).toFixed(2)} €
-                              </td>
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                          <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                            <tr>
+                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
+                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.table_user')}</th>
+                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('affiliate.table_paid') || 'Total Pagado'}</th>
+                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('affiliate.commission_column')}</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {affiliateData.referrals.map(ref => (
+                              <tr key={ref.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(ref.createdAt).toLocaleDateString()}</td>
+                                <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                                  {ref.user?.email}
+                                  <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>{ref.razonSocial || 'Empresa pendiente'}</div>
+                                </td>
+                                <td style={{ padding: '1.5rem 2rem', textAlign: 'right', fontWeight: '600' }}>
+                                  {(ref.totalPaidFromStripe || 0).toFixed(2)} €
+                                </td>
+                                <td style={{ padding: '1.5rem 2rem', textAlign: 'right', fontWeight: '800', color: 'var(--corp-green)' }}>
+                                  {(ref.commission || 0).toFixed(2)} €
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
 
@@ -4468,7 +4804,8 @@ export default function ClientDashboard() {
                     {affiliateData.loading ? (
                       <div style={{ padding: '4rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
                     ) : (
-                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                         <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                           <tr>
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
@@ -4508,7 +4845,8 @@ export default function ClientDashboard() {
                           )}
                         </tbody>
                       </table>
-                    )}
+                    </div>
+                  )}
                   </div>
 
                   {/* Settlements Table */}
@@ -4516,43 +4854,45 @@ export default function ClientDashboard() {
                     <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>{t('affiliate.settlements_header')}</h3>
                     </div>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                        <tr>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.date_collected')}</th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {affiliateData.settlements?.length === 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                           <tr>
-                            <td colSpan={3} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                              <p>{t('affiliate.no_settlements_desc')}</p>
-                            </td>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.date')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('affiliate.date_collected')}</th>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('common.status')}</th>
                           </tr>
-                        ) : (
-                          affiliateData.settlements?.map(s => (
-                            <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>
-                                {new Date(s.date).toLocaleDateString()}
-                              </td>
-                              <td style={{ padding: '1.25rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                                {s.amount.toFixed(2)} €
-                                <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>
-                                  {s.notes || 'Liquidación de comisiones'}
-                                </div>
-                              </td>
-                              <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
-                                <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>
-                                  {t('common.success') || 'Completado'}
-                                </span>
+                        </thead>
+                        <tbody>
+                          {affiliateData.settlements?.length === 0 ? (
+                            <tr>
+                              <td colSpan={3} style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                <p>{t('affiliate.no_settlements_desc')}</p>
                               </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                          ) : (
+                            affiliateData.settlements?.map(s => (
+                              <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>
+                                  {new Date(s.date).toLocaleDateString()}
+                                </td>
+                                <td style={{ padding: '1.25rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                                  {s.amount.toFixed(2)} €
+                                  <div style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>
+                                    {s.notes || 'Liquidación de comisiones'}
+                                  </div>
+                                </td>
+                                <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
+                                  <span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.85rem' }}>
+                                    {t('common.success') || 'Completado'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
 
                   {/* Summary and Request Button */}
@@ -4673,78 +5013,94 @@ export default function ClientDashboard() {
               </div>
               
               <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                    <tr>
-                      <th onClick={() => handleSort('date')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('dashboard.elaboration_date_header')} {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('traceability_form.elaboration_title')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                      </th>
-                       <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th onClick={() => handleSort('costPrice')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                          <span>{t('dashboard.cost_header')} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</span>
-                          <span 
-                            onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
-                            style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
-                          >
-                            {t('dashboard.assign_costs_link')}
-                          </span>
-                        </div>
-                      </th>
-                      <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedElaborations.map(elab => (
-                      <tr key={elab.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
-                          {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </td>
-                        <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--corp-green)' }}>{elab.name}</td>
-                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                          <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
-                            {elab.recipe.name}
-                          </span>
-                        </td>
-                        <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>
-                          {elab.costPrice ? `${elab.costPrice.toFixed(2)} €` : '-'}
-                        </td>
-                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button 
-                              onClick={() => handleEditElaboration(elab)}
-                              style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
-                            >
-                              {t('dashboard.modify')}
-                            </button>
-                            {session?.user?.role !== "WORKER" && (
-                              <button 
-                                onClick={() => handleDeleteElaboration(elab.id)}
-                                className="btn-secondary"
-                                style={{ color: '#ef4444', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
-                                title={t('common.delete')}
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {sortedElaborations.length === 0 && (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
+                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                       <tr>
-                        <td colSpan="5" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                          {t('dashboard.no_elaborations_recorded')}
-                        </td>
+                        <th onClick={() => handleSort('date')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {t('dashboard.elaboration_date_header')} {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th onClick={() => handleSort('name')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {t('traceability_form.elaboration_title')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th onClick={() => handleSort('costPrice')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span>{t('dashboard.cost_header')} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</span>
+                            <span 
+                              onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
+                              style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                            >
+                              {t('dashboard.assign_costs_link')}
+                            </span>
+                          </div>
+                        </th>
+                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {t('dashboard.elaboration_prep_time_header')}
+                        </th>
+                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {t('dashboard.labor_cost_header')}
+                        </th>
+                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {sortedElaborations.map(elab => (
+                        <tr key={elab.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
+                            {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--corp-green)' }}>{elab.name}</td>
+                          <td style={{ padding: '1.25rem 1.5rem' }}>
+                            <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
+                              {elab.recipe.name}
+                            </span>
+                          </td>
+                          <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>
+                            {elab.costPrice ? formatPrice(elab.costPrice, profile?.currency, locale) : '-'}
+                          </td>
+                          <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                            {elab.preparationTime ? `${elab.preparationTime} min` : '-'}
+                          </td>
+                          <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600', color: 'var(--text-main)' }}>
+                            {elab.preparationTime && (elab.laborCostHourlyRate || 0) > 0
+                              ? formatPrice((parseFloat(elab.preparationTime.replace(',', '.')) / 60) * elab.laborCostHourlyRate, profile?.currency, locale)
+                              : formatPrice(0, profile?.currency, locale)}
+                          </td>
+                          <td style={{ padding: '1.25rem 1.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button 
+                                onClick={() => handleEditElaboration(elab)}
+                                style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                              >
+                                {t('dashboard.modify')}
+                              </button>
+                              {session?.user?.role !== "WORKER" && (
+                                <button 
+                                  onClick={() => handleDeleteElaboration(elab.id)}
+                                  className="btn-secondary"
+                                  style={{ color: '#ef4444', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                                  title={t('common.delete')}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {sortedElaborations.length === 0 && (
+                        <tr>
+                          <td colSpan="7" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            {t('dashboard.no_elaborations_recorded')}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Pagination Controls */}
                 {totalElabs > 0 && (
@@ -4886,6 +5242,11 @@ export default function ClientDashboard() {
           onImageChange={handleImageChange}
           providers={providers}
           allMerchantTypes={profile?.merchantTypes || []}
+          onGoToConfig={() => {
+            setActiveTab("configuracion");
+            setIsGoodsModalOpen(false);
+            setEditingGoodsReceipt(null);
+          }}
         />
       )}
 
@@ -4895,6 +5256,7 @@ export default function ClientDashboard() {
           onSave={handleSaveIngredientPrices}
           ingredientPrices={ingredientPrices}
           loading={loading}
+          currency={profile?.currency}
         />
       )}
 
@@ -4911,6 +5273,11 @@ export default function ClientDashboard() {
           loading={loading}
           isEditing={!!editingProvider}
           allMerchantTypes={profile?.merchantTypes || []}
+          onGoToConfig={() => {
+            setActiveTab("configuracion");
+            setIsProvidersModalOpen(false);
+            setEditingProvider(null);
+          }}
         />
       )}
 
@@ -4975,9 +5342,9 @@ export default function ClientDashboard() {
 
       {isLabelModalOpen && (
         <LabelConfigModal 
-          config={profile?.labelConfig}
+          config={mergeLabelConfig(profile?.labelConfig)}
           onClose={() => setIsLabelModalOpen(false)}
-          onSave={handleUpdateLabelConfig}
+          onSave={(newConfig) => handleUpdateProfile({ labelConfig: newConfig })}
         />
       )}
 
@@ -5550,7 +5917,8 @@ export default function ClientDashboard() {
                 }
 
                 return (
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                     <thead>
                       <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('dashboard.date')}</th>
@@ -5606,6 +5974,7 @@ export default function ClientDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
                 );
               })()}
             </div>
@@ -5614,7 +5983,7 @@ export default function ClientDashboard() {
       )}
 
     </div>
-  );
+);
 }
 
 function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setFormData, loading, isEditing }) {
@@ -5703,7 +6072,342 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
   );
 }
 
-function IngredientCostModal({ onClose, onSave, ingredientPrices, loading }) {
+function BusinessConfigView({ profile, onUpdate, loading }) {
+  const { t } = useI18n();
+  const [selectedCurrency, setSelectedCurrency] = useState(profile?.currency || "EUR");
+  const [laborCostHourlyRate, setLaborCostHourlyRate] = useState(profile?.laborCostHourlyRate || 0);
+  const [isPreparationTimeMandatory, setIsPreparationTimeMandatory] = useState(profile?.isPreparationTimeMandatory || false);
+  const [merchantTypes, setMerchantTypes] = useState(profile?.merchantTypes || []);
+  const [newMerchantType, setNewMerchantType] = useState("");
+
+  const popular = ["EUR", "USD", "GBP"];
+  const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
+    .sort((a, b) => a.code.localeCompare(b.code));
+  
+  useEffect(() => {
+    if (profile) {
+      setSelectedCurrency(profile.currency || "EUR");
+      setLaborCostHourlyRate(profile.laborCostHourlyRate || 0);
+      setIsPreparationTimeMandatory(profile.isPreparationTimeMandatory || false);
+      setMerchantTypes(profile.merchantTypes || []);
+    }
+  }, [profile]);
+
+  const handleSave = () => {
+    onUpdate({ 
+      currency: selectedCurrency,
+      merchantTypes: merchantTypes,
+      laborCostHourlyRate,
+      isPreparationTimeMandatory
+    });
+  };
+
+  const handleAddMerchantType = () => {
+    if (!newMerchantType.trim()) return;
+    if (merchantTypes.includes(newMerchantType.trim())) {
+      setNewMerchantType("");
+      return;
+    }
+    setMerchantTypes([...merchantTypes, newMerchantType.trim()]);
+    setNewMerchantType("");
+  };
+
+  const handleDeleteMerchantType = (typeToRemove) => {
+    setMerchantTypes(merchantTypes.filter(t => t !== typeToRemove));
+  };
+
+  // Check if anything changed to enable save button
+  const hasChanges = selectedCurrency !== profile?.currency || 
+                    JSON.stringify(merchantTypes) !== JSON.stringify(profile?.merchantTypes || []) ||
+                    laborCostHourlyRate !== (profile?.laborCostHourlyRate || 0) ||
+                    isPreparationTimeMandatory !== (profile?.isPreparationTimeMandatory || false);
+
+  return (
+    <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '800px', paddingBottom: '4rem' }}>
+      <header style={{ marginBottom: '2.5rem' }}>
+        <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+          {t('business_config.title')}
+        </h2>
+      </header>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        {/* Currency Section */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <DollarSign size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.currency_section')}</h3>
+          </div>
+
+          <div className="form-group">
+            <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>{t('business_config.select_currency')}</label>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                {t('business_config.quick_access')}
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {popular.map(code => (
+                  <button
+                    key={code}
+                    onClick={() => setSelectedCurrency(code)}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '0.75rem',
+                      border: '2px solid',
+                      borderColor: selectedCurrency === code ? 'var(--corp-green)' : 'var(--border)',
+                      background: selectedCurrency === code ? 'rgba(66, 98, 22, 0.05)' : 'white',
+                      color: selectedCurrency === code ? 'var(--corp-green)' : 'var(--text-main)',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.1rem' }}>{ALL_CURRENCIES.find(c => c.code === code)?.symbol}</span>
+                    {code}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ width: '100%' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                {t('business_config.others')}
+              </div>
+              <select 
+                className="input-field"
+                value={popular.includes(selectedCurrency) ? "" : selectedCurrency}
+                onChange={(e) => {
+                  if (e.target.value) setSelectedCurrency(e.target.value);
+                }}
+                style={{ padding: '1rem', fontSize: '1rem', fontWeight: '500' }}
+              >
+                <option value="" disabled>{t('common.select_currency') || "Selecciona..."}</option>
+                {otherCurrencies.map(c => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} ({c.symbol})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ 
+              fontSize: '0.9rem', 
+              color: '#3b82f6', 
+              fontWeight: '600',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'rgba(59, 130, 246, 0.05)',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid rgba(59, 130, 246, 0.1)'
+            }}>
+              <AlertCircle size={16} />
+              {t('business_config.save_reminder')}
+            </div>
+          </div>
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+            <button 
+              onClick={handleSave}
+              className="btn-primary" 
+              disabled={loading || !hasChanges}
+              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
+            </button>
+          </div>
+        </section>
+
+        {/* Labor Cost & Preparation Time Configuration */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <Clock size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.labor_cost_section')}</h3>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                {t('business_config.labor_cost_per_hour')}
+              </label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: '600' }}>
+                  {ALL_CURRENCIES.find(c => c.code === selectedCurrency)?.symbol || selectedCurrency}
+                </span>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  className="input-field" 
+                  style={{ paddingLeft: '2.5rem' }}
+                  value={laborCostHourlyRate} 
+                  onChange={(e) => setLaborCostHourlyRate(parseFloat(e.target.value) || 0)} 
+                />
+              </div>
+              <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                {t('business_config.labor_cost_help')}
+              </p>
+              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', gap: '0.75rem' }}>
+                <AlertTriangle size={18} color="#f59e0b" style={{ flexShrink: 0 }} />
+                <p style={{ fontSize: '0.8rem', color: '#92400e', margin: 0, fontWeight: '500' }}>
+                  {t('business_config.labor_cost_warning')}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                {t('business_config.mandatory_prep_time')}
+              </label>
+              <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                <div style={{ position: 'relative', width: '48px', height: '24px', background: isPreparationTimeMandatory ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+                  <div style={{ position: 'absolute', left: isPreparationTimeMandatory ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+                </div>
+                <input 
+                  type="checkbox" 
+                  style={{ display: 'none' }}
+                  checked={isPreparationTimeMandatory} 
+                  onChange={(e) => setIsPreparationTimeMandatory(e.target.checked)} 
+                />
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.mandatory_prep_time')}</span>
+              </label>
+              <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                {t('business_config.mandatory_prep_time_help')}
+              </p>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+              <AlertCircle size={16} /> {t('business_config.save_reminder')}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+            <button 
+              onClick={handleSave}
+              className="btn-primary" 
+              disabled={loading || !hasChanges}
+              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
+            </button>
+          </div>
+        </section>
+
+        {/* Merchant Types Section */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <Package size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.merchant_types_section')}</h3>
+          </div>
+          
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>
+            {t('business_config.merchant_types_desc')}
+          </p>
+
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder={t('business_config.add_type_placeholder')}
+              value={newMerchantType}
+              onChange={(e) => setNewMerchantType(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddMerchantType()}
+            />
+            <button 
+              onClick={handleAddMerchantType}
+              className="btn-primary"
+              style={{ whiteSpace: 'nowrap', padding: '0 1.5rem' }}
+            >
+              {t('business_config.add_type_btn')}
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            {merchantTypes.map((type, idx) => (
+              <div 
+                key={idx} 
+                className="merchant-type-item"
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  padding: '1rem', 
+                  background: '#f8fafc', 
+                  borderRadius: '0.75rem', 
+                  border: '1px solid var(--border)',
+                  animation: 'fadeIn 0.3s ease'
+                }}
+              >
+                <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{type}</span>
+                <button 
+                  onClick={() => handleDeleteMerchantType(type)}
+                  style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+            {merchantTypes.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
+                {t('modals.no_merchant_types') || "No hay tipos de mercancía configurados"}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ 
+              fontSize: '0.9rem', 
+              color: '#3b82f6', 
+              fontWeight: '600',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'rgba(59, 130, 246, 0.05)',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid rgba(59, 130, 246, 0.1)'
+            }}>
+              <AlertCircle size={16} />
+              {t('business_config.save_reminder')}
+            </div>
+          </div>
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+            <button 
+              onClick={handleSave}
+              className="btn-primary" 
+              disabled={loading || !hasChanges}
+              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
+            </button>
+          </div>
+        </section>
+
+        {/* Global Save Button */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+          <button 
+            onClick={handleSave}
+            className="btn-primary" 
+            disabled={loading || !hasChanges}
+            style={{ minWidth: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '1rem 2rem', fontSize: '1.1rem' }}
+          >
+            {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> {t('common.save')}</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IngredientCostModal({ onClose, onSave, ingredientPrices, loading, currency }) {
   const { t, locale } = useI18n();
   const [localPrices, setLocalPrices] = useState([]);
 
@@ -5739,7 +6443,8 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, loading }) {
         </div>
         
         <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto', marginTop: '1.5rem' }}>
-          <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 0.5rem', minWidth: '500px' }}>
             <thead className="table-header">
               <tr>
                 <th className="table-header-cell" style={{ background: 'var(--bg-light)', borderRadius: '8px 0 0 8px' }}>
@@ -5784,7 +6489,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, loading }) {
                           onChange={(e) => handlePriceChange(index, e.target.value)}
                           placeholder="0.00"
                         />
-                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>€</span>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{ALL_CURRENCIES.find(c => c.code === (currency || "EUR"))?.symbol || "€"}</span>
                       </div>
                     </td>
                   </tr>
@@ -5793,6 +6498,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, loading }) {
             </tbody>
           </table>
         </div>
+      </div>
 
         <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', marginTop: '2rem', paddingTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
           <button 
@@ -5816,7 +6522,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, loading }) {
   );
 }
 
-function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers, allMerchantTypes = [] }) {
+function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers, allMerchantTypes = [], onGoToConfig }) {
   const { t } = useI18n();
   return (
     <div className="modal-overlay">
@@ -5977,6 +6683,32 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
             </div>
           )}
 
+          <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+            <p style={{ margin: 0, lineHeight: '1.5' }}>
+              {t('modals.merchant_types_config_reminder')}
+            </p>
+            <button 
+              type="button" 
+              onClick={onGoToConfig}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: 'var(--corp-green)', 
+                fontWeight: '700', 
+                textDecoration: 'underline', 
+                padding: 0, 
+                marginTop: '0.5rem', 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}
+            >
+              <Settings size={14} />
+              {t('modals.go_to_config')}
+            </button>
+          </div>
+
           <div className="form-group">
             <label className="label">{t('dashboard.delivery_note_photo')}</label>
             <div style={{ 
@@ -6040,12 +6772,10 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
     postalCode: profile?.postalCode || "",
     city: profile?.city || "",
     province: profile?.province || "",
-    country: profile?.country || "España",
-    merchantTypes: profile?.merchantTypes || []
+    country: profile?.country || "España"
   });
   const [loading, setLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [newMerchantType, setNewMerchantType] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -6067,25 +6797,6 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
     }
   };
 
-  const handleAddMerchantType = () => {
-    if (!newMerchantType.trim()) return;
-    if (formData.merchantTypes.includes(newMerchantType.trim())) {
-      setNewMerchantType("");
-      return;
-    }
-    setFormData({
-      ...formData,
-      merchantTypes: [...formData.merchantTypes, newMerchantType.trim()]
-    });
-    setNewMerchantType("");
-  };
-
-  const handleRemoveMerchantType = (typeToRemove) => {
-    setFormData({
-      ...formData,
-      merchantTypes: formData.merchantTypes.filter(t => t !== typeToRemove)
-    });
-  };
 
   const isDemo = !profile?.planId || profile?.plan?.name?.toUpperCase() === "DEMO";
 
@@ -6246,62 +6957,6 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
               </div>
             </div>
 
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: '2rem 0 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)' }}>
-              <Package size={20} /> {t('modals.merchant_types')}
-            </h3>
-            <div className="glass-card" style={{ padding: '1.5rem', background: '#f8fafc' }}>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                {t('modals.merchant_types_desc')}
-              </p>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  placeholder={t('modals.new_merchant_type_placeholder')}
-                  value={newMerchantType}
-                  onChange={e => setNewMerchantType(e.target.value)}
-                  onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleAddMerchantType())}
-                />
-                <button 
-                  type="button"
-                  onClick={handleAddMerchantType}
-                  className="btn-primary"
-                  style={{ width: 'auto', padding: '0 1rem', whiteSpace: 'nowrap' }}
-                >
-                  <Plus size={20} />
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {formData.merchantTypes.map((type, idx) => (
-                  <div 
-                    key={idx}
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem', 
-                      padding: '0.25rem 0.75rem', 
-                      background: 'white', 
-                      borderRadius: '2rem', 
-                      border: '1px solid var(--border)',
-                      fontSize: '0.85rem',
-                      fontWeight: '600',
-                      color: 'var(--text-main)'
-                    }}
-                  >
-                    <span>{type}</span>
-                    <button 
-                      type="button"
-                      onClick={() => handleRemoveMerchantType(type)}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, display: 'flex' }}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
           </section>
         </div>
       </div>
@@ -6354,15 +7009,29 @@ function SidebarBtn({ icon, label, active, onClick }) {
     <button 
       onClick={onClick}
       style={{ 
-        width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem',
+        width: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '0.75rem', 
+        padding: '0.75rem 1rem',
         background: active ? 'rgba(66, 98, 22, 0.08)' : 'transparent',
         border: 'none', 
         color: active ? 'var(--corp-green)' : 'var(--text-muted)', 
-        fontSize: '0.95rem', fontWeight: active ? '800' : '500',
-        cursor: 'pointer', borderRadius: '0.75rem', textAlign: 'left', transition: 'all 0.2s'
+        fontSize: '0.9rem', 
+        fontWeight: active ? '800' : '500',
+        cursor: 'pointer', 
+        borderRadius: '0.75rem', 
+        textAlign: 'left', 
+        transition: 'all 0.2s',
+        lineHeight: '1.2'
       }}
     >
-      {icon} {label}
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {icon}
+      </span>
+      <span style={{ flex: 1, whiteSpace: 'normal', wordBreak: 'break-word', display: 'block' }}>
+        {label}
+      </span>
     </button>
   );
 }
@@ -7450,7 +8119,7 @@ function TemperatureExportModal({ onClose, onGenerate, dates, setDates }) {
   );
 }
 
-function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, allMerchantTypes = [] }) {
+function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, allMerchantTypes = [], onGoToConfig }) {
   const { t } = useI18n();
   return (
     <div className="modal-overlay">
@@ -7551,6 +8220,32 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
               </div>
             </div>
           )}
+
+          <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+            <p style={{ margin: 0, lineHeight: '1.5' }}>
+              {t('modals.merchant_types_config_reminder')}
+            </p>
+            <button 
+              type="button" 
+              onClick={onGoToConfig}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: 'var(--corp-green)', 
+                fontWeight: '700', 
+                textDecoration: 'underline', 
+                padding: 0, 
+                marginTop: '0.5rem', 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}
+            >
+              <Settings size={14} />
+              {t('modals.go_to_config')}
+            </button>
+          </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
             <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1 }}>{t('common.cancel')}</button>
