@@ -4741,13 +4741,7 @@ export default function ClientDashboard() {
                         </div>
                         
                         <div style={{ display: 'flex', gap: '0.75rem' }}>
-                          <button 
-                            onClick={() => handleDuplicateRecipe(recipe)}
-                            className="btn-secondary"
-                            style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                          >
-                            <Plus size={14} /> {t('common.duplicate') || "Duplicar"}
-                          </button>
+
                           <button 
                             onClick={() => handleOpenRecipe(recipe)}
                             className="btn-primary"
