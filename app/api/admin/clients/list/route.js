@@ -35,6 +35,9 @@ export async function GET() {
             utmMedium: true,
             utmCampaign: true,
             utmContent: true,
+            utmTerm: true,
+            gclid: true,
+            fbclid: true,
             plan: true,
             _count: {
               select: { recipes: true }

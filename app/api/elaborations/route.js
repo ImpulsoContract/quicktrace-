@@ -107,7 +107,7 @@ export async function POST(req) {
     }
 
     const data = await req.json();
-    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime } = data;
+    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime, unitPrice, quantityProduced, netWeight, workshopTemp } = data;
 
     const profileId = session.user.profileId;
     const profile = await prisma.clientProfile.findUnique({
@@ -180,6 +180,7 @@ export async function POST(req) {
         quantityProduced: data.quantityProduced,
         netWeight: data.netWeight,
         preparationTime: data.preparationTime,
+        unitPrice: parseFloat(data.unitPrice?.toString().replace(',', '.')) || 0,
         laborCostHourlyRate: profile.laborCostHourlyRate || 0,
         costPrice: totalCost,
         ingredients: {
@@ -216,7 +217,7 @@ export async function PATCH(req) {
     }
 
     const data = await req.json();
-    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, preparationTime, ingredients } = data;
+    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, preparationTime, unitPrice, ingredients } = data;
 
     if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
@@ -253,6 +254,7 @@ export async function PATCH(req) {
       quantityProduced,
       netWeight,
       preparationTime,
+      unitPrice: unitPrice !== undefined ? (parseFloat(unitPrice?.toString().replace(',', '.')) || 0) : undefined,
     };
 
     if (ingredients) {

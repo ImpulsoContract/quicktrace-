@@ -631,16 +631,21 @@ export default function AdminDashboard() {
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                 <span style={{
                                   padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: '800', width: 'fit-content',
-                                  background: client.clientProfile?.origin === 'META' ? '#dbeafe' : client.clientProfile?.origin === 'AFFILIATE' ? '#fde68a' : '#f1f5f9',
-                                  color: client.clientProfile?.origin === 'META' ? '#1e40af' : client.clientProfile?.origin === 'AFFILIATE' ? '#92400e' : '#64748b',
+                                  background: client.clientProfile?.origin === 'META' ? '#dbeafe' : client.clientProfile?.origin === 'GOOGLE' ? '#fef2f2' : client.clientProfile?.origin === 'AFFILIATE' ? '#fde68a' : client.clientProfile?.origin === 'BING' ? '#ecfeff' : client.clientProfile?.origin === 'TIKTOK' ? '#f5f3ff' : '#f1f5f9',
+                                  color: client.clientProfile?.origin === 'META' ? '#1e40af' : client.clientProfile?.origin === 'GOOGLE' ? '#991b1b' : client.clientProfile?.origin === 'AFFILIATE' ? '#92400e' : client.clientProfile?.origin === 'BING' ? '#083344' : client.clientProfile?.origin === 'TIKTOK' ? '#4c1d95' : '#64748b',
                                   textTransform: 'uppercase'
                                 }}>
                                   {client.clientProfile?.origin || 'DIRECT'}
                                 </span>
-                                {client.clientProfile?.origin === 'META' && (
+                                {(client.clientProfile?.origin === 'META' || client.clientProfile?.origin === 'GOOGLE') && (
                                   <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', lineHeight: '1.2' }}>
                                     <div style={{ fontWeight: '600' }}>C: {client.clientProfile.utmCampaign || '-'}</div>
-                                    <div>A: {client.clientProfile.utmContent || '-'}</div>
+                                    <div>{client.clientProfile.origin === 'META' ? 'A: ' : 'S: '}{client.clientProfile.origin === 'META' ? (client.clientProfile.utmContent || '-') : (client.clientProfile.utmSource || '-')}</div>
+                                  </div>
+                                )}
+                                {client.clientProfile?.origin === 'OTHER' && (
+                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', lineHeight: '1.2' }}>
+                                    <div>S: {client.clientProfile.utmSource || '-'}</div>
                                   </div>
                                 )}
                               </div>

@@ -44,7 +44,8 @@
     "elaborations": "Elaborações",
     "ingredients": "Ingredientes",
     "view_image": "Ver imagem",
-    "upload_image": "Carregar imagem"
+    "upload_image": "Carregar imagem",
+    "duplicate": "Duplicar"
   },
   "profile": {
     "title": "Perfil",
@@ -223,7 +224,8 @@
     "configure_labels": "Configurar etiquetas",
     "upload_photo": "Carregar foto da guia",
     "photo_format": "Tire una foto ou selecione um ficheiro",
-    "ingredient_costs_btn": "Preços de custo de cada mercadoria"
+    "ingredient_costs_btn": "Preços de custo de cada mercadoria",
+    "elaborar": "Elaborar"
   },
   "modals": {
     "cleaning_header": "Novo Registo de Limpeza",

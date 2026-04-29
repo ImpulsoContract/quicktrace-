@@ -44,7 +44,8 @@
     "elaborations": "Élaborations",
     "ingredients": "Ingrédients",
     "view_image": "Voir l'image",
-    "upload_image": "Charger l'image"
+    "upload_image": "Charger l'image",
+    "duplicate": "Dupliquer"
   },
   "profile": {
     "title": "Profil",
@@ -144,7 +145,7 @@
     "actions": "Actions",
     "search": "Rechercher des enregistrements...",
     "no_records": "Aucun enregistrement dans cette plage",
-    "goods_info": "Enregistrez et gérez les réceptions de matières premières et de produits",
+    "goods_info": "Gérez les bons de livraison et les entrées de marchandises de vos fournisseurs.",
     "filter_by_type": "Filtrer par type",
     "new_goods_entry": "NOUVELLE ENTRÉE",
     "providers_info": "Gérez votre liste de fournisseurs habituels",
@@ -156,7 +157,6 @@
     "no_providers": "Vous n'avez pas de fournisseurs",
     "no_providers_info": "Ajoutez votre premier fournisseur pour l'avoir à disposition lors de la réception de marchandises.",
     "provider_products_label": "Produits servis",
-    "goods_info": "Gérez les bons de livraison et les entrées de marchandises de vos fournisseurs.",
     "goods": "Marchandises",
     "view_note": "VOIR BON",
     "lote": "LOT",
@@ -219,7 +219,8 @@
     "video_help": "Aide vidéo",
     "configure_labels": "Configurer étiquettes",
     "upload_photo": "Charger photo du bon",
-    "photo_format": "Prenez une photo ou sélectionnez un fichier"
+    "photo_format": "Prenez une photo ou sélectionnez un fichier",
+    "elaborar": "Élaborer"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",
@@ -291,6 +292,8 @@
     "zone_placeholder": "Ex: Cuisine, Toilettes, Chambre...",
     "new_recipe_btn": "NOUVELLE RECETTE",
     "upgrade_plan": "AUGMENTER LIMITE",
+    "labels_help_video": "Si vous avez besoin d'aide regardez cette vidéo",
+    "labels_help_video_btn": "Si vous avez besoin d'aide regardez cette vidéo",
     "labels_header": "Configurer Étiquettes",
     "labels_header_image": "Image d'en-tête",
     "labels_header_image_desc": "Insérez une image qui apparaîtra en haut de l'étiquette. Il peut s'agir d'un logo ou, par exemple, d'une image avec votre logo et les coordonnées de votre entreprise",
@@ -341,7 +344,8 @@
       "ingredientsList": "Liste des ingrédients",
       "madeBy": "Personne qui élabore",
       "barcode": "Code-barres",
-      "healthRegistry": "Registre sanitaire"
+      "healthRegistry": "Registre sanitaire",
+      "unitPrice": "Prix Unitaire (PVC)"
     },
     "drag_elements": "Faites glisser des éléments ici",
     "none": "Aucun"
@@ -349,6 +353,8 @@
   "workers": {
     "title": "Gestion des Travailleurs",
     "subtitle": "Créez et gérez les accès de votre personnel.",
+    "video_help": "À quoi sert cette section ?",
+    "video_help_btn": "À quoi sert cette section ?",
     "add_btn": "Ajouter un Travailleur",
     "name": "Nom",
     "user": "Utilisateur/Email",
@@ -532,7 +538,9 @@
     "label_drying_out": "Sortie séchoir",
     "quantity_produced": "Quantité élaborée",
     "net_weight_label": "Poids net pour l'étiquette",
-    "label_net_weight": "Poids net"
+    "label_net_weight": "Poids net",
+    "unit_price": "Prix Unitaire (PVC)",
+    "unit_price_help": "Vous pouvez l'utiliser sur l'étiquette. Vous pouvez changer la devise dans les paramètres de l'entreprise dans le menu principal."
   },
   "goods_receipt_form": {
     "product": "Produit",

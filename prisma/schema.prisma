@@ -82,6 +82,9 @@ model ClientProfile {
   utmMedium   String?
   utmCampaign String?
   utmContent  String?
+  utmTerm     String?
+  gclid       String?
+  fbclid      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -256,6 +259,7 @@ model Elaboration {
 
   quantityProduced String?
   netWeight        String?
+  unitPrice            Float?            @default(0)
   costPrice            Float?            @default(0)
   preparationTime      String?
   laborCostHourlyRate  Float?            @default(0)

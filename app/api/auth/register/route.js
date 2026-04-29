@@ -10,7 +10,8 @@ export async function POST(req) {
   try {
     const { 
       name, email, razonSocial, phone, termsAccepted, referralCode, locale,
-      utmSource, utmMedium, utmCampaign, utmContent 
+      utmSource, utmMedium, utmCampaign, utmContent, utmTerm, 
+      gclid, fbclid, msclkid, ttclid 
     } = await req.json();
     const headersList = headers();
 
@@ -56,6 +57,24 @@ export async function POST(req) {
         });
       }
 
+      const source = (utmSource || '').toLowerCase();
+      const medium = (utmMedium || '').toLowerCase();
+      let calculatedOrigin = 'DIRECT';
+
+      if (referrer) {
+        calculatedOrigin = 'AFFILIATE';
+      } else if (fbclid || ['meta', 'facebook', 'instagram', 'fb', 'ig'].some(s => source.includes(s))) {
+        calculatedOrigin = 'META';
+      } else if (gclid || ['google', 'gads', 'googleads', 'google-ads'].some(s => source.includes(s))) {
+        calculatedOrigin = 'GOOGLE';
+      } else if (msclkid || ['bing', 'microsoft'].some(s => source.includes(s))) {
+        calculatedOrigin = 'BING';
+      } else if (ttclid || ['tiktok', 'tt'].some(s => source.includes(s))) {
+        calculatedOrigin = 'TIKTOK';
+      } else if (source || medium || utmCampaign) {
+        calculatedOrigin = 'OTHER';
+      }
+
       const user = await tx.user.create({
         data: {
           email: normalizedEmail,
@@ -80,14 +99,21 @@ export async function POST(req) {
           recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
           canManageRecipes: true,
           referredById: referrer ? referrer.id : undefined,
-          origin: referrer ? 'AFFILIATE' : (utmSource === 'meta' ? 'META' : 'DIRECT'),
+          origin: calculatedOrigin,
           utmSource: utmSource || null,
           utmMedium: utmMedium || null,
           utmCampaign: utmCampaign || null,
-          utmContent: utmContent || null
+          utmContent: utmContent || null,
+          utmTerm: utmTerm || null,
+          gclid: gclid || null,
+          fbclid: fbclid || null
         }
       });
     });
+
+    // Send verification email
+    // ... (rest of the code moved down)
+
 
     // Send verification email
     const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`;
@@ -126,6 +152,12 @@ export async function POST(req) {
             <li><strong>Email:</strong> ${normalizedEmail}</li>
             <li><strong>Teléfono:</strong> ${phone}</li>
             <li><strong>Código Ref:</strong> ${referralCode || 'Ninguno'}</li>
+            <li><strong>Origen Calculado:</strong> ${calculatedOrigin}</li>
+            <li><strong>UTM Source:</strong> ${utmSource || '-'}</li>
+            <li><strong>UTM Medium:</strong> ${utmMedium || '-'}</li>
+            <li><strong>UTM Campaign:</strong> ${utmCampaign || '-'}</li>
+            <li><strong>GCLID:</strong> ${gclid || '-'}</li>
+            <li><strong>FBCLID:</strong> ${fbclid || '-'}</li>
             <li><strong>Recomendado por:</strong> ${referrer ? (referrer.razonSocial || 'ID: ' + referrer.id) : 'Directo'}</li>
             <li><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</li>
           </ul>
@@ -153,14 +185,27 @@ export async function POST(req) {
 
     // Report to Clientify CRM
     try {
+      // Re-calculate origin for sync if needed or just pass the captured ones
+      const source = (utmSource || '').toLowerCase();
+      let syncOrigin = 'DIRECT';
+      if (referralCode) syncOrigin = 'AFFILIATE';
+      else if (['meta', 'facebook', 'instagram', 'fb', 'ig'].some(s => source.includes(s))) syncOrigin = 'META';
+      else if (['google', 'gads', 'googleads', 'google-ads'].some(s => source.includes(s))) syncOrigin = 'GOOGLE';
+      else if (source) syncOrigin = 'OTHER';
+
       await createClientifyContact({
         email: normalizedEmail,
         name: name,
         phone: phone,
         razonSocial: razonSocial,
-        locale: locale
+        locale: locale,
+        utmSource,
+        utmMedium,
+        utmCampaign,
+        origin: syncOrigin
       });
     } catch (crmErr) {
+
       console.error('[Clientify Sync] Error:', crmErr);
     }
 

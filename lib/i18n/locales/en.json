@@ -44,7 +44,8 @@
     "elaborations": "Elaborations",
     "ingredients": "Ingredients",
     "view_image": "View image",
-    "upload_image": "Upload image"
+    "upload_image": "Upload image",
+    "duplicate": "Duplicate"
   },
   "profile": {
     "title": "Profile",
@@ -143,7 +144,7 @@
     "recipe_name": "Recipe",
     "actions": "Actions",
     "search": "Search records...",
-    "goods_info": "Register and manage raw material and product receptions",
+    "goods_info": "Manage delivery notes and incoming goods from your suppliers.",
     "filter_by_type": "Filter by type",
     "no_records": "No records in this range",
     "new_goods_entry": "ADD ENTRY",
@@ -156,7 +157,6 @@
     "no_providers": "You have no providers",
     "no_providers_info": "Add your first provider to have it available when receiving goods.",
     "provider_products_label": "Products served",
-    "goods_info": "Manage delivery notes and incoming goods from your suppliers.",
     "goods": "Goods",
     "view_note": "VIEW NOTE",
     "lote": "BATCH",
@@ -224,7 +224,8 @@
     "configure_labels": "Configure labels",
     "upload_photo": "Upload Delivery Note Photo",
     "photo_format": "Take a photo or choose a file",
-    "ingredient_costs_btn": "Raw material cost prices"
+    "ingredient_costs_btn": "Raw material cost prices",
+    "elaborar": "Elaborate"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -296,6 +297,8 @@
     "zone_placeholder": "Example: Kitchen, Toilets, Cold Room...",
     "new_recipe_btn": "NEW RECIPE",
     "upgrade_plan": "UPGRADE PLAN",
+    "labels_help_video": "If you need help watch this video",
+    "labels_help_video_btn": "If you need help watch this video",
     "labels_header": "Configure Labels",
     "labels_header_image": "Header Image",
     "labels_header_image_desc": "Insert an image that will appear at the top of the label. It can be a logo or an image with your logo and company details",
@@ -346,7 +349,8 @@
       "ingredientsList": "Ingredients list",
       "madeBy": "Prepared by",
       "barcode": "Barcode",
-      "healthRegistry": "Health registry"
+      "healthRegistry": "Health registry",
+      "unitPrice": "Unit Price (RRP)"
     },
     "drag_elements": "Drag elements here",
     "none": "None",
@@ -358,7 +362,9 @@
   },
   "workers": {
     "title": "Worker Management",
-    "subtitle": "Create and manage access for your staff.",
+    "subtitle": "Create and manage staff access.",
+    "video_help": "What is this section for?",
+    "video_help_btn": "What is this section for?",
     "add_btn": "Add Worker",
     "name": "Name",
     "user": "User/Email",
@@ -543,7 +549,9 @@
     "label_drying_out": "Drying room outlet",
     "quantity_produced": "Quantity produced",
     "net_weight_label": "Net weight for label",
-    "label_net_weight": "Net weight"
+    "label_net_weight": "Net weight",
+    "unit_price": "Unit Price (RRP)",
+    "unit_price_help": "You can use it on the label. You can change the currency in the business settings in the main menu."
   },
   "goods_receipt_form": {
     "product": "Product",

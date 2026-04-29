@@ -309,6 +309,7 @@ export default function ClientDashboard() {
   const [totalElabs, setTotalElabs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [recipeSearchTerm, setRecipeSearchTerm] = useState("");
 
   // Affiliate State
   const [affiliateData, setAffiliateData] = useState({
@@ -370,6 +371,7 @@ export default function ClientDashboard() {
     preparationTime: "",
     quantityProduced: "",
     netWeight: "",
+    unitPrice: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
   });
 
@@ -1353,6 +1355,11 @@ export default function ClientDashboard() {
       expirationDate: expirationDate,
       quantityProduced: "",
       netWeight: "",
+      unitPrice: "",
+      workshopTemp: "",
+      preparationTime: "",
+      dryingRoomIn: "",
+      dryingRoomOut: "",
       ingredientes: initialIngredientes
     });
   };
@@ -1383,6 +1390,7 @@ export default function ClientDashboard() {
       preparationTime: elab.preparationTime || "",
       quantityProduced: elab.quantityProduced || "",
       netWeight: elab.netWeight || "",
+      unitPrice: elab.unitPrice || "",
       ingredientes: initialIngredientes
     });
   };
@@ -1831,6 +1839,18 @@ export default function ClientDashboard() {
             currentY += lineHeightMM;
           }
           break;
+        case 'unitPrice':
+          if (elaboration.unitPrice) {
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(fontSize + 4);
+            const unitPriceLabel = t('modals.labels_elements.unitPrice');
+            const priceStr = formatPrice(elaboration.unitPrice, profile?.currency || "EUR", locale);
+            doc.text(`${priceStr}`, startX, currentY);
+            currentY += ((fontSize + 4 + 2) * mmFactor);
+            doc.setFontSize(fontSize);
+            doc.setFont("helvetica", "normal");
+          }
+          break;
         case 'elaborationInstructions':
           if (elaboration.recipe.elaborationInstructions) {
             doc.setFont("helvetica", "bold");
@@ -1868,7 +1888,7 @@ export default function ClientDashboard() {
           if (nInfo.energyValue || nInfo.fats || nInfo.carbohydrates || nInfo.proteins || nInfo.salt) {
             currentY += 2;
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(fontSize - 2);
+            doc.setFontSize(Math.max(2, fontSize - 2));
             const titleTxt = doc.splitTextToSize(t('traceability_form.label_nutritional_title') || "Información nutricional\n(Valores medios por 100g)", columnWidth - 2);
             doc.setDrawColor(0);
             doc.setLineWidth(0.3);
@@ -2372,6 +2392,7 @@ export default function ClientDashboard() {
           preparationTime: elaboracionForm.preparationTime,
           quantityProduced: elaboracionForm.quantityProduced,
           netWeight: elaboracionForm.netWeight,
+          unitPrice: elaboracionForm.unitPrice,
           ingredients: ingredientsData
         })
       });
@@ -2942,6 +2963,25 @@ export default function ClientDashboard() {
                         placeholder="Ej: 250g, 1kg..."
                       />
                     </div>
+
+                    <div>
+                      <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                        {t('traceability_form.unit_price')} 
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+                          ({profile?.currency || 'EUR'})
+                        </span>
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.unitPrice} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, unitPrice: e.target.value})}
+                        placeholder="Ej: 15.50"
+                      />
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
+                        {t('traceability_form.unit_price_help')}
+                      </p>
+                    </div>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.made_by')}</label>
                       <input 
@@ -3134,7 +3174,7 @@ export default function ClientDashboard() {
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "eHdC-SSK5dA" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
                       className="btn-secondary" 
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
@@ -3149,30 +3189,48 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
-                  {recipes.map(recipe => (
-                    <div 
-                      key={recipe.id} 
-                      className="glass-card" 
-                      onClick={() => handleOpenRecipe(recipe)}
-                      style={{ 
-                        padding: '1.5rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
-                        background: 'white', display: 'flex', flexDirection: 'column', gap: '1.5rem'
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>{recipe.name}</h3>
-                      
-                      <div 
-                        className="btn-primary"
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', fontSize: '0.85rem', fontWeight: '800' }}
-                      >
-                        <Plus size={18} /> {t('dashboard.register_elaboration')}
-                      </div>
+                <>
+                  <div style={{ marginBottom: '2.5rem', maxWidth: '600px' }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <Search size={22} style={{ position: 'absolute', left: '1.25rem', color: 'var(--text-muted)', zIndex: 1 }} />
+                      <input 
+                        type="text" 
+                        placeholder={t('common.search')} 
+                        value={recipeSearchTerm}
+                        onChange={(e) => setRecipeSearchTerm(e.target.value)}
+                        className="input-field"
+                        style={{ paddingLeft: '3.5rem', height: '3.75rem', fontSize: '1.05rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderRadius: '1rem' }}
+                      />
                     </div>
-                  ))}
-                </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+                    {recipes
+                      .filter(recipe => recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                      .map(recipe => (
+                        <div 
+                          key={recipe.id} 
+                          className="glass-card" 
+                          onClick={() => handleOpenRecipe(recipe)}
+                          style={{ 
+                            padding: '1.5rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+                            background: 'white', display: 'flex', flexDirection: 'column', gap: '1.5rem'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                        >
+                          <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>{recipe.name}</h3>
+                          
+                          <div 
+                            className="btn-primary"
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', fontSize: '0.85rem', fontWeight: '800' }}
+                          >
+                            <Plus size={18} /> {t('dashboard.register_elaboration')}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </>
               )}
             </div>
           ) : activeTab === 'historial' ? (
@@ -3199,7 +3257,7 @@ export default function ClientDashboard() {
                       <Settings size={18} /> {t('dashboard.configure_labels')}
                     </button>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "eHdC-SSK5dA" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                     >
@@ -4450,20 +4508,29 @@ export default function ClientDashboard() {
                   <h1 style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{t('workers.title') || "Gestión de Trabajadores"}</h1>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('workers.subtitle') || "Crea y gestiona los accesos de tu personal."}</p>
                 </div>
-                <button 
-                  onClick={() => {
-                    setEditingWorker(null);
-                    setWorkerForm({
-                      name: '', email: '', password: '', 
-                      permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false }
-                    });
-                    setIsWorkerModalOpen(true);
-                  }}
-                  className="btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.8rem 1.5rem' }}
-                >
-                  <UserPlus size={20} /> {t('workers.add_btn') || "Añadir Trabajador"}
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={() => setVideoModal({ isOpen: true, videoId: "5dVfgYOSx_U" })}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.8rem 1.5rem' }}
+                  >
+                    <PlayCircle size={20} /> {t('workers.video_help_btn') || "Para qué sirve esta sección"}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setEditingWorker(null);
+                      setWorkerForm({
+                        name: '', email: '', password: '', 
+                        permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false }
+                      });
+                      setIsWorkerModalOpen(true);
+                    }}
+                    className="btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.8rem 1.5rem' }}
+                  >
+                    <UserPlus size={20} /> {t('workers.add_btn') || "Añadir Trabajador"}
+                  </button>
+                </div>
               </div>
 
               <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
@@ -4552,7 +4619,7 @@ export default function ClientDashboard() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.recipe_manage_desc')}</p>
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "eHdC-SSK5dA" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
                     >
@@ -4589,6 +4656,20 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </header>
+
+              <div style={{ marginBottom: '2.5rem', maxWidth: '600px' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Search size={22} style={{ position: 'absolute', left: '1.25rem', color: 'var(--text-muted)', zIndex: 1 }} />
+                  <input 
+                    type="text" 
+                    placeholder={t('common.search')} 
+                    value={recipeSearchTerm}
+                    onChange={(e) => setRecipeSearchTerm(e.target.value)}
+                    className="input-field"
+                    style={{ paddingLeft: '3.5rem', height: '3.75rem', fontSize: '1.05rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderRadius: '1rem' }}
+                  />
+                </div>
+              </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
                 {recipes.length === 0 ? (
@@ -4629,43 +4710,54 @@ export default function ClientDashboard() {
                     </button>
                   </div>
                 ) : (
-                  recipes.map(recipe => (
-                    <div key={recipe.id} className="glass-card" style={{ padding: '2rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <ChefHat size={20} color="var(--corp-green)" />
+                  recipes
+                    .filter(recipe => recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                    .map(recipe => (
+                      <div key={recipe.id} className="glass-card" style={{ padding: '2rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <ChefHat size={20} color="var(--corp-green)" />
+                            </div>
+                            <div>
+                              <h3 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0 }}>{recipe.name}</h3>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{recipe.ingredients.length} Ingredientes</span>
+                            </div>
                           </div>
-                          <div>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0 }}>{recipe.name}</h3>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{recipe.ingredients.length} Ingredientes</span>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              onClick={() => handleEditRecipe(recipe)}
+                              style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteRecipe(recipe.id)}
+                              style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
                           <button 
-                            onClick={() => handleEditRecipe(recipe)}
-                            style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                            onClick={() => handleDuplicateRecipe(recipe)}
+                            className="btn-secondary"
+                            style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                           >
-                            <Edit size={16} />
+                            <Plus size={14} /> {t('common.duplicate') || "Duplicar"}
                           </button>
                           <button 
-                            onClick={() => handleDeleteRecipe(recipe.id)}
-                            style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                            onClick={() => handleOpenRecipe(recipe)}
+                            className="btn-primary"
+                            style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                           >
-                            <Trash2 size={16} />
+                            <PlayCircle size={14} /> {t('dashboard.elaborar') || "Elaborar"}
                           </button>
                         </div>
                       </div>
-                      
-                      <button 
-                        onClick={() => handleOpenRecipe(recipe)}
-                        className="btn-primary"
-                        style={{ width: '100%', marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', fontSize: '0.85rem', fontWeight: '800' }}
-                      >
-                        <Plus size={18} /> {t('dashboard.register_elaboration')}
-                      </button>
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
             </div>
@@ -7644,6 +7736,7 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
 function LabelConfigModal({ config, onClose, onSave }) {
   const { t } = useI18n();
   const [localConfig, setLocalConfig] = useState(mergeLabelConfig(config));
+  const [showHelpVideo, setShowHelpVideo] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -7655,7 +7748,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
     'recipeName', 'lote', 'elaborationDate', 'expirationDate', 'netWeight',
     'elaborationInstructions', 'conservationInstructions', 
     'allergens', 'nutritionalTable', 'ingredientsList', 
-    'madeBy', 'barcode', 'healthRegistry'
+    'madeBy', 'barcode', 'healthRegistry', 'unitPrice'
   ];
 
   const getAvailableElements = () => {
@@ -7726,6 +7819,44 @@ function LabelConfigModal({ config, onClose, onSave }) {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
+          {/* Help Video */}
+          <div style={{ marginBottom: '1rem' }}>
+            {!showHelpVideo ? (
+              <button 
+                type="button"
+                onClick={() => setShowHelpVideo(true)}
+                className="btn-secondary"
+                style={{ 
+                  width: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '0.75rem', 
+                  padding: '1rem',
+                  background: 'var(--corp-green)',
+                  color: 'white',
+                  fontWeight: '800',
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <PlayCircle size={20} />
+                {t('modals.labels_help_video_btn')}
+              </button>
+            ) : (
+              <div style={{ width: '100%', position: 'relative', paddingTop: '56.25%', background: '#000', borderRadius: '0.75rem', overflow: 'hidden' }}>
+                <iframe 
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                  src="https://www.youtube.com/embed/_Pu_-QYqA_I?autoplay=1"
+                  title="Help Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            )}
+          </div>
+
           {/* Header Image */}
           <section style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>{t('modals.labels_header_image') || "Imagen encabezado"}</h3>
@@ -8005,7 +8136,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
               onChange={(e) => setLocalConfig({...localConfig, fontSize: parseInt(e.target.value)})}
               style={{ padding: '0.75rem' }}
             >
-              {[8, 10, 12, 14, 16, 18, 20].map(size => (
+              {[2, 4, 6, 8, 10, 12, 14, 16, 18, 20].map(size => (
                 <option key={size} value={size}>{size}px</option>
               ))}
             </select>

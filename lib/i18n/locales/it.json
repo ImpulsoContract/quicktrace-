@@ -44,7 +44,8 @@
     "elaborations": "Elaborazioni",
     "ingredients": "Ingredienti",
     "view_image": "Vedi immagine",
-    "upload_image": "Carica immagine"
+    "upload_image": "Carica immagine",
+    "duplicate": "Duplicare"
   },
   "profile": {
     "title": "Profilo",
@@ -144,7 +145,7 @@
     "actions": "Azioni",
     "search": "Cerca record...",
     "no_records": "Nessun record in questo intervallo",
-    "goods_info": "Registra e gestisci le ricezioni di materie prime e prodotti",
+    "goods_info": "Gestisci i documenti di trasporto e le entrate merce dei tuoi fornitori.",
     "filter_by_type": "Filtra per tipo",
     "new_goods_entry": "NUOVA ENTRATA",
     "providers_info": "Gestisci il tuo elenco di fornitori abituali",
@@ -156,7 +157,6 @@
     "no_providers": "Non hai fornitori",
     "no_providers_info": "Aggiungi il tuo primo fornitore per averlo a disposizione al momento della ricezione della merce.",
     "provider_products_label": "Prodotti forniti",
-    "goods_info": "Gestisci i documenti di trasporto e le entrate merce dei tuoi fornitori.",
     "goods": "Merci",
     "view_note": "VEDI DDT",
     "lote": "LOTTO",
@@ -219,7 +219,8 @@
     "video_help": "Video aiuto",
     "configure_labels": "Configura etichette",
     "upload_photo": "Carica foto DDT",
-    "photo_format": "Scatta una foto o seleziona un file"
+    "photo_format": "Scatta una foto o seleziona un file",
+    "elaborar": "Elaborare"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",
@@ -291,6 +292,8 @@
     "zone_placeholder": "Es: Cucina, Bagni, Cella...",
     "new_recipe_btn": "NUOVA RICETTA",
     "upgrade_plan": "AMPLIA LIMITE",
+    "labels_help_video": "Se hai bisogno di aiuto guarda questo video",
+    "labels_help_video_btn": "Se hai bisogno di aiuto guarda questo video",
     "labels_header": "Configura Etichette",
     "labels_header_image": "Immagine intestazione",
     "labels_header_image_desc": "Inserisci un'immagine che apparirà nella parte superiore dell'etichetta. Può essere un logo o ad esempio un'immagine con il tuo logo e i dati della tua azienda",
@@ -341,7 +344,8 @@
       "ingredientsList": "Elenco ingredienti",
       "madeBy": "Persona che lavora",
       "barcode": "Codice a barre",
-      "healthRegistry": "Registro sanitario"
+      "healthRegistry": "Registro sanitario",
+      "unitPrice": "Prezzo unitario (PVP)"
     },
     "drag_elements": "Trascina elementi qui",
     "none": "Nessuno"
@@ -349,6 +353,8 @@
   "workers": {
     "title": "Gestione dei Lavoratori",
     "subtitle": "Crea e gestisci gli accessi del tuo personale.",
+    "video_help": "A cosa serve questa sezione?",
+    "video_help_btn": "A cosa serve questa sezione?",
     "add_btn": "Aggiungi Lavoratore",
     "name": "Nome",
     "user": "Utente/Email",
@@ -532,7 +538,9 @@
     "label_drying_out": "Uscita essiccatoio",
     "quantity_produced": "Quantità lavorata",
     "net_weight_label": "Peso netto per l'etichetta",
-    "label_net_weight": "Peso netto"
+    "label_net_weight": "Peso netto",
+    "unit_price": "Prezzo unitario (PVP)",
+    "unit_price_help": "Puoi usarlo sull'etichetta. Puoi cambiare la valuta nelle impostazioni aziendali nel menu principale."
   },
   "goods_receipt_form": {
     "product": "Prodotto",
