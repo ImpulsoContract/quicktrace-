@@ -73,6 +73,7 @@ export async function POST(req) {
     }
 
     // Check plan limits for Water module
+    /*
     if (profile.plan && profile.plan.waterLimit !== null) {
       if (profile._count.waterMeasurements >= profile.plan.waterLimit) {
         return NextResponse.json({ 
@@ -81,6 +82,7 @@ export async function POST(req) {
         }, { status: 403 });
       }
     }
+    */
 
     const body = await req.json();
     const { 

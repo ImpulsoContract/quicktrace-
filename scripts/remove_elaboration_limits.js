@@ -7,7 +7,8 @@ async function main() {
     data: {
       elaborationsLimit: null,
       cleaningLimit: null,
-      temperaturesLimit: null
+      temperaturesLimit: null,
+      waterLimit: null
     }
   });
   console.log(`Updated ${result.count} plans.`);

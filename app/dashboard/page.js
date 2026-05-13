@@ -4403,6 +4403,7 @@ export default function ClientDashboard() {
                     label={t('sidebar.water') || "Agua"} 
                     current={waterMeasurements.length} 
                     limit={profile?.plan?.waterLimit} 
+                    hideLimit={true}
                   />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
