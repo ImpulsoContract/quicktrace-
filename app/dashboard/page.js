@@ -3966,6 +3966,7 @@ export default function ClientDashboard() {
                     label={t('dashboard.cleaning')}
                     current={cleaningLogs.length} 
                     limit={profile?.plan?.cleaningLimit} 
+                    hideLimit={true}
                   />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>

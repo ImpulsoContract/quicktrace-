@@ -222,7 +222,7 @@ export default function PlansPage() {
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2.5rem' }}>
                   <FeatureItem icon={<ChefHat size={18}/>} label={t('plans.recipes')} val={plan.recipesLimit} t={t} />
                   <FeatureItem icon={<History size={18}/>} label={t('plans.elaborations')} val={null} t={t} showAsterisk={true} />
-                  <FeatureToggle icon={<Brush size={18}/>} label={t('plans.cleaning')} active={plan.hasCleaning} limit={plan.cleaningLimit} t={t} showAsterisk={true} />
+                  <FeatureToggle icon={<Brush size={18}/>} label={t('plans.cleaning')} active={plan.hasCleaning} limit={null} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={plan.goodsLimit} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Thermometer size={18}/>} label={t('plans.temperatures')} active={plan.hasTemperatures} limit={plan.temperaturesLimit} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Droplets size={18}/>} label={t('plans.water')} active={plan.hasWater} limit={plan.waterLimit} t={t} showAsterisk={true} />

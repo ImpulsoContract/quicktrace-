@@ -86,9 +86,11 @@ export async function POST(req) {
       return NextResponse.json({ error: "El módulo de limpieza no está incluido en tu plan." }, { status: 403 });
     }
 
+    /*
     if (profile.plan.cleaningLimit !== null && profile._count.cleaningLogs >= profile.plan.cleaningLimit) {
       return NextResponse.json({ error: "Has alcanzado el límite de registros de limpieza de tu plan." }, { status: 403 });
     }
+    */
 
     const body = await req.json();
     const { personName, date, selectedZones } = body;

@@ -5,7 +5,8 @@ async function main() {
   console.log('Updating all pricing plans to have unlimited elaborations...');
   const result = await prisma.pricingPlan.updateMany({
     data: {
-      elaborationsLimit: null
+      elaborationsLimit: null,
+      cleaningLimit: null
     }
   });
   console.log(`Updated ${result.count} plans.`);
