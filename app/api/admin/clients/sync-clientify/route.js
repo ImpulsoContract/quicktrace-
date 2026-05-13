@@ -26,6 +26,10 @@ export async function POST(req) {
       return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
     }
 
+    if (client.role !== "CLIENT") {
+      return NextResponse.json({ error: "Solo se pueden sincronizar perfiles de clientes" }, { status: 400 });
+    }
+
     // Usar la misma función que el login, que ahora busca primero si existe
     const contact = await createClientifyContact({
       email: client.email,

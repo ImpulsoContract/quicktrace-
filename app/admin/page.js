@@ -10,7 +10,7 @@ import {
   X, AlertCircle, Loader2, LogOut,
   Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu
 } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -35,7 +35,6 @@ export default function AdminDashboard() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showMasterPass, setShowMasterPass] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const [sortConfig, setSortConfig] = useState({ key: 'created', direction: 'desc' });
@@ -316,6 +315,42 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleImpersonate = async (targetUserId) => {
+    if (!confirm("¿Seguro que quieres entrar como este cliente? Se cerrará tu sesión de administrador.")) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        // Realizar el login con el token de suplantación
+        const result = await signIn("credentials", {
+          redirect: false,
+          impersonationToken: data.impersonationToken
+        });
+        
+        if (result.ok) {
+          window.location.href = "/dashboard";
+        } else {
+          alert("Error al iniciar sesión como cliente");
+        }
+      } else {
+        alert(data.error || "Error al obtener token de suplantación");
+      }
+    } catch (error) {
+      console.error("Error en impersonate:", error);
+      alert("Error de conexión");
+    } finally {
+      setLoading(false);
+      setActiveMenu(null);
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
       
@@ -392,12 +427,6 @@ export default function AdminDashboard() {
               </div>
             </div>
             
-            <button 
-              onClick={() => setShowMasterPass(true)}
-              style={{ width: '100%', background: 'rgba(66, 98, 22, 0.1)', border: '1px solid var(--corp-green)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.5rem' }}
-            >
-              <ShieldCheck size={16} /> {t('admin.sidebar.master_pass')}
-            </button>
             <button 
               onClick={() => signOut({ callbackUrl: '/login' })}
               style={{ width: '100%', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700' }}
@@ -771,6 +800,7 @@ export default function AdminDashboard() {
             <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', fontSize: '0.7rem', fontWeight: '800', color: 'var(--corp-green)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {t('admin.actions.title')}: {activeMenu.clientProfile?.razonSocial}
             </div>
+            <MenuBtn icon={<ShieldCheck size={16} />} text="Entrar como cliente" onClick={() => handleImpersonate(activeMenu.id)} />
             <MenuBtn icon={<Edit size={16} />} text={t('admin.actions.edit')} onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile } }); setActiveMenu(null); }} />
             <MenuBtn
               icon={<Plus size={16} />}
@@ -978,32 +1008,7 @@ export default function AdminDashboard() {
         </Modal>
       )}
 
-      {showMasterPass && (
-        <Modal title={t('admin.master_pass.title')} onClose={() => setShowMasterPass(false)}>
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <div style={{ width: '60px', height: '60px', background: 'rgba(66, 98, 22, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-              <ShieldCheck size={32} color="var(--corp-green)" />
-            </div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-              {t('admin.master_pass.desc')}
-            </p>
-            <div style={{ 
-              background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '2px dashed var(--corp-green)',
-              fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '0.1em',
-              userSelect: 'all'
-            }}>
-              Vicente@Fernando.123
-            </div>
-            <button 
-              onClick={() => setShowMasterPass(false)}
-              className="btn-primary"
-              style={{ marginTop: '2rem', width: '100%' }}
-            >
-              {t('admin.master_pass.understood')}
-            </button>
-          </div>
-        </Modal>
-      )}
+
 
       {activeTab === "coupons" && <CouponsTab plans={plans} />}
 

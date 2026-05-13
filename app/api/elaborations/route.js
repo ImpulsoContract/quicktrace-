@@ -123,7 +123,8 @@ export async function POST(req) {
       return NextResponse.json({ error: "No tienes un plan asignado." }, { status: 403 });
     }
 
-    // Check limits
+    // Check limits - Removed as per request (always unlimited)
+    /*
     const currentCount = await prisma.elaboration.count({
       where: {
         recipe: {
@@ -139,6 +140,7 @@ export async function POST(req) {
         error: `Límite alcanzado.` 
       }, { status: 403 });
     }
+    */
 
     // Verificar que la receta pertenece al cliente
     const recipe = await prisma.recipe.findUnique({

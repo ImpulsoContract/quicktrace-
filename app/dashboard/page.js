@@ -3158,6 +3158,7 @@ export default function ClientDashboard() {
                     label={t('dashboard.elaborations')} 
                     current={totalElabs} 
                     limit={profile?.plan?.elaborationsLimit} 
+                    hideLimit={true}
                   />
                 </div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '0.25rem' }}>{t('dashboard.traceability_desc')}</p>
@@ -7050,9 +7051,9 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
   );
 }
 
-function PlanUsageIndicator({ label, current, limit }) {
+function PlanUsageIndicator({ label, current, limit, hideLimit = false }) {
   const { t } = useI18n();
-  const isCapped = limit !== null && current >= limit;
+  const isCapped = !hideLimit && limit !== null && current >= limit;
   const percentage = limit ? Math.min((current / limit) * 100, 100) : 0;
 
   return (
@@ -7067,9 +7068,9 @@ function PlanUsageIndicator({ label, current, limit }) {
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: '1.1rem', fontWeight: '900', color: isCapped ? '#ef4444' : 'var(--corp-green)' }}>
-            {current} / {limit === null ? '∞' : limit}
+            {current} {!hideLimit && <> / {limit === null ? '∞' : limit}</>}
           </span>
-          {limit && (
+          {!hideLimit && limit && (
             <div style={{ width: '60px', height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ width: `${percentage}%`, height: '100%', background: isCapped ? '#ef4444' : 'var(--corp-green)', transition: 'width 0.5s ease' }} />
             </div>
@@ -7077,15 +7078,17 @@ function PlanUsageIndicator({ label, current, limit }) {
         </div>
       </div>
       
-      <Link href="/dashboard/plans" style={{ 
-        display: 'flex', alignItems: 'center', gap: '0.5rem', 
-        padding: '0.5rem 1rem', background: 'rgba(66, 98, 22, 0.1)', 
-        color: 'var(--corp-green)', borderRadius: '0.75rem', 
-        fontSize: '0.85rem', fontWeight: '800', textDecoration: 'none',
-        transition: 'all 0.2s'
-      }}>
-        <Crown size={14} /> {t('modals.upgrade_plan')}
-      </Link>
+      {!hideLimit && (
+        <Link href="/dashboard/plans" style={{ 
+          display: 'flex', alignItems: 'center', gap: '0.5rem', 
+          padding: '0.5rem 1rem', background: 'rgba(66, 98, 22, 0.1)', 
+          color: 'var(--corp-green)', borderRadius: '0.75rem', 
+          fontSize: '0.85rem', fontWeight: '800', textDecoration: 'none',
+          transition: 'all 0.2s'
+        }}>
+          <Crown size={14} /> {t('modals.upgrade_plan')}
+        </Link>
+      )}
     </div>
   );
 }

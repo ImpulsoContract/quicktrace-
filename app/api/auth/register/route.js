@@ -185,14 +185,14 @@ export async function POST(req) {
 
     // Report to Clientify CRM
     try {
-      // Re-calculate origin for sync if needed or just pass the captured ones
       const source = (utmSource || '').toLowerCase();
       let syncOrigin = 'DIRECT';
       if (referralCode) syncOrigin = 'AFFILIATE';
       else if (['meta', 'facebook', 'instagram', 'fb', 'ig'].some(s => source.includes(s))) syncOrigin = 'META';
       else if (['google', 'gads', 'googleads', 'google-ads'].some(s => source.includes(s))) syncOrigin = 'GOOGLE';
       else if (source) syncOrigin = 'OTHER';
-
+      
+      // Defensive check: Only sync if this is a CLIENT registration
       await createClientifyContact({
         email: normalizedEmail,
         name: name,
@@ -205,7 +205,6 @@ export async function POST(req) {
         origin: syncOrigin
       });
     } catch (crmErr) {
-
       console.error('[Clientify Sync] Error:', crmErr);
     }
 
