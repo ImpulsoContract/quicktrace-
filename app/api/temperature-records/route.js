@@ -84,9 +84,11 @@ export async function POST(req) {
       return NextResponse.json({ error: "El módulo de temperaturas no está incluido en tu plan." }, { status: 403 });
     }
 
+    /*
     if (profile.plan.temperaturesLimit !== null && profile._count.temperatureRecords >= profile.plan.temperaturesLimit) {
       return NextResponse.json({ error: "Has alcanzado el límite de registros de temperatura de tu plan." }, { status: 403 });
     }
+    */
 
     const { date, values } = await req.json(); // values: { [chamberId]: temperature }
     if (!date || !values) {

@@ -3154,12 +3154,22 @@ export default function ClientDashboard() {
               <header style={{ marginBottom: '1.5rem', position: 'relative' }}>
                 <div className="header-content-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.traceability')}</h2>
-                  <PlanUsageIndicator 
-                    label={t('dashboard.elaborations')} 
-                    current={totalElabs} 
-                    limit={profile?.plan?.elaborationsLimit} 
-                    hideLimit={true}
-                  />
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button 
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <PlayCircle size={18} /> {t('dashboard.video_help')}
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('historial')}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <History size={18} /> {t('dashboard.view_registered_elabs')}
+                    </button>
+                  </div>
                 </div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '0.25rem' }}>{t('dashboard.traceability_desc')}</p>
               </header>
@@ -4181,6 +4191,7 @@ export default function ClientDashboard() {
                     label={t('sidebar.temperatures')} 
                     current={tempRecords.length} 
                     limit={profile?.plan?.temperaturesLimit} 
+                    hideLimit={true}
                   />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>

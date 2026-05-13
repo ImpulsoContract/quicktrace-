@@ -6,7 +6,8 @@ async function main() {
   const result = await prisma.pricingPlan.updateMany({
     data: {
       elaborationsLimit: null,
-      cleaningLimit: null
+      cleaningLimit: null,
+      temperaturesLimit: null
     }
   });
   console.log(`Updated ${result.count} plans.`);
