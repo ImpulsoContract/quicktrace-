@@ -2002,6 +2002,26 @@ export default function ClientDashboard() {
             currentY += (splitHR.length * lineHeightMM);
           }
           break;
+        case 'dryingRoomDates':
+          if (elaboration.dryingRoomIn || elaboration.dryingRoomOut) {
+            if (elaboration.dryingRoomIn) {
+              doc.setFont("helvetica", "bold");
+              doc.text(`${t('traceability_form.label_drying_in') || "Entrada secadero"}:`, startX, currentY);
+              currentY += lineHeightMM;
+              doc.setFont("helvetica", "normal");
+              doc.text(elaboration.dryingRoomIn, startX, currentY);
+              currentY += lineHeightMM;
+            }
+            if (elaboration.dryingRoomOut) {
+              doc.setFont("helvetica", "bold");
+              doc.text(`${t('traceability_form.label_drying_out') || "Salida secadero"}:`, startX, currentY);
+              currentY += lineHeightMM;
+              doc.setFont("helvetica", "normal");
+              doc.text(elaboration.dryingRoomOut, startX, currentY);
+              currentY += lineHeightMM;
+            }
+          }
+          break;
       }
       
       if (currentY > initialY) {
@@ -7758,7 +7778,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
     'recipeName', 'lote', 'elaborationDate', 'expirationDate', 'netWeight',
     'elaborationInstructions', 'conservationInstructions', 
     'allergens', 'nutritionalTable', 'ingredientsList', 
-    'madeBy', 'barcode', 'healthRegistry', 'unitPrice'
+    'madeBy', 'barcode', 'healthRegistry', 'unitPrice', 'dryingRoomDates'
   ];
 
   const getAvailableElements = () => {
@@ -7813,6 +7833,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
   };
 
   const getElementLabel = (el) => {
+    if (el === 'dryingRoomDates') return t('dashboard.drying_room_dates') || "Fechas de Secadero";
     const translated = t(`modals.labels_elements.${el}`);
     return (translated && translated !== `modals.labels_elements.${el}`) ? translated : el;
   };
