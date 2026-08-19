@@ -131,9 +131,14 @@ export default function AdminDashboard() {
     try {
       const res = await fetch("/api/admin/clients/list");
       const data = await res.json();
-      if (!data.error) setClients(data);
+      if (data.error) {
+        alert("Error al cargar clientes: " + data.error);
+      } else {
+        setClients(data);
+      }
     } catch (error) {
       console.error("Error loading clients:", error);
+      alert("Error de red al cargar clientes");
     } finally {
       setListLoading(false);
     }
