@@ -27,6 +27,7 @@ export default function AdminDashboard() {
 
   // Modals state
   const [editClientModal, setEditClientModal] = useState(null);
+  const [changePasswordModal, setChangePasswordModal] = useState(null);
   const [addRecipeModal, setAddRecipeModal] = useState(null);
   const [manageRecipesModal, setManageRecipesModal] = useState(null);
   const [manageCleaningZonesModal, setManageCleaningZonesModal] = useState(null);
@@ -837,6 +838,7 @@ export default function AdminDashboard() {
             <MenuBtn icon={<RefreshCw size={16} />} text={t('admin.actions.sync_stripe')} onClick={() => handleResyncStripe(activeMenu.id)} />
             <MenuBtn icon={<UserPlus size={16} />} text={t('admin.actions.sync_clientify')} onClick={() => handleSyncClientify(activeMenu.id)} />
             <MenuBtn icon={<Mail size={16} />} text="Enviar email de recuperación de contraseña" onClick={() => handleSendPasswordReset(activeMenu.email)} />
+            <MenuBtn icon={<Lock size={16} />} text="Cambiar contraseña" onClick={() => { setChangePasswordModal(activeMenu); setActiveMenu(null); }} />
             <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
                <MenuBtn 
                 icon={<FileText size={16} />} 
@@ -976,6 +978,12 @@ export default function AdminDashboard() {
 
       {addRecipeModal && <AddRecipeModal profile={addRecipeModal} onRefresh={fetchClients} onClose={() => setAddRecipeModal(null)} />}
       {manageRecipesModal && <ManageRecipesModal profile={manageRecipesModal} onRefresh={fetchClients} onClose={() => setManageRecipesModal(null)} />}
+      {changePasswordModal && (
+        <ChangePasswordModal 
+          user={changePasswordModal} 
+          onClose={() => setChangePasswordModal(null)} 
+        />
+      )}
       {manageCleaningZonesModal && (
         <ManageCleaningZonesModal 
           profile={manageCleaningZonesModal} 
@@ -1400,6 +1408,94 @@ function Modal({ title, children, onClose }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function ChangePasswordModal({ user, onClose }) {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!password) {
+      setError("La contraseña no puede estar vacía");
+      return;
+    }
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch(`/api/admin/clients/change-password/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert("Contraseña actualizada con éxito");
+        onClose();
+      } else {
+        setError(data.error || "Error al actualizar la contraseña");
+      }
+    } catch (err) {
+      setError("Error de conexión con el servidor");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title={`Cambiar contraseña de: ${user.clientProfile?.razonSocial || user.email}`} onClose={onClose}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {error && (
+          <div style={{ color: '#ef4444', background: '#fef2f2', padding: '0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+        <div>
+          <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Nueva contraseña</label>
+          <input 
+            type="password" 
+            className="input-field" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+            placeholder="Mínimo 6 caracteres"
+          />
+        </div>
+        <div>
+          <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Confirmar nueva contraseña</label>
+          <input 
+            type="password" 
+            className="input-field" 
+            value={confirmPassword} 
+            onChange={(e) => setConfirmPassword(e.target.value)} 
+            required 
+            placeholder="Repite la contraseña"
+          />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
+            Cancelar
+          </button>
+          <button type="submit" className="btn-primary" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {loading ? <Loader2 size={16} className="animate-spin" /> : "Guardar contraseña"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
