@@ -86,3 +86,33 @@ body {
   .desktop-only { display: none; }
   .mobile-full { width: 100% !important; }
 }
+
+/* Botón de Vídeo de Ayuda Unificado */
+.btn-help-video {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 750;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: linear-gradient(135deg, rgba(66, 98, 22, 0.08) 0%, rgba(170, 152, 112, 0.08) 100%);
+  color: var(--corp-green) !important;
+  border: 1px solid var(--corp-green);
+  box-shadow: 0 2px 6px rgba(66, 98, 22, 0.08);
+}
+
+.btn-help-video:hover {
+  background: linear-gradient(135deg, var(--corp-green) 0%, var(--corp-green-light) 100%);
+  color: white !important;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 10px rgba(66, 98, 22, 0.2);
+  border-color: transparent;
+}
+
+.btn-help-video:active {
+  transform: translateY(0);
+}

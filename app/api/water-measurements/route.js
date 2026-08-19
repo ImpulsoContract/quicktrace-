@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { isRecipeLimitExceeded } from "@/lib/planLimits";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -60,6 +61,10 @@ export async function POST(req) {
 
   try {
     const profileId = session.user.profileId;
+    if (await isRecipeLimitExceeded(profileId)) {
+      return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
+    }
+
     const profile = await prisma.clientProfile.findUnique({
       where: { id: profileId },
       include: { 
@@ -94,7 +99,9 @@ export async function POST(req) {
       flavor,
       color,
       responsible,
-      receiptImage
+      ph,
+      receiptImage,
+      notes
     } = body;
 
     if (!date || chlorine === undefined) {
@@ -111,7 +118,9 @@ export async function POST(req) {
         flavor: !!flavor,
         color: !!color,
         responsible,
+        ph,
         receiptImage,
+        notes: notes || null,
         clientProfileId: profile.id
       }
     });
@@ -146,7 +155,9 @@ export async function PATCH(req) {
       flavor,
       color,
       responsible,
-      receiptImage
+      ph,
+      receiptImage,
+      notes
     } = body;
 
     if (!id || !date || chlorine === undefined) {
@@ -167,7 +178,9 @@ export async function PATCH(req) {
         flavor: !!flavor,
         color: !!color,
         responsible,
-        receiptImage
+        ph,
+        receiptImage,
+        notes: notes || null
       }
     });
 

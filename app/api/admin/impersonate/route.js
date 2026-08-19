@@ -29,8 +29,12 @@ export async function POST(req) {
     }
 
     // 3. Generar el token firmado
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error("[Admin] Missing NEXTAUTH_SECRET in environment");
+      return NextResponse.json({ error: "Error de configuración de seguridad" }, { status: 500 });
+    }
     const timestamp = Date.now();
-    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret";
+    const secret = process.env.NEXTAUTH_SECRET;
     
     const hash = crypto.createHmac('sha256', secret)
       .update(`${timestamp}:${targetUserId}`)

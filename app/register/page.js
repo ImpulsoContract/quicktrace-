@@ -92,6 +92,27 @@ function RegisterForm() {
     return () => clearTimeout(t1);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (success && typeof window !== 'undefined' && window.gtag) {
+      const adsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || 'AW-18129247983';
+      const label = process.env.NEXT_PUBLIC_GOOGLE_ADS_REGISTRATION_LABEL;
+      
+      if (adsId && label) {
+        // Enhanced Conversions (Google will hash the data if configured or we send it as is if gtag handles it)
+        window.gtag('set', 'user_data', {
+          'email': formData.email,
+          'phone_number': formData.phone
+        });
+
+        window.gtag('event', 'conversion', {
+          'send_to': `${adsId}/${label}`,
+          'value': 1.0,
+          'currency': 'EUR'
+        });
+      }
+    }
+  }, [success, formData.email, formData.phone]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);

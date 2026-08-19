@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { isRecipeLimitExceeded } from "@/lib/planLimits";
+import { 
+  processNewGoodsReceiptStock, 
+  processUpdatedGoodsReceiptStock, 
+  processDeletedGoodsReceiptsStock 
+} from "@/lib/stock-utils";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -37,7 +43,7 @@ export async function GET(req) {
         where.date.lte = end;
       }
     } else {
-      take = 10;
+      take = 40;
     }
 
     const receipts = await prisma.goodsReceipt.findMany({
@@ -45,7 +51,16 @@ export async function GET(req) {
       orderBy: { date: 'desc' },
       take: take
     });
-    return NextResponse.json(receipts);
+
+    const totalCount = await prisma.goodsReceipt.count({
+      where: { clientProfileId: profileId }
+    });
+
+    return NextResponse.json(receipts, {
+      headers: {
+        "x-total-count": totalCount.toString()
+      }
+    });
   } catch (error) {
     console.error("Error fetching goods receipts:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -64,6 +79,10 @@ export async function POST(req) {
 
   try {
     const profileId = session.user.profileId;
+    if (await isRecipeLimitExceeded(profileId)) {
+      return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
+    }
+
     const profile = await prisma.clientProfile.findUnique({
       where: { id: profileId },
       include: { 
@@ -97,7 +116,9 @@ export async function POST(req) {
       endDate,
       typeAndOrigin,
       providerId,
-      merchantTypes
+      merchantTypes,
+      relatedIngredients,
+      relatedQuantities
     } = body;
 
     if (!productName || !date) {
@@ -117,10 +138,15 @@ export async function POST(req) {
         endDate,
         typeAndOrigin,
         merchantTypes: merchantTypes || [],
+        relatedIngredients: relatedIngredients || [],
+        relatedQuantities: relatedQuantities || {},
         providerId: providerId ? parseInt(providerId) : null,
         clientProfileId: profile.id
       }
     });
+
+    // Update stock levels
+    await processNewGoodsReceiptStock(profile.id, relatedQuantities);
 
     return NextResponse.json({ success: true, receipt });
   } catch (error) {
@@ -155,11 +181,25 @@ export async function PATCH(req) {
       endDate,
       typeAndOrigin,
       providerId,
-      merchantTypes
+      merchantTypes,
+      relatedIngredients,
+      relatedQuantities
     } = body;
 
     if (!id || !productName || !date) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+
+    // Fetch existing record to calculate old quantities
+    const existing = await prisma.goodsReceipt.findUnique({
+      where: { 
+        id: parseInt(id),
+        clientProfileId: profileId
+      }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Registro no encontrado" }, { status: 404 });
     }
 
     const receipt = await prisma.goodsReceipt.update({
@@ -179,9 +219,15 @@ export async function PATCH(req) {
         endDate,
         typeAndOrigin,
         merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
+        relatedIngredients: relatedIngredients !== undefined ? relatedIngredients : undefined,
+        relatedQuantities: relatedQuantities !== undefined ? relatedQuantities : undefined,
         providerId: providerId ? parseInt(providerId) : null
       }
     });
+
+    // Update stock levels
+    const finalNewQuantities = relatedQuantities !== undefined ? relatedQuantities : existing.relatedQuantities;
+    await processUpdatedGoodsReceiptStock(profileId, existing.relatedQuantities, finalNewQuantities);
 
     return NextResponse.json({ success: true, receipt });
   } catch (error) {
@@ -225,12 +271,24 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
+    // Fetch the receipts to be deleted first
+    const receiptsToDelete = await prisma.goodsReceipt.findMany({
+      where: {
+        id: { in: idsToDelete },
+        clientProfileId: profileId
+      }
+    });
+
     const deleteResult = await prisma.goodsReceipt.deleteMany({
       where: { 
         id: { in: idsToDelete },
         clientProfileId: profileId
       }
     });
+
+    // Subtract from stock
+    await processDeletedGoodsReceiptsStock(profileId, receiptsToDelete);
+
     return NextResponse.json({ success: true, count: deleteResult.count });
   } catch (error) {
     console.error("Error deleting goods receipts:", error);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { isRecipeLimitExceeded } from "@/lib/planLimits";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -70,6 +71,10 @@ export async function POST(req) {
 
   try {
     const profileId = session.user.profileId;
+    if (await isRecipeLimitExceeded(profileId)) {
+      return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
+    }
+
     const profile = await prisma.clientProfile.findUnique({
       where: { id: profileId },
       include: { 
@@ -93,7 +98,7 @@ export async function POST(req) {
     */
 
     const body = await req.json();
-    const { personName, date, selectedZones } = body;
+    const { personName, date, selectedZones, notes } = body;
 
     if (!personName || !date || !Array.isArray(selectedZones)) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -103,6 +108,7 @@ export async function POST(req) {
       data: {
         personName,
         date: new Date(date),
+        notes: notes || null,
         clientProfileId: profile.id,
         zones: {
           create: selectedZones.map(zoneId => ({
@@ -130,7 +136,7 @@ export async function PATCH(req) {
   }
 
   try {
-    const { id, personName, date, selectedZones } = await req.json();
+    const { id, personName, date, selectedZones, notes } = await req.json();
     if (!id || !personName || !date || !Array.isArray(selectedZones)) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
@@ -146,6 +152,7 @@ export async function PATCH(req) {
       data: {
         personName,
         date: new Date(date),
+        notes: notes || null,
         zones: {
           deleteMany: {}, // Clean existing zones
           create: selectedZones.map(zoneId => ({

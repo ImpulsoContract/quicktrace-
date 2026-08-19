@@ -36,13 +36,24 @@ function UTMTrackerInner() {
     });
 
     if (hasMarketingData) {
+      // 1. Persist in localStorage (existing logic)
       const storageData = {
         data: currentData,
         timestamp: Date.now()
       };
-      
       localStorage.setItem("qt_marketing_data", JSON.stringify(storageData));
-      console.log("[UTMTracker] Persisted marketing data:", currentData);
+
+      // 2. Persist in Cookies (to ensure registration page can find them)
+      utmKeys.forEach((key) => {
+        const value = currentData[key];
+        if (value) {
+          const days = 30;
+          const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+          document.cookie = `qt_${key}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+        }
+      });
+
+      console.log("[UTMTracker] Persisted marketing data in LocalStorage and Cookies:", currentData);
     }
   }, [searchParams, pathname]);
 

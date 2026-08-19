@@ -3,6 +3,12 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { toTitleCase } from "@/lib/utils";
+import {
+  processNewElaborationStock,
+  processUpdatedElaborationStock,
+  processDeletedElaborationsStock
+} from "@/lib/stock-utils";
+import { isRecipeLimitExceeded } from "@/lib/planLimits";
 
 export async function GET(req) {
   try {
@@ -19,6 +25,7 @@ export async function GET(req) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const lote = searchParams.get("lote");
+    const loteElab = searchParams.get("loteElab");
     const recipeId = searchParams.get("recipeId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -40,9 +47,17 @@ export async function GET(req) {
       where.ingredients = {
         some: {
           lote: {
-            contains: lote
+            contains: lote,
+            mode: 'insensitive'
           }
         }
+      };
+    }
+
+    if (loteElab) {
+      where.name = {
+        contains: loteElab,
+        mode: 'insensitive'
       };
     }
 
@@ -107,9 +122,13 @@ export async function POST(req) {
     }
 
     const data = await req.json();
-    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime, unitPrice, quantityProduced, netWeight, workshopTemp } = data;
+    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime, unitPrice, quantityProduced, netWeight, workshopTemp, extraInfo } = data;
 
     const profileId = session.user.profileId;
+    if (await isRecipeLimitExceeded(profileId)) {
+      return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
+    }
+
     const profile = await prisma.clientProfile.findUnique({
       where: { id: profileId },
       include: { plan: true }
@@ -185,6 +204,7 @@ export async function POST(req) {
         unitPrice: parseFloat(data.unitPrice?.toString().replace(',', '.')) || 0,
         laborCostHourlyRate: profile.laborCostHourlyRate || 0,
         costPrice: totalCost,
+        extraInfo: data.extraInfo,
         ingredients: {
           create: ingredients.map(ing => ({
             name: toTitleCase(ing.name),
@@ -199,6 +219,9 @@ export async function POST(req) {
         ingredients: true
       }
     });
+
+    // Update stock levels (subtract quantities)
+    await processNewElaborationStock(profile.id, ingredients);
 
     return NextResponse.json(elaboration);
   } catch (error) {
@@ -219,7 +242,7 @@ export async function PATCH(req) {
     }
 
     const data = await req.json();
-    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, preparationTime, unitPrice, ingredients } = data;
+    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, preparationTime, unitPrice, extraInfo, ingredients } = data;
 
     if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
@@ -228,7 +251,7 @@ export async function PATCH(req) {
     // Verify ownership
     const existing = await prisma.elaboration.findUnique({
       where: { id: parseInt(id) },
-      include: { recipe: true }
+      include: { recipe: true, ingredients: true }
     });
 
     if (!existing || existing.recipe.clientProfileId !== profileId) {
@@ -257,6 +280,7 @@ export async function PATCH(req) {
       netWeight,
       preparationTime,
       unitPrice: unitPrice !== undefined ? (parseFloat(unitPrice?.toString().replace(',', '.')) || 0) : undefined,
+      extraInfo: extraInfo !== undefined ? extraInfo : undefined,
     };
 
     if (ingredients) {
@@ -288,6 +312,11 @@ export async function PATCH(req) {
         ingredients: true
       }
     });
+
+    // Update stock levels
+    if (ingredients) {
+      await processUpdatedElaborationStock(profileId, existing.ingredients, ingredients);
+    }
 
     return NextResponse.json(elaboration);
   } catch (error) {
@@ -327,6 +356,17 @@ export async function DELETE(req) {
 
     const profileId = session.user.profileId;
 
+    // Fetch records to delete with their ingredients
+    const elaborationsToDelete = await prisma.elaboration.findMany({
+      where: {
+        id: { in: idsToDelete },
+        recipe: {
+          clientProfileId: profileId
+        }
+      },
+      include: { ingredients: true }
+    });
+
     // Delete records that belong to the client
     const deleteResult = await prisma.elaboration.deleteMany({
       where: {
@@ -336,6 +376,9 @@ export async function DELETE(req) {
         }
       }
     });
+
+    // Add back quantities to stock
+    await processDeletedElaborationsStock(profileId, elaborationsToDelete);
 
     return NextResponse.json({ success: true, count: deleteResult.count });
   } catch (error) {

@@ -48,9 +48,24 @@ export default function RootLayout({ children }) {
             </noscript>
           </>
         )}
+        {/* Google Ads Tag */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18129247983"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-tag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-18129247983', {
+              'allow_enhanced_conversions': true
+            });
+          `}
+        </Script>
 
         <Script 
-          src="https://apps.clientify.net/widget-whatsapp2.0/app/assets/index-5yccDyx4.js?id=6d9f3bb5-ac27-4a8a-9b42-3f706307dc8c&path=https://plus.clientify.com"
+          src="https://api.clientify.net/web-marketing/chatbots/script/294157.js"
           strategy="afterInteractive"
         />
       </body>

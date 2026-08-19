@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { isRecipeLimitExceeded } from "@/lib/planLimits";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -68,6 +69,10 @@ export async function POST(req) {
 
   try {
     const profileId = session.user.profileId;
+    if (await isRecipeLimitExceeded(profileId)) {
+      return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
+    }
+
     const profile = await prisma.clientProfile.findUnique({
       where: { id: profileId },
       include: { 
@@ -90,7 +95,7 @@ export async function POST(req) {
     }
     */
 
-    const { date, values } = await req.json(); // values: { [chamberId]: temperature }
+    const { date, values, notes } = await req.json(); // values: { [chamberId]: temperature }
     if (!date || !values) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
@@ -98,6 +103,7 @@ export async function POST(req) {
     const record = await prisma.temperatureRecord.create({
       data: {
         date: new Date(date),
+        notes: notes || null,
         clientProfileId: profile.id,
         values: {
           create: Object.entries(values).map(([chamberId, value]) => ({
@@ -126,7 +132,7 @@ export async function PATCH(req) {
   }
 
   try {
-    const { id, date, values } = await req.json();
+    const { id, date, values, notes } = await req.json();
     if (!id || !date || !values) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
@@ -140,6 +146,7 @@ export async function PATCH(req) {
       where: { id: parseInt(id) },
       data: {
         date: new Date(date),
+        notes: notes || null,
         values: {
           deleteMany: {},
           create: Object.entries(values).map(([chamberId, value]) => ({

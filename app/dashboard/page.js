@@ -10,7 +10,7 @@ import {
   Plus, Brush, User, Users, UserPlus, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
-  Droplets, Waves, DollarSign
+  Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -200,6 +200,36 @@ const formatPrice = (amount, currencyCode = "EUR", locale = "es-ES") => {
   }
 };
 
+const formatDateDDMMYYYY = (dateInput) => {
+  if (!dateInput) return "-";
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "-";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch (e) {
+    return "-";
+  }
+};
+
+const formatDateTimeDDMMYYYY = (dateInput) => {
+  if (!dateInput) return "-";
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "-";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  } catch (e) {
+    return "-";
+  }
+};
+
 const DEFAULT_LABEL_CONFIG = {
   headerImage: null,
   healthRegistry: "",
@@ -259,6 +289,12 @@ export default function ClientDashboard() {
   const { t, locale } = useI18n();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("trazabilidad");
+  const [wasteCollections, setWasteCollections] = useState([]);
+  const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
+  const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "" });
+  const [editingWasteRecord, setEditingWasteRecord] = useState(null);
+
+
   const [recipes, setRecipes] = useState([]);
   const [elaborations, setElaborations] = useState([]);
   const [cleaningLogs, setCleaningLogs] = useState([]);
@@ -267,6 +303,7 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [editingElaboration, setEditingElaboration] = useState(null);
+  const [isReadOnlyElab, setIsReadOnlyElab] = useState(false);
   const [proportionMasterId, setProportionMasterId] = useState(null);
   const [isCleaningModalOpen, setIsCleaningModalOpen] = useState(false);
   const [editingCleaningLog, setEditingCleaningLog] = useState(null);
@@ -276,6 +313,7 @@ export default function ClientDashboard() {
   const [editingTempRecord, setEditingTempRecord] = useState(null);
   const [goodsReceipts, setGoodsReceipts] = useState([]);
   const [isGoodsModalOpen, setIsGoodsModalOpen] = useState(false);
+  const [isIaScanModalOpen, setIsIaScanModalOpen] = useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [editingGoodsReceipt, setEditingGoodsReceipt] = useState(null);
   const [editingWaterMeasurement, setEditingWaterMeasurement] = useState(null);
@@ -294,10 +332,18 @@ export default function ClientDashboard() {
   const [viewingImage, setViewingImage] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
+  const [isRecipeOverlimitModalOpen, setIsRecipeOverlimitModalOpen] = useState(false);
+  const isRecipeLimitExceeded = () => {
+    if (!profile) return false;
+    const limit = profile.plan ? profile.plan.recipesLimit : 3;
+    if (limit === null) return false;
+    return recipes.length > limit;
+  };
   const [videoModal, setVideoModal] = useState({ isOpen: false, videoId: "" });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [elabFilters, setElabFilters] = useState({
     lote: "",
+    loteElab: "",
     startDate: "",
     endDate: "",
     recipeId: "all"
@@ -372,6 +418,7 @@ export default function ClientDashboard() {
     quantityProduced: "",
     netWeight: "",
     unitPrice: "",
+    extraInfo: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
   });
 
@@ -379,13 +426,15 @@ export default function ClientDashboard() {
   const [cleaningForm, setCleaningForm] = useState({
     personName: "",
     date: new Date().toISOString().slice(0, 16), // YYYY-MM-DDTHH:mm
-    selectedZones: [] // Array of cleaningZoneId
+    selectedZones: [], // Array of cleaningZoneId
+    notes: ""
   });
 
   // Temperature Form State
   const [tempForm, setTempForm] = useState({
     date: new Date().toISOString().slice(0, 16),
-    values: {} // { chamberId: value }
+    values: {}, // { chamberId: value }
+    notes: ""
   });
 
   // Provider Receipts View State
@@ -405,18 +454,22 @@ export default function ClientDashboard() {
     manufacturingTemp: "",
     endDate: "",
     typeAndOrigin: "",
-    merchantTypes: []
+    merchantTypes: [],
+    relatedIngredients: [],
+    relatedQuantities: {}
   });
   const [waterForm, setWaterForm] = useState({
     date: new Date().toISOString().slice(0, 16),
     samplingPoint: "",
     chlorine: "",
+    ph: "",
     turbidity: false,
     odor: false,
     flavor: false,
     color: false,
     responsible: "",
-    receiptImage: ""
+    receiptImage: "",
+    notes: ""
   });
 
   // Bulk Selection State
@@ -452,6 +505,7 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (isIngredientCostsModalOpen) {
       fetchIngredientPrices();
+      fetchWasteCollections();
     }
   }, [isIngredientCostsModalOpen]);
 
@@ -642,6 +696,29 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleDuplicateRecipe = async (recipe) => {
+    if (!confirm(t('alerts.duplicate_confirm_recipe') || '¿Seguro que quieres duplicar esta receta?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/client/recipes/manage/${recipe.id}/duplicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(t('alerts.recipe_duplicated') || 'Receta duplicada correctamente');
+        fetchRecipes();
+      } else {
+        alert(data.error || t('alerts.duplicate_error') || 'Error al duplicar la receta');
+      }
+    } catch (error) {
+      console.error("Error duplicating recipe:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmitRecipe = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -700,6 +777,7 @@ export default function ClientDashboard() {
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
         lote: elabFilters.lote,
+        loteElab: elabFilters.loteElab,
         recipeId: elabFilters.recipeId,
         startDate: elabFilters.startDate,
         endDate: elabFilters.endDate
@@ -744,6 +822,18 @@ export default function ClientDashboard() {
       if (!data.error) setChambers(data);
     } catch (error) {
       console.error("Error fetching chambers:", error);
+    }
+  };
+
+    const fetchWasteCollections = async () => {
+    try {
+      const res = await fetch("/api/waste-collections");
+      const data = await res.json();
+      if (data.success) {
+        setWasteCollections(data.collections);
+      }
+    } catch (error) {
+      console.error("Error fetching waste collections:", error);
     }
   };
 
@@ -1114,6 +1204,10 @@ export default function ClientDashboard() {
 
   const handleSubmitGoods = async (e) => {
     e.preventDefault();
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
     if (!goodsForm.productName || !goodsForm.date) {
       alert(t('alerts.product_date_required'));
       return;
@@ -1146,7 +1240,9 @@ export default function ClientDashboard() {
           manufacturingTemp: "",
           endDate: "",
           typeAndOrigin: "",
-          merchantTypes: []
+          merchantTypes: [],
+          relatedIngredients: [],
+          relatedQuantities: {}
         });
         fetchGoodsReceipts(goodsFilters);
       } else {
@@ -1182,7 +1278,9 @@ export default function ClientDashboard() {
       manufacturingTemp: receipt.manufacturingTemp || "",
       endDate: receipt.endDate || "",
       typeAndOrigin: receipt.typeAndOrigin || "",
-      merchantTypes: receipt.merchantTypes || []
+      merchantTypes: receipt.merchantTypes || [],
+      relatedIngredients: receipt.relatedIngredients || [],
+      relatedQuantities: receipt.relatedQuantities || {}
     });
     setIsGoodsModalOpen(true);
   };
@@ -1230,6 +1328,10 @@ export default function ClientDashboard() {
 
   const handleSubmitWater = async (e) => {
     e.preventDefault();
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
     if (!waterForm.date || waterForm.chlorine === "") {
       alert(t('alerts.required_fields') || "Fecha y Cloro son obligatorios");
       return;
@@ -1254,12 +1356,14 @@ export default function ClientDashboard() {
           date: new Date().toISOString().slice(0, 16),
           samplingPoint: "",
           chlorine: "",
+          ph: "",
           turbidity: false,
           odor: false,
           flavor: false,
           color: false,
           responsible: "",
-          receiptImage: ""
+          receiptImage: "",
+          notes: ""
         });
         fetchWaterMeasurements();
       } else {
@@ -1280,12 +1384,14 @@ export default function ClientDashboard() {
       date: new Date(measurement.date).toISOString().slice(0, 16),
       samplingPoint: measurement.samplingPoint || "",
       chlorine: measurement.chlorine || "",
+      ph: measurement.ph || "",
       turbidity: !!measurement.turbidity,
       odor: !!measurement.odor,
       flavor: !!measurement.flavor,
       color: !!measurement.color,
       responsible: measurement.responsible || "",
-      receiptImage: measurement.receiptImage || ""
+      receiptImage: measurement.receiptImage || "",
+      notes: measurement.notes || ""
     });
     setIsWaterModalOpen(true);
   };
@@ -1309,7 +1415,11 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleOpenRecipe = (recipe) => {
+  const handleOpenRecipe = async (recipe) => {
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -1341,14 +1451,22 @@ export default function ClientDashboard() {
     setSelectedRecipe(recipe);
     setEditingElaboration(null);
     setProportionMasterId(null);
+    setIsReadOnlyElab(false);
     
-    // Inicializar formulario con valores por defecto
+    // Inicializar formulario con valores por defecto buscando en la lista local cargada
     const initialIngredientes = {};
     recipe.ingredients.forEach(ing => {
-      initialIngredientes[ing.id] = { lote: "", cantidad: ing.amount };
+      const matchingReceipt = goodsReceipts.find(receipt => 
+        receipt.lote && 
+        receipt.relatedIngredients && 
+        receipt.relatedIngredients.some(ri => ri.trim().toLowerCase() === ing.name.trim().toLowerCase())
+      );
+      const defaultLote = matchingReceipt ? matchingReceipt.lote : "";
+      initialIngredientes[ing.id] = { lote: defaultLote, cantidad: ing.amount };
     });
 
     setElaboracionForm({
+      recipeId: recipe.id,
       titulo: `${dateStr}${initials}`,
       personName: lastPerson,
       date: currentDateTime,
@@ -1360,14 +1478,49 @@ export default function ClientDashboard() {
       preparationTime: "",
       dryingRoomIn: "",
       dryingRoomOut: "",
+      extraInfo: "",
       ingredientes: initialIngredientes
     });
+
+    // Fetch all last lotes from goods receipts asynchronously to catch older records from DB
+    try {
+      const res = await fetch("/api/client/last-lotes-goods");
+      if (res.ok) {
+        const lastLotesMap = await res.json();
+        setElaboracionForm(prev => {
+          if (prev.recipeId !== recipe.id) return prev;
+          const updatedIngredientes = { ...prev.ingredientes };
+          let changed = false;
+          recipe.ingredients.forEach(ing => {
+            const normalizedName = ing.name.trim().toLowerCase();
+            const fetchedLote = lastLotesMap[normalizedName];
+            if (fetchedLote && updatedIngredientes[ing.id] && updatedIngredientes[ing.id].lote !== fetchedLote) {
+              updatedIngredientes[ing.id] = {
+                ...updatedIngredientes[ing.id],
+                lote: fetchedLote
+              };
+              changed = true;
+            }
+          });
+          if (changed) {
+            return {
+              ...prev,
+              ingredientes: updatedIngredientes
+            };
+          }
+          return prev;
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching last lotes from goods receipts:", e);
+    }
   };
 
   const handleEditElaboration = (elab) => {
     setEditingElaboration(elab);
     setSelectedRecipe(elab.recipe);
     setProportionMasterId(null);
+    setIsReadOnlyElab(false);
     
     const initialIngredientes = {};
     // Map existing ingredients by name to match recipe ingredients
@@ -1380,6 +1533,7 @@ export default function ClientDashboard() {
     });
 
     setElaboracionForm({
+      recipeId: elab.recipe.id,
       titulo: elab.name,
       personName: elab.personName || "",
       date: elab.date ? new Date(elab.date).toISOString().slice(0, 16) : "",
@@ -1391,8 +1545,179 @@ export default function ClientDashboard() {
       quantityProduced: elab.quantityProduced || "",
       netWeight: elab.netWeight || "",
       unitPrice: elab.unitPrice || "",
+      extraInfo: elab.extraInfo || "",
       ingredientes: initialIngredientes
     });
+  };
+
+  const handleViewElaborationOnly = (elab) => {
+    handleEditElaboration(elab);
+    setIsReadOnlyElab(true);
+  };
+
+  const handleExportElaborationPDF = (elab) => {
+    try {
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text(t('dashboard.traceability_report') || "INFORME DE TRAZABILIDAD", 105, 20, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${t('dashboard.lote') || "Lote"}: ${elab.name || "N/A"}`, 105, 30, { align: 'center' });
+      
+      doc.setLineWidth(0.5);
+      doc.line(20, 35, 190, 35);
+
+      // Datos de la elaboración
+      let currentY = 50;
+      doc.setFont("helvetica", "bold");
+      doc.text((t('dashboard.elaboration_recipe_header') || "Receta") + ":", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.text(elab.recipe?.name || "N/A", 90, currentY);
+      currentY += 7;
+
+      doc.setFont("helvetica", "bold");
+      doc.text((t('dashboard.lote') || "Lote") + ":", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.text(elab.name || "N/A", 90, currentY);
+      currentY += 7;
+
+      doc.setFont("helvetica", "bold");
+      doc.text((t('traceability_form.label_made_by') || "Realizado por:") + ":", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.text(elab.personName || "N/A", 90, currentY);
+      currentY += 7;
+
+      doc.setFont("helvetica", "bold");
+      doc.text((t('traceability_form.label_date') || "Fecha") + ":", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.text(formatDateTimeDDMMYYYY(elab.date), 90, currentY);
+      currentY += 7;
+
+      const expLabel = elab.recipe?.expiryType === "BEST_BEFORE" 
+        ? t('traceability_form.label_best_before') 
+        : t('traceability_form.label_expiration');
+      doc.setFont("helvetica", "bold");
+      doc.text(expLabel + ":", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.text(formatDateDDMMYYYY(elab.expirationDate), 90, currentY);
+      currentY += 7;
+
+      // Alérgenos
+      const allergensList = (elab.recipe?.allergens || [])
+        .map(a => t(`allergens.list.${a}`))
+        .join(", ");
+      
+      doc.setFont("helvetica", "bold");
+      doc.text((t('allergens.title') || "Alérgenos") + ":", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.text(allergensList || t('modals.none') || "Ninguno", 90, currentY);
+      currentY += 7;
+
+      if (elab.workshopTemp) {
+        doc.setFont("helvetica", "bold");
+        doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(elab.workshopTemp, 90, currentY);
+        currentY += 7;
+      }
+
+      if (elab.dryingRoomIn) {
+        doc.setFont("helvetica", "bold");
+        doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(elab.dryingRoomIn, 90, currentY);
+        currentY += 7;
+      }
+
+      if (elab.dryingRoomOut) {
+        doc.setFont("helvetica", "bold");
+        doc.text((t('traceability_form.label_drying_out') || "Salida secadero") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(elab.dryingRoomOut, 90, currentY);
+        currentY += 7;
+      }
+
+      currentY += 10; // Extra spacing
+
+      // Tabla de ingredientes
+      doc.setFont("helvetica", "bold");
+      doc.text((t('modals.ingredients') || "Ingredientes") + ":", 20, currentY);
+      
+      const tableBody = elab.ingredients.map(ing => [
+        ing.name,
+        ing.lote || "N/A",
+        `${ing.realAmount} ${ing.unit}`
+      ]);
+
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [[t('modals.ing_name') || "Nombre del ingrediente", t('traceability_form.lot') || "Lote", t('traceability_form.real_amount') || "Cantidad real"]],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillStyle: '#3f6212', textColor: [255, 255, 255] },
+        margin: { left: 20, right: 20 },
+        didDrawPage: (data) => {
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 20, doc.internal.pageSize.height - 12);
+        }
+      });
+
+      // Pie de página
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 20, doc.internal.pageSize.height - 12);
+
+      doc.save(`Elaboracion_${elab.name || elab.id}.pdf`);
+    } catch (error) {
+      console.error("Error generating single elaboration PDF:", error);
+      alert(t('alerts.request_error') || "Error al generar el PDF");
+    }
+  };
+
+  const handleAutoFillLotesFromGoods = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/client/last-lotes-goods");
+      if (res.ok) {
+        const lastLotesMap = await res.json();
+        const updatedIngredientes = { ...elaboracionForm.ingredientes };
+        let count = 0;
+        
+        selectedRecipe.ingredients.forEach(ing => {
+          const normalized = ing.name.trim().toLowerCase();
+          const fetchedLote = lastLotesMap[normalized];
+          if (fetchedLote) {
+            updatedIngredientes[ing.id] = {
+              ...updatedIngredientes[ing.id],
+              lote: fetchedLote
+            };
+            count++;
+          }
+        });
+        
+        setElaboracionForm(prev => ({
+          ...prev,
+          ingredientes: updatedIngredientes
+        }));
+        
+        if (count === 0) {
+          alert(t('alerts.no_linked_goods_receipts'));
+        } else {
+          alert(t('alerts.auto_filled_lotes_from_goods').replace('{count}', count));
+        }
+      } else {
+        alert(t('alerts.last_lotes_error'));
+      }
+    } catch (error) {
+      console.error("Error auto-filling lotes from goods receipts:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteElaboration = async (id) => {
@@ -1459,20 +1784,22 @@ export default function ClientDashboard() {
       
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`${t('common.from')}: ${from}  ${t('common.to')}: ${to}`, 14, 30);
+      doc.text(`${t('common.from')}: ${formatDateDDMMYYYY(from)}  ${t('common.to')}: ${formatDateDDMMYYYY(to)}`, 14, 30);
       doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 35);
       
       // Table
       const tableColumn = [
-        t('dashboard.datetime'),
-        t('dashboard.person'),
-        t('dashboard.zones_cleaned')
+        t('dashboard.datetime') || "Fecha y Hora",
+        t('dashboard.person') || "Persona",
+        t('dashboard.zones_cleaned') || "Zonas Limpiadas",
+        t('common.notes_corrective') || "Notas / Medidas correctivas"
       ];
       
       const tableRows = logs.map(log => [
-        new Date(log.date).toLocaleString(),
+        formatDateTimeDDMMYYYY(log.date),
         log.personName,
-        log.zones.map(z => z.cleaningZone.name).join(', ')
+        log.zones.map(z => z.cleaningZone.name).join(', '),
+        log.notes || "-"
       ]);
 
       autoTable(doc, {
@@ -1529,7 +1856,7 @@ export default function ClientDashboard() {
       
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`${t('common.from')}: ${from}  ${t('common.to')}: ${to}`, 14, 30);
+      doc.text(`${t('common.from')}: ${formatDateDDMMYYYY(from)}  ${t('common.to')}: ${formatDateDDMMYYYY(to)}`, 14, 30);
       doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 35);
       
       // Table Columns
@@ -1537,7 +1864,7 @@ export default function ClientDashboard() {
       
       // Table Rows
       const tableRows = records.map(record => {
-        const row = [new Date(record.date).toLocaleString()];
+        const row = [formatDateTimeDDMMYYYY(record.date)];
         sortedChamberIds.forEach(chamberId => {
           const val = record.values.find(v => v.chamberId === chamberId);
           row.push(val ? `${val.value} ºC` : '-');
@@ -1593,7 +1920,7 @@ export default function ClientDashboard() {
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 30);
-        doc.text(`${t('common.date')}: ${new Date(m.date).toLocaleString()}`, 14, 38);
+        doc.text(`${t('common.date')}: ${formatDateTimeDDMMYYYY(m.date)}`, 14, 38);
         
         // Content
         doc.setFontSize(12);
@@ -1608,9 +1935,14 @@ export default function ClientDashboard() {
         doc.setFont(undefined, 'normal');
         doc.text(`${m.chlorine} mg/l`, 60, 56);
 
+        doc.setFont(undefined, 'bold');
+        doc.text(`${t('water.ph') || "pH"}:`, 14, 64);
+        doc.setFont(undefined, 'normal');
+        doc.text(m.ph || '-', 60, 64);
+
         // Checks
         doc.setFont(undefined, 'bold');
-        doc.text(`${t('water.table_checks')}:`, 14, 64);
+        doc.text(`${t('water.table_checks')}:`, 14, 72);
         doc.setFont(undefined, 'normal');
         
         // Format checks for the document
@@ -1619,21 +1951,21 @@ export default function ClientDashboard() {
         const checkF = `${t('water.flavor')}: ${m.flavor ? t('water.yes') : t('water.no')}`;
         const checkC = `${t('water.color')}: ${m.color ? t('water.yes') : t('water.no')}`;
         
-        doc.text(`${checkT}  |  ${checkO}`, 60, 64);
-        doc.text(`${checkF}  |  ${checkC}`, 60, 70);
+        doc.text(`${checkT}  |  ${checkO}`, 60, 72);
+        doc.text(`${checkF}  |  ${checkC}`, 60, 78);
 
         doc.setFont(undefined, 'bold');
-        doc.text(`${t('water.responsible')}:`, 14, 80);
+        doc.text(`${t('water.responsible')}:`, 14, 88);
         doc.setFont(undefined, 'normal');
-        doc.text(m.responsible || '-', 60, 80);
+        doc.text(m.responsible || '-', 60, 88);
 
         // Image
         if (m.receiptImage) {
           doc.setFont(undefined, 'bold');
-          doc.text(`${t('water.receipt')}:`, 14, 92);
+          doc.text(`${t('water.receipt')}:`, 14, 100);
           try {
             // We assume receiptImage is a base64 or a valid URL accessible to jsPDF
-            doc.addImage(m.receiptImage, 'JPEG', 14, 98, 180, 140);
+            doc.addImage(m.receiptImage, 'JPEG', 14, 106, 180, 135);
           } catch (e) {
             console.error("Error adding image to PDF:", e);
           }
@@ -1811,7 +2143,7 @@ export default function ClientDashboard() {
           doc.text(`${t('traceability_form.label_date')}:`, startX, currentY);
           currentY += lineHeightMM;
           doc.setFont("helvetica", "normal");
-          const dateStr = new Date(elaboration.date).toLocaleString(t('common.locale_code'));
+          const dateStr = formatDateTimeDDMMYYYY(elaboration.date);
           doc.text(dateStr, startX, currentY);
           currentY += lineHeightMM;
           break;
@@ -1824,7 +2156,7 @@ export default function ClientDashboard() {
             doc.text(`${expLabel}:`, startX, currentY);
             currentY += lineHeightMM;
             doc.setFont("helvetica", "normal");
-            const expStr = new Date(elaboration.expirationDate).toLocaleDateString(t('common.locale_code'));
+            const expStr = formatDateDDMMYYYY(elaboration.expirationDate);
             doc.text(expStr, startX, currentY);
             currentY += lineHeightMM;
           }
@@ -2079,7 +2411,7 @@ export default function ClientDashboard() {
         
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
-        doc.text(`${t('common.from')}: ${startDate} ${t('common.to')}: ${endDate}`, 105, 30, { align: 'center' });
+        doc.text(`${t('common.from')}: ${formatDateDDMMYYYY(startDate)} ${t('common.to')}: ${formatDateDDMMYYYY(endDate)}`, 105, 30, { align: 'center' });
         
         doc.setLineWidth(0.5);
         doc.line(20, 35, 190, 35);
@@ -2092,9 +2424,9 @@ export default function ClientDashboard() {
           [t('goods_receipt_form.quantity') + ":", receipt.quantity || "N/A"],
           [t('goods_receipt_form.invoice_number') + ":", receipt.invoiceNumber || "N/A"],
           [t('goods_receipt_form.temp') + " (°C):", receipt.manufacturingTemp || "N/A"],
-          [t('goods_receipt_form.end_date') + ":", receipt.endDate || "N/A"],
+          [t('goods_receipt_form.end_date') + ":", formatDateDDMMYYYY(receipt.endDate)],
           [t('goods_receipt_form.type_and_origin') + ":", receipt.typeAndOrigin || "N/A"],
-          [t('dashboard.datetime') + ":", new Date(receipt.date).toLocaleString()]
+          [t('dashboard.datetime') + ":", formatDateTimeDDMMYYYY(receipt.date)]
         ];
 
         let currentY = 50;
@@ -2175,7 +2507,7 @@ export default function ClientDashboard() {
         
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
-        doc.text(`${t('common.from')}: ${startDate} ${t('common.to')}: ${endDate}`, 105, 30, { align: 'center' });
+        doc.text(`${t('common.from')}: ${formatDateDDMMYYYY(startDate)} ${t('common.to')}: ${formatDateDDMMYYYY(endDate)}`, 105, 30, { align: 'center' });
         
         doc.setLineWidth(0.5);
         doc.line(20, 35, 190, 35);
@@ -2203,7 +2535,7 @@ export default function ClientDashboard() {
         doc.setFont("helvetica", "bold");
         doc.text(t('traceability_form.label_date') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(new Date(el.date).toLocaleString(), 90, currentY);
+        doc.text(formatDateTimeDDMMYYYY(el.date), 90, currentY);
         currentY += 7;
 
         const expLabel = el.recipe?.expiryType === "BEST_BEFORE" 
@@ -2212,7 +2544,7 @@ export default function ClientDashboard() {
         doc.setFont("helvetica", "bold");
         doc.text(expLabel + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(new Date(el.expirationDate).toLocaleDateString(), 90, currentY);
+        doc.text(formatDateDDMMYYYY(el.expirationDate), 90, currentY);
         currentY += 7;
 
         // Alérgenos
@@ -2413,6 +2745,7 @@ export default function ClientDashboard() {
           quantityProduced: elaboracionForm.quantityProduced,
           netWeight: elaboracionForm.netWeight,
           unitPrice: elaboracionForm.unitPrice,
+          extraInfo: elaboracionForm.extraInfo,
           ingredients: ingredientsData
         })
       });
@@ -2548,8 +2881,82 @@ export default function ClientDashboard() {
     );
   };
 
+      const handleSubmitWaste = async (e) => {
+    e.preventDefault();
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
+    setLoading(true);
+    try {
+      const url = "/api/waste-collections";
+      const method = editingWasteRecord ? "PATCH" : "POST";
+      const body = editingWasteRecord ? { ...wasteForm, id: editingWasteRecord.id } : wasteForm;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsWasteModalOpen(false);
+        setEditingWasteRecord(null);
+        fetchWasteCollections();
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(t("alerts.connection_error") || "Error de conexión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenWasteModal = () => {
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
+    const lastPerson = wasteCollections.length > 0 ? wasteCollections[0].personName : (profile?.personName || session?.user?.name || "");
+    setEditingWasteRecord(null);
+    setWasteForm({ date: new Date().toISOString().slice(0, 10), personName: lastPerson, kilos: "" });
+    setIsWasteModalOpen(true);
+  };
+
+  const handleEditWaste = (record) => {
+    setEditingWasteRecord(record);
+    setWasteForm({
+      date: new Date(record.date).toISOString().slice(0, 10),
+      personName: record.personName,
+      kilos: record.kilos
+    });
+    setIsWasteModalOpen(true);
+  };
+  
+  const handleDeleteWaste = async (id) => {
+    if (!confirm(t('waste.delete_confirm') || "¿Seguro que quieres eliminar este registro?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/waste-collections?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        fetchWasteCollections();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmitCleaning = async (e) => {
     e.preventDefault();
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
     if (cleaningForm.selectedZones.length === 0) {
       alert(t('alerts.select_at_least_one_zone'));
       return;
@@ -2574,7 +2981,8 @@ export default function ClientDashboard() {
         setCleaningForm({
           personName: "",
           date: new Date().toISOString().slice(0, 16),
-          selectedZones: []
+          selectedZones: [],
+          notes: ""
         });
         fetchCleaningLogs();
       } else {
@@ -2593,7 +3001,8 @@ export default function ClientDashboard() {
     setCleaningForm({
       personName: log.personName,
       date: new Date(log.date).toISOString().slice(0, 16),
-      selectedZones: log.zones.map(z => z.cleaningZone.id)
+      selectedZones: log.zones.map(z => z.cleaningZone.id),
+      notes: log.notes || ""
     });
     setIsCleaningModalOpen(true);
   };
@@ -2619,6 +3028,10 @@ export default function ClientDashboard() {
 
   const handleSubmitTemperature = async (e) => {
     e.preventDefault();
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
     setLoading(true);
     try {
       const url = "/api/temperature-records";
@@ -2637,7 +3050,8 @@ export default function ClientDashboard() {
         setEditingTempRecord(null);
         setTempForm({
           date: new Date().toISOString().slice(0, 16),
-          values: {}
+          values: {},
+          notes: ""
         });
         fetchTempRecords();
       } else {
@@ -2659,7 +3073,8 @@ export default function ClientDashboard() {
     });
     setTempForm({
       date: new Date(record.date).toISOString().slice(0, 16),
-      values
+      values,
+      notes: record.notes || ""
     });
     setIsTempModalOpen(true);
   };
@@ -2692,7 +3107,8 @@ export default function ClientDashboard() {
   };
 
   const filteredElaborations = elaborations.filter(elab => {
-    const matchesLote = !elabFilters.lote || (elab.lote && elab.lote.toLowerCase().includes(elabFilters.lote.toLowerCase())) || (elab.name && elab.name.toLowerCase().includes(elabFilters.lote.toLowerCase()));
+    const matchesLote = !elabFilters.lote || (elab.ingredients && elab.ingredients.some(ing => ing.lote && ing.lote.toLowerCase().includes(elabFilters.lote.toLowerCase())));
+    const matchesLoteElab = !elabFilters.loteElab || (elab.name && elab.name.toLowerCase().includes(elabFilters.loteElab.toLowerCase()));
     const matchesRecipe = elabFilters.recipeId === 'all' || elab.recipeId.toString() === elabFilters.recipeId.toString();
     
     let matchesDate = true;
@@ -2706,7 +3122,7 @@ export default function ClientDashboard() {
       matchesDate = matchesDate && new Date(elab.date) <= end;
     }
     
-    return matchesLote && matchesRecipe && matchesDate;
+    return matchesLote && matchesLoteElab && matchesRecipe && matchesDate;
   });
 
   const sortedElaborations = [...filteredElaborations].sort((a, b) => {
@@ -2854,6 +3270,13 @@ export default function ClientDashboard() {
                   onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
                 <SidebarBtn 
+                  icon={<Recycle size={20} />} 
+                  label={t('sidebar.waste') || "Residuos"} 
+                  active={activeTab === "residuos"} 
+                  onClick={() => { setActiveTab("residuos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+
+                <SidebarBtn 
                   icon={<Settings size={20} />} 
                   label={t('sidebar.business_config') || "Configuración del negocio"}
                   active={activeTab === "configuracion"} 
@@ -2941,7 +3364,7 @@ export default function ClientDashboard() {
               <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
                 <header style={{ marginBottom: '2.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
-                    {editingElaboration ? t('traceability_form.modify_record') : t('traceability_form.new_record')}
+                    {isReadOnlyElab ? (t('traceability_form.view_record') || "VER REGISTRO") : editingElaboration ? t('traceability_form.modify_record') : t('traceability_form.new_record')}
                   </div>
                   <h2 style={{ fontSize: '1.75rem', fontWeight: '800' }}>{selectedRecipe.name}</h2>
                 </header>
@@ -2957,6 +3380,7 @@ export default function ClientDashboard() {
                       placeholder={t('traceability_form.elaboration_title_placeholder')}
                       required
                       style={{ fontSize: '1.1rem', fontWeight: '500', padding: '1rem', border: '2px solid var(--corp-green)' }}
+                      disabled={isReadOnlyElab}
                     />
                   </div>
 
@@ -2970,6 +3394,7 @@ export default function ClientDashboard() {
                         value={elaboracionForm.quantityProduced} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, quantityProduced: e.target.value})}
                         placeholder="Ej: 50 kg, 100 unidades..."
+                        disabled={isReadOnlyElab}
                       />
                     </div>
 
@@ -2981,6 +3406,7 @@ export default function ClientDashboard() {
                         value={elaboracionForm.netWeight} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, netWeight: e.target.value})}
                         placeholder="Ej: 250g, 1kg..."
+                        disabled={isReadOnlyElab}
                       />
                     </div>
 
@@ -2997,6 +3423,7 @@ export default function ClientDashboard() {
                         value={elaboracionForm.unitPrice} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, unitPrice: e.target.value})}
                         placeholder="Ej: 15.50"
+                        disabled={isReadOnlyElab}
                       />
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
                         {t('traceability_form.unit_price_help')}
@@ -3010,6 +3437,7 @@ export default function ClientDashboard() {
                         value={elaboracionForm.personName} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, personName: e.target.value})} 
                         placeholder={t('modals.person_name')}
+                        disabled={isReadOnlyElab}
                       />
                     </div>
                     <div>
@@ -3019,6 +3447,7 @@ export default function ClientDashboard() {
                         className="input-field" 
                         value={elaboracionForm.date} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, date: e.target.value})} 
+                        disabled={isReadOnlyElab}
                       />
                     </div>
                     <div>
@@ -3028,6 +3457,7 @@ export default function ClientDashboard() {
                         className="input-field" 
                         value={elaboracionForm.expirationDate} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, expirationDate: e.target.value})} 
+                        disabled={isReadOnlyElab}
                       />
                     </div>
                     {selectedRecipe?.hasDryingRoom && (
@@ -3039,6 +3469,7 @@ export default function ClientDashboard() {
                             className="input-field" 
                             value={elaboracionForm.dryingRoomIn} 
                             onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomIn: e.target.value})} 
+                            disabled={isReadOnlyElab}
                           />
                         </div>
                         <div>
@@ -3048,6 +3479,7 @@ export default function ClientDashboard() {
                             className="input-field" 
                             value={elaboracionForm.dryingRoomOut} 
                             onChange={(e) => setElaboracionForm({...elaboracionForm, dryingRoomOut: e.target.value})} 
+                            disabled={isReadOnlyElab}
                           />
                         </div>
                       </div>
@@ -3059,6 +3491,7 @@ export default function ClientDashboard() {
                         className="input-field" 
                         value={elaboracionForm.workshopTemp} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, workshopTemp: e.target.value})} 
+                        disabled={isReadOnlyElab}
                       />
                     </div>
                     <div>
@@ -3068,6 +3501,7 @@ export default function ClientDashboard() {
                         className="input-field" 
                         value={elaboracionForm.preparationTime} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, preparationTime: e.target.value})} 
+                        disabled={isReadOnlyElab}
                       />
                       <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
                         {t('traceability_form.preparation_time_help')}
@@ -3076,34 +3510,48 @@ export default function ClientDashboard() {
                   </div>
 
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
                       <h3 style={{ fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--corp-green)', margin: 0 }}>
                         <Beaker size={20} /> {t('traceability_form.ingredients_batches')}
                       </h3>
-                      <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button 
-                          type="button" 
-                          onClick={handleAutoFillLotes}
-                          style={{ 
-                            display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
-                            borderRadius: '0.5rem', border: '1px solid var(--corp-green)', background: 'rgba(66, 98, 22, 0.05)', 
-                            color: 'var(--corp-green)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
-                          }}
-                        >
-                          <History size={16} /> {t('traceability_form.autofill_lotes')}
-                        </button>
-                        <button 
-                          type="button" 
-                          onClick={handleClearLotes}
-                          style={{ 
-                            display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
-                            borderRadius: '0.5rem', border: '1px solid #dc2626', background: 'rgba(220, 38, 38, 0.05)', 
-                            color: '#dc2626', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
-                          }}
-                        >
-                          <Trash2 size={16} /> {t('traceability_form.clear_lotes')}
-                        </button>
-                      </div>
+                      {!isReadOnlyElab && (
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                          <button 
+                            type="button" 
+                            onClick={handleAutoFillLotes}
+                            style={{ 
+                              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
+                              borderRadius: '0.5rem', border: '1px solid var(--corp-green)', background: 'rgba(66, 98, 22, 0.05)', 
+                              color: 'var(--corp-green)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
+                            }}
+                          >
+                            <History size={16} /> {t('traceability_form.autofill_lotes')}
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={handleAutoFillLotesFromGoods}
+                            style={{ 
+                              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
+                              borderRadius: '0.5rem', border: '1px solid var(--corp-green)', background: 'rgba(66, 98, 22, 0.05)', 
+                              color: 'var(--corp-green)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
+                            }}
+                            title={t('traceability_form.autofill_lotes_from_goods_help')}
+                          >
+                            <History size={16} /> {t('traceability_form.autofill_lotes_from_goods')}
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={handleClearLotes}
+                            style={{ 
+                              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
+                              borderRadius: '0.5rem', border: '1px solid #dc2626', background: 'rgba(220, 38, 38, 0.05)', 
+                              color: '#dc2626', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
+                            }}
+                          >
+                            <Trash2 size={16} /> {t('traceability_form.clear_lotes')}
+                          </button>
+                        </div>
+                      )}
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3127,7 +3575,8 @@ export default function ClientDashboard() {
                               placeholder={ing.loteMandatory ? t('traceability_form.lot_mandatory_placeholder') : t('traceability_form.lot_optional_placeholder')}
                               value={elaboracionForm.ingredientes[ing.id]?.lote}
                               onChange={(e) => handleIngredientChange(ing.id, 'lote', e.target.value)}
-                              required={!!ing.loteMandatory} 
+                              required={!isReadOnlyElab && !!ing.loteMandatory} 
+                              disabled={isReadOnlyElab}
                             />
                           </div>
                           <div>
@@ -3141,7 +3590,8 @@ export default function ClientDashboard() {
                               placeholder={ing.quantityMandatory ? "0.00 *" : "0.00"}
                               value={elaboracionForm.ingredientes[ing.id]?.cantidad}
                               onChange={(e) => handleIngredientChange(ing.id, 'cantidad', e.target.value)}
-                              required={!!ing.quantityMandatory} 
+                              required={!isReadOnlyElab && !!ing.quantityMandatory} 
+                              disabled={isReadOnlyElab}
                             />
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
                               <input 
@@ -3150,6 +3600,7 @@ export default function ClientDashboard() {
                                 checked={proportionMasterId === ing.id}
                                 onChange={(e) => setProportionMasterId(e.target.checked ? ing.id : null)}
                                 style={{ cursor: 'pointer' }}
+                                disabled={isReadOnlyElab}
                               />
                               <label htmlFor={`prop-${ing.id}`} style={{ fontSize: '0.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
                                 {t('dashboard.maintain_proportions')}
@@ -3161,10 +3612,36 @@ export default function ClientDashboard() {
                     </div>
                   </div>
 
+                  <div style={{ marginTop: '2rem' }}>
+                    <label className="label" style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.75rem', display: 'block' }}>
+                      {t('traceability_form.elaboration_notes')}
+                    </label>
+                    <textarea 
+                      className="input-field" 
+                      value={elaboracionForm.extraInfo || ""} 
+                      onChange={(e) => setElaboracionForm({...elaboracionForm, extraInfo: e.target.value})} 
+                      placeholder={t('traceability_form.elaboration_notes')}
+                      rows={4}
+                      style={{ resize: 'vertical', minHeight: '100px' }}
+                      disabled={isReadOnlyElab}
+                    />
+                  </div>
+
                   <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button type="submit" className="btn-primary" style={{ minWidth: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-                      {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> {t('dashboard.save_record')}</>}
-                    </button>
+                    {isReadOnlyElab ? (
+                      <button 
+                        type="button" 
+                        onClick={() => { setSelectedRecipe(null); setIsReadOnlyElab(false); }} 
+                        className="btn-primary" 
+                        style={{ minWidth: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+                      >
+                        <ArrowLeft size={20} /> {t('traceability_form.back_to_list') || "Volver"}
+                      </button>
+                    ) : (
+                      <button type="submit" className="btn-primary" style={{ minWidth: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+                        {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> {t('dashboard.save_record')}</>}
+                      </button>
+                    )}
                   </div>
                 </form>
               </section>
@@ -3177,8 +3654,7 @@ export default function ClientDashboard() {
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '0.75rem' }}>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
-                      className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                      className="btn-help-video"
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
@@ -3206,8 +3682,7 @@ export default function ClientDashboard() {
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
-                      className="btn-secondary" 
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                      className="btn-help-video"
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_tutorial')}
                     </button>
@@ -3289,8 +3764,7 @@ export default function ClientDashboard() {
                     </button>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
-                      className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                      className="btn-help-video"
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
@@ -3305,6 +3779,24 @@ export default function ClientDashboard() {
                   display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignItems: 'end'
                 }}
               >
+                <div>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.elaboration_batch_search')}</label>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input 
+                      type="text" 
+                      placeholder={t('dashboard.elaboration_batch_placeholder')}
+                      className="input-field"
+                      style={{ paddingLeft: '2.5rem', margin: 0 }}
+                      value={elabFilters.loteElab}
+                      onChange={(e) => {
+                        setElabFilters({...elabFilters, loteElab: e.target.value});
+                        setCurrentPage(1);
+                      }}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.batch_search')}</label>
                   <div style={{ position: 'relative' }}>
@@ -3388,7 +3880,7 @@ export default function ClientDashboard() {
 
                 <button 
                   onClick={() => {
-                    setElabFilters({ lote: "", startDate: "", endDate: "", recipeId: "all" });
+                    setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all" });
                     setCurrentPage(1);
                   }}
                   style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
@@ -3440,6 +3932,7 @@ export default function ClientDashboard() {
                               <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.labor_cost_header')}</th>
                             </>
                           )}
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_notes')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
@@ -3454,8 +3947,26 @@ export default function ClientDashboard() {
                                 onChange={() => toggleSelectRecord(el.id)}
                               />
                             </td>
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(el.date || el.createdAt).toLocaleDateString()}</td>
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--corp-green)' }}>{el.name}</td>
+                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{formatDateDDMMYYYY(el.date || el.createdAt)}</td>
+                          <td style={{ padding: '1.5rem 2rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                              <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{el.name}</span>
+                              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
+                                <span 
+                                  onClick={() => handleViewElaborationOnly(el)} 
+                                  style={{ color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('dashboard.view_elaboration') || "Ver elaboración"}
+                                </span>
+                                <span 
+                                  onClick={() => handleExportElaborationPDF(el)} 
+                                  style={{ color: '#0ea5e9', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('dashboard.export_pdf_short') || "Exportar PDF"}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>{el.preparationTime ? `${el.preparationTime} min` : '-'}</td>
                           {session?.user?.role !== "WORKER" && (
@@ -3470,6 +3981,9 @@ export default function ClientDashboard() {
                               </td>
                             </>
                           )}
+                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={el.extraInfo || ""}>
+                            {el.extraInfo || "-"}
+                          </td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                               <button 
@@ -3524,6 +4038,73 @@ export default function ClientDashboard() {
                         {t('common.next')} <ChevronRight size={18} />
                       </button>
                     </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'residuos' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.waste') || "Residuos"}</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('waste.description') || "Gestiona y registra la retirada de residuos."}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={() => setVideoModal({ isOpen: true, videoId: "N6wejn-GRHM" })}
+                    className="btn-help-video"
+                  >
+                    <PlayCircle size={18} /> {t('dashboard.video_help') || "Video ayuda"}
+                  </button>
+                  <button 
+                    onClick={handleOpenWasteModal}
+                    className="btn-primary"
+                    style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <PlusCircle size={18} /> {t('waste.new_collection') || "Nueva retirada de residuos"}
+                  </button>
+                </div>
+              </header>
+
+              {wasteCollections.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <Recycle size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('waste.no_records') || "No hay registros de retiradas de residuos."}</h3>
+                </div>
+              ) : (
+                <div style={{ background: 'white', borderRadius: '1.25rem', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_date') || "Fecha"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_person') || "Responsable"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_kilos') || "Kilos (kg)"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {wasteCollections.map(record => (
+                          <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '500' }}>
+                              {new Date(record.date).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            </td>
+                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{record.personName}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '600' }}>{record.kilos} kg</td>
+                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                <button onClick={() => handleEditWaste(record)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
+                                  <Edit size={18} />
+                                </button>
+                                <button onClick={() => handleDeleteWaste(record.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
@@ -3724,8 +4305,7 @@ export default function ClientDashboard() {
                     </button>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "rzrGj1OouVo" })}
-                      className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      className="btn-help-video"
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
@@ -3736,8 +4316,35 @@ export default function ClientDashboard() {
                     >
                       <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
                     </button>
+                    {profile?.hasIaGoods && (
                     <button 
                       onClick={() => {
+                        if (isRecipeLimitExceeded()) {
+                          setIsRecipeOverlimitModalOpen(true);
+                          return;
+                        }
+                        setIsIaScanModalOpen(true);
+                      }}
+                      className="btn-primary"
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.75rem', 
+                        padding: '0.75rem 1.5rem', 
+                        fontSize: '0.9rem',
+                        background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                        boxShadow: '0 4px 10px rgba(124, 58, 237, 0.15)'
+                      }}
+                    >
+                      <Sparkles size={18} /> {t('dashboard.scan_invoice_ia') || "Escanear albarán con IA"}
+                    </button>
+                    )}
+                    <button 
+                      onClick={() => {
+                        if (isRecipeLimitExceeded()) {
+                          setIsRecipeOverlimitModalOpen(true);
+                          return;
+                        }
                         setEditingGoodsReceipt(null);
                         setGoodsForm({
                           providerName: "",
@@ -4007,8 +4614,7 @@ export default function ClientDashboard() {
               <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'flex-end' }}>
                   <button 
                     onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'WwEylvzD3rc' : "62WLwGwTvew" })}
-                    className="btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    className="btn-help-video"
                   >
                     <PlayCircle size={18} /> {t('dashboard.video_help')}
                   </button>
@@ -4028,6 +4634,10 @@ export default function ClientDashboard() {
                   </button>
                   <button 
                     onClick={() => {
+                      if (isRecipeLimitExceeded()) {
+                        setIsRecipeOverlimitModalOpen(true);
+                        return;
+                      }
                       setEditingCleaningLog(null);
                       setCleaningForm({
                         personName: "",
@@ -4136,6 +4746,9 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             Zonas Limpiadas
                           </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {t('common.notes_corrective')}
+                          </th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
                             Acciones
                           </th>
@@ -4175,6 +4788,9 @@ export default function ClientDashboard() {
                                   </span>
                                 ))}
                               </div>
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                              {log.notes || "-"}
                             </td>
                             <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -4219,8 +4835,7 @@ export default function ClientDashboard() {
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'BLOFFbJGTdw' : "TKl-sUpuDGg" })}
-                      className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      className="btn-help-video"
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
@@ -4240,6 +4855,10 @@ export default function ClientDashboard() {
                     </button>
                     <button 
                       onClick={() => {
+                        if (isRecipeLimitExceeded()) {
+                          setIsRecipeOverlimitModalOpen(true);
+                          return;
+                        }
                         setEditingTempRecord(null);
                         setTempForm({
                           date: new Date().toISOString().slice(0, 16),
@@ -4343,6 +4962,7 @@ export default function ClientDashboard() {
                         {chambers.map(chamber => (
                           <th key={chamber.id} style={{ padding: '1.25rem 2rem', textAlign: 'center', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{chamber.name}</th>
                         ))}
+                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('common.notes_corrective')}</th>
                         <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acciones</th>
                       </tr>
                     </thead>
@@ -4389,6 +5009,9 @@ export default function ClientDashboard() {
                               </td>
                             );
                           })}
+                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.notes || ""}>
+                            {record.notes || "-"}
+                          </td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                               <button 
@@ -4438,16 +5061,23 @@ export default function ClientDashboard() {
                     </button>
                     <button 
                       onClick={() => {
+                        if (isRecipeLimitExceeded()) {
+                          setIsRecipeOverlimitModalOpen(true);
+                          return;
+                        }
                         setEditingWaterMeasurement(null);
                         setWaterForm({
                           date: new Date().toISOString().slice(0, 16),
                           samplingPoint: "",
                           chlorine: "",
+                          ph: "",
                           turbidity: false,
                           odor: false,
                           flavor: false,
                           color: false,
-                          responsible: ""
+                          responsible: "",
+                          receiptImage: "",
+                          notes: ""
                         });
                         setIsWaterModalOpen(true);
                       }}
@@ -4477,9 +5107,11 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.sampling_point') || "Punto de muestreo"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.chlorine') || "Cloro"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.ph') || "pH"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('water.table_checks')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.responsible') || "Responsable"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('water.receipt') || "Recibo"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('common.notes_corrective')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
@@ -4489,6 +5121,7 @@ export default function ClientDashboard() {
                             <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleString()}</td>
                             <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{m.samplingPoint || '-'}</td>
                             <td style={{ padding: '1.5rem 2rem', color: 'var(--text-main)', fontWeight: '800' }}>{m.chlorine} mg/l</td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-main)', fontWeight: '800' }}>{m.ph || '-'}</td>
                             <td style={{ padding: '1.5rem 2rem', textAlign: 'center' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                                 <span title={t('water.turbidity')} style={{ color: m.turbidity ? '#ef4444' : '#10b981', fontWeight: '900' }}>{t('water.check_t')}</span>
@@ -4508,6 +5141,9 @@ export default function ClientDashboard() {
                                   <Camera size={16} />
                                 </button>
                               )}
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={m.notes || ""}>
+                              {m.notes || "-"}
                             </td>
                             <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -4545,10 +5181,9 @@ export default function ClientDashboard() {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button 
                     onClick={() => setVideoModal({ isOpen: true, videoId: "5dVfgYOSx_U" })}
-                    className="btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.8rem 1.5rem' }}
+                    className="btn-help-video"
                   >
-                    <PlayCircle size={20} /> {t('workers.video_help_btn') || "Para qué sirve esta sección"}
+                    <PlayCircle size={18} /> {t('workers.video_help_btn') || "Para qué sirve esta sección"}
                   </button>
                   <button 
                     onClick={() => {
@@ -4654,8 +5289,7 @@ export default function ClientDashboard() {
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'Pmj3w3GaLKM' : "yKJbPZQUTNM" })}
-                      className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      className="btn-help-video"
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
@@ -4775,7 +5409,13 @@ export default function ClientDashboard() {
                         </div>
                         
                         <div style={{ display: 'flex', gap: '0.75rem' }}>
-
+                          <button 
+                            onClick={() => handleDuplicateRecipe(recipe)}
+                            className="btn-secondary"
+                            style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                          >
+                            <Plus size={14} /> {t('common.duplicate') || "Duplicar"}
+                          </button>
                           <button 
                             onClick={() => handleOpenRecipe(recipe)}
                             className="btn-primary"
@@ -5065,6 +5705,21 @@ export default function ClientDashboard() {
                 }}
               >
                 <div>
+                  <label className="label" style={{ fontSize: '0.7rem' }}>{t('dashboard.elaboration_batch_search')}</label>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      style={{ paddingLeft: '2.5rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }} 
+                      placeholder={t('dashboard.elaboration_batch_placeholder')}
+                      value={elabFilters.loteElab}
+                      onChange={(e) => setElabFilters({...elabFilters, loteElab: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div>
                   <label className="label" style={{ fontSize: '0.7rem' }}>{t('dashboard.batch_search')}</label>
                   <div style={{ position: 'relative' }}>
                     <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -5122,7 +5777,7 @@ export default function ClientDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button 
                     onClick={() => {
-                      setElabFilters({ lote: "", startDate: "", endDate: "", recipeId: "all" });
+                      setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all" });
                       setCurrentPage(1);
                     }}
                     style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem' }}
@@ -5170,9 +5825,27 @@ export default function ClientDashboard() {
                       {sortedElaborations.map(elab => (
                         <tr key={elab.id} style={{ borderBottom: '1px solid var(--border)' }}>
                           <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
-                            {new Date(elab.date).toLocaleDateString(t('common.locale_code') || 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {formatDateTimeDDMMYYYY(elab.date)}
                           </td>
-                          <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--corp-green)' }}>{elab.name}</td>
+                          <td style={{ padding: '1.25rem 1.5rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                              <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{elab.name}</span>
+                              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
+                                <span 
+                                  onClick={() => handleViewElaborationOnly(elab)} 
+                                  style={{ color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('dashboard.view_elaboration') || "Ver elaboración"}
+                                </span>
+                                <span 
+                                  onClick={() => handleExportElaborationPDF(elab)} 
+                                  style={{ color: '#0ea5e9', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('dashboard.export_pdf_short') || "Exportar PDF"}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
                           <td style={{ padding: '1.25rem 1.5rem' }}>
                             <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
                               {elab.recipe.name}
@@ -5362,11 +6035,24 @@ export default function ClientDashboard() {
           onImageChange={handleImageChange}
           providers={providers}
           allMerchantTypes={profile?.merchantTypes || []}
+          recipes={recipes}
           onGoToConfig={() => {
             setActiveTab("configuracion");
             setIsGoodsModalOpen(false);
             setEditingGoodsReceipt(null);
           }}
+        />
+      )}
+
+      {isIaScanModalOpen && (
+        <GoodsReceiptIaScanModal
+          isOpen={isIaScanModalOpen}
+          onClose={() => setIsIaScanModalOpen(false)}
+          recipes={recipes}
+          providers={providers}
+          t={t}
+          fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
+          profile={profile}
         />
       )}
 
@@ -5638,6 +6324,105 @@ export default function ClientDashboard() {
           border-bottom: 1px solid var(--border);
         }
       `}</style>
+      {isWasteModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '1.5rem', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s ease' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Recycle size={24} color="var(--corp-green)" /> {t('waste.new_collection') || "Nueva retirada de residuos"}
+              </h3>
+              <button onClick={() => setIsWasteModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmitWaste} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('waste.date') || "Fecha"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="date" 
+                  className="input-field" 
+                  value={wasteForm.date} 
+                  onChange={(e) => setWasteForm({...wasteForm, date: e.target.value})} 
+                  required 
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('waste.person') || "Persona que hace la retirada"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={wasteForm.personName} 
+                  onChange={(e) => setWasteForm({...wasteForm, personName: e.target.value})} 
+                  required 
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('waste.kilos') || "Kilos de basura"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    className="input-field" 
+                    style={{ paddingRight: '3rem' }}
+                    value={wasteForm.kilos} 
+                    onChange={(e) => setWasteForm({...wasteForm, kilos: e.target.value})} 
+                    required 
+                  />
+                  <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: '600' }}>kg</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setIsWasteModalOpen(false)} className="btn-secondary" style={{ flex: 1, padding: '0.75rem' }}>
+                  {t('common.cancel')}
+                </button>
+                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '0.75rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('waste.save') || "Guardar"}</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isRecipeOverlimitModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ background: '#fef2f2', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+              <AlertTriangle size={32} color="#dc2626" />
+            </div>
+            
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+              {t('plan_limit_block.title')}
+            </h2>
+            
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
+              {t('plan_limit_block.description')}
+            </p>
+            
+            <div style={{ width: '100%', marginTop: '0.5rem' }}>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={() => {
+                  window.location.href = '/dashboard/plans';
+                }} 
+                style={{ width: '100%', padding: '0.85rem', background: 'var(--corp-green)', border: 'none', color: 'white', fontWeight: 'bold', borderRadius: '0.75rem', cursor: 'pointer' }}
+              >
+                {t('plan_limit_block.view_plans')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {isBulkDeleteModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', textAlign: 'center' }}>
@@ -6180,6 +6965,18 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
             )}
           </div>
 
+          <div>
+            <label className="label">{t('common.notes_corrective')}</label>
+            <textarea 
+              className="input-field" 
+              value={formData.notes || ""} 
+              onChange={(e) => setFormData({...formData, notes: e.target.value})} 
+              placeholder={t('common.notes_corrective')}
+              rows={3}
+              style={{ resize: 'vertical', minHeight: '80px' }}
+            />
+          </div>
+
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
             <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1, padding: '1rem', background: '#f1f5f9', border: 'none', color: '#64748b', fontWeight: '800' }}>{t('common.cancel')}</button>
             <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, padding: '1rem' }}>
@@ -6642,8 +7439,31 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, loading, curre
   );
 }
 
-function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers, allMerchantTypes = [], onGoToConfig }) {
+function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers, allMerchantTypes = [], onGoToConfig, recipes = [] }) {
   const { t } = useI18n();
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [ingSearchTerm, setIngSearchTerm] = useState("");
+  const [rowIngredients, setRowIngredients] = useState([]);
+  const [rowQuantities, setRowQuantities] = useState({});
+
+  const allIngredients = Array.from(new Set(recipes.flatMap(r => r.ingredients.map(i => i.name))));
+  
+  const getIngredientsWithUnits = (ingList) => {
+    const list = [];
+    ingList.forEach(ing => {
+      let unit = "Kg";
+      for (const r of recipes) {
+        const match = r.ingredients.find(i => i.name === ing);
+        if (match) {
+          unit = match.unit || "Kg";
+          break;
+        }
+      }
+      list.push({ name: ing, unit });
+    });
+    return list;
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '750px' }}>
@@ -6705,16 +7525,47 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
             </div>
             <div className="form-group">
               <label className="label">{t('dashboard.lote')}</label>
-              <div style={{ position: 'relative' }}>
-                <FileCheck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  value={formData.lote} 
-                  onChange={(e) => setFormData({...formData, lote: e.target.value})} 
-                  placeholder={t('dashboard.lote')}
-                  style={{ paddingLeft: '3rem' }}
-                />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <FileCheck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--corp-green)' }} />
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={formData.lote} 
+                    onChange={(e) => setFormData({...formData, lote: e.target.value})} 
+                    placeholder={t('dashboard.lote')}
+                    style={{ paddingLeft: '3rem' }}
+                  />
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setRowIngredients(formData.relatedIngredients || []);
+                    setRowQuantities(formData.relatedQuantities || {});
+                    setIsLinkModalOpen(true);
+                  }}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: 'var(--corp-green)', 
+                    fontSize: '0.8rem', 
+                    fontWeight: '700', 
+                    textDecoration: 'underline', 
+                    cursor: 'pointer',
+                    padding: 0,
+                    marginTop: '0.4rem',
+                    alignSelf: 'start',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                >
+                  <PlusCircle size={12} />
+                  {formData.relatedIngredients?.length > 0 
+                    ? `Relacionado con ${formData.relatedIngredients.length} ingredientes` 
+                    : "Relaciona este lote con los ingredientes"
+                  }
+                </button>
               </div>
             </div>
             <div className="form-group">
@@ -6877,6 +7728,157 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
           </div>
         </form>
       </div>
+
+      {isLinkModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 1150 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
+            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+                  {t('goods_receipt_form.link_popup_title') || "Selecciona ingredientes"}
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                  {t('goods_receipt_form.link_popup_desc') || "Relaciona este albarán con ingredientes."}
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => {
+                  setIsLinkModalOpen(false);
+                  setIngSearchTerm("");
+                }} 
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div style={{ position: 'relative' }}>
+              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text"
+                placeholder={t('common.search')}
+                className="input-field"
+                value={ingSearchTerm}
+                onChange={(e) => setIngSearchTerm(e.target.value)}
+                style={{ paddingLeft: '2.75rem', paddingRight: '1rem' }}
+              />
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '0.5rem', minHeight: '150px' }}>
+              {allIngredients.filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase())).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
+                  {t('common.no_results')}
+                </div>
+              ) : (
+                allIngredients
+                  .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
+                  .map((ingName, idx) => {
+                    const isChecked = rowIngredients.includes(ingName);
+                    return (
+                      <label 
+                        key={idx} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer', 
+                          padding: '0.75rem 1rem', 
+                          background: isChecked ? 'rgba(66, 98, 22, 0.05)' : '#f8fafc',
+                          borderRadius: '0.75rem',
+                          border: isChecked ? '1px solid var(--corp-green)' : '1px solid var(--border)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <input 
+                          type="checkbox"
+                          style={{ cursor: 'pointer', width: '1.1rem', height: '1.1rem', accentColor: 'var(--corp-green)' }}
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...rowIngredients, ingName]
+                              : rowIngredients.filter(n => n !== ingName);
+                            setRowIngredients(next);
+                          }}
+                        />
+                        <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{ingName}</span>
+                      </label>
+                    );
+                  })
+              )}
+            </div>
+
+            {getIngredientsWithUnits(rowIngredients).length > 0 && (
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+                  {t('goods_receipt_form.stock_control_title') || "Control de stock:"}
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
+                    const key = `${item.name}:${item.unit}`;
+                    const val = rowQuantities[key] || "";
+                    return (
+                      <div className="form-group" key={idx}>
+                        <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                          {t('goods_receipt_form.related_quantity_label')
+                            ? t('goods_receipt_form.related_quantity_label').replace('{name}', item.name).replace('{unit}', item.unit)
+                            : `Cantidad de ${item.name} (${item.unit})`}
+                        </label>
+                        <input 
+                          type="number"
+                          step="any"
+                          className="input-field"
+                          value={val}
+                          onChange={(e) => {
+                            setRowQuantities({
+                              ...rowQuantities,
+                              [key]: e.target.value
+                            });
+                          }}
+                          placeholder={formData.quantity || ""}
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => {
+                  setIsLinkModalOpen(false);
+                  setIngSearchTerm("");
+                }} 
+                style={{ flex: 1, padding: '0.85rem' }}
+              >
+                {t('common.cancel')}
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={() => {
+                  setFormData({
+                    ...formData,
+                    relatedIngredients: rowIngredients,
+                    relatedQuantities: rowQuantities
+                  });
+                  setIsLinkModalOpen(false);
+                  setIngSearchTerm("");
+                }} 
+                style={{ flex: 2, padding: '0.85rem' }}
+              >
+                {t('goods_receipt_form.link_popup_save') || "Guardar relación"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -7252,6 +8254,20 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
                 {t('modals.no_chambers_config')}
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.75rem' }}>
+              {t('common.notes_corrective')}
+            </label>
+            <textarea 
+              className="input-field" 
+              value={formData.notes || ""} 
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })} 
+              placeholder={t('common.notes_corrective')}
+              rows={3}
+              style={{ resize: 'vertical', minHeight: '80px', margin: 0 }}
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
@@ -7833,7 +8849,6 @@ function LabelConfigModal({ config, onClose, onSave }) {
   };
 
   const getElementLabel = (el) => {
-    if (el === 'dryingRoomDates') return t('dashboard.drying_room_dates') || "Fechas de Secadero";
     const translated = t(`modals.labels_elements.${el}`);
     return (translated && translated !== `modals.labels_elements.${el}`) ? translated : el;
   };
@@ -7856,21 +8871,8 @@ function LabelConfigModal({ config, onClose, onSave }) {
               <button 
                 type="button"
                 onClick={() => setShowHelpVideo(true)}
-                className="btn-secondary"
-                style={{ 
-                  width: '100%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  gap: '0.75rem', 
-                  padding: '1rem',
-                  background: 'var(--corp-green)',
-                  color: 'white',
-                  fontWeight: '800',
-                  border: 'none',
-                  borderRadius: '0.75rem',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
+                className="btn-help-video"
+                style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}
               >
                 <PlayCircle size={20} />
                 {t('modals.labels_help_video_btn')}
@@ -8475,6 +9477,20 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
               />
             </div>
             <div>
+              <label className="label">{t('water.ph') || "pH"}</label>
+              <input 
+                type="number" 
+                step="0.1"
+                className="input-field" 
+                value={formData.ph || ""} 
+                onChange={(e) => setFormData({...formData, ph: e.target.value})} 
+                placeholder="7.2"
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div>
               <label className="label">{t('water.responsible')}</label>
               <input 
                 type="text" 
@@ -8484,6 +9500,7 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
                 placeholder="Nombre del operario"
               />
             </div>
+            <div></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
@@ -8569,6 +9586,18 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
             />
           </div>
 
+          <div>
+            <label className="label">{t('common.notes_corrective')}</label>
+            <textarea 
+              className="input-field" 
+              value={formData.notes || ""} 
+              onChange={(e) => setFormData({...formData, notes: e.target.value})} 
+              placeholder={t('common.notes_corrective')}
+              rows={3}
+              style={{ resize: 'vertical', minHeight: '80px' }}
+            />
+          </div>
+
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
             <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1 }}>{t('common.cancel')}</button>
             <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2 }}>
@@ -8630,5 +9659,686 @@ function WaterExportModal({ onClose, onGenerate, dates, setDates }) {
   );
 }
 
+function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, t, fetchGoodsReceipts, profile }) {
+  const [file, setFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState("");
+  const [extractedData, setExtractedData] = useState(null); 
+  const [aiRows, setAiRows] = useState([]); 
+  
+  const [linkRowIndex, setLinkRowIndex] = useState(null);
+  const [ingSearchTerm, setIngSearchTerm] = useState("");
+  const [rowIngredients, setRowIngredients] = useState([]); 
+  const [rowQuantities, setRowQuantities] = useState({}); 
 
+  const allIngredients = (() => {
+    if (!recipes) return [];
+    const names = new Set();
+    recipes.forEach(r => {
+      r.ingredients?.forEach(ing => {
+        if (ing.name && ing.name.trim()) {
+          names.add(ing.name.trim());
+        }
+      });
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  })();
 
+  const getIngredientsWithUnits = (selectedIngs) => {
+    const list = [];
+    if (!selectedIngs || !recipes) return list;
+    selectedIngs.forEach(ingName => {
+      const units = new Set();
+      recipes.forEach(recipe => {
+        recipe.ingredients?.forEach(ing => {
+          if (ing.name === ingName && ing.unit) {
+            units.add(ing.unit.trim());
+          }
+        });
+      });
+      const sortedUnits = Array.from(units).sort();
+      sortedUnits.forEach(unit => {
+        list.push({ name: ingName, unit });
+      });
+    });
+    return list;
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!file) return;
+    setAnalyzing(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const res = await fetch("/api/client/goods-receipts/analyze-invoice", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al analizar el albarán");
+      }
+      
+      setExtractedData(data);
+      const rows = (data.items || []).map((item, idx) => ({
+        id: idx,
+        productName: item.product || "",
+        providerName: data.provider || "",
+        providerId: providers.find(p => p.name === data.provider)?.id || null,
+        lote: item.lote || "",
+        quantity: item.quantity || "",
+        invoiceNumber: "",
+        manufacturingTemp: "",
+        endDate: "",
+        typeAndOrigin: "",
+        relatedIngredients: [],
+        relatedQuantities: {},
+        saving: false,
+        saved: false
+      }));
+      setAiRows(rows);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Error al procesar el archivo con la IA");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const handleRowChange = (index, field, value) => {
+    setAiRows(prev => prev.map((row, idx) => {
+      if (idx === index) {
+        if (field === "providerName") {
+          const found = providers.find(p => p.name === value);
+          return {
+            ...row,
+            providerName: value,
+            providerId: found ? found.id : null
+          };
+        }
+        return { ...row, [field]: value };
+      }
+      return row;
+    }));
+  };
+
+  const openLinkModal = (index) => {
+    const row = aiRows[index];
+    setLinkRowIndex(index);
+    setRowIngredients(row.relatedIngredients || []);
+    setRowQuantities(row.relatedQuantities || {});
+  };
+
+  const saveLinkDetails = () => {
+    setAiRows(prev => prev.map((row, idx) => {
+      if (idx === linkRowIndex) {
+        return {
+          ...row,
+          relatedIngredients: rowIngredients,
+          relatedQuantities: rowQuantities
+        };
+      }
+      return row;
+    }));
+    setLinkRowIndex(null);
+    setIngSearchTerm("");
+  };
+
+  const handleSaveRow = async (index) => {
+    const row = aiRows[index];
+    if (row.saved || row.saving) return;
+    
+    if (!row.productName.trim()) {
+      alert("El nombre del producto es obligatorio");
+      return;
+    }
+
+    setAiRows(prev => prev.map((r, idx) => idx === index ? { ...r, saving: true } : r));
+
+    try {
+      const payload = {
+        providerName: row.providerName,
+        productName: row.productName,
+        lote: row.lote,
+        invoiceNumber: row.invoiceNumber,
+        quantity: row.quantity,
+        date: new Date().toISOString(),
+        deliveryNoteImage: extractedData.imageUrl, 
+        manufacturingTemp: row.manufacturingTemp,
+        endDate: row.endDate,
+        typeAndOrigin: row.typeAndOrigin,
+        providerId: row.providerId,
+        merchantTypes: [],
+        relatedIngredients: row.relatedIngredients,
+        relatedQuantities: row.relatedQuantities
+      };
+
+      const res = await fetch("/api/goods-receipts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al guardar el registro");
+      }
+
+      setAiRows(prev => prev.map((r, idx) => idx === index ? { ...r, saving: false, saved: true } : r));
+      alert(t('goods_receipt_form.goods_saved') || t('goods_receipt_form.ia_saved') || "Entrada guardada correctamente");
+      fetchGoodsReceipts(); 
+    } catch (err) {
+      console.error(err);
+      alert((t('goods_receipt_form.ia_error_saving') || "Error al guardar: ") + err.message);
+      setAiRows(prev => prev.map((r, idx) => idx === index ? { ...r, saving: false } : r));
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1050 }}>
+      <div className="modal-content glass-card" style={{ maxWidth: extractedData ? '95%' : '600px', width: '90%', padding: '2.5rem', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', transition: 'all 0.3s ease' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Cpu size={24} style={{ color: 'var(--corp-green)' }} />
+              {t('goods_receipt_form.ia_modal_title') || "Escanear albarán con IA"}
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+              {t('goods_receipt_form.ia_modal_desc') || "Sube una foto o PDF de un albarán para extraer automáticamente los productos, lotes y cantidades."}
+            </p>
+            <button
+              type="button"
+              onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "8_qOTe6RrHk" })}
+              className="btn-help-video"
+              style={{ marginTop: '0.75rem' }}
+            >
+              <PlayCircle size={16} /> {t('dashboard.video_help') || "Vídeo de ayuda"}
+            </button>
+          </div>
+          <button 
+            onClick={onClose} 
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <X size={24} />
+          </button>
+        </header>
+
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '1rem', borderRadius: '0.75rem', color: '#dc2626', fontSize: '0.9rem', fontWeight: '500' }}>
+            {error}
+          </div>
+        )}
+
+        {!extractedData ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div 
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => document.getElementById("ia-file-upload").click()}
+              style={{
+                border: dragActive ? '2.5px dashed var(--corp-green)' : '2px dashed var(--border)',
+                borderRadius: '1rem',
+                padding: '3.5rem 2rem',
+                textAlign: 'center',
+                background: dragActive ? 'rgba(66, 98, 22, 0.02)' : '#f8fafc',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem'
+              }}
+            >
+              <UploadCloud size={48} color={dragActive ? "var(--corp-green)" : "var(--text-muted)"} style={{ transition: 'all 0.2s' }} />
+              {file ? (
+                <div>
+                  <p style={{ fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{file.name}</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                    {t('goods_receipt_form.ia_select_image') || "Selecciona o arrastra una imagen o PDF del albarán"}
+                  </p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    Soporta imágenes (PNG, JPG) y archivos PDF
+                  </p>
+                </div>
+              )}
+              <input 
+                id="ia-file-upload"
+                type="file"
+                accept="image/*, application/pdf"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+                disabled={analyzing}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={onClose} 
+                style={{ flex: 1, padding: '1rem' }}
+                disabled={analyzing}
+              >
+                {t('common.cancel')}
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={handleAnalyze} 
+                style={{ flex: 2, padding: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, var(--corp-green) 0%, #15803d 100%)' }}
+                disabled={!file || analyzing}
+              >
+                {analyzing ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    {t('goods_receipt_form.ia_processing') || "Procesando albarán con IA..."}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={18} />
+                    {"Analizar albarán con IA"}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
+            <div style={{ background: 'rgba(66, 98, 22, 0.05)', border: '1px solid rgba(66, 98, 22, 0.2)', padding: '1rem', borderRadius: '0.75rem', color: 'var(--corp-green)', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Check size={18} />
+              {t('goods_receipt_form.ia_success') || "Albarán procesado con éxito. Revisa y guarda las entradas."}
+            </div>
+
+            <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.product')}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                        <span>Ingredientes</span>
+                        <Info 
+                          size={14} 
+                          style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
+                          onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert'))}
+                        />
+                      </div>
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.provider')}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Lote</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.quantity')}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Factura Nº</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Temp. Transp/Fab</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Fecha Fin</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Tipo/Procedencia</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.ia_col_actions') || "Acciones"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aiRows.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid var(--border)', opacity: row.saved ? 0.6 : 1, background: row.saved ? '#f8fafc' : 'transparent', transition: 'all 0.2s' }}>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={row.productName} 
+                          onChange={(e) => handleRowChange(idx, "productName", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '120px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => openLinkModal(idx)}
+                          disabled={row.saved || row.saving}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '0.1rem',
+                            width: '100%'
+                          }}
+                        >
+                          <PlusCircle size={14} />
+                          {row.relatedIngredients?.length > 0 
+                            ? `Relacionado (${row.relatedIngredients.length})` 
+                            : "Relacionar"}
+                        </button>
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          list={`providers-list-ai-${idx}`}
+                          className="input-field" 
+                          value={row.providerName} 
+                          onChange={(e) => handleRowChange(idx, "providerName", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '120px' }}
+                        />
+                        <datalist id={`providers-list-ai-${idx}`}>
+                          {providers.map(p => (
+                            <option key={p.id} value={p.name} />
+                          ))}
+                        </datalist>
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={row.lote} 
+                          onChange={(e) => handleRowChange(idx, "lote", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '80px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={row.quantity} 
+                          onChange={(e) => handleRowChange(idx, "quantity", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '60px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={row.invoiceNumber} 
+                          onChange={(e) => handleRowChange(idx, "invoiceNumber", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          placeholder="Nº factura"
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '80px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={row.manufacturingTemp} 
+                          onChange={(e) => handleRowChange(idx, "manufacturingTemp", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          placeholder="Temp. ºC"
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '70px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={row.endDate} 
+                          onChange={(e) => handleRowChange(idx, "endDate", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          placeholder="Fin de consumo"
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '90px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          value={row.typeAndOrigin} 
+                          onChange={(e) => handleRowChange(idx, "typeAndOrigin", e.target.value)}
+                          disabled={row.saved || row.saving}
+                          placeholder="Tipo/Origen"
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '90px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveRow(idx)}
+                          className={row.saved ? "btn-secondary" : "btn-primary"}
+                          disabled={row.saved || row.saving}
+                          style={{ 
+                            padding: '0.4rem 0.8rem', 
+                            fontSize: '0.75rem', 
+                            borderRadius: '0.5rem', 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '0.25rem',
+                            backgroundColor: row.saved ? '#e2e8f0' : (row.saving ? 'var(--text-muted)' : 'var(--corp-green)'),
+                            color: row.saved ? '#64748b' : 'white',
+                            border: 'none',
+                            cursor: row.saved ? 'default' : 'pointer'
+                          }}
+                        >
+                          {row.saving ? (
+                            <Loader2 className="animate-spin" size={12} />
+                          ) : (
+                            row.saved ? (
+                              <>
+                                <Check size={12} />
+                                {t('goods_receipt_form.ia_already_saved') || "Guardado"}
+                              </>
+                            ) : (
+                              t('common.save') || "Guardar"
+                            )
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem', justifyContent: 'flex-end' }}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => {
+                  setExtractedData(null);
+                  setFile(null);
+                  setAiRows([]);
+                }} 
+                style={{ padding: '0.75rem 1.5rem' }}
+              >
+                {"Escanear otro albarán"}
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={onClose} 
+                style={{ padding: '0.75rem 2rem' }}
+              >
+                {t('common.back') || "Cerrar"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {linkRowIndex !== null && (
+        <div className="modal-overlay" style={{ zIndex: 1150 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
+            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+                  {t('goods_receipt_form.link_popup_title') || "Selecciona ingredientes"}
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                  {t('goods_receipt_form.link_popup_desc') || "Relaciona este albarán con ingredientes."}
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => {
+                  setLinkRowIndex(null);
+                  setIngSearchTerm("");
+                }} 
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div style={{ position: 'relative' }}>
+              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text"
+                placeholder={t('common.search')}
+                className="input-field"
+                value={ingSearchTerm}
+                onChange={(e) => setIngSearchTerm(e.target.value)}
+                style={{ paddingLeft: '2.75rem', paddingRight: '1rem' }}
+              />
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '0.5rem', minHeight: '150px' }}>
+              {allIngredients.filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase())).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
+                  {t('common.no_results')}
+                </div>
+              ) : (
+                allIngredients
+                  .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
+                  .map((ingName, idx) => {
+                    const isChecked = rowIngredients.includes(ingName);
+                    return (
+                      <label 
+                        key={idx} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer', 
+                          padding: '0.75rem 1rem', 
+                          background: isChecked ? 'rgba(66, 98, 22, 0.05)' : '#f8fafc',
+                          borderRadius: '0.75rem',
+                          border: isChecked ? '1px solid var(--corp-green)' : '1px solid var(--border)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <input 
+                          type="checkbox"
+                          style={{ cursor: 'pointer', width: '1.1rem', height: '1.1rem', accentColor: 'var(--corp-green)' }}
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...rowIngredients, ingName]
+                              : rowIngredients.filter(n => n !== ingName);
+                            setRowIngredients(next);
+                          }}
+                        />
+                        <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{ingName}</span>
+                      </label>
+                    );
+                  })
+              )}
+            </div>
+
+            {getIngredientsWithUnits(rowIngredients).length > 0 && (
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+                  {t('goods_receipt_form.stock_control_title') || "Control de stock:"}
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
+                    const key = `${item.name}:${item.unit}`;
+                    const val = rowQuantities[key] || "";
+                    return (
+                      <div className="form-group" key={idx}>
+                        <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                          {t('goods_receipt_form.related_quantity_label')
+                            ? t('goods_receipt_form.related_quantity_label').replace('{name}', item.name).replace('{unit}', item.unit)
+                            : `Cantidad de ${item.name} (${item.unit})`}
+                        </label>
+                        <input 
+                          type="number"
+                          step="any"
+                          className="input-field"
+                          value={val}
+                          onChange={(e) => {
+                            setRowQuantities({
+                              ...rowQuantities,
+                              [key]: e.target.value
+                            });
+                          }}
+                          placeholder={aiRows[linkRowIndex]?.quantity || ""}
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => {
+                  setLinkRowIndex(null);
+                  setIngSearchTerm("");
+                }} 
+                style={{ flex: 1, padding: '0.85rem' }}
+              >
+                {t('common.cancel')}
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={saveLinkDetails} 
+                style={{ flex: 2, padding: '0.85rem' }}
+              >
+                {t('goods_receipt_form.link_popup_save') || "Guardar relación"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

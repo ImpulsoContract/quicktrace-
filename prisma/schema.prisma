@@ -66,6 +66,7 @@ model ClientProfile {
 
   canManageRecipes Boolean @default(true)
   labelConfig      Json?   @default("{}")
+  hasIaGoods       Boolean @default(true)
 
   // Referrals / Affiliates
   referralCode        String?   @unique
@@ -101,10 +102,13 @@ model ClientProfile {
   providers            Provider[]
   ingredientPrices     IngredientPrice[]
   workers              Worker[]
+  cleaningProductSheets CleaningProductSheet[]
   merchantTypes        String[]          @default([])
   currency                   String            @default("EUR")
   laborCostHourlyRate        Float?            @default(0)
   isPreparationTimeMandatory Boolean           @default(false)
+  wasteCollections           WasteCollection[]
+  ingredientStocks           IngredientStock[]
 }
 
 model Provider {
@@ -263,6 +267,7 @@ model Elaboration {
   costPrice            Float?            @default(0)
   preparationTime      String?
   laborCostHourlyRate  Float?            @default(0)
+  extraInfo            String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -297,6 +302,7 @@ model CleaningLog {
   id              Int           @id @default(autoincrement())
   personName      String
   date            DateTime      @default(now())
+  notes           String?
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
@@ -330,6 +336,7 @@ model Chamber {
 model TemperatureRecord {
   id              Int           @id @default(autoincrement())
   date            DateTime      @default(now())
+  notes           String?
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
@@ -361,6 +368,8 @@ model GoodsReceipt {
   endDate           String? // Optional end date text field
   typeAndOrigin     String? // Optional type and origin field
   merchantTypes     String[] @default([])
+  relatedIngredients String[] @default([])
+  relatedQuantities  Json?    @default("{}")
 
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
@@ -382,7 +391,9 @@ model WaterMeasurement {
   flavor        Boolean  @default(false)
   color         Boolean  @default(false)
   responsible   String?
+  ph            String?
   receiptImage  String? // Base64 or URL
+  notes         String?
 
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
@@ -447,3 +458,48 @@ model Worker {
 
   @@index([clientProfileId])
 }
+
+model WasteCollection {
+  id              Int           @id @default(autoincrement())
+  date            DateTime      @default(now())
+  personName      String
+  kilos           Float
+  
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([clientProfileId])
+}
+
+model CleaningProductSheet {
+  id              Int           @id @default(autoincrement())
+  name            String
+  imageUrl        String?       // Base64 image
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientProfileId])
+}
+
+model IngredientStock {
+  id              Int           @id @default(autoincrement())
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  name  String
+  unit  String
+  stock Float  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientProfileId, name, unit])
+  @@index([clientProfileId])
+}
+

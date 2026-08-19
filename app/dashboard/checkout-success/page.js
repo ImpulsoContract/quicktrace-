@@ -40,6 +40,20 @@ function CheckoutSuccessContent() {
               currency: data.currency || 'EUR'
             });
           }
+
+          // Google Ads Purchase Tracking
+          if (typeof window !== 'undefined' && window.gtag) {
+            const adsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || 'AW-18129247983';
+            const label = process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL;
+            if (adsId && label) {
+              window.gtag('event', 'conversion', {
+                'send_to': `${adsId}/${label}`,
+                'value': data.value,
+                'currency': data.currency || 'EUR',
+                'transaction_id': sessionId
+              });
+            }
+          }
         }
       } catch (error) {
         console.error("Sync Error:", error);

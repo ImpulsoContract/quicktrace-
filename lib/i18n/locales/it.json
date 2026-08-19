@@ -45,7 +45,11 @@
     "ingredients": "Ingredienti",
     "view_image": "Vedi immagine",
     "upload_image": "Carica immagine",
-    "duplicate": "Duplicare"
+    "duplicate": "Duplica",
+    "no_results": "Nessun risultato trovato",
+    "duplicate_suffix": " (Copia)",
+    "upload_image_pdf": "Carica Immagine / PDF",
+    "notes_corrective": "Note o azioni correttive"
   },
   "profile": {
     "title": "Profilo",
@@ -106,7 +110,22 @@
     "plan": "PIANO",
     "workers": "Lavoratori",
     "business_config": "Configurazione della mia attività",
-    "logout": "Chiudi sessione"
+    "logout": "Chiudi sessione",
+    "waste": "Rifiuti",
+    "inventory": "Inventario"
+  },
+  "inventory": {
+    "title": "Gestione dell'Inventario",
+    "description": "Visualizza e modifica lo stock attuale dei tuoi ingredienti. Lo stock aumenta quando registri le entrate merci e si riduce quando effettui le elaborazioni.",
+    "search_placeholder": "Cerca ingrediente...",
+    "col_ingredient": "Ingrediente",
+    "col_unit": "Unità",
+    "col_recipes": "Ricette Correlate",
+    "col_stock": "Stock Attuale",
+    "btn_save": "Salva Modifiche",
+    "save_success": "Inventario aggiornato con successo",
+    "no_ingredients": "Nessun ingrediente in inventario. Crea ricette e ingredienti per iniziare.",
+    "btn_modify": "Modifica stock"
   },
   "business_config": {
     "title": "Configurazione dell'Attività",
@@ -183,11 +202,15 @@
     "more": "altro",
     "my_elaborations": "Le mie Ricette",
     "elaborations_list_desc": "Elenco delle tue ricette configurate.",
-    "batch_search": "Ricerca per Lotto",
+    "batch_search": "Cerca per lotto di ingrediente",
     "batch_placeholder": "Scrivi un lotto...",
+    "elaboration_batch_search": "Cerca per lotto di produzione",
+    "elaboration_batch_placeholder": "Lotto di produzione...",
     "show": "Mostra",
     "per_page": "{count} per pagina",
     "clear_filters": "Pulisci filtri",
+    "view_elaboration": "Vedi lavorazione",
+    "export_pdf_short": "Esporta in PDF",
     "elaboration_name_header": "Nome Lavorazione",
     "elaboration_date_header": "Data",
     "elaboration_recipe_header": "Ricetta",
@@ -199,9 +222,10 @@
     "generate_report": "Genera Report",
     "modify": "Modifica",
     "no_elaborations_recorded": "Nessuna lavorazione registrata ancora.",
-    "goods_report": "Report entrate merci",
-    "generate_goods_report": "Scarica report",
-    "cleaning_report": "Report pulizia",
+    "goods_report": "Rapporto sulle entrate merci",
+    "generate_goods_report": "Scarica un report di entrata merci",
+    "view_stock_inventory_btn": "Vedi inventario stock",
+    "cleaning_report": "Rapporto di pulizia",
     "generate_cleaning_report": "Genera report pulizia",
     "temp_report": "Report temperature",
     "generate_temp_report": "Genera report temperature",
@@ -213,6 +237,7 @@
     "new_record": "Nuovo Record di Pulizia.",
     "manage_recipes": "Ricette contrattate",
     "showing_info": "Mostrando {start} - {end} di {total} lavorazioni",
+    "showing_last_40": "Mostrando le ultime 40 voci registrate",
     "delivery_note_photo": "Puoi allegare una foto del DDT",
     "save_entry": "Salva",
     "invoice": "Fattura",
@@ -220,7 +245,8 @@
     "configure_labels": "Configura etichette",
     "upload_photo": "Carica foto DDT",
     "photo_format": "Scatta una foto o seleziona un file",
-    "elaborar": "Elaborare"
+    "elaborar": "Elaborare",
+    "scan_invoice_ia": "Scansiona bolla con IA"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",
@@ -236,8 +262,8 @@
     "provider_phone": "Telefono",
     "provider_address": "Indirizzo",
     "provider_products": "Prodotti che forniscono",
-    "merchant_types": "Tipi di Merce",
-    "manage_merchant_types": "Gestisci Tipi di Merce",
+    "merchant_types": "Tipi de Merce",
+    "manage_merchant_types": "Gestisci Tipi de Merce",
     "merchant_types_desc": "Definisci i tipi di merce che gestisci nella tua attività (es: Carne, Pesce, Frutta...)",
     "new_merchant_type_placeholder": "Nuovo tipo...",
     "add_type": "Aggiungi Tipo",
@@ -259,8 +285,9 @@
     "expiry_days_help": "Scrivi il numero di giorni prima della scadenza di ogni lavorazione per poterlo mettere in etichetta",
     "expiry_type": "Tipo di scadenza",
     "expiry_type_expiration": "PRODOTTO SCADUTO",
-    "expiry_type_best_before": "DA CONSUMARSI PREFERIBILMENTE ENTRO",
+    "expiry_type_best_before": "DA CONSUMARSI PREFERIBILMENTE ENTRO IL",
     "ingredients": "INGREDIENTI",
+    "ingredients_stock_warning": "Se ad esempio un ingrediente è il riso e in altre ricette lo hai inserito in kg, inseriscilo qui con la stessa unità di misura affinché la gestione dello stock sia più efficace. Evita di utilizzare unità di misura diverse in ricette diverse per lo stesso ingrediente.",
     "ing_name": "NOME",
     "ing_amount": "QUANTITÀ",
     "ing_unit": "UNITÀ",
@@ -301,6 +328,8 @@
     "labels_header_image_remove": "Rimuovi immagine",
     "labels_health_registry": "Registro sanitario",
     "labels_health_registry_desc": "Inserisci qui il testo relativo al tuo registro sanitario se vuoi che appaia in etichetta",
+    "labels_other_info": "Altre informazioni",
+    "labels_other_info_desc": "Se vuoi che sull'etichetta appaia del testo extra, scrivilo qui",
     "labels_show_fields": "Mostra campi nell'etichetta",
     "labels_batch_num": "Numero di lotto",
     "labels_made_by": "Persona che lavora",
@@ -345,6 +374,9 @@
       "madeBy": "Persona che lavora",
       "barcode": "Codice a barre",
       "healthRegistry": "Registro sanitario",
+      "otherInfo": "Altre informazioni",
+      "elaborationExtraInfo": "Info extra lavorazione",
+      "dryingRoomDates": "Date essiccatoio",
       "unitPrice": "Prezzo unitario (PVP)"
     },
     "drag_elements": "Trascina elementi qui",
@@ -410,7 +442,11 @@
     "water_limit_reached": "Hai raggiunto il limite di misurazioni acqua per il tuo piano.",
     "product_date_required": "Prodotto e data sono obbligatori",
     "file_too_large": "Errore: Il file allegato è troppo grande. Si prega di caricare un'immagine più piccola o abbassare la risoluzione (Max 4.5 MB).",
-    "delete_confirm_worker": "Sei sicuro di voler eliminare questo lavoratore ?"
+    "delete_confirm_worker": "Sei sicuro di voler eliminare questo lavoratore ?",
+    "duplicate_confirm_recipe": "Sei sicuro di voler duplicare questa ricetta?",
+    "recipe_duplicated": "Ricetta duplicata correttamente",
+    "no_linked_goods_receipts": "Non sono state trovate entrate merci correlate per questi ingredienti.",
+    "auto_filled_lotes_from_goods": "Compilati automaticamente {count} lotti da entrate merci."
   },
   "affiliate": {
     "sidebar_link": "Guadagna con Quicktrace",
@@ -516,6 +552,8 @@
     "expiration_date": "Data di scadenza",
     "ingredients_batches": "Ingredienti e Lotti",
     "autofill_lotes": "Compila lotti con l'ultimo inserito",
+    "autofill_lotes_from_goods": "Compila lotti con l'ultima entrata merci",
+    "autofill_lotes_from_goods_help": "Questo è valido se hai collegato le entrate merci con gli ingredienti",
     "clear_lotes": "Svuota lotti",
     "theoretical_amount": "Cant. Teorica",
     "lot": "Lotto",
@@ -540,7 +578,10 @@
     "net_weight_label": "Peso netto per l'etichetta",
     "label_net_weight": "Peso netto",
     "unit_price": "Prezzo unitario (PVP)",
-    "unit_price_help": "Puoi usarlo sull'etichetta. Puoi cambiare la valuta nelle impostazioni aziendali nel menu principale."
+    "unit_price_help": "Puoi usarlo sull'etichetta. Puoi cambiare la valuta nelle impostazioni aziendali nel menu principale.",
+    "extra_info_label": "Informazioni extra di questa lavorazione",
+    "extra_info_help": "Questo testo potrà comparire sull'etichetta. Serve per inserire dati come l'origine, il formato, ecc.",
+    "elaboration_notes": "Note di questa elaborazione"
   },
   "goods_receipt_form": {
     "product": "Prodotto",
@@ -552,7 +593,26 @@
     "end_date": "Data di fine",
     "type_and_origin": "Tipo e provenienza",
     "quantity": "Quantità",
-    "upload_file": "Carica immagine..."
+    "upload_file": "Carica immagine...",
+    "link_ingredients_btn": "Collega questo lotto ad alcuni ingredienti per utilizzarlo nella tracciabilità",
+    "link_popup_title": "Seleziona gli ingredienti che desideri collegare a questa entrata merci",
+    "link_popup_desc": "Quando andrai a generare la tracciabilità di una lavorazione, potrai compilare automaticamente il numero di lotto degli ingredienti selezionati con il lotto di questa entrata merci",
+    "link_popup_save": "Collega ingredienti a questa entrata merci",
+    "stock_control_title": "Collega le quantità di questa entrata merci per tenere traccia delle scorte",
+    "stock_control_help": "Se vedi l'ingrediente in più unità è perché si trova in ricette diverse in unità diverse e lo stock verrà tracciato separatamente, anche se puoi modificarlo manualmente nella gestione dell'inventario.",
+    "related_quantity_label": "Quantità di {name} ({unit})",
+    "ia_modal_title": "Scansiona bolla con IA",
+    "ia_modal_desc": "Carica una foto o un PDF di una bolla di consegna per estrarre automaticamente prodotti, lotti e quantità.",
+    "ia_processing": "Elaborazione bolla con IA...",
+    "ia_success": "Bolla di consegna elaborata con successo. Controlla e salva le voci.",
+    "ia_save_confirm": "Vuoi salvare questa entrata merci?",
+    "ia_saved": "Voce salvata",
+    "ia_already_saved": "Già salvato",
+    "ia_select_image": "Seleziona o trascina un'immagine o un PDF della bolla di consegna",
+    "ia_col_actions": "Azioni",
+    "goods_saved": "Entrata merci salvata con successo",
+    "ia_error_saving": "Errore durante il salvataggio: ",
+    "ia_ingredients_info_alert": "Se colleghi questa entrata merci a uno o più ingredienti, quando crei una produzione e la sua tracciabilità, questo lotto apparirà in quegli ingredienti."
   },
   "plans": {
     "title": "Piani di Prezzo",
@@ -644,6 +704,7 @@
     "check_s": "S",
     "check_c": "C",
     "responsible": "Responsabile del prelievo",
+    "ph": "Ph del campione",
     "table_date": "Data",
     "table_point": "Punto",
     "table_chlorine": "Cloro",
@@ -827,6 +888,10 @@
       "force_btn_confirm": "Sì, Forza l'aggiornamento ora",
       "force_processing": "Elaborazione di tutti gli utenti...",
       "accepted_date_label": "DATA DI ACCETTAZIONE"
+    },
+    "edit": {
+      "ia_config": "Configurazione IA",
+      "ia_goods": "Abilita il sistema IA per le entrate merci"
     }
   },
   "providers": {
@@ -844,5 +909,47 @@
     "restricted_title": "Questa sezione è solo per gli utenti con un piano a pagamento.",
     "restricted_desc": "In questa sezione puoi registrare tutti i tuoi fornitori con tutti i loro dati e utilizzare queste informazioni nelle entrate merce tra le altre funzionalità.",
     "view_plans": "Controlla i piani Quicktrace qui"
+  },
+  "waste": {
+    "title": "Rifiuti",
+    "description": "Gestire e registrare la raccolta dei rifiuti.",
+    "new_collection": "Nuova raccolta rifiuti",
+    "date": "Data",
+    "person": "Persona che effettua la raccolta",
+    "kilos": "Chili di rifiuti",
+    "no_records": "Nessun record di raccolta rifiuti trovato.",
+    "save": "Salva raccolta",
+    "table_date": "Data",
+    "table_person": "Responsabile",
+    "table_kilos": "Chili (kg)",
+    "delete_confirm": "Sei sicuro di voler eliminare questo record?"
+  },
+  "cleaning": {
+    "product_sheets_btn": "Schede tecniche dei prodotti per la pulizia",
+    "product_sheets_title": "Schede tecniche dei prodotti",
+    "add_sheet_btn": "Aggiungi nuova scheda",
+    "edit_sheet_title": "Modifica scheda tecnica",
+    "new_sheet_title": "Nuova scheda tecnica",
+    "product_name": "Nome del prodotto",
+    "product_photo": "Foto della scheda tecnica",
+    "col_name": "Nome",
+    "col_created_at": "Data di creazione",
+    "col_link": "Scheda / Immagine",
+    "col_actions": "Azioni",
+    "view_image": "Visualizza scheda",
+    "delete_confirm": "Sei sicuro di voler eliminare questa scheda tecnica?",
+    "save_success": "Scheda tecnica salvata correttamente",
+    "delete_success": "Scheda tecnica eliminata correttamente",
+    "error_loading": "Errore durante il caricamento delle schede tecniche",
+    "error_saving": "Errore durante il salvataggio della scheda tecnica",
+    "error_deleting": "Errore durante l'eliminazione della scheda tecnica",
+    "search_placeholder": "Cerca per nome del prodotto...",
+    "product_photo_or_pdf": "Documento o foto della scheda tecnica",
+    "view_pdf": "Vedi PDF"
+  },
+  "plan_limit_block": {
+    "title": "Limite ricette superato",
+    "description": "Hai registrato più ricette di quelle consentite dal tuo piano attuale. Devi aggiornare il piano o eliminare alcune ricette per poter continuare a registrare preparazioni, pulizia, temperature, acqua, merci e rifiuti.",
+    "view_plans": "Visualizza piani disponibili"
   }
 }

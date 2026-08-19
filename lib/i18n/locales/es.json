@@ -45,7 +45,11 @@
     "ingredients": "Ingredientes",
     "view_image": "Ver imagen",
     "upload_image": "Subir imagen",
-    "duplicate": "Duplicar"
+    "duplicate": "Duplicar",
+    "no_results": "No hay resultados",
+    "duplicate_suffix": " (Copia)",
+    "upload_image_pdf": "Subir Imagen / PDF",
+    "notes_corrective": "Notas o medidas correctivas"
   },
   "profile": {
     "title": "Perfil",
@@ -106,7 +110,22 @@
     "plan": "PLAN",
     "workers": "Trabajadores",
     "business_config": "Configuración de mi negocio",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "waste": "Residuos",
+    "inventory": "Inventario"
+  },
+  "inventory": {
+    "title": "Gestión de Inventario",
+    "description": "Visualiza y edita el stock actual de tus ingredientes. El stock se actualiza automáticamente al registrar entradas de mercancías y elaborar recetas.",
+    "search_placeholder": "Buscar ingrediente...",
+    "col_ingredient": "Ingrediente",
+    "col_unit": "Unidad",
+    "col_recipes": "Recetas Relacionadas",
+    "col_stock": "Stock Actual",
+    "btn_save": "Guardar Cambios",
+    "save_success": "Inventario actualizado correctamente",
+    "no_ingredients": "No hay ingredientes en el inventario. Crea recetas e ingredientes para empezar.",
+    "btn_modify": "Modificar stock"
   },
   "business_config": {
     "title": "Configuración del Negocio",
@@ -183,11 +202,15 @@
     "more": "más",
     "my_elaborations": "Mis Recetas",
     "elaborations_list_desc": "Listado de tus recetas configuradas.",
-    "batch_search": "Buscador por Lote",
+    "batch_search": "Buscar por lote de ingrediente",
     "batch_placeholder": "Escribe un lote...",
+    "elaboration_batch_search": "Buscar por lote de elaboración",
+    "elaboration_batch_placeholder": "Lote de elaboración...",
     "show": "Mostrar",
     "per_page": "{count} por página",
     "clear_filters": "Limpiar filtros",
+    "view_elaboration": "Ver elaboración",
+    "export_pdf_short": "Exportar PDF",
     "elaboration_name_header": "Nombre Elaboración",
     "elaboration_date_header": "Fecha",
     "elaboration_recipe_header": "Receta",
@@ -203,7 +226,8 @@
     "modify": "Modificar",
     "no_elaborations_recorded": "No hay elaboraciones registradas todavía.",
     "goods_report": "Informe de entradas de mercancía",
-    "generate_goods_report": "Sacar un informe",
+    "generate_goods_report": "Sacar un informe de entrada de mercancías",
+    "view_stock_inventory_btn": "Ver inventario de stock",
     "cleaning_report": "Informe de limpieza",
     "generate_cleaning_report": "Generar informe de limpieza",
     "temp_report": "Informe de temperaturas",
@@ -216,7 +240,7 @@
     "new_record": "Nuevo Registro de Limpieza.",
     "manage_recipes": "Recetas contratadas",
     "showing_info": "Mostrando {start} - {end} de {total} elaboraciones",
-    "showing_last_10": "Mostrando las últimas 10 entradas registradas",
+    "showing_last_40": "Mostrando las últimas 40 entradas registradas",
     "delivery_note_photo": "Puedes adjuntar una foto del albarán",
     "save_entry": "Guardar",
     "invoice": "Factura",
@@ -226,7 +250,8 @@
     "upload_photo": "Subir foto del albarán",
     "photo_format": "Haz una foto o selecciona un archivo",
     "ingredient_costs_btn": "Precios de coste de cada mercancía",
-    "elaborar": "Elaborar"
+    "elaborar": "Elaborar",
+    "scan_invoice_ia": "Escanear albarán con IA"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -267,6 +292,7 @@
     "expiry_type_expiration": "PRODUCTO CADUCADO",
     "expiry_type_best_before": "FECHA DE CONSUMO PREFERENTE",
     "ingredients": "INGREDIENTES",
+    "ingredients_stock_warning": "Si por ejemplo un ingrediente es el arroz y en otras recetas lo has metido en unidad de medida kg, mételo aquí con la misma unidad de medida para que la gestión de stock sea más efectiva. Evita usar diferentes unidades de medida en diferentes recetas para un mismo ingrediente.",
     "ing_name": "NOMBRE",
     "ing_amount": "CANTIDAD",
     "ing_unit": "UNIDAD",
@@ -307,6 +333,8 @@
     "labels_header_image_remove": "Eliminar imagen",
     "labels_health_registry": "Registro sanitario",
     "labels_health_registry_desc": "Introduce aquí el texto relativo a tu registro sanitario si quieres que aparezca en la etiqueta",
+    "labels_other_info": "Otra información",
+    "labels_other_info_desc": "Si quieres que aparezca algún texto extra en la etiqueta, escríbelo aquí",
     "labels_show_fields": "Mostrar campos en la etiqueta",
     "labels_batch_num": "Número de lote",
     "labels_made_by": "Persona que elabora",
@@ -351,6 +379,9 @@
       "madeBy": "Persona que elabora",
       "barcode": "Código de barras",
       "healthRegistry": "Registro sanitario",
+      "otherInfo": "Otra información",
+      "elaborationExtraInfo": "Información extra de elaboración",
+      "dryingRoomDates": "Fechas de secadero",
       "unitPrice": "Precio unitario (PVP)"
     },
     "drag_elements": "Arrastra elementos aquí",
@@ -422,7 +453,11 @@
     "product_date_required": "Producto y fecha son obligatorios",
     "file_too_large": "Error: El archivo de foto/albarán adjunto es demasiado grande. Por favor, sube una imagen menos pesada o baja la resolución (Máx 4.5 MB).",
     "prices_saved": "Precios guardados correctamente",
-    "delete_confirm_worker": "¿Seguro que quieres eliminar este trabajador?"
+    "delete_confirm_worker": "¿Seguro que quieres eliminar este trabajador?",
+    "duplicate_confirm_recipe": "¿Seguro que quieres duplicar esta receta?",
+    "recipe_duplicated": "Receta duplicada correctamente",
+    "no_linked_goods_receipts": "No se encontraron entradas de mercancías relacionadas para estos ingredientes.",
+    "auto_filled_lotes_from_goods": "Se han auto-rellenado {count} lotes desde entradas de mercancías."
   },
   "affiliate": {
     "sidebar_link": "Gana dinero con Quicktrace",
@@ -528,6 +563,8 @@
     "expiration_date": "Fecha de caducidad",
     "ingredients_batches": "Ingredientes y Lotes",
     "autofill_lotes": "Rellenar lotes con el último introducido",
+    "autofill_lotes_from_goods": "Rellenar lotes con la última entrada de mercancías",
+    "autofill_lotes_from_goods_help": "Esto es válido si has relacionado las entradas de mercancías con los ingredientes",
     "clear_lotes": "Vaciar lotes",
     "theoretical_amount": "Cant. Teórica",
     "lot": "Lote",
@@ -552,7 +589,10 @@
     "net_weight_label": "Peso neto para la etiqueta",
     "label_net_weight": "Peso neto",
     "unit_price": "Precio unitario (PVP)",
-    "unit_price_help": "Lo podrás usar en la etiqueta. Puedes cambiar la moneda en la configuración de la empresa en el menú principal."
+    "unit_price_help": "Lo podrás usar en la etiqueta. Puedes cambiar la moneda en la configuración de la empresa en el menú principal.",
+    "extra_info_label": "Información extra de esta elaboración",
+    "extra_info_help": "Este texto podrá salir en la etiqueta. Sirve para poner datos como el origen, formato, etc.",
+    "elaboration_notes": "Notas de esta elaboración"
   },
   "goods_receipt_form": {
     "product": "Producto",
@@ -564,7 +604,26 @@
     "end_date": "Fecha de finalización",
     "type_and_origin": "Tipo y procedencia",
     "quantity": "Cantidad",
-    "upload_file": "Subir imagen..."
+    "upload_file": "Subir imagen...",
+    "link_ingredients_btn": "Relaciona este lote con algunos ingredientes para usarlo en la trazabilidad",
+    "link_popup_title": "Selecciona los ingredientes que quieres relacionar con esta entrada de mercancía",
+    "link_popup_desc": "Cuando vayas a generar la trazabilidad de una elaboración, podrás rellenar automáticamente el número de lote de los ingredientes seleccionados con el lote de esta entrada de mercancía",
+    "link_popup_save": "Relacionar ingredientes con esta entrada de mercancías",
+    "stock_control_title": "Relaciona las cantidades de esta entrada de mercancías para llevar un control del stock",
+    "stock_control_help": "Si ves el ingrediente en varias unidades es porque está en diferentes recetas en diferentes unidades y el stock se mediará por separado aunque lo puedes modificar a mano en la gestión de inventario.",
+    "related_quantity_label": "Cantidad de {name} ({unit})",
+    "ia_modal_title": "Escanear albarán con IA",
+    "ia_modal_desc": "Sube una foto o PDF de un albarán para extraer automáticamente los productos, lotes y cantidades.",
+    "ia_processing": "Procesando albarán con IA...",
+    "ia_success": "Albarán procesado con éxito. Revisa y guarda las entradas.",
+    "ia_save_confirm": "¿Deseas guardar esta entrada de mercancía?",
+    "ia_saved": "Entrada guardada",
+    "ia_already_saved": "Ya guardado",
+    "ia_select_image": "Selecciona o arrastra una imagen o PDF del albarán",
+    "ia_col_actions": "Acciones",
+    "goods_saved": "Entrada de mercancías guardada correctamente",
+    "ia_error_saving": "Error al guardar: ",
+    "ia_ingredients_info_alert": "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes."
   },
   "plans": {
     "title": "Planes de Precios",
@@ -656,6 +715,7 @@
     "check_s": "S",
     "check_c": "C",
     "responsible": "Responsable del muestreo",
+    "ph": "Ph de la muestra",
     "table_date": "Fecha",
     "table_point": "Punto",
     "table_chlorine": "Cloro",
@@ -839,6 +899,10 @@
       "force_btn_confirm": "Sí, Forzar Actualización Ahora",
       "force_processing": "Procesando a todos los usuarios...",
       "accepted_date_label": "FECHA DE ACEPTACIÓN"
+    },
+    "edit": {
+      "ia_config": "Configuración IA",
+      "ia_goods": "Activar sistema IA para entrada de mercancías"
     }
   },
   "providers": {
@@ -856,5 +920,47 @@
     "restricted_title": "Esta sección solo es para usuario con un plan de pago.",
     "restricted_desc": "En esta sección podrás dar de alta a todos tus proveedores con todos sus datos y utilizar esta información en la entrada de mercancías entre otra funcionalidades",
     "view_plans": "Consulta aquí los planes de Quicktrace"
+  },
+  "waste": {
+    "title": "Residuos",
+    "description": "Gestiona y registra la retirada de residuos.",
+    "new_collection": "Nueva retirada de residuos",
+    "date": "Fecha",
+    "person": "Persona que hace la retirada",
+    "kilos": "Kilos de basura",
+    "no_records": "No hay registros de retiradas de residuos.",
+    "save": "Guardar retirada",
+    "table_date": "Fecha",
+    "table_person": "Responsable",
+    "table_kilos": "Kilos (kg)",
+    "delete_confirm": "¿Seguro que quieres eliminar este registro?"
+  },
+  "cleaning": {
+    "product_sheets_btn": "Fichas técnicas de los productos de limpieza",
+    "product_sheets_title": "Fichas técnicas de productos",
+    "add_sheet_btn": "Añadir nueva ficha",
+    "edit_sheet_title": "Editar ficha técnica",
+    "new_sheet_title": "Nueva ficha técnica",
+    "product_name": "Nombre del producto",
+    "product_photo": "Foto de la ficha técnica",
+    "col_name": "Nombre",
+    "col_created_at": "Fecha de creación",
+    "col_link": "Ficha / Imagen",
+    "col_actions": "Acciones",
+    "view_image": "Ver ficha",
+    "delete_confirm": "¿Seguro que quieres eliminar esta ficha técnica?",
+    "save_success": "Ficha técnica guardada correctamente",
+    "delete_success": "Ficha técnica eliminada correctamente",
+    "error_loading": "Error al cargar las fichas técnicas",
+    "error_saving": "Error al guardar la ficha técnica",
+    "error_deleting": "Error al eliminar la ficha técnica",
+    "search_placeholder": "Buscar por nombre de producto...",
+    "product_photo_or_pdf": "Documento / Foto de la ficha técnica",
+    "view_pdf": "Ver PDF"
+  },
+  "plan_limit_block": {
+    "title": "Límite de recetas excedido",
+    "description": "Has registrado más recetas de las permitidas en tu plan actual. Debes contratar un plan superior o eliminar recetas para poder seguir registrando elaboraciones, limpieza, temperaturas, agua, mercancías y residuos.",
+    "view_plans": "Ver planes disponibles"
   }
 }

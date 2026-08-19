@@ -21,7 +21,8 @@ export async function PATCH(req, { params }) {
       dryingRoomOut, 
       workshopTemp,
       preparationTime,
-      unitPrice
+      unitPrice,
+      extraInfo
     } = data;
 
     // Buscar el perfil del cliente
@@ -56,6 +57,7 @@ export async function PATCH(req, { params }) {
         workshopTemp: workshopTemp !== undefined ? workshopTemp : undefined,
         preparationTime: preparationTime !== undefined ? preparationTime : undefined,
         unitPrice: unitPrice !== undefined ? (parseFloat(unitPrice?.toString().replace(',', '.')) || 0) : undefined,
+        extraInfo: extraInfo !== undefined ? extraInfo : undefined,
         ingredients: {
           deleteMany: {},
           create: ingredients.map(ing => ({

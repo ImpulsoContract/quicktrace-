@@ -45,7 +45,11 @@
     "ingredients": "Ingredients",
     "view_image": "View image",
     "upload_image": "Upload image",
-    "duplicate": "Duplicate"
+    "duplicate": "Duplicate",
+    "no_results": "No results found",
+    "duplicate_suffix": " (Copy)",
+    "upload_image_pdf": "Upload Image / PDF",
+    "notes_corrective": "Notes or corrective actions"
   },
   "profile": {
     "title": "Profile",
@@ -106,7 +110,22 @@
     "plan": "PLAN",
     "workers": "Workers",
     "business_config": "Business Configuration",
-    "logout": "Logout"
+    "logout": "Logout",
+    "waste": "Waste",
+    "inventory": "Inventory"
+  },
+  "inventory": {
+    "title": "Inventory Management",
+    "description": "View and edit the current stock of your ingredients. The stock increases when you log goods receipts and decreases when you register elaborations.",
+    "search_placeholder": "Search ingredient...",
+    "col_ingredient": "Ingredient",
+    "col_unit": "Unit",
+    "col_recipes": "Related Recipes",
+    "col_stock": "Current Stock",
+    "btn_save": "Save Changes",
+    "save_success": "Inventory updated successfully",
+    "no_ingredients": "No ingredients in the inventory. Create recipes and ingredients to start.",
+    "btn_modify": "Modify stock"
   },
   "business_config": {
     "title": "Business Configuration",
@@ -183,11 +202,15 @@
     "more": "more",
     "my_elaborations": "My Recipes",
     "elaborations_list_desc": "List of your configured recipes.",
-    "batch_search": "Batch Search",
+    "batch_search": "Search by ingredient batch",
     "batch_placeholder": "Enter a batch number...",
+    "elaboration_batch_search": "Search by elaboration batch",
+    "elaboration_batch_placeholder": "Elaboration batch...",
     "show": "Show",
     "per_page": "{count} per page",
     "clear_filters": "Clear filters",
+    "view_elaboration": "View elaboration",
+    "export_pdf_short": "Export PDF",
     "elaboration_name_header": "Production Name",
     "elaboration_date_header": "Date",
     "elaboration_recipe_header": "Recipe",
@@ -203,7 +226,8 @@
     "modify": "Modify",
     "no_elaborations_recorded": "No productions recorded yet.",
     "goods_report": "Goods receipt report",
-    "generate_goods_report": "Get a report",
+    "generate_goods_report": "Get a goods receipt report",
+    "view_stock_inventory_btn": "View stock inventory",
     "cleaning_report": "Cleaning report",
     "generate_cleaning_report": "Generate cleaning report",
     "temp_report": "Temperature report",
@@ -216,7 +240,7 @@
     "new_record": "New Cleaning Record.",
     "manage_recipes": "Recipes",
     "showing_info": "Showing {start} - {end} of {total} productions",
-    "showing_last_10": "Showing the last 10 entries recorded",
+    "showing_last_40": "Showing the last 40 entries recorded",
     "delivery_note_photo": "You can attach a photo of the delivery note",
     "save_entry": "Save",
     "invoice": "Invoice",
@@ -226,7 +250,8 @@
     "upload_photo": "Upload Delivery Note Photo",
     "photo_format": "Take a photo or choose a file",
     "ingredient_costs_btn": "Raw material cost prices",
-    "elaborar": "Elaborate"
+    "elaborar": "Elaborate",
+    "scan_invoice_ia": "Scan delivery note with AI"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -267,6 +292,7 @@
     "expiry_type_expiration": "EXPIRED PRODUCT",
     "expiry_type_best_before": "BEST BEFORE DATE",
     "ingredients": "INGREDIENTS",
+    "ingredients_stock_warning": "If for example an ingredient is rice and in other recipes you have entered it in kg, enter it here with the same unit of measure so that stock management is more effective. Avoid using different units of measure in different recipes for the same ingredient.",
     "ing_name": "NAME",
     "ing_amount": "QTY",
     "ing_unit": "UNIT",
@@ -307,6 +333,8 @@
     "labels_header_image_remove": "Remove image",
     "labels_health_registry": "Health registry",
     "labels_health_registry_desc": "Enter the text related to your health registry here if you want it to appear on the label",
+    "labels_other_info": "Other information",
+    "labels_other_info_desc": "If you want any extra text to appear on the label, write it here",
     "labels_show_fields": "Show fields on the label",
     "labels_batch_num": "Batch number",
     "labels_made_by": "Person who prepares",
@@ -351,6 +379,9 @@
       "madeBy": "Prepared by",
       "barcode": "Barcode",
       "healthRegistry": "Health registry",
+      "otherInfo": "Other information",
+      "elaborationExtraInfo": "Extra production info",
+      "dryingRoomDates": "Drying room dates",
       "unitPrice": "Unit Price (RRP)"
     },
     "drag_elements": "Drag elements here",
@@ -422,7 +453,11 @@
     "product_date_required": "Product and date are required",
     "file_too_large": "Error: The attached file is too large. Please upload smaller image or lower the resolution (Max 4.5 MB).",
     "prices_saved": "Prices saved successfully",
-    "delete_confirm_worker": "Are you sure you want to delete this worker?"
+    "delete_confirm_worker": "Are you sure you want to delete this worker?",
+    "duplicate_confirm_recipe": "Are you sure you want to duplicate this recipe?",
+    "recipe_duplicated": "Recipe duplicated successfully",
+    "no_linked_goods_receipts": "No related goods receipts were found for these ingredients.",
+    "auto_filled_lotes_from_goods": "Auto-filled {count} batches from goods receipts."
   },
   "affiliate": {
     "sidebar_link": "Earn money with Quicktrace",
@@ -525,6 +560,8 @@
     "elaboration_title_placeholder": "Batch number...",
     "ingredients_batches": "Ingredients and Batches",
     "autofill_lotes": "Autofill batches with last entry",
+    "autofill_lotes_from_goods": "Autofill batches with the latest goods receipt",
+    "autofill_lotes_from_goods_help": "This is valid if you have linked the goods receipts with the ingredients",
     "clear_lotes": "Clear batches",
     "theoretical_amount": "Theoretical Qty",
     "lot": "Batch",
@@ -552,7 +589,10 @@
     "net_weight_label": "Net weight for label",
     "label_net_weight": "Net weight",
     "unit_price": "Unit Price (RRP)",
-    "unit_price_help": "You can use it on the label. You can change the currency in the business settings in the main menu."
+    "unit_price_help": "You can use it on the label. You can change the currency in the business settings in the main menu.",
+    "extra_info_label": "Extra information of this production",
+    "extra_info_help": "This text can appear on the label. It is used to put data such as origin, format, etc.",
+    "elaboration_notes": "Elaboration notes"
   },
   "goods_receipt_form": {
     "product": "Product",
@@ -564,7 +604,26 @@
     "end_date": "End Date",
     "type_and_origin": "Type and origin",
     "quantity": "Quantity",
-    "upload_file": "Upload image..."
+    "upload_file": "Upload image...",
+    "link_ingredients_btn": "Link this batch with some ingredients to use it in traceability",
+    "link_popup_title": "Select the ingredients you want to link to this goods receipt",
+    "link_popup_desc": "When you generate the traceability of an elaboration, you can automatically fill in the batch number of the selected ingredients with the batch of this goods receipt",
+    "link_popup_save": "Link ingredients to this goods receipt",
+    "stock_control_title": "Link the quantities of this goods receipt to keep track of stock",
+    "stock_control_help": "If you see the ingredient in several units it is because it is in different recipes in different units and stock will be tracked separately, although you can edit it manually in inventory management.",
+    "related_quantity_label": "Quantity of {name} ({unit})",
+    "ia_modal_title": "Scan delivery note with AI",
+    "ia_modal_desc": "Upload a photo or PDF of a delivery note to automatically extract products, lots, and quantities.",
+    "ia_processing": "Processing delivery note with AI...",
+    "ia_success": "Delivery note processed successfully. Review and save the entries.",
+    "ia_save_confirm": "Do you want to save this goods receipt?",
+    "ia_saved": "Entry saved",
+    "ia_already_saved": "Already saved",
+    "ia_select_image": "Select or drag an image or PDF of the delivery note",
+    "ia_col_actions": "Actions",
+    "goods_saved": "Goods receipt saved successfully",
+    "ia_error_saving": "Error saving: ",
+    "ia_ingredients_info_alert": "If you link this goods receipt with one or more ingredients, when you create a production and its traceability, this batch will appear in those ingredients."
   },
   "plans": {
     "title": "Pricing Plans",
@@ -656,6 +715,7 @@
     "check_s": "F",
     "check_c": "C",
     "responsible": "Sampling responsible",
+    "ph": "Ph of the sample",
     "table_date": "Date",
     "table_point": "Point",
     "table_chlorine": "Chlorine",
@@ -839,6 +899,10 @@
       "force_btn_confirm": "Yes, Force Update Now",
       "force_processing": "Processing all users...",
       "accepted_date_label": "ACCEPTANCE DATE"
+    },
+    "edit": {
+      "ia_config": "AI Configuration",
+      "ia_goods": "Enable AI system for goods receipts"
     }
   },
   "providers": {
@@ -856,5 +920,47 @@
     "restricted_title": "This section is only for users with a paid plan.",
     "restricted_desc": "In this section you can register all your providers with all their data and use this information in goods receipts among other features.",
     "view_plans": "Check Quicktrace plans here"
+  },
+  "waste": {
+    "title": "Waste",
+    "description": "Manage and record waste collection.",
+    "new_collection": "New waste collection",
+    "date": "Date",
+    "person": "Person making the collection",
+    "kilos": "Kilos of waste",
+    "no_records": "No waste collection records found.",
+    "save": "Save collection",
+    "table_date": "Date",
+    "table_person": "Responsible",
+    "table_kilos": "Kilos (kg)",
+    "delete_confirm": "Are you sure you want to delete this record?"
+  },
+  "cleaning": {
+    "product_sheets_btn": "Technical sheets of cleaning products",
+    "product_sheets_title": "Product Technical Sheets",
+    "add_sheet_btn": "Add new sheet",
+    "edit_sheet_title": "Edit technical sheet",
+    "new_sheet_title": "New technical sheet",
+    "product_name": "Product Name",
+    "product_photo": "Photo of the technical sheet",
+    "col_name": "Name",
+    "col_created_at": "Date of creation",
+    "col_link": "Sheet / Image",
+    "col_actions": "Actions",
+    "view_image": "View sheet",
+    "delete_confirm": "Are you sure you want to delete this technical sheet?",
+    "save_success": "Technical sheet saved successfully",
+    "delete_success": "Technical sheet deleted successfully",
+    "error_loading": "Error loading technical sheets",
+    "error_saving": "Error saving technical sheet",
+    "error_deleting": "Error deleting technical sheet",
+    "search_placeholder": "Search by product name...",
+    "product_photo_or_pdf": "Document or photo of the product sheet",
+    "view_pdf": "View PDF"
+  },
+  "plan_limit_block": {
+    "title": "Recipe Limit Exceeded",
+    "description": "You have registered more recipes than your current plan allows. You must upgrade your plan or delete recipes to continue recording elaborations, cleaning logs, temperatures, water records, goods receipts, and waste collections.",
+    "view_plans": "View Available Plans"
   }
 }
