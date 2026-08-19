@@ -132,7 +132,13 @@ export default function AdminDashboard() {
       const res = await fetch("/api/admin/clients/list");
       const data = await res.json();
       if (data.error) {
-        alert("Error al cargar clientes: " + data.error);
+        try {
+          const testRes = await fetch("/api/admin/clients/test-query");
+          const testData = await testRes.json();
+          alert("Error al cargar clientes: " + (testData.error || data.error));
+        } catch (e) {
+          alert("Error al cargar clientes: " + data.error);
+        }
       } else {
         setClients(data);
       }
