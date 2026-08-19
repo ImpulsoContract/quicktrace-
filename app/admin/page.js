@@ -315,6 +315,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSendPasswordReset = async (email) => {
+    if (!confirm(`¿Seguro que deseas enviar el email de recuperación de contraseña a ${email}?`)) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(`Email de recuperación enviado con éxito a ${email}`);
+      } else {
+        alert(data.error || "Error al enviar el email de recuperación");
+      }
+    } catch (error) {
+      alert("Error al conectar con el servidor");
+    } finally {
+      setLoading(false);
+      setActiveMenu(null);
+    }
+  };
+
   const handleImpersonate = async (targetUserId) => {
     if (!confirm("¿Seguro que quieres entrar como este cliente? Se cerrará tu sesión de administrador.")) return;
     
@@ -801,7 +824,7 @@ export default function AdminDashboard() {
               {t('admin.actions.title')}: {activeMenu.clientProfile?.razonSocial}
             </div>
             <MenuBtn icon={<ShieldCheck size={16} />} text="Entrar como cliente" onClick={() => handleImpersonate(activeMenu.id)} />
-            <MenuBtn icon={<Edit size={16} />} text={t('admin.actions.edit')} onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile } }); setActiveMenu(null); }} />
+            <MenuBtn icon={<Edit size={16} />} text={t('admin.actions.edit')} onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile, personName: activeMenu.clientProfile?.personName || activeMenu.name || "" } }); setActiveMenu(null); }} />
             <MenuBtn
               icon={<Plus size={16} />}
               text={t('admin.actions.add_recipe')}
@@ -813,6 +836,7 @@ export default function AdminDashboard() {
             <MenuBtn icon={<Thermometer size={16} />} text={t('admin.actions.chambers')} onClick={() => { setManageChambersModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<RefreshCw size={16} />} text={t('admin.actions.sync_stripe')} onClick={() => handleResyncStripe(activeMenu.id)} />
             <MenuBtn icon={<UserPlus size={16} />} text={t('admin.actions.sync_clientify')} onClick={() => handleSyncClientify(activeMenu.id)} />
+            <MenuBtn icon={<Mail size={16} />} text="Enviar email de recuperación de contraseña" onClick={() => handleSendPasswordReset(activeMenu.email)} />
             <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
                <MenuBtn 
                 icon={<FileText size={16} />} 
@@ -922,6 +946,23 @@ export default function AdminDashboard() {
                     placeholder="YYYY-MM-DD..."
                   />
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="section-title">{t('admin.edit.ia_config') || "Configuración IA"}</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                  <input 
+                    type="checkbox" 
+                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer', accentColor: 'var(--corp-green)' }}
+                    checked={!!editClientModal.form.hasIaGoods} 
+                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, hasIaGoods: e.target.checked}})} 
+                  />
+                  <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                    {t('admin.edit.ia_goods') || "Activar sistema IA para entrada de mercancías"}
+                  </span>
+                </label>
               </div>
             </div>
 

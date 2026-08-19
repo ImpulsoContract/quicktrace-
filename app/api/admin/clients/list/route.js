@@ -16,6 +16,7 @@ export async function GET() {
       select: {
         id: true,
         email: true,
+        name: true,
         createdAt: true,
         lastLogin: true,
         lastLoginLanguage: true,
@@ -39,6 +40,7 @@ export async function GET() {
             gclid: true,
             fbclid: true,
             plan: true,
+            hasIaGoods: true,
             _count: {
               select: { recipes: true }
             }
