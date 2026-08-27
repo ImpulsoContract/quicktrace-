@@ -149,6 +149,7 @@
   },
   "dashboard": {
     "welcome": "Bonjour",
+    "items_limit": "Limite d'enregistrements",
     "traceability_desc": "Sélectionnez une recette pour enregistrer une nouvelle élaboration.",
     "history_info": "Consultez l'historique de vos élaborations créées.",
     "elaborations": "Élaborations",
@@ -237,7 +238,7 @@
     "new_record": "Nouvel enregistrement de nettoyage.",
     "manage_recipes": "Recettes contractées",
     "showing_info": "Affichage de {start} - {end} sur {total} élaborations",
-    "showing_last_40": "Affichage des 40 dernières entrées enregistrées",
+    "showing_last_count": "Affichage des {count} dernières entrées enregistrées",
     "delivery_note_photo": "Vous pouvez joindre une photo du bon",
     "save_entry": "Enregistrer",
     "invoice": "Facture",

@@ -149,6 +149,7 @@
   },
   "dashboard": {
     "welcome": "Olá",
+    "items_limit": "Limite de registos",
     "traceability_desc": "Selecione una receita para registar uma nova elaboração.",
     "history_info": "Consulte o histórico das suas elaborações criadas.",
     "elaborations": "Elaborações",
@@ -240,7 +241,7 @@
     "new_record": "Novo Registo de Limpeza.",
     "manage_recipes": "Receitas contratadas",
     "showing_info": "Mostrando {start} - {end} de {total} elaborações",
-    "showing_last_40": "Mostrando as últimas 40 entradas registadas",
+    "showing_last_count": "Mostrando as últimas {count} entradas registadas",
     "delivery_note_photo": "Pode anexar uma foto da guia de remessa",
     "save_entry": "Guardar",
     "invoice": "Fatura",

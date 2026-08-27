@@ -149,6 +149,7 @@
   },
   "dashboard": {
     "welcome": "Hello",
+    "items_limit": "Items limit",
     "traceability_desc": "Select a recipe to register a new elaboration.",
     "history_info": "Check the history of your preparations.",
     "elaborations": "Elaborations",
@@ -240,7 +241,7 @@
     "new_record": "New Cleaning Record.",
     "manage_recipes": "Recipes",
     "showing_info": "Showing {start} - {end} of {total} productions",
-    "showing_last_40": "Showing the last 40 entries recorded",
+    "showing_last_count": "Showing the last {count} entries recorded",
     "delivery_note_photo": "You can attach a photo of the delivery note",
     "save_entry": "Save",
     "invoice": "Invoice",

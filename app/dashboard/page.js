@@ -350,7 +350,7 @@ export default function ClientDashboard() {
   });
   const [cleaningFilters, setCleaningFilters] = useState({ startDate: "", endDate: "" });
   const [tempFilters, setTempFilters] = useState({ startDate: "", endDate: "" });
-  const [goodsFilters, setGoodsFilters] = useState({ startDate: "", endDate: "", merchantType: "", productName: "", providerName: "", lote: "" });
+  const [goodsFilters, setGoodsFilters] = useState({ startDate: "", endDate: "", merchantType: "", productName: "", providerName: "", lote: "", limit: "40" });
   const filteredGoodsReceipts = useMemo(() => {
     return goodsReceipts.filter(r => {
       if (goodsFilters.startDate && goodsFilters.endDate) {
@@ -4462,8 +4462,21 @@ export default function ClientDashboard() {
                     onChange={(e) => setGoodsFilters({...goodsFilters, lote: e.target.value})}
                   />
                 </div>
+                <div style={{ flex: 1, minWidth: '120px' }}>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.items_limit') || "Límite de registros"}</label>
+                  <select 
+                    className="input-field"
+                    value={goodsFilters.limit || "40"}
+                    onChange={(e) => setGoodsFilters({...goodsFilters, limit: e.target.value})}
+                  >
+                    <option value="40">40</option>
+                    <option value="80">80</option>
+                    <option value="120">120</option>
+                    <option value="150">150</option>
+                  </select>
+                </div>
                   <button 
-                    onClick={() => setGoodsFilters({ startDate: "", endDate: "", merchantType: "", productName: "", providerName: "", lote: "" })}
+                    onClick={() => setGoodsFilters({ startDate: "", endDate: "", merchantType: "", productName: "", providerName: "", lote: "", limit: "40" })}
                     style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
                   >
                     {t('dashboard.cancel')}
@@ -4485,7 +4498,7 @@ export default function ClientDashboard() {
                 <div style={{ padding: '0.75rem 1.25rem', background: 'rgba(66, 98, 22, 0.05)', borderRadius: '1rem', marginBottom: '1.5rem', border: '1px solid rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <Zap size={18} color="var(--corp-green)" />
                   <span style={{ fontSize: '0.95rem', color: 'var(--corp-green)', fontWeight: '800' }}>
-                    {t('dashboard.showing_last_40')}
+                    {t('dashboard.showing_last_count', { count: goodsFilters.limit || "40" })}
                   </span>
                 </div>
               )}

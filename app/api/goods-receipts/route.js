@@ -31,9 +31,13 @@ export async function GET(req) {
     const productName = searchParams.get("productName");
     const providerName = searchParams.get("providerName");
     const lote = searchParams.get("lote");
+    const limit = searchParams.get("limit");
 
     const where = { clientProfileId: profileId };
-    let take = undefined;
+    let take = limit ? parseInt(limit, 10) : 40;
+    if (isNaN(take)) {
+      take = 40;
+    }
     
     if (startDate || endDate) {
       where.date = {};
@@ -66,11 +70,6 @@ export async function GET(req) {
         contains: lote,
         mode: "insensitive"
       };
-    }
-
-    const hasFilters = startDate || endDate || productName || providerName || lote;
-    if (!hasFilters) {
-      take = 40;
     }
 
     const receipts = await prisma.goodsReceipt.findMany({

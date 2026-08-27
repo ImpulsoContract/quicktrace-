@@ -149,6 +149,7 @@
   },
   "dashboard": {
     "welcome": "Ciao",
+    "items_limit": "Limite record",
     "traceability_desc": "Seleziona una ricetta per registrare una nuova lavorazione.",
     "history_info": "Consulta lo storico delle lavorazioni create.",
     "elaborations": "Lavorazioni",
@@ -237,7 +238,7 @@
     "new_record": "Nuovo Record di Pulizia.",
     "manage_recipes": "Ricette contrattate",
     "showing_info": "Mostrando {start} - {end} di {total} lavorazioni",
-    "showing_last_40": "Mostrando le ultime 40 voci registrate",
+    "showing_last_count": "Mostrando le ultime {count} voci registrate",
     "delivery_note_photo": "Puoi allegare una foto del DDT",
     "save_entry": "Salva",
     "invoice": "Fattura",
