@@ -4324,31 +4324,32 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.goods_info')}</p>
-                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem', width: '100%', flexWrap: 'wrap' }}>
                     <button 
                       onClick={() => setIsGoodsReportModalOpen(true)}
                       className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
                       <FileText size={18} /> {t('dashboard.generate_goods_report')}
                     </button>
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "rzrGj1OouVo" })}
                       className="btn-help-video"
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
                     <button 
                       onClick={() => setIsManageMerchantTypesModalOpen(true)}
                       className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
                       <Settings size={18} /> {t('modals.manage_merchant_types') || "Gestionar tipos de mercancía"}
                     </button>
                     <button
                       onClick={() => setIsIngredientCostsModalOpen(true)}
                       className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
                       <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
                     </button>
@@ -4363,11 +4364,14 @@ export default function ClientDashboard() {
                       }}
                       className="btn-primary"
                       style={{ 
+                        flex: 1,
                         display: 'flex', 
                         alignItems: 'center', 
+                        justifyContent: 'center',
                         gap: '0.75rem', 
                         padding: '0.75rem 1.5rem', 
                         fontSize: '0.9rem',
+                        whiteSpace: 'nowrap',
                         background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
                         boxShadow: '0 4px 10px rgba(124, 58, 237, 0.15)'
                       }}
@@ -4394,7 +4398,7 @@ export default function ClientDashboard() {
                         setIsGoodsModalOpen(true);
                       }}
                       className="btn-primary" 
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
                       <Package size={18} /> {t('dashboard.new_goods_entry')}
                     </button>

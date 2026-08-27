@@ -271,6 +271,7 @@
     "merchant_types": "Merchandise Types",
     "manage_merchant_types": "Manage Merchandise Types",
     "merchant_types_desc": "Define the types of merchandise you handle in your business (e.g., Meat, Fish, Fruit...)",
+    "new_merchant_type": "New merchandise type",
     "new_merchant_type_placeholder": "New type...",
     "add_type": "Add Type",
     "person_name": "Responsible Person's Name",

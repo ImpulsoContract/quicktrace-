@@ -266,6 +266,7 @@
     "merchant_types": "Types de Marchandise",
     "manage_merchant_types": "Gérer les Types de Marchandise",
     "merchant_types_desc": "Définissez les types de marchandises que vous gérez (ex : Viande, Poisson, Fruits...)",
+    "new_merchant_type": "Nouveau type de marchandise",
     "new_merchant_type_placeholder": "Nouveau type...",
     "add_type": "Ajouter le type",
     "person_name": "Nom de la personne responsable",

@@ -270,6 +270,7 @@
     "merchant_types": "Tipos de Mercadoria",
     "manage_merchant_types": "Gerir Tipos de Mercadoria",
     "merchant_types_desc": "Defina os tipos de mercadoria que gere no seu negócio (ex: Carne, Peixe, Fruta...)",
+    "new_merchant_type": "Novo tipo de mercadoria",
     "new_merchant_type_placeholder": "Novo tipo...",
     "add_type": "Adicionar Tipo",
     "person_name": "Nome da pessoa responsável",
