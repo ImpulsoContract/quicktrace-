@@ -497,6 +497,7 @@ export default function ClientDashboard() {
   const [isWaterExportModalOpen, setIsWaterExportModalOpen] = useState(false);
   const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState(false);
   const [isIngredientCostsModalOpen, setIsIngredientCostsModalOpen] = useState(false);
+  const [isManageMerchantTypesModalOpen, setIsManageMerchantTypesModalOpen] = useState(false);
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   const [workers, setWorkers] = useState([]);
   const [editingWorker, setEditingWorker] = useState(null);
@@ -4337,6 +4338,13 @@ export default function ClientDashboard() {
                     >
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
+                    <button 
+                      onClick={() => setIsManageMerchantTypesModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                    >
+                      <Settings size={18} /> {t('modals.manage_merchant_types') || "Gestionar tipos de mercancía"}
+                    </button>
                     <button
                       onClick={() => setIsIngredientCostsModalOpen(true)}
                       className="btn-secondary"
@@ -6088,6 +6096,14 @@ export default function ClientDashboard() {
           ingredientPrices={ingredientPrices}
           loading={loading}
           currency={profile?.currency}
+        />
+      )}
+
+      {isManageMerchantTypesModalOpen && (
+        <ManageMerchantTypesModal 
+          merchantTypes={profile?.merchantTypes || []}
+          onClose={() => setIsManageMerchantTypesModalOpen(false)}
+          onUpdate={(newTypes) => handleUpdateProfile({ merchantTypes: newTypes })}
         />
       )}
 
@@ -10364,6 +10380,115 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, t, fetch
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ManageMerchantTypesModal({ merchantTypes, onClose, onUpdate }) {
+  const { t } = useI18n();
+  const [newType, setNewType] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editValue, setEditValue] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!newType.trim()) return;
+    if (merchantTypes.includes(newType.trim())) {
+      setNewType("");
+      return;
+    }
+    const updated = [...merchantTypes, newType.trim()];
+    onUpdate(updated);
+    setNewType("");
+  };
+
+  const handleUpdate = (e) => {
+    e.preventDefault();
+    if (!editValue.trim() || editingIndex === null) return;
+    
+    const updated = [...merchantTypes];
+    updated[editingIndex] = editValue.trim();
+    onUpdate(updated);
+    setEditingIndex(null);
+  };
+
+  const handleDelete = (typeToDelete) => {
+    if (!confirm(t('common.confirm_delete') || "¿Estás seguro de que quieres eliminar este elemento?")) return;
+    const updated = merchantTypes.filter(t => t !== typeToDelete);
+    onUpdate(updated);
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 10000 }}>
+      <div className="modal-content" style={{ maxWidth: '600px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('modals.manage_merchant_types') || "Gestionar tipos de mercancía"}</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('modals.merchant_types_desc') || "Crea, edita o elimina los tipos de mercancía."}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <X size={24} />
+          </button>
+        </header>
+
+        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_merchant_type') || "Nuevo tipo de mercancía"}</label>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder={t('modals.new_merchant_type_placeholder') || "Ej: Carne, Pescado, Verduras..."}
+              value={newType}
+              onChange={(e) => setNewType(e.target.value)}
+              required
+            />
+            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>{t('modals.add_type') || "Añadir"}</button>
+          </div>
+        </form>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+          {merchantTypes.map((type, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1rem' }}>
+              {editingIndex === idx ? (
+                <form onSubmit={handleUpdate} style={{ flex: 1, display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    autoFocus
+                  />
+                  <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }}><Save size={16} /></button>
+                  <button type="button" className="btn-secondary" onClick={() => setEditingIndex(null)} style={{ padding: '0.5rem 1rem' }}><X size={16} /></button>
+                </form>
+              ) : (
+                <>
+                  <span style={{ fontWeight: '700', fontSize: '1rem' }}>{type}</span>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button 
+                      onClick={() => { setEditingIndex(idx); setEditValue(type); }}
+                      style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', color: 'var(--corp-green)', cursor: 'pointer' }}
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(type)}
+                      style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', cursor: 'pointer' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+          {merchantTypes.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
+              {t('modals.no_merchant_types')}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

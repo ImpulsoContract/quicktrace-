@@ -149,7 +149,7 @@
   },
   "dashboard": {
     "welcome": "Olá",
-    "items_limit": "Limite de registos",
+    "items_limit": "Limite de entradas na lista",
     "traceability_desc": "Selecione una receita para registar uma nova elaboração.",
     "history_info": "Consulte o histórico das suas elaborações criadas.",
     "elaborations": "Elaborações",

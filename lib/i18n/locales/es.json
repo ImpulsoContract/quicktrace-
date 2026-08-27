@@ -149,7 +149,7 @@
   },
   "dashboard": {
     "welcome": "Hola",
-    "items_limit": "Límite de registros",
+    "items_limit": "Límite de entradas en el listado",
     "traceability_desc": "Selecciona una receta para registrar una nueva elaboración.",
     "history_info": "Consulta el historial de tus elaboraciones creadas.",
     "elaborations": "Elaboraciones",

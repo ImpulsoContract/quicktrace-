@@ -149,7 +149,7 @@
   },
   "dashboard": {
     "welcome": "Hello",
-    "items_limit": "Items limit",
+    "items_limit": "List entries limit",
     "traceability_desc": "Select a recipe to register a new elaboration.",
     "history_info": "Check the history of your preparations.",
     "elaborations": "Elaborations",

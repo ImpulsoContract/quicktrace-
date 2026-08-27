@@ -149,7 +149,7 @@
   },
   "dashboard": {
     "welcome": "Ciao",
-    "items_limit": "Limite record",
+    "items_limit": "Limite di voci nell'elenco",
     "traceability_desc": "Seleziona una ricetta per registrare una nuova lavorazione.",
     "history_info": "Consulta lo storico delle lavorazioni create.",
     "elaborations": "Lavorazioni",
