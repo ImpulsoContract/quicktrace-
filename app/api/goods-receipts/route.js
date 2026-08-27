@@ -28,6 +28,9 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const productName = searchParams.get("productName");
+    const providerName = searchParams.get("providerName");
+    const lote = searchParams.get("lote");
 
     const where = { clientProfileId: profileId };
     let take = undefined;
@@ -42,7 +45,31 @@ export async function GET(req) {
         end.setHours(23, 59, 59, 999);
         where.date.lte = end;
       }
-    } else {
+    }
+
+    if (productName) {
+      where.productName = {
+        contains: productName,
+        mode: "insensitive"
+      };
+    }
+
+    if (providerName) {
+      where.providerName = {
+        contains: providerName,
+        mode: "insensitive"
+      };
+    }
+
+    if (lote) {
+      where.lote = {
+        contains: lote,
+        mode: "insensitive"
+      };
+    }
+
+    const hasFilters = startDate || endDate || productName || providerName || lote;
+    if (!hasFilters) {
       take = 40;
     }
 

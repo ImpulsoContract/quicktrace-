@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { 
   ChefHat, History, LogOut, 
@@ -350,7 +350,23 @@ export default function ClientDashboard() {
   });
   const [cleaningFilters, setCleaningFilters] = useState({ startDate: "", endDate: "" });
   const [tempFilters, setTempFilters] = useState({ startDate: "", endDate: "" });
-  const [goodsFilters, setGoodsFilters] = useState({ startDate: "", endDate: "", merchantType: "" });
+  const [goodsFilters, setGoodsFilters] = useState({ startDate: "", endDate: "", merchantType: "", productName: "", providerName: "", lote: "" });
+  const filteredGoodsReceipts = useMemo(() => {
+    return goodsReceipts.filter(r => {
+      if (goodsFilters.startDate && goodsFilters.endDate) {
+        const date = new Date(r.date);
+        const start = new Date(goodsFilters.startDate);
+        const end = new Date(goodsFilters.endDate);
+        end.setHours(23, 59, 59, 999);
+        if (date < start || date > end) return false;
+      }
+      if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
+      if (goodsFilters.productName && !r.productName.toLowerCase().includes(goodsFilters.productName.toLowerCase())) return false;
+      if (goodsFilters.providerName && !(r.providerName || "").toLowerCase().includes(goodsFilters.providerName.toLowerCase())) return false;
+      if (goodsFilters.lote && !(r.lote || "").toLowerCase().includes(goodsFilters.lote.toLowerCase())) return false;
+      return true;
+    });
+  }, [goodsReceipts, goodsFilters]);
   const [providerMerchantTypeFilter, setProviderMerchantTypeFilter] = useState("");
   const [totalElabs, setTotalElabs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -523,9 +539,13 @@ export default function ClientDashboard() {
   }, [status]);
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status !== "authenticated") return;
+    const handler = setTimeout(() => {
       fetchGoodsReceipts(goodsFilters);
-    }
+    }, 300);
+    return () => {
+      clearTimeout(handler);
+    };
   }, [status, goodsFilters]);
 
   useEffect(() => {
@@ -972,9 +992,17 @@ export default function ClientDashboard() {
   const fetchGoodsReceipts = async (filters = null) => {
     try {
       let url = "/api/goods-receipts";
-      if (filters && (filters.startDate || filters.endDate)) {
-        const query = new URLSearchParams(filters).toString();
-        url += `?${query}`;
+      if (filters) {
+        const cleanFilters = {};
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) {
+            cleanFilters[key] = filters[key];
+          }
+        });
+        if (Object.keys(cleanFilters).length > 0) {
+          const query = new URLSearchParams(cleanFilters).toString();
+          url += `?${query}`;
+        }
       }
       const res = await fetch(url);
       const data = await res.json();
@@ -4404,8 +4432,38 @@ export default function ClientDashboard() {
                     ))}
                   </select>
                 </div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('goods_receipt_form.product')}</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    placeholder={t('goods_receipt_form.product') + "..."}
+                    value={goodsFilters.productName || ""}
+                    onChange={(e) => setGoodsFilters({...goodsFilters, productName: e.target.value})}
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('goods_receipt_form.provider')}</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    placeholder={t('goods_receipt_form.provider') + "..."}
+                    value={goodsFilters.providerName || ""}
+                    onChange={(e) => setGoodsFilters({...goodsFilters, providerName: e.target.value})}
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('elaboration_form.lot') || t('lote')}</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    placeholder={(t('elaboration_form.lot') || t('lote')) + "..."}
+                    value={goodsFilters.lote || ""}
+                    onChange={(e) => setGoodsFilters({...goodsFilters, lote: e.target.value})}
+                  />
+                </div>
                   <button 
-                    onClick={() => setGoodsFilters({ startDate: "", endDate: "", merchantType: "" })}
+                    onClick={() => setGoodsFilters({ startDate: "", endDate: "", merchantType: "", productName: "", providerName: "", lote: "" })}
                     style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
                   >
                     {t('dashboard.cancel')}
@@ -4413,36 +4471,12 @@ export default function ClientDashboard() {
                   {goodsReceipts.length > 0 && (
                     <button 
                       onClick={() => {
-                        const filtered = goodsReceipts.filter(r => {
-                          if (goodsFilters.startDate && goodsFilters.endDate) {
-                            const date = new Date(r.date);
-                            const start = new Date(goodsFilters.startDate);
-                            const end = new Date(goodsFilters.endDate);
-                            end.setHours(23, 59, 59, 999);
-                            if (date < start || date > end) return false;
-                          }
-                          if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
-                          return true;
-                        });
-                        toggleSelectAll(filtered);
+                        toggleSelectAll(filteredGoodsReceipts);
                       }}
                       className="btn-secondary"
                       style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                     >
-                      {(() => {
-                        const filtered = goodsReceipts.filter(r => {
-                          if (goodsFilters.startDate && goodsFilters.endDate) {
-                            const date = new Date(r.date);
-                            const start = new Date(goodsFilters.startDate);
-                            const end = new Date(goodsFilters.endDate);
-                            end.setHours(23, 59, 59, 999);
-                            if (date < start || date > end) return false;
-                          }
-                          if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
-                          return true;
-                        });
-                        return filtered.every(r => selectedRecords.includes(r.id)) ? t('bulk_actions.deselect_all') || "Deseleccionar todos" : t('bulk_actions.select_all') || "Seleccionar todos";
-                      })()}
+                      {filteredGoodsReceipts.every(r => selectedRecords.includes(r.id)) ? t('bulk_actions.deselect_all') || "Deseleccionar todos" : t('bulk_actions.select_all') || "Seleccionar todos"}
                     </button>
                   )}
                 </div>
@@ -4456,17 +4490,7 @@ export default function ClientDashboard() {
                 </div>
               )}
 
-              {goodsReceipts.filter(r => {
-                if (goodsFilters.startDate && goodsFilters.endDate) {
-                  const date = new Date(r.date);
-                  const start = new Date(goodsFilters.startDate);
-                  const end = new Date(goodsFilters.endDate);
-                  end.setHours(23, 59, 59, 999);
-                  if (date < start || date > end) return false;
-                }
-                if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
-                return true;
-              }).length === 0 ? (
+              {filteredGoodsReceipts.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '2px dashed var(--border)' }}>
                   <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <Truck size={40} color="var(--border)" />
@@ -4476,19 +4500,7 @@ export default function ClientDashboard() {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
-                  {goodsReceipts
-                    .filter(r => {
-                      if (goodsFilters.startDate && goodsFilters.endDate) {
-                        const date = new Date(r.date);
-                        const start = new Date(goodsFilters.startDate);
-                        const end = new Date(goodsFilters.endDate);
-                        end.setHours(23, 59, 59, 999);
-                        if (date < start || date > end) return false;
-                      }
-                      if (goodsFilters.merchantType && (!r.merchantTypes || !r.merchantTypes.includes(goodsFilters.merchantType))) return false;
-                      return true;
-                    })
-                    .map(receipt => (
+                  {filteredGoodsReceipts.map(receipt => (
                     <div key={receipt.id} className="glass-card" style={{ 
                       background: selectedRecords.includes(receipt.id) ? '#f0fdf4' : 'white', 
                       padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem',
