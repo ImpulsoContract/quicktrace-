@@ -4453,11 +4453,11 @@ export default function ClientDashboard() {
                   />
                 </div>
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('elaboration_form.lot') || t('lote')}</label>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('traceability_form.lot')}</label>
                   <input 
                     type="text" 
                     className="input-field" 
-                    placeholder={(t('elaboration_form.lot') || t('lote')) + "..."}
+                    placeholder={t('traceability_form.lot') + "..."}
                     value={goodsFilters.lote || ""}
                     onChange={(e) => setGoodsFilters({...goodsFilters, lote: e.target.value})}
                   />
@@ -4485,7 +4485,7 @@ export default function ClientDashboard() {
                 <div style={{ padding: '0.75rem 1.25rem', background: 'rgba(66, 98, 22, 0.05)', borderRadius: '1rem', marginBottom: '1.5rem', border: '1px solid rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <Zap size={18} color="var(--corp-green)" />
                   <span style={{ fontSize: '0.95rem', color: 'var(--corp-green)', fontWeight: '800' }}>
-                    {t('dashboard.showing_last_10') || "Mostrando las últimas 10 entradas registradas"}
+                    {t('dashboard.showing_last_40')}
                   </span>
                 </div>
               )}
