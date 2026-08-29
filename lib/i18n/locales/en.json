@@ -625,6 +625,7 @@
     "ia_col_actions": "Actions",
     "goods_saved": "Goods receipt saved successfully",
     "ia_error_saving": "Error saving: ",
+    "relate_entry_with_ingredients": "Relate this entry with ingredients",
     "ia_ingredients_info_alert": "If you link this goods receipt with one or more ingredients, when you create a production and its traceability, this batch will appear in those ingredients."
   },
   "plans": {

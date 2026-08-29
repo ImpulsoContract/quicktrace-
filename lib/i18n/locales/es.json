@@ -625,6 +625,7 @@
     "ia_col_actions": "Acciones",
     "goods_saved": "Entrada de mercancías guardada correctamente",
     "ia_error_saving": "Error al guardar: ",
+    "relate_entry_with_ingredients": "Relacionar esta entrada con ingredientes",
     "ia_ingredients_info_alert": "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes."
   },
   "plans": {

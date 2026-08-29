@@ -4333,7 +4333,7 @@ export default function ClientDashboard() {
                       <FileText size={18} /> {t('dashboard.generate_goods_report')}
                     </button>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "rzrGj1OouVo" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "8_qOTe6RrHk" })}
                       className="btn-help-video"
                       style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
@@ -6087,9 +6087,9 @@ export default function ClientDashboard() {
           onClose={() => setIsIaScanModalOpen(false)}
           recipes={recipes}
           providers={providers}
-          t={t}
           fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
           profile={profile}
+          onHelpVideoClick={(videoId) => setVideoModal({ isOpen: true, videoId })}
         />
       )}
 
@@ -9704,7 +9704,8 @@ function WaterExportModal({ onClose, onGenerate, dates, setDates }) {
   );
 }
 
-function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, t, fetchGoodsReceipts, profile }) {
+function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoodsReceipts, profile, onHelpVideoClick }) {
+  const { t, locale } = useI18n();
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -9922,7 +9923,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, t, fetch
             </p>
             <button
               type="button"
-              onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "8_qOTe6RrHk" })}
+              onClick={() => onHelpVideoClick(locale === 'en' ? 'raxn-Z7o3No' : "8_qOTe6RrHk")}
               className="btn-help-video"
               style={{ marginTop: '0.75rem' }}
             >
@@ -10033,187 +10034,223 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, t, fetch
               {t('goods_receipt_form.ia_success') || "Albarán procesado con éxito. Revisa y guarda las entradas."}
             </div>
 
-            <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.product')}</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                        <span>Ingredientes</span>
-                        <Info 
-                          size={14} 
-                          style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
-                          onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert'))}
-                        />
-                      </div>
-                    </th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.provider')}</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Lote</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.quantity')}</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Factura Nº</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Temp. Transp/Fab</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Fecha Fin</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>Tipo/Procedencia</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-muted)' }}>{t('goods_receipt_form.ia_col_actions') || "Acciones"}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {aiRows.map((row, idx) => (
-                    <tr key={idx} style={{ borderBottom: '1px solid var(--border)', opacity: row.saved ? 0.6 : 1, background: row.saved ? '#f8fafc' : 'transparent', transition: 'all 0.2s' }}>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={row.productName} 
-                          onChange={(e) => handleRowChange(idx, "productName", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '120px' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => openLinkModal(idx)}
-                          disabled={row.saved || row.saving}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
-                            fontSize: '0.75rem',
-                            fontWeight: '700',
-                            textDecoration: 'underline',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '0.1rem',
-                            width: '100%'
-                          }}
-                        >
-                          <PlusCircle size={14} />
-                          {row.relatedIngredients?.length > 0 
-                            ? `Relacionado (${row.relatedIngredients.length})` 
-                            : "Relacionar"}
-                        </button>
-                      </td>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          list={`providers-list-ai-${idx}`}
-                          className="input-field" 
-                          value={row.providerName} 
-                          onChange={(e) => handleRowChange(idx, "providerName", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '120px' }}
-                        />
-                        <datalist id={`providers-list-ai-${idx}`}>
-                          {providers.map(p => (
-                            <option key={p.id} value={p.name} />
-                          ))}
-                        </datalist>
-                      </td>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={row.lote} 
-                          onChange={(e) => handleRowChange(idx, "lote", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '80px' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={row.quantity} 
-                          onChange={(e) => handleRowChange(idx, "quantity", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '60px' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={row.invoiceNumber} 
-                          onChange={(e) => handleRowChange(idx, "invoiceNumber", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          placeholder="Nº factura"
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '80px' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={row.manufacturingTemp} 
-                          onChange={(e) => handleRowChange(idx, "manufacturingTemp", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          placeholder="Temp. ºC"
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '70px' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={row.endDate} 
-                          onChange={(e) => handleRowChange(idx, "endDate", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          placeholder="Fin de consumo"
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '90px' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={row.typeAndOrigin} 
-                          onChange={(e) => handleRowChange(idx, "typeAndOrigin", e.target.value)}
-                          disabled={row.saved || row.saving}
-                          placeholder="Tipo/Origen"
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', minWidth: '90px' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleSaveRow(idx)}
-                          className={row.saved ? "btn-secondary" : "btn-primary"}
-                          disabled={row.saved || row.saving}
-                          style={{ 
-                            padding: '0.4rem 0.8rem', 
-                            fontSize: '0.75rem', 
-                            borderRadius: '0.5rem', 
-                            display: 'inline-flex', 
-                            alignItems: 'center', 
-                            gap: '0.25rem',
-                            backgroundColor: row.saved ? '#e2e8f0' : (row.saving ? 'var(--text-muted)' : 'var(--corp-green)'),
-                            color: row.saved ? '#64748b' : 'white',
-                            border: 'none',
-                            cursor: row.saved ? 'default' : 'pointer'
-                          }}
-                        >
-                          {row.saving ? (
-                            <Loader2 className="animate-spin" size={12} />
-                          ) : (
-                            row.saved ? (
-                              <>
-                                <Check size={12} />
-                                {t('goods_receipt_form.ia_already_saved') || "Guardado"}
-                              </>
-                            ) : (
-                              t('common.save') || "Guardar"
-                            )
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {aiRows.map((row, idx) => (
+                <div 
+                  key={idx} 
+                  style={{ 
+                    background: row.saved ? '#f8fafc' : 'white', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '1rem', 
+                    padding: '1.5rem', 
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    opacity: row.saved ? 0.65 : 1, 
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
+                  }}
+                >
+                  {/* Row 1: Product, Provider, Lote, Quantity */}
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.product') || "Producto"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.productName} 
+                        onChange={(e) => handleRowChange(idx, "productName", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                    
+                    <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.provider') || "Proveedor"}
+                      </label>
+                      <input 
+                        type="text" 
+                        list={`providers-list-ai-${idx}`}
+                        className="input-field" 
+                        value={row.providerName} 
+                        onChange={(e) => handleRowChange(idx, "providerName", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                      <datalist id={`providers-list-ai-${idx}`}>
+                        {providers.map(p => (
+                          <option key={p.id} value={p.name} />
+                        ))}
+                      </datalist>
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('traceability_form.lot') || "Lote"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.lote} 
+                        onChange={(e) => handleRowChange(idx, "lote", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '100px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.quantity') || "Cantidad"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.quantity} 
+                        onChange={(e) => handleRowChange(idx, "quantity", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Relate with ingredients link + Info icon */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => openLinkModal(idx)}
+                      disabled={row.saved || row.saving}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
+                        fontSize: '0.85rem',
+                        fontWeight: '700',
+                        textDecoration: 'underline',
+                        cursor: row.saved ? 'default' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: 0
+                      }}
+                    >
+                      <PlusCircle size={16} />
+                      {row.relatedIngredients?.length > 0 
+                        ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${row.relatedIngredients.length})` 
+                        : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")}
+                    </button>
+                    <Info 
+                      size={16} 
+                      style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
+                      onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
+                    />
+                  </div>
+
+                  {/* Row 3: Factura Nº, Temp. Transp/Fab, Fecha Fin, Tipo/Procedencia */}
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.invoice_number') || "Número de factura"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.invoiceNumber} 
+                        onChange={(e) => handleRowChange(idx, "invoiceNumber", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder={t('goods_receipt_form.invoice_number') || "Nº factura"}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.temp') || "Temperatura Transporte / Fab."}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.manufacturingTemp} 
+                        onChange={(e) => handleRowChange(idx, "manufacturingTemp", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder="Temp. ºC"
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.end_date') || "Fecha de finalización"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.endDate} 
+                        onChange={(e) => handleRowChange(idx, "endDate", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder="Fin de consumo"
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.type_and_origin') || "Tipo y procedencia"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.typeAndOrigin} 
+                        onChange={(e) => handleRowChange(idx, "typeAndOrigin", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder="Tipo/Origen"
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 4: Save button */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveRow(idx)}
+                      className={row.saved ? "btn-secondary" : "btn-primary"}
+                      disabled={row.saved || row.saving}
+                      style={{ 
+                        padding: '0.6rem 1.5rem', 
+                        fontSize: '0.85rem', 
+                        borderRadius: '0.5rem', 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        backgroundColor: row.saved ? '#e2e8f0' : (row.saving ? 'var(--text-muted)' : 'var(--corp-green)'),
+                        color: row.saved ? '#64748b' : 'white',
+                        border: 'none',
+                        cursor: row.saved ? 'default' : 'pointer',
+                        fontWeight: '700'
+                      }}
+                    >
+                      {row.saving ? (
+                        <>
+                          <Loader2 className="animate-spin" size={14} />
+                          {t('common.saving') || "Guardando..."}
+                        </>
+                      ) : (
+                        row.saved ? (
+                          <>
+                            <Check size={14} />
+                            {t('goods_receipt_form.ia_already_saved') || "Guardado"}
+                          </>
+                        ) : (
+                          t('common.save') || "Guardar"
+                        )
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem', justifyContent: 'flex-end' }}>

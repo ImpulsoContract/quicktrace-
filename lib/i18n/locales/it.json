@@ -614,6 +614,7 @@
     "ia_col_actions": "Azioni",
     "goods_saved": "Entrata merci salvata con successo",
     "ia_error_saving": "Errore durante il salvataggio: ",
+    "relate_entry_with_ingredients": "Collega questa voce agli ingredienti",
     "ia_ingredients_info_alert": "Se colleghi questa entrata merci a uno o più ingredienti, quando crei una produzione e la sua tracciabilità, questo lotto apparirà in quegli ingredienti."
   },
   "plans": {
