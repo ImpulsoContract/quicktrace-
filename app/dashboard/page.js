@@ -3961,7 +3961,6 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_title')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.elaboration_prep_time_header')}</th>
                           {session?.user?.role !== "WORKER" && (
                             <>
                               <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
@@ -3982,8 +3981,7 @@ export default function ClientDashboard() {
                               <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.labor_cost_header')}</th>
                             </>
                           )}
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_notes')}</th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('traceability_form.label_btn') || "Etiqueta"}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4015,10 +4013,23 @@ export default function ClientDashboard() {
                                   {t('dashboard.export_pdf_short') || "Exportar PDF"}
                                 </span>
                               </div>
+                              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
+                                <span 
+                                  onClick={() => handleEditElaboration(el)} 
+                                  style={{ color: '#475569', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('common.edit') || "Modificar"}
+                                </span>
+                                <span 
+                                  onClick={() => handleDeleteElaboration(el.id)} 
+                                  style={{ color: '#ef4444', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('common.delete') || "Eliminar"}
+                                </span>
+                              </div>
                             </div>
                           </td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>{el.preparationTime ? `${el.preparationTime} min` : '-'}</td>
                           {session?.user?.role !== "WORKER" && (
                             <>
                               <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
@@ -4055,28 +4066,13 @@ export default function ClientDashboard() {
                               </td>
                             </>
                           )}
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={el.extraInfo || ""}>
-                            {el.extraInfo || "-"}
-                          </td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                               <button 
                                 onClick={() => generateLabelPDF(el)}
                                 style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
                               >
-                                <Printer size={16} /> {t('traceability_form.label_btn')}
-                              </button>
-                              <button 
-                                onClick={() => handleEditElaboration(el)}
-                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Edit size={16} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteElaboration(el.id)}
-                                style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Trash2 size={16} />
+                                <Printer size={16} /> {t('traceability_form.label_btn') || "Etiqueta"}
                               </button>
                             </div>
                           </td>
@@ -5917,12 +5913,9 @@ export default function ClientDashboard() {
                           </div>
                         </th>
                         <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {t('dashboard.elaboration_prep_time_header')}
-                        </th>
-                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           {t('dashboard.labor_cost_header')}
                         </th>
-                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dashboard.actions')}</th>
+                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('traceability_form.label_btn') || "Etiqueta"}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -5946,6 +5939,20 @@ export default function ClientDashboard() {
                                   style={{ color: '#0ea5e9', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
                                 >
                                   {t('dashboard.export_pdf_short') || "Exportar PDF"}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
+                                <span 
+                                  onClick={() => handleEditElaboration(elab)} 
+                                  style={{ color: '#475569', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('common.edit') || "Modificar"}
+                                </span>
+                                <span 
+                                  onClick={() => handleDeleteElaboration(elab.id)} 
+                                  style={{ color: '#ef4444', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                >
+                                  {t('common.delete') || "Eliminar"}
                                 </span>
                               </div>
                             </div>
@@ -5982,9 +5989,6 @@ export default function ClientDashboard() {
                               )}
                             </div>
                           </td>
-                          <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--text-main)' }}>
-                            {elab.preparationTime ? `${elab.preparationTime} min` : '-'}
-                          </td>
                           <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600', color: 'var(--text-main)' }}>
                             {elab.preparationTime && (elab.laborCostHourlyRate || 0) > 0
                               ? formatPrice((parseFloat(elab.preparationTime.replace(',', '.')) / 60) * elab.laborCostHourlyRate, profile?.currency, locale)
@@ -5993,28 +5997,18 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.25rem 1.5rem' }}>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                               <button 
-                                onClick={() => handleEditElaboration(elab)}
-                                style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                                onClick={() => generateLabelPDF(elab)}
+                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
                               >
-                                {t('dashboard.modify')}
+                                <Printer size={16} /> {t('traceability_form.label_btn') || "Etiqueta"}
                               </button>
-                              {session?.user?.role !== "WORKER" && (
-                                <button 
-                                  onClick={() => handleDeleteElaboration(elab.id)}
-                                  className="btn-secondary"
-                                  style={{ color: '#ef4444', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
-                                  title={t('common.delete')}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              )}
                             </div>
                           </td>
                         </tr>
                       ))}
                       {sortedElaborations.length === 0 && (
                         <tr>
-                          <td colSpan="7" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                          <td colSpan="6" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                             {t('dashboard.no_elaborations_recorded')}
                           </td>
                         </tr>

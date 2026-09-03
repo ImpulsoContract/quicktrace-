@@ -635,6 +635,7 @@
     "ia_select_image": "Sélectionnez ou faites glisser une image ou un PDF du bon de livraison",
     "ia_col_actions": "Actions",
     "goods_saved": "Entrée de marchandises enregistrée avec succès",
+    "save_this_entry": "Enregistrer cette entrée",
     "ia_error_saving": "Erreur lors de l'enregistrement : ",
     "relate_entry_with_ingredients": "Associer cette entrée à des ingrédients",
     "ia_ingredients_info_alert": "Si vous liez cette entrée de marchandises à un ou plusieurs ingrédients, lorsque vous créerez une fabrication et sa traçabilité, ce lot apparaîtra dans ces ingrédients."

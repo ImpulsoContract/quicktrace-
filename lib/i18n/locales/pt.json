@@ -632,6 +632,7 @@
     "ia_select_image": "Selecione ou arraste uma imagem ou PDF da nota de entrega",
     "ia_col_actions": "Ações",
     "goods_saved": "Entrada de mercadorias salva com sucesso",
+    "save_this_entry": "Salvar esta entrada",
     "ia_error_saving": "Erro ao salvar: ",
     "relate_entry_with_ingredients": "Relacionar esta entrada com ingredientes",
     "ia_ingredients_info_alert": "Se você associar esta entrada de mercadoria com um ou mais ingredientes, quando criar uma produção e a sua rastreabilidade, este lote aparecerá nesses ingredientes."
