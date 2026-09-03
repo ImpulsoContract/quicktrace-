@@ -342,6 +342,8 @@
     "analyzing_sheet": "Analyse de la fiche avec l'IA...",
     "analyze_sheet_btn": "Analyser la fiche avec l'IA",
     "sheet_analyzed_success": "Fiche technique analysée avec succès. Vérifiez et enregistrez la recette.",
+    "recipe_pages_label": "Si vous téléchargez un document avec plusieurs recettes, dites-moi quelles pages examiner. Si votre recette est à la page 5 et va jusqu'à la page 7, écrivez 5-7",
+    "recipe_pages_placeholder": "ex. : 5-7 ou 12",
     "upgrade_plan": "AUGMENTER LIMITE",
     "labels_help_video": "Si vous avez besoin d'aide regardez cette vidéo",
     "labels_help_video_btn": "Si vous avez besoin d'aide regardez cette vidéo",

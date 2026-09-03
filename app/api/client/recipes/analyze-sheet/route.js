@@ -31,6 +31,7 @@ export async function POST(req) {
 
     const formData = await req.formData();
     const file = formData.get("file");
+    const pages = formData.get("pages") ? String(formData.get("pages")).trim() : "";
 
     if (!file) {
       return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 });
@@ -43,8 +44,12 @@ export async function POST(req) {
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
+    const pageInstruction = pages 
+      ? `\n\nATENCIÓN IMPORTANTE: El usuario indica que este documento contiene varias recetas y que la receta específica a extraer está en las páginas: "${pages}". Por favor, revisa y extrae la información ÚNICAMENTE de las páginas especificadas (${pages}). Ignora las recetas de otras páginas.\n` 
+      : "";
+
     const promptText = `Eres un asistente experto en cocina, fichas técnicas de hostelería y tecnología de los alimentos.
-Tu tarea es analizar esta ficha técnica o documento de receta y extraer detalladamente la información para autorrellenar el formulario de la receta.
+Tu tarea es analizar esta ficha técnica o documento de receta y extraer detalladamente la información para autorrellenar el formulario de la receta.${pageInstruction}
 
 Instrucciones de extracción:
 1. name: Nombre de la receta o plato elaborado.

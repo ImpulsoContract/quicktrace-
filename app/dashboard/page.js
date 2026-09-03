@@ -8491,6 +8491,7 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
 function RecipeIaScanModal({ isOpen, onClose, onExtracted }) {
   const { t } = useI18n();
   const [file, setFile] = useState(null);
+  const [pages, setPages] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
@@ -8529,6 +8530,9 @@ function RecipeIaScanModal({ isOpen, onClose, onExtracted }) {
 
     const formData = new FormData();
     formData.append("file", file);
+    if (pages.trim()) {
+      formData.append("pages", pages.trim());
+    }
 
     try {
       const res = await fetch("/api/client/recipes/analyze-sheet", {
@@ -8626,6 +8630,21 @@ function RecipeIaScanModal({ isOpen, onClose, onExtracted }) {
               onChange={handleFileChange}
               style={{ display: 'none' }}
               disabled={analyzing}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label className="label" style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-main)', margin: 0, lineHeight: 1.4 }}>
+              {t('modals.recipe_pages_label') || "Si subes un documento con varias recetas, dime qué páginas tengo que mirar. Si tu receta está en la página 5 y es hasta la página 7, escribe 5-7"}
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              value={pages}
+              onChange={(e) => setPages(e.target.value)}
+              placeholder={t('modals.recipe_pages_placeholder') || "Ej: 5-7 o 12"}
+              disabled={analyzing}
+              style={{ padding: '0.65rem 0.9rem', fontSize: '0.9rem' }}
             />
           </div>
 

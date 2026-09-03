@@ -346,6 +346,8 @@
     "analyzing_sheet": "Analyzing sheet with AI...",
     "analyze_sheet_btn": "Analyze sheet with AI",
     "sheet_analyzed_success": "Technical sheet analyzed successfully. Review and save the recipe.",
+    "recipe_pages_label": "If you upload a document with multiple recipes, tell me which pages to look at. If your recipe is on page 5 and goes up to page 7, write 5-7",
+    "recipe_pages_placeholder": "e.g. 5-7 or 12",
     "upgrade_plan": "UPGRADE PLAN",
     "labels_help_video": "If you need help watch this video",
     "labels_help_video_btn": "If you need help watch this video",

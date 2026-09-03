@@ -346,6 +346,8 @@
     "analyzing_sheet": "Analizando ficha con IA...",
     "analyze_sheet_btn": "Analizar ficha con IA",
     "sheet_analyzed_success": "Ficha técnica analizada con éxito. Revisa y guarda la receta.",
+    "recipe_pages_label": "Si subes un documento con varias recetas, dime qué páginas tengo que mirar. Si tu receta está en la página 5 y es hasta la página 7, escribe 5-7",
+    "recipe_pages_placeholder": "Ej: 5-7 o 12",
     "upgrade_plan": "AMPLIAR LÍMITE",
     "labels_help_video": "Si necesitas ayuda mira este video",
     "labels_help_video_btn": "Si necesitas ayuda mira este video",

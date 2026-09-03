@@ -342,6 +342,8 @@
     "analyzing_sheet": "Analisi della scheda con IA...",
     "analyze_sheet_btn": "Analizza scheda con l'IA",
     "sheet_analyzed_success": "Scheda tecnica analizzata con successo. Rivedi e salva la ricetta.",
+    "recipe_pages_label": "Se carichi un documento con più ricette, indicami quali pagine devo guardare. Se la tua ricetta è a pagina 5 e arriva fino a pagina 7, scrivi 5-7",
+    "recipe_pages_placeholder": "es. 5-7 o 12",
     "upgrade_plan": "AMPLIA LIMITE",
     "labels_help_video": "Se hai bisogno di aiuto guarda questo video",
     "labels_help_video_btn": "Se hai bisogno di aiuto guarda questo video",
