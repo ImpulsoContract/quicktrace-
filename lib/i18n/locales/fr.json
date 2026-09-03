@@ -250,7 +250,19 @@
     "upload_photo": "Charger photo du bon",
     "photo_format": "Prenez une photo ou sélectionnez un fichier",
     "elaborar": "Élaborer",
-    "scan_invoice_ia": "Scanner le bon de livraison avec l'IA"
+    "scan_invoice_ia": "Scanner le bon de livraison avec l'IA",
+    "view_scanned_invoices": "Voir les bons scannés",
+    "scanned_invoices_title": "Bons de livraison scannés avec l'IA",
+    "scanned_invoices_desc": "Consultez les bons analysés, vérifiez les entrées enregistrées et enregistrez les produits en attente.",
+    "no_scanned_invoices": "Aucun bon de livraison scanné pour le moment.",
+    "view_details": "Voir les détails",
+    "back_to_scanned_list": "Retour à la liste",
+    "scanned_items_count": "{saved} sur {total} enregistrés",
+    "scanned_saved_badge": "Enregistré en marchandises",
+    "scanned_pending_badge": "En attente d'enregistrement",
+    "save_goods_entry": "Enregistrer l'entrée",
+    "view_original_image": "Voir le bon original",
+    "delete_scanned_confirm": "Êtes-vous sûr de vouloir supprimer ce bon scanné ?"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",

@@ -10,7 +10,8 @@ import {
   Plus, Brush, User, Users, UserPlus, Calendar, Edit, Thermometer,
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
-  Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info
+  Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
+  Eye, ExternalLink
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -314,6 +315,7 @@ export default function ClientDashboard() {
   const [goodsReceipts, setGoodsReceipts] = useState([]);
   const [isGoodsModalOpen, setIsGoodsModalOpen] = useState(false);
   const [isIaScanModalOpen, setIsIaScanModalOpen] = useState(false);
+  const [isScannedInvoicesModalOpen, setIsScannedInvoicesModalOpen] = useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [editingGoodsReceipt, setEditingGoodsReceipt] = useState(null);
   const [editingWaterMeasurement, setEditingWaterMeasurement] = useState(null);
@@ -4422,6 +4424,24 @@ export default function ClientDashboard() {
                       <Sparkles size={18} /> {t('dashboard.scan_invoice_ia') || "Escanear albarán con IA"}
                     </button>
                     )}
+                    {profile?.hasIaGoods && (
+                    <button 
+                      onClick={() => setIsScannedInvoicesModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ 
+                        flex: 1,
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        gap: '0.75rem', 
+                        padding: '0.75rem 1.5rem', 
+                        fontSize: '0.9rem',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <FileText size={18} /> {t('dashboard.view_scanned_invoices') || "Ver albaranes escaneados"}
+                    </button>
+                    )}
                     <button 
                       onClick={() => {
                         if (isRecipeLimitExceeded()) {
@@ -6161,6 +6181,17 @@ export default function ClientDashboard() {
           fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
           profile={profile}
           onHelpVideoClick={(videoId) => setVideoModal({ isOpen: true, videoId })}
+        />
+      )}
+
+      {isScannedInvoicesModalOpen && (
+        <ScannedDeliveryNotesModal
+          isOpen={isScannedInvoicesModalOpen}
+          onClose={() => setIsScannedInvoicesModalOpen(false)}
+          recipes={recipes}
+          providers={providers}
+          fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
+          profile={profile}
         />
       )}
 
@@ -10018,7 +10049,9 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
         providerId: row.providerId,
         merchantTypes: [],
         relatedIngredients: row.relatedIngredients,
-        relatedQuantities: row.relatedQuantities
+        relatedQuantities: row.relatedQuantities,
+        scannedDeliveryNoteId: extractedData?.scannedDeliveryNoteId || null,
+        scannedItemId: row.id
       };
 
       const res = await fetch("/api/goods-receipts", {
@@ -10664,6 +10697,757 @@ function ManageMerchantTypesModal({ merchantTypes, onClose, onUpdate }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchGoodsReceipts, profile }) {
+  const { t, locale } = useI18n();
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  // States for editable rows in details view
+  const [savingIndex, setSavingIndex] = useState(null);
+  const [editableRows, setEditableRows] = useState([]);
+
+  // State for raw ingredient linking modal
+  const [linkRowIndex, setLinkRowIndex] = useState(null);
+  const [ingSearchTerm, setIngSearchTerm] = useState("");
+  const [rowIngredients, setRowIngredients] = useState([]);
+  const [rowQuantities, setRowQuantities] = useState({});
+
+  const allIngredients = (() => {
+    if (!recipes) return [];
+    const names = new Set();
+    recipes.forEach(r => {
+      r.ingredients?.forEach(ing => {
+        if (ing.name && ing.name.trim()) {
+          names.add(ing.name.trim());
+        }
+      });
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  })();
+
+  const getIngredientsWithUnits = (selectedIngs) => {
+    const list = [];
+    if (!selectedIngs || !recipes) return list;
+    selectedIngs.forEach(ingName => {
+      const units = new Set();
+      recipes.forEach(recipe => {
+        recipe.ingredients?.forEach(ing => {
+          if (ing.name === ingName && ing.unit) {
+            units.add(ing.unit.trim());
+          }
+        });
+      });
+      const sortedUnits = Array.from(units).sort();
+      sortedUnits.forEach(unit => {
+        list.push({ name: ingName, unit });
+      });
+    });
+    return list;
+  };
+
+  const fetchNotes = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/client/scanned-delivery-notes");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setNotes(data);
+        if (selectedNote) {
+          const fresh = data.find(n => n.id === selectedNote.id);
+          if (fresh) {
+            setSelectedNote(fresh);
+            initEditableRows(fresh);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching scanned delivery notes:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotes();
+      setSelectedNote(null);
+      setPreviewImage(null);
+    }
+  }, [isOpen]);
+
+  const initEditableRows = (note) => {
+    const items = Array.isArray(note.items) ? note.items : [];
+    setEditableRows(items.map((it, idx) => ({
+      id: it.id !== undefined ? it.id : idx,
+      productName: it.productName || "",
+      providerName: note.providerName || "",
+      providerId: providers.find(p => p.name === note.providerName)?.id || null,
+      lote: it.lote || "",
+      quantity: it.quantity || "",
+      invoiceNumber: "",
+      manufacturingTemp: "",
+      endDate: "",
+      typeAndOrigin: "",
+      relatedIngredients: [],
+      relatedQuantities: {},
+      saved: !!it.saved
+    })));
+  };
+
+  const handleSelectNote = (note) => {
+    setSelectedNote(note);
+    initEditableRows(note);
+  };
+
+  const handleRowChange = (index, field, value) => {
+    setEditableRows(prev => prev.map((row, idx) => {
+      if (idx === index) {
+        if (field === "providerName") {
+          const found = providers.find(p => p.name === value);
+          return {
+            ...row,
+            providerName: value,
+            providerId: found ? found.id : null
+          };
+        }
+        return { ...row, [field]: value };
+      }
+      return row;
+    }));
+  };
+
+  const openLinkModal = (index) => {
+    const row = editableRows[index];
+    setLinkRowIndex(index);
+    setRowIngredients(row.relatedIngredients || []);
+    setRowQuantities(row.relatedQuantities || {});
+  };
+
+  const saveLinkDetails = () => {
+    setEditableRows(prev => prev.map((row, idx) => {
+      if (idx === linkRowIndex) {
+        return {
+          ...row,
+          relatedIngredients: rowIngredients,
+          relatedQuantities: rowQuantities
+        };
+      }
+      return row;
+    }));
+    setLinkRowIndex(null);
+    setIngSearchTerm("");
+  };
+
+  const handleSaveRow = async (index) => {
+    const row = editableRows[index];
+    if (row.saved || savingIndex !== null) return;
+
+    if (!row.productName.trim()) {
+      alert("El nombre del producto es obligatorio");
+      return;
+    }
+
+    setSavingIndex(index);
+
+    try {
+      const payload = {
+        providerName: row.providerName,
+        productName: row.productName,
+        lote: row.lote,
+        invoiceNumber: row.invoiceNumber,
+        quantity: row.quantity,
+        date: new Date().toISOString(),
+        deliveryNoteImage: selectedNote.imageUrl,
+        manufacturingTemp: row.manufacturingTemp,
+        endDate: row.endDate,
+        typeAndOrigin: row.typeAndOrigin,
+        providerId: row.providerId,
+        merchantTypes: [],
+        relatedIngredients: row.relatedIngredients,
+        relatedQuantities: row.relatedQuantities,
+        scannedDeliveryNoteId: selectedNote.id,
+        scannedItemId: row.id
+      };
+
+      const res = await fetch("/api/goods-receipts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al guardar el registro");
+      }
+
+      setEditableRows(prev => prev.map((r, idx) => idx === index ? { ...r, saved: true } : r));
+
+      const updatedItems = (selectedNote.items || []).map((it, idx) => 
+        idx === index ? { ...it, saved: true, goodsReceiptId: data.receipt?.id } : it
+      );
+      const updatedNote = { ...selectedNote, items: updatedItems };
+      setSelectedNote(updatedNote);
+      setNotes(prev => prev.map(n => n.id === selectedNote.id ? updatedNote : n));
+
+      alert(t('goods_receipt_form.goods_saved') || "Entrada guardada correctamente");
+      fetchGoodsReceipts();
+    } catch (err) {
+      console.error(err);
+      alert((t('goods_receipt_form.ia_error_saving') || "Error al guardar: ") + err.message);
+    } finally {
+      setSavingIndex(null);
+    }
+  };
+
+  const handleDeleteNote = async (noteId, e) => {
+    if (e) e.stopPropagation();
+    if (!confirm(t('dashboard.delete_scanned_confirm') || "¿Estás seguro de que deseas eliminar este albarán escaneado?")) return;
+    try {
+      const res = await fetch(`/api/client/scanned-delivery-notes?id=${noteId}`, {
+        method: "DELETE"
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotes(prev => prev.filter(n => n.id !== noteId));
+        if (selectedNote?.id === noteId) {
+          setSelectedNote(null);
+        }
+      } else {
+        alert(data.error || "Error al eliminar");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión");
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1050 }}>
+      <div className="modal-content glass-card" style={{ maxWidth: selectedNote ? '1100px' : '900px', width: '95%', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', transition: 'all 0.3s ease' }}>
+        
+        {/* Header */}
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem' }}>
+          <div>
+            {selectedNote ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setSelectedNote(null)} 
+                  className="btn-secondary" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+                >
+                  <ArrowLeft size={16} /> {t('dashboard.back_to_scanned_list') || "Volver a la lista"}
+                </button>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
+                  {selectedNote.providerName || "Albarán escaneado"} - {formatDateTimeDDMMYYYY(selectedNote.date || selectedNote.createdAt)}
+                </h2>
+              </div>
+            ) : (
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={24} /> {t('dashboard.scanned_invoices_title') || "Albaranes Escaneados con IA"}
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.4rem', marginBottom: 0 }}>
+                  {t('dashboard.scanned_invoices_desc') || "Consulta los albaranes analizados, revisa las entradas guardadas y registra productos pendientes."}
+                </p>
+              </div>
+            )}
+          </div>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
+          >
+            <X size={24} />
+          </button>
+        </header>
+
+        {/* View 1: List of scanned delivery notes */}
+        {!selectedNote && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '3rem', color: 'var(--corp-green)' }}>
+                <Loader2 size={36} className="animate-spin" />
+              </div>
+            ) : notes.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3.5rem 1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
+                <FileText size={48} style={{ color: 'var(--text-muted)', opacity: 0.5, marginBottom: '0.75rem' }} />
+                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+                  {t('dashboard.no_scanned_invoices') || "No hay albaranes escaneados todavía."}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {notes.map((note) => {
+                  const items = Array.isArray(note.items) ? note.items : [];
+                  const total = items.length;
+                  const saved = items.filter(i => i.saved).length;
+                  const pending = total - saved;
+                  const isAllSaved = total > 0 && saved === total;
+
+                  return (
+                    <div 
+                      key={note.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '1rem 1.25rem',
+                        background: 'white',
+                        border: '1px solid var(--border)',
+                        borderRadius: '1rem',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                        gap: '1rem',
+                        flexWrap: 'wrap'
+                      }}
+                    >
+                      {/* Left: Thumbnail & Info */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: '1 1 300px' }}>
+                        {note.imageUrl ? (
+                          <div 
+                            onClick={() => setPreviewImage(note.imageUrl)}
+                            style={{ 
+                              width: '64px', 
+                              height: '64px', 
+                              borderRadius: '0.65rem', 
+                              overflow: 'hidden', 
+                              cursor: 'pointer',
+                              border: '1px solid var(--border)',
+                              flexShrink: 0,
+                              position: 'relative'
+                            }}
+                            title="Click para ver imagen"
+                          >
+                            <img 
+                              src={note.imageUrl} 
+                              alt="Albarán" 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                            />
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}
+                              onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                              onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
+                            >
+                              <Eye size={18} color="white" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ width: '64px', height: '64px', borderRadius: '0.65rem', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <FileText size={24} color="var(--text-muted)" />
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <span style={{ fontWeight: '800', fontSize: '1.05rem', color: 'var(--corp-green)' }}>
+                            {note.providerName || "Proveedor no detectado"}
+                          </span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {formatDateTimeDDMMYYYY(note.date || note.createdAt)}
+                          </span>
+                          <div>
+                            {isAllSaved ? (
+                              <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.55rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <Check size={12} /> {t('dashboard.scanned_items_count')?.replace('{saved}', saved).replace('{total}', total) || `${saved} de ${total} guardados`}
+                              </span>
+                            ) : (
+                              <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.15rem 0.55rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700' }}>
+                                {t('dashboard.scanned_items_count')?.replace('{saved}', saved).replace('{total}', total) || `${saved} de ${total} guardados`}
+                                {pending > 0 && ` (${pending} pendiente${pending > 1 ? 's' : ''})`}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Actions */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectNote(note)}
+                          className="btn-primary"
+                          style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                        >
+                          <FileText size={16} /> {t('dashboard.view_details') || "Ver detalles"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteNote(note.id, e)}
+                          title="Eliminar albarán escaneado"
+                          style={{
+                            padding: '0.55rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #fee2e2',
+                            background: '#fef2f2',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* View 2: Detail view of selected scanned delivery note */}
+        {selectedNote && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Top Bar with Info & Image Action */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-light)', padding: '1rem 1.25rem', borderRadius: '0.85rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block' }}>Proveedor</span>
+                  <span style={{ fontWeight: '700', color: 'var(--corp-green)', fontSize: '1rem' }}>{selectedNote.providerName || "Sin proveedor"}</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block' }}>Fecha de escaneo</span>
+                  <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{formatDateTimeDDMMYYYY(selectedNote.date || selectedNote.createdAt)}</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block' }}>Progreso</span>
+                  {(() => {
+                    const total = editableRows.length;
+                    const saved = editableRows.filter(r => r.saved).length;
+                    return (
+                      <span style={{ fontWeight: '700', fontSize: '0.9rem', color: saved === total && total > 0 ? '#15803d' : '#b45309' }}>
+                        {saved} de {total} guardados
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {selectedNote.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(selectedNote.imageUrl)}
+                  className="btn-secondary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 1rem', fontSize: '0.85rem' }}
+                >
+                  <Eye size={16} /> {t('dashboard.view_original_image') || "Ver albarán original"}
+                </button>
+              )}
+            </div>
+
+            {/* Items Table */}
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem', minWidth: '750px' }}>
+                <thead className="table-header">
+                  <tr>
+                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', borderRadius: '8px 0 0 8px', width: '130px' }}>Estado</th>
+                    <th className="table-header-cell" style={{ background: 'var(--bg-light)' }}>Producto</th>
+                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', width: '130px' }}>Lote</th>
+                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', width: '120px' }}>Cantidad</th>
+                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', width: '180px' }}>Materias primas</th>
+                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', borderRadius: '0 8px 8px 0', width: '150px', textAlign: 'right' }}>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {editableRows.map((row, idx) => (
+                    <tr 
+                      key={idx} 
+                      style={{ 
+                        background: row.saved ? 'rgba(34, 197, 94, 0.05)' : 'white', 
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                        border: row.saved ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid var(--border)'
+                      }}
+                    >
+                      <td style={{ padding: '0.85rem 1rem', borderRadius: '8px 0 0 8px' }}>
+                        {row.saved ? (
+                          <span style={{ background: '#dcfce7', color: '#166534', padding: '0.25rem 0.6rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <Check size={14} /> {t('dashboard.scanned_saved_badge') || "Guardado"}
+                          </span>
+                        ) : (
+                          <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.25rem 0.6rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700' }}>
+                            {t('dashboard.scanned_pending_badge') || "Pendiente"}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        {row.saved ? (
+                          <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{row.productName}</span>
+                        ) : (
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            value={row.productName} 
+                            onChange={(e) => handleRowChange(idx, 'productName', e.target.value)}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', width: '100%' }}
+                            placeholder="Nombre del producto"
+                          />
+                        )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        {row.saved ? (
+                          <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>{row.lote || "-"}</span>
+                        ) : (
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            value={row.lote} 
+                            onChange={(e) => handleRowChange(idx, 'lote', e.target.value)}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', width: '100%' }}
+                            placeholder="Lote"
+                          />
+                        )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        {row.saved ? (
+                          <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>{row.quantity || "-"}</span>
+                        ) : (
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            value={row.quantity} 
+                            onChange={(e) => handleRowChange(idx, 'quantity', e.target.value)}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', width: '100%' }}
+                            placeholder="Cantidad"
+                          />
+                        )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        {row.saved ? (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {row.relatedIngredients?.length > 0 ? `${row.relatedIngredients.length} vinculados` : "-"}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openLinkModal(idx)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--corp-green)',
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              fontSize: '0.78rem',
+                              fontWeight: '600',
+                              padding: 0
+                            }}
+                          >
+                            {row.relatedIngredients?.length > 0 ? `✓ ${row.relatedIngredients.length} vinculados` : "Vincular a materias"}
+                          </button>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem', borderRadius: '0 8px 8px 0', textAlign: 'right' }}>
+                        {row.saved ? (
+                          <span style={{ color: '#166534', fontWeight: '700', fontSize: '0.8rem' }}>✓ Registrado</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSaveRow(idx)}
+                            disabled={savingIndex === idx}
+                            className="btn-primary"
+                            style={{
+                              padding: '0.45rem 0.85rem',
+                              fontSize: '0.8rem',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {savingIndex === idx ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                            {t('dashboard.save_goods_entry') || "Guardar entrada"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Lightbox Modal for Original Delivery Note Image */}
+      {previewImage && (
+        <div 
+          className="modal-overlay" 
+          style={{ zIndex: 1200, background: 'rgba(0,0,0,0.85)' }}
+          onClick={() => setPreviewImage(null)}
+        >
+          <div 
+            style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              style={{
+                position: 'absolute',
+                top: '-2.5rem',
+                right: 0,
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={28} />
+            </button>
+            <img 
+              src={previewImage} 
+              alt="Albarán original" 
+              style={{ maxWidth: '100%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '0.5rem', boxShadow: '0 8px 30px rgba(0,0,0,0.5)' }} 
+            />
+            <a 
+              href={previewImage} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              style={{ color: 'white', marginTop: '0.75rem', fontSize: '0.85rem', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <ExternalLink size={14} /> Abrir imagen en pestaña nueva
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Raw Ingredients Link Submodal */}
+      {linkRowIndex !== null && (
+        <div className="modal-overlay" style={{ zIndex: 1150 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
+            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
+                  {t('goods_receipt_form.link_ingredients_title') || "Vincular a materias primas"}
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
+                  {editableRows[linkRowIndex]?.productName}
+                </p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setLinkRowIndex(null);
+                  setIngSearchTerm("");
+                }} 
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
+              <div className="form-group">
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder={t('goods_receipt_form.search_ingredients_placeholder') || "Buscar ingrediente..."}
+                  value={ingSearchTerm}
+                  onChange={(e) => setIngSearchTerm(e.target.value)}
+                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+                {allIngredients
+                  .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
+                  .map((ing, idx) => {
+                    const isSelected = rowIngredients.includes(ing);
+                    return (
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => {
+                          if (isSelected) {
+                            setRowIngredients(rowIngredients.filter(i => i !== ing));
+                          } else {
+                            setRowIngredients([...rowIngredients, ing]);
+                          }
+                        }}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '1rem',
+                          fontSize: '0.8rem',
+                          fontWeight: '600',
+                          border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
+                          background: isSelected ? 'var(--corp-green)' : 'white',
+                          color: isSelected ? 'white' : 'var(--text-main)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {ing}
+                      </button>
+                    );
+                  })}
+              </div>
+
+              {rowIngredients.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.75rem' }}>
+                    {t('goods_receipt_form.stock_control_title') || "Control de stock:"}
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
+                      const key = `${item.name}:${item.unit}`;
+                      const val = rowQuantities[key] || "";
+                      return (
+                        <div className="form-group" key={idx}>
+                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                            {`Cantidad de ${item.name} (${item.unit})`}
+                          </label>
+                          <input 
+                            type="number"
+                            step="any"
+                            className="input-field"
+                            value={val}
+                            onChange={(e) => {
+                              setRowQuantities({
+                                ...rowQuantities,
+                                [key]: e.target.value
+                              });
+                            }}
+                            placeholder={editableRows[linkRowIndex]?.quantity || ""}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => {
+                  setLinkRowIndex(null);
+                  setIngSearchTerm("");
+                }} 
+                style={{ flex: 1, padding: '0.85rem' }}
+              >
+                {t('common.cancel')}
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={saveLinkDetails} 
+                style={{ flex: 2, padding: '0.85rem' }}
+              >
+                {t('goods_receipt_form.link_popup_save') || "Guardar relación"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

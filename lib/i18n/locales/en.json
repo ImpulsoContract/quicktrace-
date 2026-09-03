@@ -254,7 +254,19 @@
     "photo_format": "Take a photo or choose a file",
     "ingredient_costs_btn": "Raw material cost prices",
     "elaborar": "Elaborate",
-    "scan_invoice_ia": "Scan delivery note with AI"
+    "scan_invoice_ia": "Scan delivery note with AI",
+    "view_scanned_invoices": "View scanned delivery notes",
+    "scanned_invoices_title": "AI Scanned Delivery Notes",
+    "scanned_invoices_desc": "View analyzed delivery notes, check saved entries and register pending products.",
+    "no_scanned_invoices": "No scanned delivery notes yet.",
+    "view_details": "View details",
+    "back_to_scanned_list": "Back to list",
+    "scanned_items_count": "{saved} of {total} saved",
+    "scanned_saved_badge": "Saved in goods receipts",
+    "scanned_pending_badge": "Pending to save",
+    "save_goods_entry": "Save entry",
+    "view_original_image": "View original delivery note",
+    "delete_scanned_confirm": "Are you sure you want to delete this scanned delivery note?"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",

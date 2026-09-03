@@ -254,7 +254,19 @@
     "photo_format": "Haz una foto o selecciona un archivo",
     "ingredient_costs_btn": "Precios de coste de cada mercancía",
     "elaborar": "Elaborar",
-    "scan_invoice_ia": "Escanear albarán con IA"
+    "scan_invoice_ia": "Escanear albarán con IA",
+    "view_scanned_invoices": "Ver albaranes escaneados",
+    "scanned_invoices_title": "Albaranes Escaneados con IA",
+    "scanned_invoices_desc": "Consulta los albaranes analizados, revisa las entradas guardadas y registra productos pendientes.",
+    "no_scanned_invoices": "No hay albaranes escaneados todavía.",
+    "view_details": "Ver detalles",
+    "back_to_scanned_list": "Volver a la lista",
+    "scanned_items_count": "{saved} de {total} guardados",
+    "scanned_saved_badge": "Guardado en mercancías",
+    "scanned_pending_badge": "Pendiente de guardar",
+    "save_goods_entry": "Guardar entrada",
+    "view_original_image": "Ver albarán original",
+    "delete_scanned_confirm": "¿Estás seguro de que deseas eliminar este albarán escaneado?"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",

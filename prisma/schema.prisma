@@ -109,6 +109,7 @@ model ClientProfile {
   isPreparationTimeMandatory Boolean           @default(false)
   wasteCollections           WasteCollection[]
   ingredientStocks           IngredientStock[]
+  scannedDeliveryNotes       ScannedDeliveryNote[]
 }
 
 model Provider {
@@ -377,6 +378,9 @@ model GoodsReceipt {
   providerId Int?
   provider   Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
 
+  scannedDeliveryNoteId Int?
+  scannedDeliveryNote   ScannedDeliveryNote? @relation(fields: [scannedDeliveryNoteId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -500,6 +504,25 @@ model IngredientStock {
   updatedAt DateTime @updatedAt
 
   @@unique([clientProfileId, name, unit])
+  @@index([clientProfileId])
+}
+
+model ScannedDeliveryNote {
+  id              Int           @id @default(autoincrement())
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  providerName    String?
+  imageUrl        String
+  fileName        String?
+  items           Json          @default("[]")
+  date            DateTime      @default(now())
+
+  goodsReceipts   GoodsReceipt[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
   @@index([clientProfileId])
 }
 

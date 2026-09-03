@@ -144,7 +144,9 @@ export async function POST(req) {
       providerId,
       merchantTypes,
       relatedIngredients,
-      relatedQuantities
+      relatedQuantities,
+      scannedDeliveryNoteId,
+      scannedItemId
     } = body;
 
     if (!productName || !date) {
@@ -167,9 +169,43 @@ export async function POST(req) {
         relatedIngredients: relatedIngredients || [],
         relatedQuantities: relatedQuantities || {},
         providerId: providerId ? parseInt(providerId) : null,
-        clientProfileId: profile.id
+        clientProfileId: profile.id,
+        scannedDeliveryNoteId: scannedDeliveryNoteId ? parseInt(scannedDeliveryNoteId) : null
       }
     });
+
+    // If associated with a scanned delivery note, mark item as saved
+    if (scannedDeliveryNoteId) {
+      try {
+        const noteId = parseInt(scannedDeliveryNoteId);
+        const note = await prisma.scannedDeliveryNote.findUnique({
+          where: { id: noteId }
+        });
+        if (note && note.clientProfileId === profile.id) {
+          const currentItems = Array.isArray(note.items) ? [...note.items] : [];
+          let updated = false;
+
+          const updatedItems = currentItems.map(item => {
+            const matchesId = scannedItemId !== undefined && scannedItemId !== null && item.id === parseInt(scannedItemId);
+            const matchesContent = !matchesId && (scannedItemId === undefined || scannedItemId === null) && 
+              item.productName === productName && (item.lote || '') === (lote || '');
+
+            if ((matchesId || matchesContent) && !updated) {
+              updated = true;
+              return { ...item, saved: true, goodsReceiptId: receipt.id };
+            }
+            return item;
+          });
+
+          await prisma.scannedDeliveryNote.update({
+            where: { id: noteId },
+            data: { items: updatedItems }
+          });
+        }
+      } catch (noteErr) {
+        console.error("Error updating ScannedDeliveryNote items:", noteErr);
+      }
+    }
 
     // Update stock levels
     await processNewGoodsReceiptStock(profile.id, relatedQuantities);
@@ -314,6 +350,31 @@ export async function DELETE(req) {
 
     // Subtract from stock
     await processDeletedGoodsReceiptsStock(profileId, receiptsToDelete);
+
+    // Unlink any deleted receipts from ScannedDeliveryNote items
+    for (const r of receiptsToDelete) {
+      if (r.scannedDeliveryNoteId) {
+        try {
+          const note = await prisma.scannedDeliveryNote.findUnique({
+            where: { id: r.scannedDeliveryNoteId }
+          });
+          if (note && Array.isArray(note.items)) {
+            const updatedItems = note.items.map(item => {
+              if (item.goodsReceiptId === r.id) {
+                return { ...item, saved: false, goodsReceiptId: null };
+              }
+              return item;
+            });
+            await prisma.scannedDeliveryNote.update({
+              where: { id: r.scannedDeliveryNoteId },
+              data: { items: updatedItems }
+            });
+          }
+        } catch (noteErr) {
+          console.error("Error unlinking deleted receipt from scanned note:", noteErr);
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, count: deleteResult.count });
   } catch (error) {

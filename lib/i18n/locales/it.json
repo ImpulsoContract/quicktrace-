@@ -250,7 +250,19 @@
     "upload_photo": "Carica foto DDT",
     "photo_format": "Scatta una foto o seleziona un file",
     "elaborar": "Elaborare",
-    "scan_invoice_ia": "Scansiona bolla con IA"
+    "scan_invoice_ia": "Scansiona bolla con IA",
+    "view_scanned_invoices": "Vedi bolle scansionate",
+    "scanned_invoices_title": "Bolle di consegna scansionate con IA",
+    "scanned_invoices_desc": "Consulta le bolle analizzate, controlla le entrate salvate e registra i prodotti in sospeso.",
+    "no_scanned_invoices": "Nessuna bolla di consegna scansionata per ora.",
+    "view_details": "Vedi dettagli",
+    "back_to_scanned_list": "Torna alla lista",
+    "scanned_items_count": "{saved} di {total} salvati",
+    "scanned_saved_badge": "Salvato in merci",
+    "scanned_pending_badge": "In attesa di salvataggio",
+    "save_goods_entry": "Salva entrata",
+    "view_original_image": "Vedi bolla originale",
+    "delete_scanned_confirm": "Sei sicuro di voler eliminare questa bolla scansionata?"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",

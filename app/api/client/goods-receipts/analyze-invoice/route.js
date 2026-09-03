@@ -148,8 +148,34 @@ export async function POST(req) {
     console.log(`[Gemini Response] Extracted text:`, resultText);
     const parsedData = JSON.parse(resultText);
 
+    const initialItems = (parsedData.items || []).map((item, idx) => ({
+      id: idx,
+      productName: item.product || "",
+      lote: item.lote || "",
+      quantity: item.quantity || "",
+      saved: false,
+      goodsReceiptId: null
+    }));
+
+    let scannedDoc = null;
+    try {
+      scannedDoc = await prisma.scannedDeliveryNote.create({
+        data: {
+          clientProfileId: profileId,
+          providerName: parsedData.provider || "",
+          imageUrl: blob.url,
+          fileName: file.name || "albaran.jpg",
+          items: initialItems,
+          date: new Date()
+        }
+      });
+    } catch (saveErr) {
+      console.error("[analyze-invoice] Error saving scanned delivery note:", saveErr);
+    }
+
     return NextResponse.json({
       success: true,
+      scannedDeliveryNoteId: scannedDoc ? scannedDoc.id : null,
       imageUrl: blob.url,
       provider: parsedData.provider || "",
       items: parsedData.items || []

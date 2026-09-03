@@ -253,7 +253,19 @@
     "photo_format": "Tire una foto ou selecione um ficheiro",
     "ingredient_costs_btn": "Preços de custo de cada mercadoria",
     "elaborar": "Elaborar",
-    "scan_invoice_ia": "Escanear nota com IA"
+    "scan_invoice_ia": "Escanear nota com IA",
+    "view_scanned_invoices": "Ver notas escaneadas",
+    "scanned_invoices_title": "Notas de entrega escaneadas com IA",
+    "scanned_invoices_desc": "Consulte as notas analisadas, verifique as entradas salvas e registe produtos pendentes.",
+    "no_scanned_invoices": "Nenhuma nota de entrega escaneada ainda.",
+    "view_details": "Ver detalhes",
+    "back_to_scanned_list": "Voltar à lista",
+    "scanned_items_count": "{saved} de {total} salvos",
+    "scanned_saved_badge": "Salvo em mercadorias",
+    "scanned_pending_badge": "Pendente para salvar",
+    "save_goods_entry": "Salvar entrada",
+    "view_original_image": "Ver nota original",
+    "delete_scanned_confirm": "Tem a certeza de que deseja eliminar esta nota escaneada?"
   },
   "modals": {
     "cleaning_header": "Novo Registo de Limpeza",
