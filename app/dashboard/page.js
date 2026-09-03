@@ -8488,13 +8488,242 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
   );
 }
 
+function RecipeIaScanModal({ isOpen, onClose, onExtracted }) {
+  const { t } = useI18n();
+  const [file, setFile] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!file) return;
+    setAnalyzing(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/client/recipes/analyze-sheet", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al analizar la ficha técnica");
+      }
+      if (data.data) {
+        onExtracted(data.data);
+      } else {
+        throw new Error("No se pudo extraer la información de la ficha");
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Error al procesar la ficha técnica");
+      setAnalyzing(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1100 }}>
+      <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', transition: 'all 0.3s ease' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Sparkles size={22} style={{ color: '#7c3aed' }} />
+              {t('modals.scan_recipe_ia_title') || "Escanear ficha técnica con IA"}
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.35rem' }}>
+              {t('modals.scan_recipe_ia_desc') || "Sube una imagen o documento (PDF) de la ficha para autorrellenar los datos de la receta."}
+            </p>
+          </div>
+          <button 
+            type="button"
+            onClick={onClose} 
+            disabled={analyzing}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
+          >
+            <X size={22} />
+          </button>
+        </header>
+
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '1rem', borderRadius: '0.75rem', color: '#dc2626', fontSize: '0.9rem', fontWeight: '500' }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div 
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDragLeave={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => !analyzing && document.getElementById("recipe-ai-file-upload").click()}
+            style={{
+              border: dragActive ? '2.5px dashed #7c3aed' : '2px dashed var(--border)',
+              borderRadius: '1rem',
+              padding: '3rem 2rem',
+              textAlign: 'center',
+              background: dragActive ? 'rgba(124, 58, 237, 0.04)' : '#f8fafc',
+              cursor: analyzing ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1rem'
+            }}
+          >
+            <UploadCloud size={48} color={dragActive ? "#7c3aed" : "var(--text-muted)"} style={{ transition: 'all 0.2s' }} />
+            {file ? (
+              <div>
+                <p style={{ fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{file.name}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  {(file.size / (1024 * 1024)).toFixed(2)} MB
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                  {t('modals.select_sheet_file') || "Selecciona o arrastra una imagen o PDF de la ficha"}
+                </p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  Soporta imágenes (PNG, JPG, WEBP) y archivos PDF
+                </p>
+              </div>
+            )}
+            <input 
+              id="recipe-ai-file-upload"
+              type="file"
+              accept="image/*, application/pdf"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+              disabled={analyzing}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              type="button" 
+              className="btn-secondary" 
+              onClick={onClose} 
+              style={{ flex: 1, padding: '0.9rem' }}
+              disabled={analyzing}
+            >
+              {t('common.cancel')}
+            </button>
+            <button 
+              type="button" 
+              onClick={handleAnalyze} 
+              disabled={!file || analyzing}
+              style={{ 
+                flex: 2, 
+                padding: '0.9rem', 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                background: !file || analyzing ? '#cbd5e1' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.75rem',
+                fontWeight: '800',
+                cursor: !file || analyzing ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {analyzing ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  {t('modals.analyzing_sheet') || "Analizando ficha con IA..."}
+                </>
+              ) : (
+                <>
+                  <Sparkles size={18} />
+                  {t('modals.analyze_sheet_btn') || "Analizar ficha con IA"}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange }) {
   const { t } = useI18n();
+  const [isAiScanOpen, setIsAiScanOpen] = useState(false);
+  const [aiSuccessMsg, setAiSuccessMsg] = useState(null);
+
+  const handleAiExtracted = (extracted) => {
+    setFormData(prev => {
+      let newIngredients = prev.ingredients;
+      if (Array.isArray(extracted.ingredients) && extracted.ingredients.length > 0) {
+        newIngredients = extracted.ingredients.map(ing => ({
+          name: ing.name || "",
+          amount: ing.amount || "",
+          unit: ing.unit || "",
+          loteMandatory: false,
+          quantityMandatory: false,
+          expandItem: false,
+          expandedText: ""
+        }));
+      }
+
+      return {
+        ...prev,
+        name: extracted.name || prev.name || "",
+        expiryDays: extracted.expiryDays !== undefined ? extracted.expiryDays : prev.expiryDays,
+        expiryType: extracted.expiryType || prev.expiryType || "EXPIRATION",
+        elaborationInstructions: extracted.elaborationInstructions || prev.elaborationInstructions || "",
+        conservationInstructions: extracted.conservationInstructions || prev.conservationInstructions || "",
+        energyValue: extracted.energyValue || prev.energyValue || "",
+        fats: extracted.fats || prev.fats || "",
+        saturatedFats: extracted.saturatedFats || prev.saturatedFats || "",
+        carbohydrates: extracted.carbohydrates || prev.carbohydrates || "",
+        sugars: extracted.sugars || prev.sugars || "",
+        proteins: extracted.proteins || prev.proteins || "",
+        salt: extracted.salt || prev.salt || "",
+        allergens: Array.isArray(extracted.allergens) && extracted.allergens.length > 0 ? extracted.allergens : (prev.allergens || []),
+        ingredients: newIngredients
+      };
+    });
+
+    setAiSuccessMsg(t('modals.sheet_analyzed_success') || "Ficha técnica analizada con éxito. Revisa y guarda la receta.");
+    setIsAiScanOpen(false);
+  };
 
   return (
     <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '850px' }}>
-        <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+        <header style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
               {isEditing ? t('modals.edit_recipe') : t('modals.recipe_header')}
@@ -8503,6 +8732,58 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}><X size={24} /></button>
         </header>
+
+        {/* Purple AI Scan Button */}
+        {!isEditing && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              type="button"
+              onClick={() => setIsAiScanOpen(true)}
+              style={{
+                width: '100%',
+                padding: '0.9rem 1.5rem',
+                borderRadius: '0.85rem',
+                border: 'none',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                color: 'white',
+                fontWeight: '800',
+                fontSize: '0.95rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.6rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(124, 58, 237, 0.25)',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              <Sparkles size={20} />
+              {t('modals.scan_recipe_ia_btn') || "Escanear imagen o documento de la ficha con IA"}
+            </button>
+          </div>
+        )}
+
+        {aiSuccessMsg && (
+          <div style={{ background: 'rgba(66, 98, 22, 0.08)', border: '1px solid rgba(66, 98, 22, 0.25)', padding: '1rem 1.25rem', borderRadius: '0.75rem', color: 'var(--corp-green)', fontWeight: '700', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Check size={18} />
+              <span>{aiSuccessMsg}</span>
+            </div>
+            <button type="button" onClick={() => setAiSuccessMsg(null)} style={{ background: 'none', border: 'none', color: 'var(--corp-green)', cursor: 'pointer', padding: '0.25rem' }}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {isAiScanOpen && (
+          <RecipeIaScanModal 
+            isOpen={isAiScanOpen}
+            onClose={() => setIsAiScanOpen(false)}
+            onExtracted={handleAiExtracted}
+          />
+        )}
 
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div>
