@@ -219,6 +219,8 @@
     "elaboration_prep_time_header": "Temps prép.",
     "labor_cost_header": "Coût de personnel",
     "cost_header": "Coût des matières premières",
+    "assign_costs_link": "Attribuer le coût à chaque matière première",
+    "assign_recipe_costs_btn": "Attribuer le coût à chaque ingrédient de cette recette",
     "all_recipes": "Toutes les recettes",
     "traceability_report": "Rapport de traçabilité",
     "generate_report": "Générer Rapport",
@@ -383,7 +385,14 @@
       "unitPrice": "Prix Unitaire (PVC)"
     },
     "drag_elements": "Faites glisser des éléments ici",
-    "none": "Aucun"
+    "none": "Aucun",
+    "ingredient_costs_header": "Prix de Revient des Matières Premières",
+    "ingredient_costs_desc": "Ajoutez ici les prix de revient actuels pour connaître ensuite le coût des matières premières dans chaque fabrication. Si une matière première apparaît plusieurs fois, c'est parce qu'elle a des unités différentes selon les recettes. Vérifiez bien l'unité pour renseigner le prix.",
+    "recipe_ingredient_costs_header": "Coût des matières premières de la recette",
+    "recipe_ingredient_costs_desc": "Attribuez ou modifiez le prix de revient des ingrédients de cette recette pour calculer le coût de fabrication.",
+    "ingredient_column": "Ingrédient et Unité",
+    "recipes_column": "Recettes qui l'utilisent",
+    "cost_price_column": "Prix de Revient (par unité)"
   },
   "workers": {
     "title": "Gestion des Travailleurs",

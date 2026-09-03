@@ -497,6 +497,7 @@ export default function ClientDashboard() {
   const [isWaterExportModalOpen, setIsWaterExportModalOpen] = useState(false);
   const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState(false);
   const [isIngredientCostsModalOpen, setIsIngredientCostsModalOpen] = useState(false);
+  const [selectedElaborationForCosts, setSelectedElaborationForCosts] = useState(null);
   const [isManageMerchantTypesModalOpen, setIsManageMerchantTypesModalOpen] = useState(false);
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   const [workers, setWorkers] = useState([]);
@@ -878,18 +879,32 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleOpenRecipeCostModal = (elaboration) => {
+    if (!elaboration) return;
+    setSelectedElaborationForCosts(elaboration);
+    setIsIngredientCostsModalOpen(true);
+    fetchIngredientPrices();
+  };
+
   const handleSaveIngredientPrices = async (pricesToSave) => {
     try {
       setLoading(true);
       const res = await fetch("/api/ingredient-prices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pricesToSave)
+        body: JSON.stringify({
+          ingredients: pricesToSave,
+          recipeId: selectedElaborationForCosts?.recipeId || selectedElaborationForCosts?.recipe?.id || null,
+          elaborationId: selectedElaborationForCosts?.id || null
+        })
       });
       const data = await res.json();
       if (data.success) {
         alert(t('alerts.prices_saved') || "Precios guardados correctamente");
         setIsIngredientCostsModalOpen(false);
+        setSelectedElaborationForCosts(null);
+        fetchIngredientPrices();
+        fetchElaborations();
       } else {
         alert(data.error || t('alerts.request_error'));
       }
@@ -3951,7 +3966,11 @@ export default function ClientDashboard() {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                   <span>{t('dashboard.cost_header')}</span>
                                   <span 
-                                    onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      setSelectedElaborationForCosts(null);
+                                      setIsIngredientCostsModalOpen(true); 
+                                    }} 
                                     style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
                                   >
                                     {t('dashboard.assign_costs_link')}
@@ -4001,7 +4020,31 @@ export default function ClientDashboard() {
                           {session?.user?.role !== "WORKER" && (
                             <>
                               <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
-                                {el.costPrice ? formatPrice(el.costPrice, profile?.currency, locale) : '-'}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                  <span>{el.costPrice ? formatPrice(el.costPrice, profile?.currency, locale) : '-'}</span>
+                                  {el.recipe && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenRecipeCostModal(el);
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        fontSize: '0.7rem',
+                                        color: 'var(--corp-green)',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline',
+                                        fontWeight: '600',
+                                        textAlign: 'left'
+                                      }}
+                                    >
+                                      {t('dashboard.assign_recipe_costs_btn') || "Asigna coste a cada ingrediente de esta receta"}
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                               <td style={{ padding: '1.5rem 2rem', fontWeight: '800', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
                                 {el.preparationTime && (el.laborCostHourlyRate || 0) > 0
@@ -5842,7 +5885,11 @@ export default function ClientDashboard() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             <span>{t('dashboard.cost_header')} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</span>
                             <span 
-                              onClick={(e) => { e.stopPropagation(); setIsIngredientCostsModalOpen(true); }} 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setSelectedElaborationForCosts(null);
+                                setIsIngredientCostsModalOpen(true); 
+                              }} 
                               style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
                             >
                               {t('dashboard.assign_costs_link')}
@@ -5889,7 +5936,31 @@ export default function ClientDashboard() {
                             </span>
                           </td>
                           <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>
-                            {elab.costPrice ? formatPrice(elab.costPrice, profile?.currency, locale) : '-'}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                              <span>{elab.costPrice ? formatPrice(elab.costPrice, profile?.currency, locale) : '-'}</span>
+                              {elab.recipe && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenRecipeCostModal(elab);
+                                  }}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 0,
+                                    fontSize: '0.7rem',
+                                    color: 'var(--corp-green)',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    fontWeight: '600',
+                                    textAlign: 'left'
+                                  }}
+                                >
+                                  {t('dashboard.assign_recipe_costs_btn') || "Asigna coste a cada ingrediente de esta receta"}
+                                </button>
+                              )}
+                            </div>
                           </td>
                           <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600', color: 'var(--text-main)' }}>
                             {elab.preparationTime ? `${elab.preparationTime} min` : '-'}
@@ -6095,9 +6166,13 @@ export default function ClientDashboard() {
 
       {isIngredientCostsModalOpen && (
         <IngredientCostModal 
-          onClose={() => setIsIngredientCostsModalOpen(false)}
+          onClose={() => {
+            setIsIngredientCostsModalOpen(false);
+            setSelectedElaborationForCosts(null);
+          }}
           onSave={handleSaveIngredientPrices}
           ingredientPrices={ingredientPrices}
+          selectedElaboration={selectedElaborationForCosts}
           loading={loading}
           currency={profile?.currency}
         />
@@ -7369,15 +7444,70 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
   );
 }
 
-function IngredientCostModal({ onClose, onSave, ingredientPrices, loading, currency }) {
+function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElaboration, loading, currency }) {
   const { t, locale } = useI18n();
   const [localPrices, setLocalPrices] = useState([]);
 
   useEffect(() => {
-    if (ingredientPrices) {
+    if (!ingredientPrices) return;
+
+    if (selectedElaboration) {
+      const recipe = selectedElaboration.recipe;
+      const recipeName = recipe?.name || "";
+
+      // Collect target ingredients for this recipe/elaboration
+      const targetMap = new Map();
+
+      // 1. From recipe.ingredients
+      if (recipe?.ingredients) {
+        recipe.ingredients.forEach(ing => {
+          if (!ing.name || !ing.name.trim()) return;
+          const key = `${ing.name.trim().toLowerCase()}_${(ing.unit || '').trim().toLowerCase()}`;
+          targetMap.set(key, { name: ing.name.trim(), unit: (ing.unit || '').trim() });
+        });
+      }
+
+      // 2. From elaboration.ingredients
+      if (selectedElaboration.ingredients) {
+        selectedElaboration.ingredients.forEach(ing => {
+          if (!ing.name || !ing.name.trim()) return;
+          const key = `${ing.name.trim().toLowerCase()}_${(ing.unit || '').trim().toLowerCase()}`;
+          if (!targetMap.has(key)) {
+            targetMap.set(key, { name: ing.name.trim(), unit: (ing.unit || '').trim() });
+          }
+        });
+      }
+
+      // 3. Also check ingredientPrices items that list this recipe
+      if (recipeName) {
+        ingredientPrices.forEach(item => {
+          if (item.recipes && item.recipes.includes(recipeName)) {
+            const key = `${(item.name || '').trim().toLowerCase()}_${(item.unit || '').trim().toLowerCase()}`;
+            if (!targetMap.has(key)) {
+              targetMap.set(key, { name: item.name.trim(), unit: (item.unit || '').trim() });
+            }
+          }
+        });
+      }
+
+      // Create array with current prices
+      const filteredPrices = Array.from(targetMap.entries()).map(([key, ing]) => {
+        const found = ingredientPrices.find(
+          p => `${(p.name || '').trim().toLowerCase()}_${(p.unit || '').trim().toLowerCase()}` === key
+        );
+        return {
+          name: ing.name,
+          unit: ing.unit,
+          recipes: found?.recipes || (recipeName ? [recipeName] : []),
+          price: found !== undefined && found.price !== undefined ? found.price : 0
+        };
+      }).sort((a, b) => a.name.localeCompare(b.name));
+
+      setLocalPrices(filteredPrices);
+    } else {
       setLocalPrices(ingredientPrices.map(item => ({ ...item })));
     }
-  }, [ingredientPrices]);
+  }, [ingredientPrices, selectedElaboration]);
 
   const handlePriceChange = (index, value) => {
     const updated = [...localPrices];
@@ -7397,10 +7527,14 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, loading, curre
 
         <div className="modal-header" style={{ display: 'block' }}>
           <h2 className="modal-title" style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '0.75rem' }}>
-            {t('modals.ingredient_costs_header')}
+            {selectedElaboration 
+              ? `${t('modals.recipe_ingredient_costs_header') || "Coste de materias primas de la receta"}: ${selectedElaboration.recipe?.name || selectedElaboration.name}`
+              : t('modals.ingredient_costs_header')}
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
-            {t('modals.ingredient_costs_desc')}
+            {selectedElaboration
+              ? (t('modals.recipe_ingredient_costs_desc') || "Asigna o modifica el precio de coste de los ingredientes de esta receta para calcular el coste de la elaboración.")
+              : t('modals.ingredient_costs_desc')}
           </p>
         </div>
         

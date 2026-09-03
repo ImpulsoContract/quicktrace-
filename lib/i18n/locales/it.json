@@ -219,6 +219,8 @@
     "elaboration_prep_time_header": "Tempo prep.",
     "labor_cost_header": "Costo del personale",
     "cost_header": "Costo delle materie prime",
+    "assign_costs_link": "Assegna il costo a ciascuna materia prima",
+    "assign_recipe_costs_btn": "Assegna il costo a ciascun ingrediente di questa ricetta",
     "all_recipes": "Tutte le ricette",
     "traceability_report": "Report di tracciabilità",
     "generate_report": "Genera Report",
@@ -383,7 +385,14 @@
       "unitPrice": "Prezzo unitario (PVP)"
     },
     "drag_elements": "Trascina elementi qui",
-    "none": "Nessuno"
+    "none": "Nessuno",
+    "ingredient_costs_header": "Prezzi di Costo delle Materie Prime",
+    "ingredient_costs_desc": "Aggiungi qui i prezzi di costo attuali per conoscere in seguito il costo delle materie prime in ciascuna lavorazione. Se una materia prima compare più volte, è perché ha unità di misura diverse in ciascuna ricetta.",
+    "recipe_ingredient_costs_header": "Costo delle materie prime della ricetta",
+    "recipe_ingredient_costs_desc": "Assegna o modifica il prezzo di costo degli ingredienti di questa ricetta per calcolare il costo di produzione.",
+    "ingredient_column": "Ingrediente e Unità",
+    "recipes_column": "Ricette che lo utilizzano",
+    "cost_price_column": "Prezzo di Costo (per unità)"
   },
   "workers": {
     "title": "Gestione dei Lavoratori",

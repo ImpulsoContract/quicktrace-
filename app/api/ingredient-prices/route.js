@@ -71,24 +71,25 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-    if (!profile) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasTraceability) {
+      return NextResponse.json({ error: "No tienes permiso para acceder a precios de coste" }, { status: 403 });
+    }
 
-    const ingredients = await req.json(); // Array of { name, unit, price }
+    const profileId = session.user.profileId;
+    if (!profileId) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
 
-    // Check if it's the first time setting prices
-    const existingPricesCount = await prisma.ingredientPrice.count({
-      where: { clientProfileId: profile.id }
-    });
-    const isFirstTime = existingPricesCount === 0;
+    const body = await req.json();
+    const ingredients = Array.isArray(body) ? body : (body.ingredients || []);
+    const targetRecipeId = body.recipeId ? parseInt(body.recipeId) : null;
+    const targetElaborationId = body.elaborationId ? parseInt(body.elaborationId) : null;
 
     const savedPrices = [];
 
-    // Use a transaction for efficiency or just loop
+    // Save or update prices
     for (const ing of ingredients) {
       if (ing.price === "" || ing.price === null || undefined === ing.price) continue;
       
@@ -98,14 +99,14 @@ export async function POST(req) {
       const updatedPrice = await prisma.ingredientPrice.upsert({
         where: {
           clientProfileId_name_unit: {
-            clientProfileId: profile.id,
+            clientProfileId: profileId,
             name: ing.name.trim(),
             unit: ing.unit.trim()
           }
         },
         update: { price: priceVal },
         create: {
-          clientProfileId: profile.id,
+          clientProfileId: profileId,
           name: ing.name.trim(),
           unit: ing.unit.trim(),
           price: priceVal
@@ -114,41 +115,49 @@ export async function POST(req) {
       savedPrices.push(updatedPrice);
     }
 
-    // If it's the first time, backpopulate past elaborations
-    if (isFirstTime && savedPrices.length > 0) {
-      const pastElaborations = await prisma.elaboration.findMany({
-        where: {
-          recipe: { clientProfileId: profile.id }
-        },
+    // Recalculate elaborations
+    if (savedPrices.length > 0) {
+      const allPrices = await prisma.ingredientPrice.findMany({
+        where: { clientProfileId: profileId }
+      });
+
+      const priceMap = {};
+      allPrices.forEach(p => {
+        priceMap[`${p.name.trim().toLowerCase()}_${p.unit.trim().toLowerCase()}`] = p.price;
+      });
+
+      const elabWhere = {
+        recipe: { clientProfileId: profileId }
+      };
+
+      if (targetRecipeId) {
+        elabWhere.recipeId = targetRecipeId;
+      } else if (targetElaborationId) {
+        elabWhere.id = targetElaborationId;
+      }
+
+      const elaborationsToUpdate = await prisma.elaboration.findMany({
+        where: elabWhere,
         include: { ingredients: true }
       });
 
-      // Create a map for quick lookup
-      const priceMap = {};
-      savedPrices.forEach(p => {
-        priceMap[`${p.name.toLowerCase()}_${p.unit.toLowerCase()}`] = p.price;
-      });
-
-      // Update each past elaboration
-      for (const elab of pastElaborations) {
+      for (const elab of elaborationsToUpdate) {
         let totalCost = 0;
         elab.ingredients.forEach(ing => {
-          const lookupKey = `${ing.name.toLowerCase()}_${ing.unit.toLowerCase()}`;
+          const lookupKey = `${ing.name.trim().toLowerCase()}_${ing.unit.trim().toLowerCase()}`;
           const price = priceMap[lookupKey] || 0;
-          const amount = parseFloat(ing.realAmount.toString().replace(',', '.')) || 0;
+          const amount = parseFloat(ing.realAmount?.toString().replace(',', '.')) || 0;
           totalCost += amount * price;
         });
 
-        if (totalCost > 0) {
-          await prisma.elaboration.update({
-            where: { id: elab.id },
-            data: { costPrice: totalCost }
-          });
-        }
+        await prisma.elaboration.update({
+          where: { id: elab.id },
+          data: { costPrice: totalCost }
+        });
       }
     }
 
-    return NextResponse.json({ success: true, backpopulated: isFirstTime });
+    return NextResponse.json({ success: true, backpopulated: true });
   } catch (error) {
     console.error("Error POST /api/ingredient-prices:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

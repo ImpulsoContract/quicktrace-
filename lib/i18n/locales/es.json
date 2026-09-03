@@ -220,6 +220,7 @@
     "labor_cost_header": "Coste de personal",
     "cost_header": "Coste de las materias primas",
     "assign_costs_link": "Asigna el coste a cada materia prima",
+    "assign_recipe_costs_btn": "Asigna coste a cada ingrediente de esta receta",
     "recipe_filter": "Filtrar por Receta",
     "workers": "Trabajadores",
     "all_recipes": "Todas las recetas",
@@ -391,6 +392,8 @@
     "none": "Ninguno",
     "ingredient_costs_header": "Precios de Coste de Materias Primas",
     "ingredient_costs_desc": "Añade aquí los precios de coste de este momento para saber luego el precio de coste de las materias primas en cada elaboración. Si una materia prima te aparece varias veces, es porque la tienes con diferentes unidades de medida en cada receta. Fíjate bien en la unidad de medida de cada materia prima para añadir el precio de coste. Por ejemplo, si una materia prima es el arroz, fíjate si tienes que poner el precio de un gramo o de un kilo.",
+    "recipe_ingredient_costs_header": "Coste de materias primas de la receta",
+    "recipe_ingredient_costs_desc": "Asigna o modifica el precio de coste de los ingredientes de esta receta para calcular el coste de la elaboración.",
     "ingredient_column": "Ingrediente y Unidad",
     "recipes_column": "Recetas que lo usan",
     "cost_price_column": "Precio de Coste (por unidad)"

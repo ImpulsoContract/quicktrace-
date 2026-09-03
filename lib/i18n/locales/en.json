@@ -220,6 +220,7 @@
     "labor_cost_header": "Labor Cost",
     "cost_header": "Raw Materials Cost",
     "assign_costs_link": "Assign cost to each raw material",
+    "assign_recipe_costs_btn": "Assign cost to each ingredient of this recipe",
     "recipe_filter": "Filter by Recipe",
     "workers": "Workers",
     "all_recipes": "All recipes",
@@ -391,6 +392,8 @@
     "none": "None",
     "ingredient_costs_header": "Raw Material Cost Prices",
     "ingredient_costs_desc": "Add the current cost prices here to later know the price of raw materials in each production. If a raw material appears several times, it is because you have it with different units of measure in each recipe. Look closely at the unit of measure of each raw material to add the cost price. For example, if a raw material is rice, check if you need to set the price for one gram or one kilogram.",
+    "recipe_ingredient_costs_header": "Recipe raw material costs",
+    "recipe_ingredient_costs_desc": "Assign or modify the cost price of the ingredients of this recipe to calculate the elaboration cost.",
     "ingredient_column": "Ingredient and Unit",
     "recipes_column": "Recipes using it",
     "cost_price_column": "Cost Price (per unit)"

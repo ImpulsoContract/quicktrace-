@@ -220,6 +220,7 @@
     "labor_cost_header": "Custo de pessoal",
     "cost_header": "Custo das matérias-primas",
     "assign_costs_link": "Atribuir custo a cada matéria-prima",
+    "assign_recipe_costs_btn": "Atribuir custo a cada ingrediente desta receita",
     "recipe_filter": "Filtrar por Receita",
     "workers": "Trabalhadores",
     "all_recipes": "Todas as receitas",
@@ -387,6 +388,8 @@
     "none": "Nenhum",
     "ingredient_costs_header": "Preços de Custo de Matérias-Primas",
     "ingredient_costs_desc": "Adicione aqui os preços de custo atuais para saber depois o preço de custo das matérias-primas em cada elaboração. Se uma matéria-prima aparecer várias vezes, é porque você a possui com diferentes unidades de medida em cada receita. Preste muita atenção na unidade de medida de cada matéria-prima para adicionar o preço de custo. Por exemplo, se uma matéria-prima for arroz, verifique se você deve colocar o preço de um grama ou de um quilo.",
+    "recipe_ingredient_costs_header": "Custo das matérias-primas da receita",
+    "recipe_ingredient_costs_desc": "Atribua ou modifique o preço de custo dos ingredientes desta receita para calcular o custo de elaboração.",
     "ingredient_column": "Ingrediente e Unidade",
     "recipes_column": "Receitas que o utilizam",
     "cost_price_column": "Preço de Custo (por unidade)"
