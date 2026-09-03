@@ -6190,6 +6190,8 @@ export default function ClientDashboard() {
           onClose={() => setIsScannedInvoicesModalOpen(false)}
           recipes={recipes}
           providers={providers}
+          goodsReceipts={goodsReceipts}
+          onEditGoodsReceipt={handleEditGoods}
           fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
           profile={profile}
         />
@@ -10701,7 +10703,7 @@ function ManageMerchantTypesModal({ merchantTypes, onClose, onUpdate }) {
   );
 }
 
-function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchGoodsReceipts, profile }) {
+function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsReceipts, onEditGoodsReceipt, fetchGoodsReceipts, profile }) {
   const { t, locale } = useI18n();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10709,7 +10711,6 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchG
   const [previewImage, setPreviewImage] = useState(null);
 
   // States for editable rows in details view
-  const [savingIndex, setSavingIndex] = useState(null);
   const [editableRows, setEditableRows] = useState([]);
 
   // State for raw ingredient linking modal
@@ -10783,21 +10784,52 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchG
 
   const initEditableRows = (note) => {
     const items = Array.isArray(note.items) ? note.items : [];
-    setEditableRows(items.map((it, idx) => ({
-      id: it.id !== undefined ? it.id : idx,
-      productName: it.productName || "",
-      providerName: note.providerName || "",
-      providerId: providers.find(p => p.name === note.providerName)?.id || null,
-      lote: it.lote || "",
-      quantity: it.quantity || "",
-      invoiceNumber: "",
-      manufacturingTemp: "",
-      endDate: "",
-      typeAndOrigin: "",
-      relatedIngredients: [],
-      relatedQuantities: {},
-      saved: !!it.saved
-    })));
+    setEditableRows(items.map((it, idx) => {
+      const matchingReceipt = (goodsReceipts || []).find(g => 
+        (it.goodsReceiptId && g.id === it.goodsReceiptId) ||
+        (g.scannedDeliveryNoteId === note.id && g.productName?.trim().toLowerCase() === it.productName?.trim().toLowerCase())
+      );
+
+      if (matchingReceipt) {
+        return {
+          id: it.id !== undefined ? it.id : idx,
+          goodsReceiptId: matchingReceipt.id,
+          productName: matchingReceipt.productName || it.productName || "",
+          providerName: matchingReceipt.providerName || note.providerName || "",
+          providerId: matchingReceipt.providerId || providers.find(p => p.name === (matchingReceipt.providerName || note.providerName))?.id || null,
+          lote: matchingReceipt.lote || it.lote || "",
+          quantity: matchingReceipt.quantity || it.quantity || "",
+          invoiceNumber: matchingReceipt.invoiceNumber || "",
+          manufacturingTemp: matchingReceipt.manufacturingTemp || "",
+          endDate: matchingReceipt.endDate || "",
+          typeAndOrigin: matchingReceipt.typeAndOrigin || "",
+          merchantTypes: matchingReceipt.merchantTypes || [],
+          relatedIngredients: matchingReceipt.relatedIngredients || [],
+          relatedQuantities: matchingReceipt.relatedQuantities || {},
+          saved: true,
+          saving: false
+        };
+      }
+
+      return {
+        id: it.id !== undefined ? it.id : idx,
+        goodsReceiptId: it.goodsReceiptId || null,
+        productName: it.productName || "",
+        providerName: note.providerName || "",
+        providerId: providers.find(p => p.name === note.providerName)?.id || null,
+        lote: it.lote || "",
+        quantity: it.quantity || "",
+        invoiceNumber: "",
+        manufacturingTemp: "",
+        endDate: "",
+        typeAndOrigin: "",
+        merchantTypes: [],
+        relatedIngredients: [],
+        relatedQuantities: {},
+        saved: !!it.saved,
+        saving: false
+      };
+    }));
   };
 
   const handleSelectNote = (note) => {
@@ -10846,14 +10878,14 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchG
 
   const handleSaveRow = async (index) => {
     const row = editableRows[index];
-    if (row.saved || savingIndex !== null) return;
+    if (row.saved || row.saving) return;
 
     if (!row.productName.trim()) {
       alert("El nombre del producto es obligatorio");
       return;
     }
 
-    setSavingIndex(index);
+    setEditableRows(prev => prev.map((r, idx) => idx === index ? { ...r, saving: true } : r));
 
     try {
       const payload = {
@@ -10868,7 +10900,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchG
         endDate: row.endDate,
         typeAndOrigin: row.typeAndOrigin,
         providerId: row.providerId,
-        merchantTypes: [],
+        merchantTypes: row.merchantTypes || [],
         relatedIngredients: row.relatedIngredients,
         relatedQuantities: row.relatedQuantities,
         scannedDeliveryNoteId: selectedNote.id,
@@ -10885,7 +10917,12 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchG
         throw new Error(data.error || "Error al guardar el registro");
       }
 
-      setEditableRows(prev => prev.map((r, idx) => idx === index ? { ...r, saved: true } : r));
+      setEditableRows(prev => prev.map((r, idx) => idx === index ? { 
+        ...r, 
+        saved: true, 
+        saving: false, 
+        goodsReceiptId: data.receipt?.id 
+      } : r));
 
       const updatedItems = (selectedNote.items || []).map((it, idx) => 
         idx === index ? { ...it, saved: true, goodsReceiptId: data.receipt?.id } : it
@@ -10899,8 +10936,41 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchG
     } catch (err) {
       console.error(err);
       alert((t('goods_receipt_form.ia_error_saving') || "Error al guardar: ") + err.message);
-    } finally {
-      setSavingIndex(null);
+      setEditableRows(prev => prev.map((r, idx) => idx === index ? { ...r, saving: false } : r));
+    }
+  };
+
+  const handleOpenReceiptEdit = (row) => {
+    const matchingReceipt = (goodsReceipts || []).find(g => 
+      (row.goodsReceiptId && g.id === row.goodsReceiptId) ||
+      (g.scannedDeliveryNoteId === selectedNote.id && g.productName?.trim().toLowerCase() === row.productName?.trim().toLowerCase())
+    );
+
+    if (matchingReceipt) {
+      if (onEditGoodsReceipt) {
+        onClose();
+        onEditGoodsReceipt(matchingReceipt);
+      }
+    } else {
+      if (onEditGoodsReceipt) {
+        onClose();
+        onEditGoodsReceipt({
+          id: row.goodsReceiptId,
+          providerName: row.providerName || selectedNote.providerName || "",
+          productName: row.productName,
+          lote: row.lote || "",
+          invoiceNumber: row.invoiceNumber || "",
+          quantity: row.quantity || "",
+          date: selectedNote.date || new Date().toISOString(),
+          deliveryNoteImage: selectedNote.imageUrl,
+          manufacturingTemp: row.manufacturingTemp || "",
+          endDate: row.endDate || "",
+          typeAndOrigin: row.typeAndOrigin || "",
+          merchantTypes: row.merchantTypes || [],
+          relatedIngredients: row.relatedIngredients || [],
+          relatedQuantities: row.relatedQuantities || {}
+        });
+      }
     }
   };
 
@@ -11142,133 +11212,248 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, fetchG
               )}
             </div>
 
-            {/* Items Table */}
-            <div style={{ overflowX: 'auto' }}>
-              <table className="table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem', minWidth: '750px' }}>
-                <thead className="table-header">
-                  <tr>
-                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', borderRadius: '8px 0 0 8px', width: '130px' }}>Estado</th>
-                    <th className="table-header-cell" style={{ background: 'var(--bg-light)' }}>Producto</th>
-                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', width: '130px' }}>Lote</th>
-                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', width: '120px' }}>Cantidad</th>
-                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', width: '180px' }}>Materias primas</th>
-                    <th className="table-header-cell" style={{ background: 'var(--bg-light)', borderRadius: '0 8px 8px 0', width: '150px', textAlign: 'right' }}>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {editableRows.map((row, idx) => (
-                    <tr 
-                      key={idx} 
-                      style={{ 
-                        background: row.saved ? 'rgba(34, 197, 94, 0.05)' : 'white', 
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                        border: row.saved ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid var(--border)'
+            {/* Entry Cards List matching GoodsReceiptIaScanModal */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {editableRows.map((row, idx) => (
+                <div 
+                  key={idx} 
+                  style={{ 
+                    background: row.saved ? '#f8fafc' : 'white', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '1rem', 
+                    padding: '1.5rem', 
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    opacity: row.saved ? 0.95 : 1, 
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
+                  }}
+                >
+                  {/* Row 1: Product, Provider, Lote, Quantity */}
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.product') || "Producto"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.productName} 
+                        onChange={(e) => handleRowChange(idx, "productName", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                    
+                    <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.provider') || "Proveedor"}
+                      </label>
+                      <input 
+                        type="text" 
+                        list={`scanned-providers-list-${idx}`}
+                        className="input-field" 
+                        value={row.providerName} 
+                        onChange={(e) => handleRowChange(idx, "providerName", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                      <datalist id={`scanned-providers-list-${idx}`}>
+                        {providers.map(p => (
+                          <option key={p.id} value={p.name} />
+                        ))}
+                      </datalist>
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('traceability_form.lot') || "Lote"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.lote} 
+                        onChange={(e) => handleRowChange(idx, "lote", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '100px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.quantity') || "Cantidad"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.quantity} 
+                        onChange={(e) => handleRowChange(idx, "quantity", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Relate with ingredients link + Info icon */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => openLinkModal(idx)}
+                      disabled={row.saved || row.saving}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
+                        fontSize: '0.85rem',
+                        fontWeight: '700',
+                        textDecoration: 'underline',
+                        cursor: row.saved ? 'default' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: 0
                       }}
                     >
-                      <td style={{ padding: '0.85rem 1rem', borderRadius: '8px 0 0 8px' }}>
-                        {row.saved ? (
-                          <span style={{ background: '#dcfce7', color: '#166534', padding: '0.25rem 0.6rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <Check size={14} /> {t('dashboard.scanned_saved_badge') || "Guardado"}
-                          </span>
-                        ) : (
-                          <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.25rem 0.6rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700' }}>
-                            {t('dashboard.scanned_pending_badge') || "Pendiente"}
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        {row.saved ? (
-                          <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{row.productName}</span>
-                        ) : (
-                          <input 
-                            type="text" 
-                            className="input-field" 
-                            value={row.productName} 
-                            onChange={(e) => handleRowChange(idx, 'productName', e.target.value)}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', width: '100%' }}
-                            placeholder="Nombre del producto"
-                          />
-                        )}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        {row.saved ? (
-                          <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>{row.lote || "-"}</span>
-                        ) : (
-                          <input 
-                            type="text" 
-                            className="input-field" 
-                            value={row.lote} 
-                            onChange={(e) => handleRowChange(idx, 'lote', e.target.value)}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', width: '100%' }}
-                            placeholder="Lote"
-                          />
-                        )}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        {row.saved ? (
-                          <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>{row.quantity || "-"}</span>
-                        ) : (
-                          <input 
-                            type="text" 
-                            className="input-field" 
-                            value={row.quantity} 
-                            onChange={(e) => handleRowChange(idx, 'quantity', e.target.value)}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', width: '100%' }}
-                            placeholder="Cantidad"
-                          />
-                        )}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        {row.saved ? (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {row.relatedIngredients?.length > 0 ? `${row.relatedIngredients.length} vinculados` : "-"}
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => openLinkModal(idx)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--corp-green)',
-                              textDecoration: 'underline',
-                              cursor: 'pointer',
-                              fontSize: '0.78rem',
-                              fontWeight: '600',
-                              padding: 0
-                            }}
-                          >
-                            {row.relatedIngredients?.length > 0 ? `✓ ${row.relatedIngredients.length} vinculados` : "Vincular a materias"}
-                          </button>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', borderRadius: '0 8px 8px 0', textAlign: 'right' }}>
-                        {row.saved ? (
-                          <span style={{ color: '#166534', fontWeight: '700', fontSize: '0.8rem' }}>✓ Registrado</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleSaveRow(idx)}
-                            disabled={savingIndex === idx}
-                            className="btn-primary"
-                            style={{
-                              padding: '0.45rem 0.85rem',
-                              fontSize: '0.8rem',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {savingIndex === idx ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                            {t('dashboard.save_goods_entry') || "Guardar entrada"}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      <PlusCircle size={16} />
+                      {row.relatedIngredients?.length > 0 
+                        ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${row.relatedIngredients.length})` 
+                        : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")}
+                    </button>
+                    <Info 
+                      size={16} 
+                      style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
+                      onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
+                    />
+                  </div>
+
+                  {/* Row 3: Factura Nº, Temp. Transp/Fab, Fecha Fin, Tipo/Procedencia */}
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.invoice_number') || "Número de factura"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.invoiceNumber} 
+                        onChange={(e) => handleRowChange(idx, "invoiceNumber", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder={t('goods_receipt_form.invoice_number') || "Nº factura"}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.temp') || "Temperatura Transporte / Fab."}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.manufacturingTemp} 
+                        onChange={(e) => handleRowChange(idx, "manufacturingTemp", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder="Temp. ºC"
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.end_date') || "Fecha de finalización"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.endDate} 
+                        onChange={(e) => handleRowChange(idx, "endDate", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder="Fin de consumo"
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                        {t('goods_receipt_form.type_and_origin') || "Tipo y procedencia"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={row.typeAndOrigin} 
+                        onChange={(e) => handleRowChange(idx, "typeAndOrigin", e.target.value)}
+                        disabled={row.saved || row.saving}
+                        placeholder="Tipo/Origen"
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 4: Status & Actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      {row.saved ? (
+                        <span style={{ background: '#dcfce7', color: '#166534', padding: '0.35rem 0.75rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Check size={14} /> {t('dashboard.scanned_saved_badge') || "Guardado en mercancías"}
+                        </span>
+                      ) : (
+                        <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.35rem 0.75rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: '700' }}>
+                          {t('dashboard.scanned_pending_badge') || "Pendiente de guardar"}
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                      {row.saved ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReceiptEdit(row)}
+                          className="btn-primary"
+                          style={{
+                            padding: '0.6rem 1.5rem',
+                            fontSize: '0.85rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: 'var(--corp-green)',
+                            color: 'white'
+                          }}
+                        >
+                          <Edit size={16} /> {t('dashboard.view_details') || "Ver detalles"}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSaveRow(idx)}
+                          disabled={row.saving}
+                          className="btn-primary"
+                          style={{
+                            padding: '0.6rem 1.5rem',
+                            fontSize: '0.85rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: 'linear-gradient(135deg, var(--corp-green) 0%, #15803d 100%)'
+                          }}
+                        >
+                          {row.saving ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              {"Guardando..."}
+                            </>
+                          ) : (
+                            <>
+                              <Save size={16} />
+                              {t('goods_receipt_form.save_this_entry') || "Guardar esta entrada"}
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
