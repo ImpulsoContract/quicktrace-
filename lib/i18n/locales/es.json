@@ -260,6 +260,7 @@
     "scanned_invoices_desc": "Consulta los albaranes analizados, revisa las entradas guardadas y registra productos pendientes.",
     "no_scanned_invoices": "No hay albaranes escaneados todavía.",
     "view_details": "Ver detalles",
+    "view_or_edit_details": "Ver y/o modificar detalles de esta entrada",
     "back_to_scanned_list": "Volver a la lista",
     "scanned_items_count": "{saved} de {total} guardados",
     "scanned_saved_badge": "Guardado en mercancías",

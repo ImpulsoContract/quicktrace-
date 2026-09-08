@@ -259,6 +259,7 @@
     "scanned_invoices_desc": "Consulte as notas analisadas, verifique as entradas salvas e registe produtos pendentes.",
     "no_scanned_invoices": "Nenhuma nota de entrega escaneada ainda.",
     "view_details": "Ver detalhes",
+    "view_or_edit_details": "Ver e/ou modificar detalhes desta entrada",
     "back_to_scanned_list": "Voltar à lista",
     "scanned_items_count": "{saved} de {total} salvos",
     "scanned_saved_badge": "Salvo em mercadorias",

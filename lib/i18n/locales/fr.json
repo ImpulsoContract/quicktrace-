@@ -256,6 +256,7 @@
     "scanned_invoices_desc": "Consultez les bons analysés, vérifiez les entrées enregistrées et enregistrez les produits en attente.",
     "no_scanned_invoices": "Aucun bon de livraison scanné pour le moment.",
     "view_details": "Voir les détails",
+    "view_or_edit_details": "Voir et/ou modifier les détails de cette entrée",
     "back_to_scanned_list": "Retour à la liste",
     "scanned_items_count": "{saved} sur {total} enregistrés",
     "scanned_saved_badge": "Enregistré en marchandises",

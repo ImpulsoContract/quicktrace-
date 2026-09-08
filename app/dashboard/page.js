@@ -11674,12 +11674,12 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                 <div 
                   key={idx} 
                   style={{ 
-                    background: row.saved ? '#f8fafc' : 'white', 
-                    border: '1px solid var(--border)', 
+                    background: row.saved ? '#f0fdf4' : 'white', 
+                    border: row.saved ? '1px solid #86efac' : '1px solid var(--border)', 
                     borderRadius: '1rem', 
                     padding: '1.5rem', 
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                    opacity: row.saved ? 0.95 : 1, 
+                    boxShadow: row.saved ? '0 1px 3px rgba(34, 197, 94, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    opacity: 1, 
                     transition: 'all 0.2s',
                     display: 'flex',
                     flexDirection: 'column',
@@ -11751,37 +11751,39 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                     </div>
                   </div>
 
-                  {/* Row 2: Relate with ingredients link + Info icon */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => openLinkModal(idx)}
-                      disabled={row.saved || row.saving}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
-                        fontSize: '0.85rem',
-                        fontWeight: '700',
-                        textDecoration: 'underline',
-                        cursor: row.saved ? 'default' : 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                        padding: 0
-                      }}
-                    >
-                      <PlusCircle size={16} />
-                      {row.relatedIngredients?.length > 0 
-                        ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${row.relatedIngredients.length})` 
-                        : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")}
-                    </button>
-                    <Info 
-                      size={16} 
-                      style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
-                      onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
-                    />
-                  </div>
+                  {/* Row 2: Relate with ingredients link + Info icon (only if not yet saved) */}
+                  {!row.saved && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => openLinkModal(idx)}
+                        disabled={row.saving}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
+                          fontSize: '0.85rem',
+                          fontWeight: '700',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: 0
+                        }}
+                      >
+                        <PlusCircle size={16} />
+                        {row.relatedIngredients?.length > 0 
+                          ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${row.relatedIngredients.length})` 
+                          : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")}
+                      </button>
+                      <Info 
+                        size={16} 
+                        style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
+                        onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
+                      />
+                    </div>
+                  )}
 
                   {/* Row 3: Factura Nº, Temp. Transp/Fab, Fecha Fin, Tipo/Procedencia */}
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -11867,7 +11869,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                           onClick={() => handleOpenReceiptEdit(row)}
                           className="btn-primary"
                           style={{
-                            padding: '0.6rem 1.5rem',
+                            padding: '0.6rem 1.25rem',
                             fontSize: '0.85rem',
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -11876,7 +11878,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                             color: 'white'
                           }}
                         >
-                          <Edit size={16} /> {t('dashboard.view_details') || "Ver detalles"}
+                          <Edit size={16} /> {t('dashboard.view_or_edit_details') || "Ver y/o modificar detalles de esta entrada"}
                         </button>
                       ) : (
                         <button

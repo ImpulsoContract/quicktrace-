@@ -256,6 +256,7 @@
     "scanned_invoices_desc": "Consulta le bolle analizzate, controlla le entrate salvate e registra i prodotti in sospeso.",
     "no_scanned_invoices": "Nessuna bolla di consegna scansionata per ora.",
     "view_details": "Vedi dettagli",
+    "view_or_edit_details": "Visualizza e/o modifica i dettagli di questa voce",
     "back_to_scanned_list": "Torna alla lista",
     "scanned_items_count": "{saved} di {total} salvati",
     "scanned_saved_badge": "Salvato in merci",

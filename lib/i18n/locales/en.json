@@ -260,6 +260,7 @@
     "scanned_invoices_desc": "View analyzed delivery notes, check saved entries and register pending products.",
     "no_scanned_invoices": "No scanned delivery notes yet.",
     "view_details": "View details",
+    "view_or_edit_details": "View and/or edit details of this entry",
     "back_to_scanned_list": "Back to list",
     "scanned_items_count": "{saved} of {total} saved",
     "scanned_saved_badge": "Saved in goods receipts",
