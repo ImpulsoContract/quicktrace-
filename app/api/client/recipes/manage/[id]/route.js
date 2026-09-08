@@ -100,10 +100,11 @@ export async function PATCH(req, { params }) {
           salt,
           allergens: allergens !== undefined ? allergens : undefined,
           ingredients: {
-            create: ingredients.map((ing) => ({
+            create: ingredients.map((ing, idx) => ({
               name: toTitleCase(ing.name),
               amount: ing.amount,
               unit: ing.unit,
+              order: typeof ing.order === 'number' ? ing.order : idx,
               loteMandatory: !!ing.loteMandatory,
               quantityMandatory: !!ing.quantityMandatory,
               expandItem: !!ing.expandItem,

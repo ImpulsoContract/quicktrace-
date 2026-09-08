@@ -84,7 +84,12 @@ export async function GET(req) {
         include: {
           recipe: {
             include: {
-              ingredients: true
+              ingredients: {
+                orderBy: [
+                  { order: 'asc' },
+                  { id: 'asc' }
+                ]
+              }
             }
           },
           ingredients: true
@@ -215,7 +220,16 @@ export async function POST(req) {
         }
       },
       include: {
-        recipe: true,
+        recipe: {
+          include: {
+            ingredients: {
+              orderBy: [
+                { order: 'asc' },
+                { id: 'asc' }
+              ]
+            }
+          }
+        },
         ingredients: true
       }
     });
@@ -308,7 +322,16 @@ export async function PATCH(req) {
       where: { id: parseInt(id) },
       data: updateData,
       include: {
-        recipe: true,
+        recipe: {
+          include: {
+            ingredients: {
+              orderBy: [
+                { order: 'asc' },
+                { id: 'asc' }
+              ]
+            }
+          }
+        },
         ingredients: true
       }
     });

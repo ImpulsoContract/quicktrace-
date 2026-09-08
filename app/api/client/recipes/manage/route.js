@@ -73,10 +73,11 @@ export async function POST(req) {
         allergens: allergens || [],
         clientProfileId: profile.id,
         ingredients: {
-          create: ingredients.map((ing) => ({
+          create: ingredients.map((ing, idx) => ({
             name: toTitleCase(ing.name),
             amount: ing.amount,
             unit: ing.unit,
+            order: typeof ing.order === 'number' ? ing.order : idx,
             loteMandatory: !!ing.loteMandatory,
             quantityMandatory: !!ing.quantityMandatory,
             expandItem: !!ing.expandItem,
@@ -85,7 +86,12 @@ export async function POST(req) {
         }
       },
       include: {
-        ingredients: true
+        ingredients: {
+          orderBy: [
+            { order: 'asc' },
+            { id: 'asc' }
+          ]
+        }
       }
     });
 

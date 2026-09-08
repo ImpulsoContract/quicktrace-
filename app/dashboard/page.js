@@ -11,7 +11,7 @@ import {
   Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
-  Eye, ExternalLink
+  Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -672,13 +672,17 @@ export default function ClientDashboard() {
 
   const handleEditRecipe = (recipe) => {
     setEditingRecipe(recipe);
+    const sortedIngs = recipe.ingredients 
+      ? [...recipe.ingredients].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+      : [];
     setRecipeForm({
       name: recipe.name,
-      ingredients: recipe.ingredients.map(ing => ({
+      ingredients: sortedIngs.map((ing, idx) => ({
         id: ing.id,
         name: ing.name,
         amount: ing.amount,
         unit: ing.unit,
+        order: typeof ing.order === 'number' ? ing.order : idx,
         loteMandatory: !!ing.loteMandatory,
         quantityMandatory: !!ing.quantityMandatory,
         expandItem: !!ing.expandItem,
@@ -1494,14 +1498,17 @@ export default function ClientDashboard() {
       .map(word => word[0].toUpperCase())
       .join('');
     
-    setSelectedRecipe(recipe);
+    const sortedRecipeIngredients = recipe.ingredients 
+      ? [...recipe.ingredients].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+      : [];
+    setSelectedRecipe({ ...recipe, ingredients: sortedRecipeIngredients });
     setEditingElaboration(null);
     setProportionMasterId(null);
     setIsReadOnlyElab(false);
     
     // Inicializar formulario con valores por defecto buscando en la lista local cargada
     const initialIngredientes = {};
-    recipe.ingredients.forEach(ing => {
+    sortedRecipeIngredients.forEach(ing => {
       const matchingReceipt = goodsReceipts.find(receipt => 
         receipt.lote && 
         receipt.relatedIngredients && 
@@ -1564,13 +1571,16 @@ export default function ClientDashboard() {
 
   const handleEditElaboration = (elab) => {
     setEditingElaboration(elab);
-    setSelectedRecipe(elab.recipe);
+    const sortedRecipeIngredients = elab.recipe?.ingredients 
+      ? [...elab.recipe.ingredients].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+      : [];
+    setSelectedRecipe({ ...elab.recipe, ingredients: sortedRecipeIngredients });
     setProportionMasterId(null);
     setIsReadOnlyElab(false);
     
     const initialIngredientes = {};
     // Map existing ingredients by name to match recipe ingredients
-    elab.recipe.ingredients.forEach(recipeIng => {
+    sortedRecipeIngredients.forEach(recipeIng => {
       const matchingElabIng = elab.ingredients.find(ei => ei.name === recipeIng.name);
       initialIngredientes[recipeIng.id] = { 
         lote: matchingElabIng?.lote || "", 
@@ -8700,6 +8710,17 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
   const { t } = useI18n();
   const [isAiScanOpen, setIsAiScanOpen] = useState(false);
   const [aiSuccessMsg, setAiSuccessMsg] = useState(null);
+  const [draggedIngredientIndex, setDraggedIngredientIndex] = useState(null);
+  const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState(null);
+
+  const handleMoveIngredient = (fromIdx, toIdx) => {
+    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || toIdx >= formData.ingredients.length) return;
+    const updated = [...formData.ingredients];
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(toIdx, 0, moved);
+    const withOrder = updated.map((item, idx) => ({ ...item, order: idx }));
+    setFormData({ ...formData, ingredients: withOrder });
+  };
 
   const handleAiExtracted = (extracted) => {
     setFormData(prev => {
@@ -8848,12 +8869,117 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>{t('modals.ingredients')}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>{t('modals.ingredients')}</h3>
+                {formData.ingredients.length > 1 && (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    ({t('modals.drag_to_reorder') || "Arrastra o usa las flechas para ordenar"})
+                  </span>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {formData.ingredients.map((ing, idx) => (
-                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 2fr auto', gap: '1rem', alignItems: 'center', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                <div 
+                  key={idx} 
+                  draggable
+                  onDragStart={(e) => {
+                    if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'LABEL'].includes(e.target.tagName)) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setDraggedIngredientIndex(idx);
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", idx.toString());
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (dragOverIngredientIndex !== idx) {
+                      setDragOverIngredientIndex(idx);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const fromIdx = draggedIngredientIndex !== null ? draggedIngredientIndex : parseInt(e.dataTransfer.getData("text/plain"), 10);
+                    if (fromIdx !== null && !isNaN(fromIdx) && fromIdx !== idx) {
+                      handleMoveIngredient(fromIdx, idx);
+                    }
+                    setDraggedIngredientIndex(null);
+                    setDragOverIngredientIndex(null);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedIngredientIndex(null);
+                    setDragOverIngredientIndex(null);
+                  }}
+                  style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'auto 2fr 1fr 1fr 2fr auto', 
+                    gap: '1rem', 
+                    alignItems: 'center', 
+                    padding: '1.25rem', 
+                    background: draggedIngredientIndex === idx ? '#f1f5f9' : '#f8fafc', 
+                    borderRadius: '1rem', 
+                    border: dragOverIngredientIndex === idx && draggedIngredientIndex !== idx 
+                      ? '2px dashed var(--corp-green)' 
+                      : '1px solid var(--border)',
+                    opacity: draggedIngredientIndex === idx ? 0.4 : 1,
+                    transition: 'background 0.15s, border 0.15s, opacity 0.15s'
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', paddingRight: '0.25rem' }}>
+                    <div 
+                      style={{ 
+                        cursor: 'grab', 
+                        color: '#94a3b8', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        padding: '0.25rem'
+                      }}
+                      title={t('modals.drag_to_reorder') || "Arrastra para ordenar"}
+                    >
+                      <GripVertical size={20} />
+                    </div>
+                    {formData.ingredients.length > 1 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveIngredient(idx, idx - 1)}
+                          disabled={idx === 0}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: idx === 0 ? 'default' : 'pointer',
+                            color: idx === 0 ? '#cbd5e1' : '#64748b',
+                            lineHeight: 1
+                          }}
+                          title="Subir ingrediente"
+                        >
+                          <ChevronUp size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveIngredient(idx, idx + 1)}
+                          disabled={idx === formData.ingredients.length - 1}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: idx === formData.ingredients.length - 1 ? 'default' : 'pointer',
+                            color: idx === formData.ingredients.length - 1 ? '#cbd5e1' : '#64748b',
+                            lineHeight: 1
+                          }}
+                          title="Bajar ingrediente"
+                        >
+                          <ChevronDown size={15} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_name')}</label>
                     <input type="text" className="input-field" value={ing.name} onChange={(e) => onIngredientChange(idx, 'name', e.target.value)} required placeholder={t('modals.ing_name')} />

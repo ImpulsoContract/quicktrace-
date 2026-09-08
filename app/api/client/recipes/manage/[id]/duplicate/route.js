@@ -43,7 +43,14 @@ export async function POST(req, { params }) {
     // Verify ownership and get original recipe
     const originalRecipe = await prisma.recipe.findUnique({
       where: { id: recipeId },
-      include: { ingredients: true }
+      include: { 
+        ingredients: {
+          orderBy: [
+            { order: 'asc' },
+            { id: 'asc' }
+          ]
+        }
+      }
     });
 
     if (!originalRecipe || originalRecipe.clientProfileId !== profile.id) {
@@ -82,10 +89,11 @@ export async function POST(req, { params }) {
         salt: originalRecipe.salt,
         allergens: originalRecipe.allergens,
         ingredients: {
-          create: originalRecipe.ingredients.map(ing => ({
+          create: originalRecipe.ingredients.map((ing, idx) => ({
             name: ing.name,
             amount: ing.amount,
             unit: ing.unit,
+            order: ing.order ?? idx,
             loteMandatory: ing.loteMandatory,
             quantityMandatory: ing.quantityMandatory,
             expandItem: ing.expandItem,
@@ -94,7 +102,12 @@ export async function POST(req, { params }) {
         }
       },
       include: {
-        ingredients: true
+        ingredients: {
+          orderBy: [
+            { order: 'asc' },
+            { id: 'asc' }
+          ]
+        }
       }
     });
 

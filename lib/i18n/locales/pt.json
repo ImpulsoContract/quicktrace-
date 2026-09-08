@@ -347,6 +347,7 @@
     "sheet_analyzed_success": "Ficha técnica analisada com sucesso. Revise e salve a receita.",
     "recipe_pages_label": "Se você enviar um documento com várias receitas, diga-me quais páginas devo olhar. Se a sua receita estiver na página 5 e for até a página 7, escreva 5-7",
     "recipe_pages_placeholder": "ex.: 5-7 ou 12",
+    "drag_to_reorder": "Arraste ou use as setas para reordenar",
     "upgrade_plan": "AUMENTAR LIMITE",
     "labels_header": "Configurar Etiquetas",
     "labels_header_image": "Imagem do cabeçalho",

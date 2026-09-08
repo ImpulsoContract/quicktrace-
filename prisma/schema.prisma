@@ -236,6 +236,7 @@ model Ingredient {
   name   String
   amount String
   unit   String
+  order  Int?   @default(0)
 
   loteMandatory     Boolean @default(false)
   quantityMandatory Boolean @default(false)

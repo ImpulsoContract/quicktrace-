@@ -69,10 +69,11 @@ export async function POST(req) {
         salt,
         allergens: allergens || [],
         ingredients: {
-          create: ingredients.map((ing) => ({
+          create: ingredients.map((ing, idx) => ({
             name: toTitleCase(ing.name),
             amount: ing.amount,
             unit: ing.unit,
+            order: typeof ing.order === 'number' ? ing.order : idx,
             loteMandatory: !!ing.loteMandatory,
             quantityMandatory: !!ing.quantityMandatory,
             expandItem: !!ing.expandItem,
@@ -81,7 +82,12 @@ export async function POST(req) {
         }
       },
       include: {
-        ingredients: true
+        ingredients: {
+          orderBy: [
+            { order: 'asc' },
+            { id: 'asc' }
+          ]
+        }
       }
     });
 
@@ -109,7 +115,14 @@ export async function GET(req) {
   try {
     const recipes = await prisma.recipe.findMany({
       where: { clientProfileId: parseInt(clientId) },
-      include: { ingredients: true },
+      include: { 
+        ingredients: {
+          orderBy: [
+            { order: 'asc' },
+            { id: 'asc' }
+          ]
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
 

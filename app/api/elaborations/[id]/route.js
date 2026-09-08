@@ -69,7 +69,16 @@ export async function PATCH(req, { params }) {
         }
       },
       include: {
-        recipe: true,
+        recipe: {
+          include: {
+            ingredients: {
+              orderBy: [
+                { order: 'asc' },
+                { id: 'asc' }
+              ]
+            }
+          }
+        },
         ingredients: true
       }
     });
