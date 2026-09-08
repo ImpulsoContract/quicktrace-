@@ -8115,9 +8115,9 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   setIsLinkModalOpen(false);
                   setIngSearchTerm("");
                 }} 
-                style={{ flex: 2, padding: '0.85rem' }}
+                style={{ flex: 2, padding: '0.85rem', fontSize: '0.85rem', lineHeight: '1.3', textAlign: 'center' }}
               >
-                {t('goods_receipt_form.link_popup_save') || "Guardar relación"}
+                {t('goods_receipt_form.link_popup_save')}
               </button>
             </div>
           </div>
@@ -11028,9 +11028,9 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                 type="button" 
                 className="btn-primary" 
                 onClick={saveLinkDetails} 
-                style={{ flex: 2, padding: '0.85rem' }}
+                style={{ flex: 2, padding: '0.85rem', fontSize: '0.85rem', lineHeight: '1.3', textAlign: 'center' }}
               >
-                {t('goods_receipt_form.link_popup_save') || "Guardar relación"}
+                {t('goods_receipt_form.link_popup_save')}
               </button>
             </div>
           </div>
@@ -12084,9 +12084,9 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                 type="button" 
                 className="btn-primary" 
                 onClick={saveLinkDetails} 
-                style={{ flex: 2, padding: '0.85rem' }}
+                style={{ flex: 2, padding: '0.85rem', fontSize: '0.85rem', lineHeight: '1.3', textAlign: 'center' }}
               >
-                {t('goods_receipt_form.link_popup_save') || "Guardar relación"}
+                {t('goods_receipt_form.link_popup_save')}
               </button>
             </div>
           </div>

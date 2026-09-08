@@ -632,7 +632,7 @@
     "search_ingredients_placeholder": "Cerca ingrediente...",
     "link_popup_title": "Seleziona gli ingredienti che desideri collegare a questa entrata merci",
     "link_popup_desc": "Quando andrai a generare la tracciabilità di una lavorazione, potrai compilare automaticamente il numero di lotto degli ingredienti selezionati con il lotto di questa entrata merci",
-    "link_popup_save": "Collega ingredienti a questa entrata merci",
+    "link_popup_save": "Salva modifiche. Le modifiche non avranno effetto finché non salvi l'entrata merci nella finestra successiva.",
     "stock_control_title": "Inserisci le quantità di stock da aggiungere a ciascun ingrediente.",
     "stock_control_important": "IMPORTANTE. Se vedi più campi per lo stesso ingrediente, è perché lo hai inserito in ricette diverse con diverse unità di misura, ed è per questo che appare in più unità.",
     "stock_control_help": "Se vedi l'ingrediente in più unità è perché si trova in ricette diverse in unità diverse e lo stock verrà tracciato separatamente, anche se puoi modificarlo manualmente nella gestione dell'inventario.",

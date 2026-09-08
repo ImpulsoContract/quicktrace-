@@ -637,7 +637,7 @@
     "search_ingredients_placeholder": "Search ingredient...",
     "link_popup_title": "Select the ingredients you want to link to this goods receipt",
     "link_popup_desc": "When you generate the traceability of an elaboration, you can automatically fill in the batch number of the selected ingredients with the batch of this goods receipt",
-    "link_popup_save": "Link ingredients to this goods receipt",
+    "link_popup_save": "Save changes. The changes will not take effect until you save the goods receipt in the next window.",
     "stock_control_title": "Enter the stock quantities to add to each ingredient.",
     "stock_control_important": "IMPORTANT. If you see multiple fields for the same ingredient, it is because you have included it in different recipes with different units of measurement, which is why it appears in multiple units.",
     "stock_control_help": "If you see the ingredient in several units it is because it is in different recipes in different units and stock will be tracked separately, although you can edit it manually in inventory management.",

@@ -632,7 +632,7 @@
     "search_ingredients_placeholder": "Rechercher un ingrédient...",
     "link_popup_title": "Sélectionnez les ingrédients que vous souhaitez lier à cette réception de marchandises",
     "link_popup_desc": "Lorsque vous générerez la traçabilité d'une élaboration, vous pourrez remplir automatiquement le numéro de lot des ingrédients sélectionnés avec le lot de cette réception de marchandises",
-    "link_popup_save": "Lier les ingrédients à cette réception de marchandises",
+    "link_popup_save": "Enregistrer les modifications. Les modifications ne prendront effet que lorsque vous aurez enregistré l'entrée de marchandises dans la fenêtre suivante.",
     "stock_control_title": "Saisissez les quantités de stock à ajouter à chaque ingrédient.",
     "stock_control_important": "IMPORTANT. Si vous voyez plusieurs champs pour le même ingrédient, c'est parce que vous l'avez inclus dans différentes recettes avec différentes unités de mesure, c'est pourquoi il apparaît dans plusieurs unités.",
     "stock_control_help": "Si vous voyez l'ingrédient dans plusieurs unités, c'est parce qu'il se trouve dans différentes recettes dans différentes unités et le stock sera suivi séparément, bien que vous puissiez le modifier manuellement dans la gestion des stocks.",
