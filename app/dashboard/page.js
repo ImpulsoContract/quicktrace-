@@ -4385,7 +4385,7 @@ export default function ClientDashboard() {
                       <FileText size={18} /> {t('dashboard.generate_goods_report')}
                     </button>
                     <button 
-                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "8_qOTe6RrHk" })}
+                      onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'raxn-Z7o3No' : "g7H5XVjWsCA" })}
                       className="btn-help-video"
                       style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
@@ -10548,7 +10548,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
             </p>
             <button
               type="button"
-              onClick={() => onHelpVideoClick(locale === 'en' ? 'raxn-Z7o3No' : "8_qOTe6RrHk")}
+              onClick={() => onHelpVideoClick(locale === 'en' ? 'raxn-Z7o3No' : "g7H5XVjWsCA")}
               className="btn-help-video"
               style={{ marginTop: '0.75rem' }}
             >
