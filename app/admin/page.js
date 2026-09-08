@@ -1646,13 +1646,13 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
                           </button>
                         </div>
                         {ing.expandItem && (
-                          <input 
-                            type="text" 
+                          <textarea 
                             className="input-field" 
                             value={ing.expandedText || ''} 
                             onChange={(e) => handleIngredientChange(idx, 'expandedText', e.target.value)} 
                             placeholder="Escribe el texto de la etiqueta aquí" 
-                            style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem' }} 
+                            rows={3}
+                            style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem', resize: 'vertical', width: '100%', minHeight: '65px' }} 
                           />
                         )}
                       </div>
