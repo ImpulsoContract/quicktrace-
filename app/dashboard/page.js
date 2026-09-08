@@ -8,7 +8,7 @@ import {
   ArrowLeft, Save, Beaker, Menu,
   ChevronRight, Loader2, AlertCircle, Trash2,
   Plus, Brush, User, Users, UserPlus, Calendar, Edit, Thermometer,
-  Package, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
+  Package, Boxes, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown
@@ -316,6 +316,7 @@ export default function ClientDashboard() {
   const [isGoodsModalOpen, setIsGoodsModalOpen] = useState(false);
   const [isIaScanModalOpen, setIsIaScanModalOpen] = useState(false);
   const [isScannedInvoicesModalOpen, setIsScannedInvoicesModalOpen] = useState(false);
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [editingGoodsReceipt, setEditingGoodsReceipt] = useState(null);
   const [editingWaterMeasurement, setEditingWaterMeasurement] = useState(null);
@@ -4404,6 +4405,13 @@ export default function ClientDashboard() {
                     >
                       <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
                     </button>
+                    <button 
+                      onClick={() => setIsInventoryModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                    >
+                      <Boxes size={18} /> {t('dashboard.view_stock_inventory_btn') || "Ver inventario de stock"}
+                    </button>
                     {profile?.hasIaGoods && (
                     <button 
                       onClick={() => {
@@ -6198,6 +6206,13 @@ export default function ClientDashboard() {
           onEditGoodsReceipt={handleEditGoods}
           fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
           profile={profile}
+        />
+      )}
+
+      {isInventoryModalOpen && (
+        <InventoryModal 
+          isOpen={isInventoryModalOpen} 
+          onClose={() => setIsInventoryModalOpen(false)} 
         />
       )}
 
@@ -12056,3 +12071,244 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
     </div>
   );
 }
+
+function InventoryModal({ isOpen, onClose }) {
+  const { t } = useI18n();
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+      const res = await fetch("/api/client/inventory");
+      if (!res.ok) {
+        throw new Error("Error fetching inventory");
+      }
+      const data = await res.json();
+      setInventory(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching inventory:", err);
+      setErrorMessage(t('alerts.connection_error') || "Error al cargar el inventario");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchInventory();
+    }
+  }, [isOpen]);
+
+  const handleStockChange = (name, unit, val) => {
+    setInventory(prev => prev.map(item => {
+      if (item.name === name && item.unit === unit) {
+        return { ...item, stock: val };
+      }
+      return item;
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const res = await fetch("/api/client/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inventory.map(item => ({
+          name: item.name,
+          unit: item.unit,
+          stock: item.stock
+        })))
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(t('inventory.save_success') || "Inventario actualizado correctamente");
+        onClose();
+      } else {
+        alert(data.error || t('alerts.request_error') || "Error al guardar el inventario");
+      }
+    } catch (err) {
+      console.error("Error saving inventory:", err);
+      alert(t('alerts.connection_error') || "Error de conexión");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filteredInventory = useMemo(() => {
+    if (!search.trim()) return inventory;
+    const term = search.toLowerCase().trim();
+    return inventory.filter(item => 
+      (item.name && item.name.toLowerCase().includes(term)) ||
+      (item.recipes && item.recipes.some(r => r.toLowerCase().includes(term)))
+    );
+  }, [inventory, search]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 10000 }}>
+      <div className="modal-content" style={{ maxWidth: '900px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '2rem', position: 'relative' }}>
+        <button 
+          onClick={onClose} 
+          style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+          title={t('common.cancel') || "Cerrar"}
+        >
+          <X size={24} />
+        </button>
+
+        <div className="modal-header" style={{ marginBottom: '1.25rem', paddingRight: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--corp-green)' }}>
+              <Boxes size={22} />
+            </div>
+            <h2 className="modal-title" style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>
+              {t('inventory.title') || "Gestión de Inventario"}
+            </h2>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5', margin: 0 }}>
+            {t('inventory.description') || "Visualiza y edita el stock actual de tus ingredientes. El stock se actualiza automáticamente al registrar entradas de mercancías y elaborar recetas."}
+          </p>
+        </div>
+
+        {/* Search bar */}
+        <div style={{ marginBottom: '1rem', position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            className="input-field" 
+            placeholder={t('inventory.search_placeholder') || "Buscar ingrediente..."}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ paddingLeft: '2.75rem', width: '100%' }}
+          />
+        </div>
+
+        {/* Body content */}
+        <div className="modal-body" style={{ flex: 1, overflowY: 'auto', minHeight: '200px', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '0.5rem' }}>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '1rem' }}>
+              <Loader2 className="animate-spin" size={36} style={{ color: 'var(--corp-green)' }} />
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('common.loading') || "Cargando inventario..."}</p>
+            </div>
+          ) : errorMessage ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#ef4444', gap: '0.5rem' }}>
+              <AlertCircle size={32} />
+              <p>{errorMessage}</p>
+              <button onClick={fetchInventory} className="btn-secondary" style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                Reintentar
+              </button>
+            </div>
+          ) : inventory.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+              <Boxes size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+              <p style={{ fontSize: '1rem', fontWeight: 600 }}>{t('inventory.no_ingredients') || "No hay ingredientes en el inventario. Crea recetas e ingredientes para empezar."}</p>
+            </div>
+          ) : filteredInventory.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: '0.95rem' }}>{t('common.no_results') || "No se encontraron ingredientes que coincidan con la búsqueda."}</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                  <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      {t('inventory.col_ingredient') || "Ingrediente"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '100px' }}>
+                      {t('inventory.col_unit') || "Unidad"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      {t('inventory.col_recipes') || "Recetas Relacionadas"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '180px' }}>
+                      {t('inventory.col_stock') || "Stock Actual"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInventory.map((item, idx) => (
+                    <tr key={`${item.name}_${item.unit}_${idx}`} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                      <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                        {item.name}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
+                          {item.unit || "-"}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        {item.recipes && item.recipes.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                            {item.recipes.map((r, rIdx) => (
+                              <span key={rIdx} style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 500 }}>
+                                {r}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            min="0"
+                            className="input-field" 
+                            style={{ width: '110px', textAlign: 'right', padding: '0.45rem 0.6rem', fontWeight: 700, fontSize: '0.95rem' }}
+                            value={item.stock === null || item.stock === undefined ? "" : item.stock}
+                            onChange={(e) => handleStockChange(item.name, item.unit, e.target.value)}
+                            placeholder="0"
+                          />
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', minWidth: '24px', textAlign: 'left', fontWeight: 600 }}>
+                            {item.unit}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', marginTop: '1.25rem', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            {!loading && `${filteredInventory.length} ${filteredInventory.length === 1 ? 'ingrediente' : 'ingredientes'}`}
+          </span>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              type="button" 
+              className="btn-secondary" 
+              onClick={onClose}
+              style={{ padding: '0.75rem 1.5rem' }}
+            >
+              {t('common.cancel') || "Cancelar"}
+            </button>
+            <button 
+              type="button" 
+              className="btn-primary" 
+              onClick={handleSave}
+              disabled={loading || saving}
+              style={{ padding: '0.75rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+              {saving ? (t('common.saving') || "Guardando...") : (t('inventory.btn_save') || "Guardar Cambios")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
