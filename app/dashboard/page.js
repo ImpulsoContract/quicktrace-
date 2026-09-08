@@ -7677,20 +7677,35 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
   const [rowIngredients, setRowIngredients] = useState([]);
   const [rowQuantities, setRowQuantities] = useState({});
 
-  const allIngredients = Array.from(new Set(recipes.flatMap(r => r.ingredients.map(i => i.name))));
-  
-  const getIngredientsWithUnits = (ingList) => {
-    const list = [];
-    ingList.forEach(ing => {
-      let unit = "Kg";
-      for (const r of recipes) {
-        const match = r.ingredients.find(i => i.name === ing);
-        if (match) {
-          unit = match.unit || "Kg";
-          break;
+  const allIngredients = (() => {
+    if (!recipes) return [];
+    const names = new Set();
+    recipes.forEach(r => {
+      r.ingredients?.forEach(ing => {
+        if (ing.name && ing.name.trim()) {
+          names.add(ing.name.trim());
         }
-      }
-      list.push({ name: ing, unit });
+      });
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  })();
+  
+  const getIngredientsWithUnits = (selectedIngs) => {
+    const list = [];
+    if (!selectedIngs || !recipes) return list;
+    selectedIngs.forEach(ingName => {
+      const units = new Set();
+      recipes.forEach(recipe => {
+        recipe.ingredients?.forEach(ing => {
+          if (ing.name === ingName && ing.unit) {
+            units.add(ing.unit.trim());
+          }
+        });
+      });
+      const sortedUnits = Array.from(units).sort();
+      sortedUnits.forEach(unit => {
+        list.push({ name: ingName, unit });
+      });
     });
     return list;
   };
@@ -7793,8 +7808,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                 >
                   <PlusCircle size={12} />
                   {formData.relatedIngredients?.length > 0 
-                    ? `Relacionado con ${formData.relatedIngredients.length} ingredientes` 
-                    : "Relaciona este lote con los ingredientes"
+                    ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${formData.relatedIngredients.length})` 
+                    : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")
                   }
                 </button>
               </div>
@@ -7965,11 +7980,11 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
           <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
             <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
-                  {t('goods_receipt_form.link_popup_title') || "Selecciona ingredientes"}
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
+                  {t('goods_receipt_form.link_ingredients_title') || "Relacionar esta entrada con ingredientes"}
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                  {t('goods_receipt_form.link_popup_desc') || "Relaciona este albarán con ingredientes."}
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
+                  {formData.productName || t('goods_receipt_form.product')}
                 </p>
               </div>
               <button 
@@ -7978,105 +7993,95 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   setIsLinkModalOpen(false);
                   setIngSearchTerm("");
                 }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </header>
 
-            <div style={{ position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text"
-                placeholder={t('common.search')}
-                className="input-field"
-                value={ingSearchTerm}
-                onChange={(e) => setIngSearchTerm(e.target.value)}
-                style={{ paddingLeft: '2.75rem', paddingRight: '1rem' }}
-              />
-            </div>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
+              <div className="form-group">
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder={t('goods_receipt_form.search_ingredients_placeholder') || "Buscar ingrediente..."}
+                  value={ingSearchTerm}
+                  onChange={(e) => setIngSearchTerm(e.target.value)}
+                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                />
+              </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '0.5rem', minHeight: '150px' }}>
-              {allIngredients.filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase())).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
-                  {t('common.no_results')}
-                </div>
-              ) : (
-                allIngredients
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+                {allIngredients
                   .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
-                  .map((ingName, idx) => {
-                    const isChecked = rowIngredients.includes(ingName);
+                  .map((ing, idx) => {
+                    const isSelected = rowIngredients.includes(ing);
                     return (
-                      <label 
-                        key={idx} 
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.75rem', 
-                          cursor: 'pointer', 
-                          padding: '0.75rem 1rem', 
-                          background: isChecked ? 'rgba(66, 98, 22, 0.05)' : '#f8fafc',
-                          borderRadius: '0.75rem',
-                          border: isChecked ? '1px solid var(--corp-green)' : '1px solid var(--border)',
-                          transition: 'all 0.2s'
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => {
+                          if (isSelected) {
+                            setRowIngredients(rowIngredients.filter(i => i !== ing));
+                          } else {
+                            setRowIngredients([...rowIngredients, ing]);
+                          }
+                        }}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '1rem',
+                          fontSize: '0.8rem',
+                          fontWeight: '600',
+                          border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
+                          background: isSelected ? 'var(--corp-green)' : 'white',
+                          color: isSelected ? 'white' : 'var(--text-main)',
+                          cursor: 'pointer'
                         }}
                       >
-                        <input 
-                          type="checkbox"
-                          style={{ cursor: 'pointer', width: '1.1rem', height: '1.1rem', accentColor: 'var(--corp-green)' }}
-                          checked={isChecked}
-                          onChange={(e) => {
-                            const next = e.target.checked
-                              ? [...rowIngredients, ingName]
-                              : rowIngredients.filter(n => n !== ingName);
-                            setRowIngredients(next);
-                          }}
-                        />
-                        <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{ingName}</span>
-                      </label>
-                    );
-                  })
-              )}
-            </div>
-
-            {getIngredientsWithUnits(rowIngredients).length > 0 && (
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-                  {t('goods_receipt_form.stock_control_title') || "Control de stock:"}
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
-                    const key = `${item.name}:${item.unit}`;
-                    const val = rowQuantities[key] || "";
-                    return (
-                      <div className="form-group" key={idx}>
-                        <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                          {t('goods_receipt_form.related_quantity_label')
-                            ? t('goods_receipt_form.related_quantity_label').replace('{name}', item.name).replace('{unit}', item.unit)
-                            : `Cantidad de ${item.name} (${item.unit})`}
-                        </label>
-                        <input 
-                          type="number"
-                          step="any"
-                          className="input-field"
-                          value={val}
-                          onChange={(e) => {
-                            setRowQuantities({
-                              ...rowQuantities,
-                              [key]: e.target.value
-                            });
-                          }}
-                          placeholder={formData.quantity || ""}
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                        />
-                      </div>
+                        {ing}
+                      </button>
                     );
                   })}
-                </div>
               </div>
-            )}
+
+              {rowIngredients.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+                    {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
+                  </h4>
+                  <p style={{ margin: '0.35rem 0 0.75rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                    {t('goods_receipt_form.stock_control_important') || "IMPORTANTE. Si ves que sale varios campos de un mismo ingrediente es porque lo has puesto en diferentes recetas con diferentes unidades de medida y por eso aparece en varias unidades de medida."}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
+                      const key = `${item.name}:${item.unit}`;
+                      const val = rowQuantities[key] || "";
+                      return (
+                        <div className="form-group" key={idx}>
+                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                            {`Cantidad de ${item.name} (${item.unit})`}
+                          </label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            className="input-field" 
+                            value={val} 
+                            onChange={(e) => {
+                              setRowQuantities({
+                                ...rowQuantities,
+                                [key]: e.target.value
+                              });
+                            }}
+                            placeholder={formData.quantity || ""}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
               <button 
@@ -8094,10 +8099,18 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                 type="button" 
                 className="btn-primary" 
                 onClick={() => {
+                  const activeWithUnits = getIngredientsWithUnits(rowIngredients);
+                  const validKeys = new Set(activeWithUnits.map(item => `${item.name}:${item.unit}`));
+                  const cleanedQuantities = {};
+                  for (const key of validKeys) {
+                    if (rowQuantities[key] !== undefined && rowQuantities[key] !== "") {
+                      cleanedQuantities[key] = rowQuantities[key];
+                    }
+                  }
                   setFormData({
                     ...formData,
                     relatedIngredients: rowIngredients,
-                    relatedQuantities: rowQuantities
+                    relatedQuantities: cleanedQuantities
                   });
                   setIsLinkModalOpen(false);
                   setIngSearchTerm("");
@@ -10446,12 +10459,20 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
   };
 
   const saveLinkDetails = () => {
+    const activeWithUnits = getIngredientsWithUnits(rowIngredients);
+    const validKeys = new Set(activeWithUnits.map(item => `${item.name}:${item.unit}`));
+    const cleanedQuantities = {};
+    for (const key of validKeys) {
+      if (rowQuantities[key] !== undefined && rowQuantities[key] !== "") {
+        cleanedQuantities[key] = rowQuantities[key];
+      }
+    }
     setAiRows(prev => prev.map((row, idx) => {
       if (idx === linkRowIndex) {
         return {
           ...row,
           relatedIngredients: rowIngredients,
-          relatedQuantities: rowQuantities
+          relatedQuantities: cleanedQuantities
         };
       }
       return row;
@@ -10888,11 +10909,11 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
           <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
             <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
-                  {t('goods_receipt_form.link_popup_title') || "Selecciona ingredientes"}
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
+                  {t('goods_receipt_form.link_ingredients_title') || "Relacionar esta entrada con ingredientes"}
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                  {t('goods_receipt_form.link_popup_desc') || "Relaciona este albarán con ingredientes."}
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
+                  {aiRows[linkRowIndex]?.productName}
                 </p>
               </div>
               <button 
@@ -10901,105 +10922,95 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                   setLinkRowIndex(null);
                   setIngSearchTerm("");
                 }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </header>
 
-            <div style={{ position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text"
-                placeholder={t('common.search')}
-                className="input-field"
-                value={ingSearchTerm}
-                onChange={(e) => setIngSearchTerm(e.target.value)}
-                style={{ paddingLeft: '2.75rem', paddingRight: '1rem' }}
-              />
-            </div>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
+              <div className="form-group">
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder={t('goods_receipt_form.search_ingredients_placeholder') || "Buscar ingrediente..."}
+                  value={ingSearchTerm}
+                  onChange={(e) => setIngSearchTerm(e.target.value)}
+                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                />
+              </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '0.5rem', minHeight: '150px' }}>
-              {allIngredients.filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase())).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
-                  {t('common.no_results')}
-                </div>
-              ) : (
-                allIngredients
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+                {allIngredients
                   .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
-                  .map((ingName, idx) => {
-                    const isChecked = rowIngredients.includes(ingName);
+                  .map((ing, idx) => {
+                    const isSelected = rowIngredients.includes(ing);
                     return (
-                      <label 
-                        key={idx} 
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.75rem', 
-                          cursor: 'pointer', 
-                          padding: '0.75rem 1rem', 
-                          background: isChecked ? 'rgba(66, 98, 22, 0.05)' : '#f8fafc',
-                          borderRadius: '0.75rem',
-                          border: isChecked ? '1px solid var(--corp-green)' : '1px solid var(--border)',
-                          transition: 'all 0.2s'
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => {
+                          if (isSelected) {
+                            setRowIngredients(rowIngredients.filter(i => i !== ing));
+                          } else {
+                            setRowIngredients([...rowIngredients, ing]);
+                          }
+                        }}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '1rem',
+                          fontSize: '0.8rem',
+                          fontWeight: '600',
+                          border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
+                          background: isSelected ? 'var(--corp-green)' : 'white',
+                          color: isSelected ? 'white' : 'var(--text-main)',
+                          cursor: 'pointer'
                         }}
                       >
-                        <input 
-                          type="checkbox"
-                          style={{ cursor: 'pointer', width: '1.1rem', height: '1.1rem', accentColor: 'var(--corp-green)' }}
-                          checked={isChecked}
-                          onChange={(e) => {
-                            const next = e.target.checked
-                              ? [...rowIngredients, ingName]
-                              : rowIngredients.filter(n => n !== ingName);
-                            setRowIngredients(next);
-                          }}
-                        />
-                        <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{ingName}</span>
-                      </label>
-                    );
-                  })
-              )}
-            </div>
-
-            {getIngredientsWithUnits(rowIngredients).length > 0 && (
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-                  {t('goods_receipt_form.stock_control_title') || "Control de stock:"}
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
-                    const key = `${item.name}:${item.unit}`;
-                    const val = rowQuantities[key] || "";
-                    return (
-                      <div className="form-group" key={idx}>
-                        <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                          {t('goods_receipt_form.related_quantity_label')
-                            ? t('goods_receipt_form.related_quantity_label').replace('{name}', item.name).replace('{unit}', item.unit)
-                            : `Cantidad de ${item.name} (${item.unit})`}
-                        </label>
-                        <input 
-                          type="number"
-                          step="any"
-                          className="input-field"
-                          value={val}
-                          onChange={(e) => {
-                            setRowQuantities({
-                              ...rowQuantities,
-                              [key]: e.target.value
-                            });
-                          }}
-                          placeholder={aiRows[linkRowIndex]?.quantity || ""}
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                        />
-                      </div>
+                        {ing}
+                      </button>
                     );
                   })}
-                </div>
               </div>
-            )}
+
+              {rowIngredients.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+                    {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
+                  </h4>
+                  <p style={{ margin: '0.35rem 0 0.75rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                    {t('goods_receipt_form.stock_control_important') || "IMPORTANTE. Si ves que sale varios campos de un mismo ingrediente es porque lo has puesto en diferentes recetas con diferentes unidades de medida y por eso aparece en varias unidades de medida."}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
+                      const key = `${item.name}:${item.unit}`;
+                      const val = rowQuantities[key] || "";
+                      return (
+                        <div className="form-group" key={idx}>
+                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                            {`Cantidad de ${item.name} (${item.unit})`}
+                          </label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            className="input-field" 
+                            value={val} 
+                            onChange={(e) => {
+                              setRowQuantities({
+                                ...rowQuantities,
+                                [key]: e.target.value
+                              });
+                            }}
+                            placeholder={aiRows[linkRowIndex]?.quantity || ""}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
               <button 
@@ -11297,12 +11308,22 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
   };
 
   const saveLinkDetails = () => {
+    // Clean up quantities for deselected ingredients
+    const activeWithUnits = getIngredientsWithUnits(rowIngredients);
+    const validKeys = new Set(activeWithUnits.map(item => `${item.name}:${item.unit}`));
+    const cleanedQuantities = {};
+    Object.entries(rowQuantities).forEach(([k, v]) => {
+      if (validKeys.has(k) && v !== "" && v !== null && v !== undefined) {
+        cleanedQuantities[k] = v;
+      }
+    });
+
     setEditableRows(prev => prev.map((row, idx) => {
       if (idx === linkRowIndex) {
         return {
           ...row,
           relatedIngredients: rowIngredients,
-          relatedQuantities: rowQuantities
+          relatedQuantities: cleanedQuantities
         };
       }
       return row;
@@ -12010,9 +12031,12 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
 
               {rowIngredients.length > 0 && (
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.75rem' }}>
-                    {t('goods_receipt_form.stock_control_title') || "Control de stock:"}
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                    {t('goods_receipt_form.stock_control_title')}
                   </h4>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', lineHeight: '1.4' }}>
+                    {t('goods_receipt_form.stock_control_important')}
+                  </p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                     {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
                       const key = `${item.name}:${item.unit}`;
