@@ -8911,21 +8911,17 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               {formData.ingredients.map((ing, idx) => (
                 <div 
                   key={idx} 
-                  draggable
-                  onDragStart={(e) => {
-                    if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'LABEL'].includes(e.target.tagName)) {
-                      e.preventDefault();
-                      return;
-                    }
-                    setDraggedIngredientIndex(idx);
-                    e.dataTransfer.effectAllowed = "move";
-                    e.dataTransfer.setData("text/plain", idx.toString());
-                  }}
+                  data-ingredient-row="true"
                   onDragOver={(e) => {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = "move";
                     if (dragOverIngredientIndex !== idx) {
                       setDragOverIngredientIndex(idx);
+                    }
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget)) {
+                      setDragOverIngredientIndex(null);
                     }
                   }}
                   onDrop={(e) => {
@@ -8934,10 +8930,6 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                     if (fromIdx !== null && !isNaN(fromIdx) && fromIdx !== idx) {
                       handleMoveIngredient(fromIdx, idx);
                     }
-                    setDraggedIngredientIndex(null);
-                    setDragOverIngredientIndex(null);
-                  }}
-                  onDragEnd={() => {
                     setDraggedIngredientIndex(null);
                     setDragOverIngredientIndex(null);
                   }}
@@ -8958,13 +8950,29 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', paddingRight: '0.25rem' }}>
                     <div 
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        setDraggedIngredientIndex(idx);
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", idx.toString());
+                        const rowEl = e.currentTarget.closest('[data-ingredient-row]');
+                        if (rowEl && e.dataTransfer.setDragImage) {
+                          e.dataTransfer.setDragImage(rowEl, 20, 20);
+                        }
+                      }}
+                      onDragEnd={() => {
+                        setDraggedIngredientIndex(null);
+                        setDragOverIngredientIndex(null);
+                      }}
                       style={{ 
-                        cursor: 'grab', 
-                        color: '#94a3b8', 
+                        cursor: draggedIngredientIndex === idx ? 'grabbing' : 'grab', 
+                        color: draggedIngredientIndex === idx ? 'var(--corp-green)' : '#94a3b8', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center',
-                        padding: '0.25rem'
+                        padding: '0.25rem',
+                        userSelect: 'none'
                       }}
                       title={t('modals.drag_to_reorder') || "Arrastra para ordenar"}
                     >
