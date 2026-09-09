@@ -796,6 +796,7 @@
     "list": {
       "title": "Gestión de Clientes",
       "refresh": "Refrescar",
+      "sales_call_script": "Accede al guion de llamadas comerciales",
       "all_plans": "Todos los planes",
       "no_plan": "Sin Plan",
       "per_page": "{count} por pág",

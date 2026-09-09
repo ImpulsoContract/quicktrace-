@@ -791,6 +791,7 @@
     "list": {
       "title": "Gestion des Clients",
       "refresh": "Rafraîchir",
+      "sales_call_script": "Accéder au script d'appels commerciaux",
       "all_plans": "Tous les plans",
       "no_plan": "Sans Plan",
       "per_page": "{count} par pág",

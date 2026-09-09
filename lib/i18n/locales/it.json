@@ -791,6 +791,7 @@
     "list": {
       "title": "Gestione Clienti",
       "refresh": "Aggiorna",
+      "sales_call_script": "Accedi al copione delle chiamate commerciali",
       "all_plans": "Tutti i piani",
       "no_plan": "Senza Piano",
       "per_page": "{count} per pag",

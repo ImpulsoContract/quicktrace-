@@ -8,7 +8,7 @@ import {
   Search, ShieldCheck, ChevronRight,
   MoreVertical, Edit, Plus, Trash2,
   X, AlertCircle, Loader2, LogOut,
-  Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu
+  Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu, ExternalLink
 } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 
@@ -565,7 +565,7 @@ export default function AdminDashboard() {
           ) : activeTab === "list" ? (
             <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Users size={24} color="var(--corp-green)" />
                     <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{t('admin.list.title')}</h2>
@@ -583,6 +583,33 @@ export default function AdminDashboard() {
                     <RefreshCw size={16} style={{ animation: listLoading ? 'spin 1s linear infinite' : 'none' }} />
                     {t('admin.list.refresh')}
                   </button>
+                  <a
+                    href="https://docs.google.com/document/d/1r-yaFAn3IILsi69isekeboDY0YRfIASmak7imsprUIQ/edit?usp=sharing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ 
+                      padding: '0.4rem 0.8rem', 
+                      background: 'var(--corp-green)', 
+                      color: 'white', 
+                      border: '1px solid var(--corp-green)',
+                      borderRadius: '0.5rem', 
+                      textDecoration: 'none', 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '0.5rem', 
+                      fontSize: '0.85rem', 
+                      fontWeight: '700',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      transition: 'all 0.2s',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                    <FileText size={16} />
+                    {t('admin.list.sales_call_script')}
+                    <ExternalLink size={14} />
+                  </a>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

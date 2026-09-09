@@ -796,6 +796,7 @@
     "list": {
       "title": "Client Management",
       "refresh": "Refresh",
+      "sales_call_script": "Access sales call script",
       "all_plans": "All plans",
       "no_plan": "No Plan",
       "per_page": "{count} per page",
