@@ -1042,6 +1042,7 @@
     "modal_subtitle": "Record sales associated with this elaboration indicating customer, percentage sold and price",
     "select_customer": "Customer (optional)",
     "no_customer_option": "Direct sale / No customer",
+    "manage_customers_link": "Add or manage customers",
     "sold_percentage": "Percentage sold (%)",
     "percentage_placeholder": "e.g. 25, 50, 100",
     "sale_price": "Sale price",

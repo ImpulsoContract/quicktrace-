@@ -6850,6 +6850,15 @@ export default function ClientDashboard() {
           onSaleUpdated={() => {
             fetchElaborations();
           }}
+          onNavigateToCustomers={() => {
+            setIsSaleModalOpen(false);
+            setSaleModalElaboration(null);
+            setActiveTab("clientes");
+            setSelectedRecipe(null);
+            setSelectedRecords([]);
+            if (window.innerWidth <= 1024) setIsSidebarOpen(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
       )}
 
@@ -10864,7 +10873,7 @@ function CustomerModal({ onClose, onSubmit, formData, setFormData, loading, isEd
   );
 }
 
-function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated }) {
+function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated, onNavigateToCustomers }) {
   const { t, locale } = useI18n();
   const [sales, setSales] = useState(elaboration.sales || []);
   const [loadingSales, setLoadingSales] = useState(false);
@@ -11108,6 +11117,32 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                     </option>
                   ))}
                 </select>
+                <div style={{ marginTop: '0.45rem', display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onNavigateToCustomers) {
+                        onNavigateToCustomers();
+                      }
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      fontSize: '0.78rem',
+                      color: 'var(--corp-green)',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      fontWeight: '700',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}
+                  >
+                    <Contact size={14} />
+                    {t('elaboration_sales.manage_customers_link') || "Añadir o gestionar clientes"}
+                  </button>
+                </div>
               </div>
 
               {/* Porcentaje */}

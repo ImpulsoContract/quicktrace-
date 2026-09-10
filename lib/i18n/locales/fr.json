@@ -1037,6 +1037,7 @@
     "modal_subtitle": "Enregistrez les ventes associées à cette élaboration en indiquant le client, le pourcentage vendu et le prix",
     "select_customer": "Client (optionnel)",
     "no_customer_option": "Vente directe / Sans client",
+    "manage_customers_link": "Ajouter ou gérer les clients",
     "sold_percentage": "Pourcentage vendu (%)",
     "percentage_placeholder": "Ex: 25, 50, 100",
     "sale_price": "Prix de vente",
