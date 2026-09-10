@@ -11,7 +11,7 @@ import {
   Package, Boxes, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
-  Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown
+  Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -328,6 +328,16 @@ export default function ClientDashboard() {
     name: "", nif: "", rgs: "", phone: "", address: "", products: "", merchantTypes: []
   });
 
+  const [customers, setCustomers] = useState([]);
+  const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [customersForm, setCustomersForm] = useState({
+    commercialName: "", fiscalName: "", nif: "", address: "",
+    postalCode: "", city: "", province: "", email: "", email2: "",
+    phone: "", phone2: ""
+  });
+
   const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
   const [cleaningExportDates, setCleaningExportDates] = useState({ from: "", to: "" });
   const [isTempExportModalOpen, setIsTempExportModalOpen] = useState(false);
@@ -539,6 +549,7 @@ export default function ClientDashboard() {
       fetchTempRecords();
       fetchWaterMeasurements();
       fetchProviders();
+      fetchCustomers();
       fetchProfile();
     }
   }, [status]);
@@ -1125,6 +1136,91 @@ export default function ClientDashboard() {
   const handleViewProviderReceipts = (provider) => {
     setSelectedProviderForReceipts(provider);
     setIsProviderReceiptsModalOpen(true);
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch("/api/client/customers");
+      const data = await res.json();
+      if (!data.error && Array.isArray(data)) setCustomers(data);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
+  const handleSubmitCustomer = async (e) => {
+    e.preventDefault();
+    if (!customersForm.commercialName || !customersForm.commercialName.trim()) {
+      alert(t('customers.commercial_name_mandatory') || "El nombre comercial es obligatorio");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const url = editingCustomer ? `/api/client/customers/${editingCustomer.id}` : "/api/client/customers";
+      const method = editingCustomer ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customersForm)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(editingCustomer ? (t('customers.updated_success') || "Cliente modificado correctamente") : (t('customers.saved_success') || "Cliente guardado correctamente"));
+        setIsCustomersModalOpen(false);
+        setEditingCustomer(null);
+        setCustomersForm({
+          commercialName: "", fiscalName: "", nif: "", address: "",
+          postalCode: "", city: "", province: "", email: "", email2: "",
+          phone: "", phone2: ""
+        });
+        fetchCustomers();
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (error) {
+      console.error("Error saving customer:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditCustomer = (customer) => {
+    setEditingCustomer(customer);
+    setCustomersForm({
+      commercialName: customer.commercialName || "",
+      fiscalName: customer.fiscalName || "",
+      nif: customer.nif || "",
+      address: customer.address || "",
+      postalCode: customer.postalCode || "",
+      city: customer.city || "",
+      province: customer.province || "",
+      email: customer.email || "",
+      email2: customer.email2 || "",
+      phone: customer.phone || "",
+      phone2: customer.phone2 || ""
+    });
+    setIsCustomersModalOpen(true);
+  };
+
+  const handleDeleteCustomer = async (id) => {
+    if (!confirm(t('customers.delete_confirm') || "¿Estás seguro de que deseas eliminar este cliente?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/client/customers/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        fetchCustomers();
+      } else {
+        alert(data.error || t('alerts.delete_error'));
+      }
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateChamber = async (name) => {
@@ -3327,6 +3423,12 @@ export default function ClientDashboard() {
                   onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
                 <SidebarBtn 
+                  icon={<Contact size={20} />} 
+                  label={t('sidebar.customers') || "Clientes"} 
+                  active={activeTab === "clientes"} 
+                  onClick={() => { setActiveTab("clientes"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                />
+                <SidebarBtn 
                   icon={<Recycle size={20} />} 
                   label={t('sidebar.waste') || "Residuos"} 
                   active={activeTab === "residuos"} 
@@ -4361,6 +4463,190 @@ export default function ClientDashboard() {
                     </div>
                   )}
                 </>
+              )}
+            </div>
+          ) : activeTab === 'clientes' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('customers.title') || "Clientes"}</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('customers.subtitle') || "Gestiona la información de tus clientes y sus datos fiscales y de contacto"}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={() => {
+                      setEditingCustomer(null);
+                      setCustomersForm({
+                        commercialName: "", fiscalName: "", nif: "", address: "",
+                        postalCode: "", city: "", province: "", email: "", email2: "",
+                        phone: "", phone2: ""
+                      });
+                      setIsCustomersModalOpen(true);
+                    }}
+                    className="btn-primary" 
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                  >
+                    <Plus size={18} /> {t('customers.add_customer') || "Añadir cliente"}
+                  </button>
+                </div>
+              </header>
+
+              {/* Buscador de clientes */}
+              <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'white', padding: '0.75rem 1.25rem', borderRadius: '1.25rem', border: '1px solid var(--border)' }}>
+                <Search size={20} color="var(--text-muted)" />
+                <input
+                  type="text"
+                  placeholder={t('customers.search_placeholder') || "Buscar por nombre comercial, fiscal, NIF, ciudad..."}
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  style={{
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    fontSize: '0.95rem',
+                    color: 'var(--text-main)',
+                    background: 'transparent'
+                  }}
+                />
+                {customerSearchQuery && (
+                  <button
+                    onClick={() => setCustomerSearchQuery("")}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+
+              {customers.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                    <Contact size={40} color="var(--border)" />
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('customers.no_customers') || "No tienes clientes registrados"}</h3>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{t('customers.no_customers_desc') || "Añade tu primer cliente para tener organizados todos sus datos fiscales y de contacto."}</p>
+                  <button 
+                    onClick={() => {
+                      setEditingCustomer(null);
+                      setCustomersForm({
+                        commercialName: "", fiscalName: "", nif: "", address: "",
+                        postalCode: "", city: "", province: "", email: "", email2: "",
+                        phone: "", phone2: ""
+                      });
+                      setIsCustomersModalOpen(true);
+                    }}
+                    className="btn-primary" 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                  >
+                    <Plus size={18} /> {t('customers.add_customer') || "Añadir cliente"}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
+                  {customers
+                    .filter(c => {
+                      if (!customerSearchQuery) return true;
+                      const q = customerSearchQuery.toLowerCase();
+                      return (
+                        c.commercialName?.toLowerCase().includes(q) ||
+                        c.fiscalName?.toLowerCase().includes(q) ||
+                        c.nif?.toLowerCase().includes(q) ||
+                        c.city?.toLowerCase().includes(q) ||
+                        c.province?.toLowerCase().includes(q) ||
+                        c.email?.toLowerCase().includes(q) ||
+                        c.phone?.includes(q)
+                      );
+                    })
+                    .map(customer => (
+                      <div key={customer.id} className="glass-card" style={{ padding: '1.5rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', margin: 0, wordBreak: 'break-word' }}>
+                              {customer.commercialName}
+                            </h4>
+                            {customer.fiscalName && (
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: '500' }}>
+                                {customer.fiscalName}
+                              </div>
+                            )}
+                            {customer.nif && (
+                              <div style={{ display: 'inline-block', marginTop: '0.4rem', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', padding: '0.2rem 0.5rem', borderRadius: '0.35rem' }}>
+                                {t('customers.nif') || "NIF"}: {customer.nif}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                            <button 
+                              onClick={() => handleEditCustomer(customer)} 
+                              style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              title={t('customers.edit_customer') || "Modificar"}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteCustomer(customer.id)} 
+                              style={{ background: 'none', border: '1px solid var(--border)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              title={t('common.delete') || "Eliminar"}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '0.88rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)', borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem' }}>
+                          {/* Dirección / Ubicación */}
+                          {(customer.address || customer.city || customer.province || customer.postalCode) && (
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                              <MapPin size={16} color="var(--corp-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                              <span style={{ color: '#475569' }}>
+                                {[
+                                  customer.address,
+                                  [customer.postalCode, customer.city].filter(Boolean).join(' '),
+                                  customer.province
+                                ].filter(Boolean).join(', ')}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Teléfonos */}
+                          {(customer.phone || customer.phone2) && (
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <Phone size={16} color="var(--corp-green)" style={{ flexShrink: 0 }} />
+                              {customer.phone && (
+                                <a href={`tel:${customer.phone}`} style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: '600' }}>
+                                  {customer.phone}
+                                </a>
+                              )}
+                              {customer.phone && customer.phone2 && <span style={{ color: 'var(--border)' }}>|</span>}
+                              {customer.phone2 && (
+                                <a href={`tel:${customer.phone2}`} style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+                                  {customer.phone2}
+                                </a>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Emails */}
+                          {(customer.email || customer.email2) && (
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <Mail size={16} color="var(--corp-green)" style={{ flexShrink: 0 }} />
+                              {customer.email && (
+                                <a href={`mailto:${customer.email}`} style={{ color: 'var(--corp-green)', textDecoration: 'none', wordBreak: 'break-all' }}>
+                                  {customer.email}
+                                </a>
+                              )}
+                              {customer.email && customer.email2 && <span style={{ color: 'var(--border)' }}>|</span>}
+                              {customer.email2 && (
+                                <a href={`mailto:${customer.email2}`} style={{ color: 'var(--text-muted)', textDecoration: 'none', wordBreak: 'break-all' }}>
+                                  {customer.email2}
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
               )}
             </div>
           ) : activeTab === 'entradas' ? (
@@ -6256,6 +6542,20 @@ export default function ClientDashboard() {
             setIsProvidersModalOpen(false);
             setEditingProvider(null);
           }}
+        />
+      )}
+
+      {isCustomersModalOpen && (
+        <CustomerModal 
+          onClose={() => {
+            setIsCustomersModalOpen(false);
+            setEditingCustomer(null);
+          }}
+          onSubmit={handleSubmitCustomer}
+          formData={customersForm}
+          setFormData={setCustomersForm}
+          loading={loading}
+          isEditing={!!editingCustomer}
         />
       )}
 
@@ -10083,6 +10383,185 @@ function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEd
             <button type="button" className="btn-secondary" onClick={onClose} style={{ flex: 1 }}>{t('common.cancel')}</button>
             <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2 }}>
               {loading ? <Loader2 className="animate-spin" size={20} /> : t('common.save')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CustomerModal({ onClose, onSubmit, formData, setFormData, loading, isEditing }) {
+  const { t } = useI18n();
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <header style={{ marginBottom: '1.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
+              {isEditing ? (t('customers.edit_customer') || "Modificar cliente") : (t('customers.add_customer') || "Añadir cliente")}
+            </h2>
+            <p style={{ margin: '0.35rem 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              {t('customers.subtitle') || "Gestiona la información de tus clientes y sus datos fiscales y de contacto"}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
+            <X size={24} />
+          </button>
+        </header>
+
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Nombre Comercial (OBLIGATORIO) */}
+          <div>
+            <label className="label">
+              {t('customers.commercial_name') || "Nombre comercial"} <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+            </label>
+            <input 
+              type="text" 
+              className="input-field" 
+              value={formData.commercialName} 
+              onChange={(e) => setFormData({ ...formData, commercialName: e.target.value })} 
+              placeholder={t('customers.commercial_name') || "Nombre comercial"}
+              required 
+            />
+          </div>
+
+          {/* Datos Fiscales */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label className="label">{t('customers.fiscal_name') || "Nombre fiscal"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.fiscalName} 
+                onChange={(e) => setFormData({ ...formData, fiscalName: e.target.value })} 
+                placeholder={t('customers.fiscal_name') || "Razón social / Nombre fiscal"}
+              />
+            </div>
+            <div>
+              <label className="label">{t('customers.nif') || "NIF"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.nif} 
+                onChange={(e) => setFormData({ ...formData, nif: e.target.value })} 
+                placeholder="B12345678"
+              />
+            </div>
+          </div>
+
+          {/* Dirección */}
+          <div>
+            <label className="label">{t('customers.address') || "Dirección"}</label>
+            <input 
+              type="text" 
+              className="input-field" 
+              value={formData.address} 
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
+              placeholder={t('customers.address') || "Calle, número, piso..."}
+            />
+          </div>
+
+          {/* Código Postal, Ciudad y Provincia */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label className="label">{t('customers.postal_code') || "Código postal"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.postalCode} 
+                onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} 
+                placeholder="28001"
+              />
+            </div>
+            <div>
+              <label className="label">{t('customers.city') || "Ciudad"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.city} 
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })} 
+                placeholder={t('customers.city') || "Ciudad"}
+              />
+            </div>
+            <div>
+              <label className="label">{t('customers.province') || "Provincia"}</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.province} 
+                onChange={(e) => setFormData({ ...formData, province: e.target.value })} 
+                placeholder={t('customers.province') || "Provincia"}
+              />
+            </div>
+          </div>
+
+          {/* Teléfonos */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label className="label">{t('customers.phone') || "Teléfono"}</label>
+              <input 
+                type="tel" 
+                className="input-field" 
+                value={formData.phone} 
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
+                placeholder="+34 600 000 000"
+              />
+            </div>
+            <div>
+              <label className="label">{t('customers.phone2') || "Teléfono 2"}</label>
+              <input 
+                type="tel" 
+                className="input-field" 
+                value={formData.phone2} 
+                onChange={(e) => setFormData({ ...formData, phone2: e.target.value })} 
+                placeholder="+34 910 000 000"
+              />
+            </div>
+          </div>
+
+          {/* Emails */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label className="label">{t('customers.email') || "Email"}</label>
+              <input 
+                type="email" 
+                className="input-field" 
+                value={formData.email} 
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                placeholder="cliente@ejemplo.com"
+              />
+            </div>
+            <div>
+              <label className="label">{t('customers.email2') || "Email 2"}</label>
+              <input 
+                type="email" 
+                className="input-field" 
+                value={formData.email2} 
+                onChange={(e) => setFormData({ ...formData, email2: e.target.value })} 
+                placeholder="pedidos@ejemplo.com"
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="btn-secondary" 
+              style={{ padding: '0.75rem 1.5rem' }}
+              disabled={loading}
+            >
+              {t('common.cancel') || "Cancelar"}
+            </button>
+            <button 
+              type="submit" 
+              className="btn-primary" 
+              style={{ padding: '0.75rem 2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              disabled={loading}
+            >
+              {loading && <Loader2 size={16} className="animate-spin" />}
+              {t('customers.save_customer') || "Guardar cliente"}
             </button>
           </div>
         </form>

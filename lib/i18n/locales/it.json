@@ -113,7 +113,8 @@
     "business_config": "Configurazione della mia attività",
     "logout": "Chiudi sessione",
     "waste": "Rifiuti",
-    "inventory": "Inventario"
+    "inventory": "Inventario",
+    "customers": "Clienti"
   },
   "inventory": {
     "title": "Gestione dell'Inventario",
@@ -991,5 +992,35 @@
     "title": "Limite ricette superato",
     "description": "Hai registrato più ricette di quelle consentite dal tuo piano attuale. Devi aggiornare il piano o eliminare alcune ricette per poter continuare a registrare preparazioni, pulizia, temperature, acqua, merci e rifiuti.",
     "view_plans": "Visualizza piani disponibili"
+  },
+  "customers": {
+    "title": "Clienti",
+    "subtitle": "Gestisci le informazioni dei tuoi clienti, i dati fiscali e di contatto",
+    "add_customer": "Aggiungi cliente",
+    "edit_customer": "Modifica cliente",
+    "save_customer": "Salva cliente",
+    "no_customers": "Nessun cliente registrato",
+    "no_customers_desc": "Aggiungi il tuo primo cliente per organizzare tutti i suoi dati fiscali e di contatto.",
+    "search_placeholder": "Cerca per nome commerciale, nome fiscale, NIF, città...",
+    "commercial_name": "Nome commerciale",
+    "commercial_name_required": "Nome commerciale *",
+    "fiscal_name": "Ragione sociale / Nome fiscale",
+    "nif": "Codice Fiscale / Partita IVA",
+    "address": "Indirizzo",
+    "postal_code": "Codice postale",
+    "city": "Città",
+    "province": "Provincia",
+    "email": "Email",
+    "email2": "Email 2",
+    "phone": "Telefono",
+    "phone2": "Telefono 2",
+    "contact_info": "Contatto",
+    "location_info": "Posizione",
+    "tax_info": "Dati fiscali",
+    "delete_confirm": "Sei sicuro di voler eliminare questo cliente?",
+    "saved_success": "Cliente salvato con successo",
+    "updated_success": "Cliente modificato con successo",
+    "deleted_success": "Cliente eliminato con successo",
+    "commercial_name_mandatory": "Il nome commerciale è obbligatorio"
   }
 }

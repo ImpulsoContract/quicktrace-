@@ -113,7 +113,8 @@
     "business_config": "Configuration du magasin",
     "logout": "Se déconnecter",
     "waste": "Déchets",
-    "inventory": "Inventaire"
+    "inventory": "Inventaire",
+    "customers": "Clients"
   },
   "inventory": {
     "title": "Gestion des Stocks",
@@ -991,5 +992,35 @@
     "title": "Limite de recettes dépassée",
     "description": "Vous avez enregistré plus de recettes que votre forfait actuel ne le permet. Vous devez passer à un forfait supérieur ou supprimer des recettes pour continuer à enregistrer les préparations, le nettoyage, les températures, l'eau, les marchandises et les déchets.",
     "view_plans": "Voir les forfaits disponibles"
+  },
+  "customers": {
+    "title": "Clients",
+    "subtitle": "Gérez les informations de vos clients, leurs données fiscales et de contact",
+    "add_customer": "Ajouter un client",
+    "edit_customer": "Modifier le client",
+    "save_customer": "Enregistrer le client",
+    "no_customers": "Aucun client enregistré",
+    "no_customers_desc": "Ajoutez votre premier client pour organiser toutes ses coordonnées et informations fiscales.",
+    "search_placeholder": "Rechercher par nom commercial, nom fiscal, NIF, ville...",
+    "commercial_name": "Nom commercial",
+    "commercial_name_required": "Nom commercial *",
+    "fiscal_name": "Raison sociale / Nom fiscal",
+    "nif": "Numéro fiscal / NIF",
+    "address": "Adresse",
+    "postal_code": "Code postal",
+    "city": "Ville",
+    "province": "Département / Province",
+    "email": "E-mail",
+    "email2": "E-mail 2",
+    "phone": "Téléphone",
+    "phone2": "Téléphone 2",
+    "contact_info": "Contact",
+    "location_info": "Localisation",
+    "tax_info": "Données fiscales",
+    "delete_confirm": "Êtes-vous sûr de vouloir supprimer ce client ?",
+    "saved_success": "Client enregistré avec succès",
+    "updated_success": "Client mis à jour avec succès",
+    "deleted_success": "Client supprimé avec succès",
+    "commercial_name_mandatory": "Le nom commercial est obligatoire"
   }
 }

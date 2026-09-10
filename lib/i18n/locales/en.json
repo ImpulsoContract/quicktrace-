@@ -113,7 +113,8 @@
     "business_config": "Business Configuration",
     "logout": "Logout",
     "waste": "Waste",
-    "inventory": "Inventory"
+    "inventory": "Inventory",
+    "customers": "Customers"
   },
   "inventory": {
     "title": "Inventory Management",
@@ -996,5 +997,35 @@
     "title": "Recipe Limit Exceeded",
     "description": "You have registered more recipes than your current plan allows. You must upgrade your plan or delete recipes to continue recording elaborations, cleaning logs, temperatures, water records, goods receipts, and waste collections.",
     "view_plans": "View Available Plans"
+  },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "Manage your customer information, tax details, and contact info",
+    "add_customer": "Add customer",
+    "edit_customer": "Edit customer",
+    "save_customer": "Save customer",
+    "no_customers": "No customers registered",
+    "no_customers_desc": "Add your first customer to keep all their tax and contact information organized.",
+    "search_placeholder": "Search by commercial name, fiscal name, Tax ID, city...",
+    "commercial_name": "Commercial name",
+    "commercial_name_required": "Commercial name *",
+    "fiscal_name": "Fiscal / Legal name",
+    "nif": "Tax ID / VAT",
+    "address": "Address",
+    "postal_code": "Postal code",
+    "city": "City",
+    "province": "Province / State",
+    "email": "Email",
+    "email2": "Email 2",
+    "phone": "Phone",
+    "phone2": "Phone 2",
+    "contact_info": "Contact",
+    "location_info": "Location",
+    "tax_info": "Tax details",
+    "delete_confirm": "Are you sure you want to delete this customer?",
+    "saved_success": "Customer saved successfully",
+    "updated_success": "Customer updated successfully",
+    "deleted_success": "Customer deleted successfully",
+    "commercial_name_mandatory": "Commercial name is mandatory"
   }
 }

@@ -110,6 +110,30 @@ model ClientProfile {
   wasteCollections           WasteCollection[]
   ingredientStocks           IngredientStock[]
   scannedDeliveryNotes       ScannedDeliveryNote[]
+  customers                  Customer[]
+}
+
+model Customer {
+  id             Int           @id @default(autoincrement())
+  commercialName String        // Nombre comercial (obligatorio)
+  fiscalName     String?       // Nombre fiscal
+  nif            String?       // NIF
+  address        String?       @db.Text
+  postalCode     String?
+  city           String?
+  province       String?
+  email          String?
+  email2         String?
+  phone          String?
+  phone2         String?
+
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientProfileId])
 }
 
 model Provider {
