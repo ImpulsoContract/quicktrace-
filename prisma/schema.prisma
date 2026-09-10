@@ -111,6 +111,7 @@ model ClientProfile {
   ingredientStocks           IngredientStock[]
   scannedDeliveryNotes       ScannedDeliveryNote[]
   customers                  Customer[]
+  elaborationSales           ElaborationSale[]
 }
 
 model Customer {
@@ -129,6 +130,8 @@ model Customer {
 
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  elaborationSales ElaborationSale[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -286,6 +289,7 @@ model Elaboration {
   workshopTemp   String?
 
   ingredients ElaborationIngredient[]
+  sales       ElaborationSale[]
 
   quantityProduced String?
   netWeight        String?
@@ -297,6 +301,27 @@ model Elaboration {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ElaborationSale {
+  id              Int           @id @default(autoincrement())
+  elaborationId   Int
+  elaboration     Elaboration   @relation(fields: [elaborationId], references: [id], onDelete: Cascade)
+  customerId      Int?
+  customer        Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  percentage      Float         // Porcentaje de la elaboración vendido (ej: 25.0)
+  price           Float         // Precio de venta
+  date            DateTime      @default(now())
+
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([elaborationId])
+  @@index([customerId])
+  @@index([clientProfileId])
 }
 
 model ElaborationIngredient {

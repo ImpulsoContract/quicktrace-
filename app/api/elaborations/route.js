@@ -92,7 +92,11 @@ export async function GET(req) {
               }
             }
           },
-          ingredients: true
+          ingredients: true,
+          sales: {
+            include: { customer: true },
+            orderBy: { date: 'desc' }
+          }
         },
         orderBy: {
           date: 'desc'

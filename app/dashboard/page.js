@@ -338,6 +338,13 @@ export default function ClientDashboard() {
     phone: "", phone2: ""
   });
 
+  const [saleModalElaboration, setSaleModalElaboration] = useState(null);
+  const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const handleOpenSaleModal = (elaboration) => {
+    setSaleModalElaboration(elaboration);
+    setIsSaleModalOpen(true);
+  };
+
   const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
   const [cleaningExportDates, setCleaningExportDates] = useState({ from: "", to: "" });
   const [isTempExportModalOpen, setIsTempExportModalOpen] = useState(false);
@@ -4094,7 +4101,7 @@ export default function ClientDashboard() {
                               <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.labor_cost_header')}</th>
                             </>
                           )}
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('traceability_form.label_btn') || "Etiqueta"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4180,7 +4187,40 @@ export default function ClientDashboard() {
                             </>
                           )}
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <button 
+                                onClick={() => handleOpenSaleModal(el)}
+                                style={{ 
+                                  background: (el.sales && el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '#f0fdf4' : 'white', 
+                                  border: (el.sales && el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '1px solid #86efac' : '1px solid #e2e8f0', 
+                                  color: (el.sales && el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : 'var(--text-main)', 
+                                  padding: '0.5rem 0.85rem', 
+                                  borderRadius: '0.5rem', 
+                                  cursor: 'pointer', 
+                                  display: 'inline-flex', 
+                                  alignItems: 'center', 
+                                  gap: '0.4rem', 
+                                  fontSize: '0.85rem', 
+                                  fontWeight: '600'
+                                }}
+                                title={t('elaboration_sales.register_sale') || "Registrar venta"}
+                              >
+                                <DollarSign size={16} color="var(--corp-green)" />
+                                {t('elaboration_sales.register_sale') || "Registrar venta"}
+                                {el.sales && el.sales.length > 0 && (
+                                  <span style={{ 
+                                    fontSize: '0.7rem', 
+                                    padding: '0.1rem 0.45rem', 
+                                    borderRadius: '1rem', 
+                                    background: (el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : '#f59e0b', 
+                                    color: 'white',
+                                    fontWeight: '800',
+                                    marginLeft: '0.2rem'
+                                  }}>
+                                    {Math.round(el.sales.reduce((s, x) => s + (x.percentage || 0), 0))}%
+                                  </span>
+                                )}
+                              </button>
                               <button 
                                 onClick={() => generateLabelPDF(el)}
                                 style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
@@ -6219,7 +6259,7 @@ export default function ClientDashboard() {
                         <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           {t('dashboard.labor_cost_header')}
                         </th>
-                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('traceability_form.label_btn') || "Etiqueta"}</th>
+                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -6299,7 +6339,40 @@ export default function ClientDashboard() {
                               : formatPrice(0, profile?.currency, locale)}
                           </td>
                           <td style={{ padding: '1.25rem 1.5rem' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <button 
+                                onClick={() => handleOpenSaleModal(elab)}
+                                style={{ 
+                                  background: (elab.sales && elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '#f0fdf4' : 'white', 
+                                  border: (elab.sales && elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '1px solid #86efac' : '1px solid #e2e8f0', 
+                                  color: (elab.sales && elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : 'var(--text-main)', 
+                                  padding: '0.5rem 0.85rem', 
+                                  borderRadius: '0.5rem', 
+                                  cursor: 'pointer', 
+                                  display: 'inline-flex', 
+                                  alignItems: 'center', 
+                                  gap: '0.4rem', 
+                                  fontSize: '0.85rem', 
+                                  fontWeight: '600'
+                                }}
+                                title={t('elaboration_sales.register_sale') || "Registrar venta"}
+                              >
+                                <DollarSign size={16} color="var(--corp-green)" />
+                                {t('elaboration_sales.register_sale') || "Registrar venta"}
+                                {elab.sales && elab.sales.length > 0 && (
+                                  <span style={{ 
+                                    fontSize: '0.7rem', 
+                                    padding: '0.1rem 0.45rem', 
+                                    borderRadius: '1rem', 
+                                    background: (elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : '#f59e0b', 
+                                    color: 'white',
+                                    fontWeight: '800',
+                                    marginLeft: '0.2rem'
+                                  }}>
+                                    {Math.round(elab.sales.reduce((s, x) => s + (x.percentage || 0), 0))}%
+                                  </span>
+                                )}
+                              </button>
                               <button 
                                 onClick={() => generateLabelPDF(elab)}
                                 style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
@@ -6556,6 +6629,21 @@ export default function ClientDashboard() {
           setFormData={setCustomersForm}
           loading={loading}
           isEditing={!!editingCustomer}
+        />
+      )}
+
+      {isSaleModalOpen && saleModalElaboration && (
+        <ElaborationSaleModal 
+          elaboration={saleModalElaboration}
+          customers={customers}
+          profile={profile}
+          onClose={() => {
+            setIsSaleModalOpen(false);
+            setSaleModalElaboration(null);
+          }}
+          onSaleUpdated={() => {
+            fetchElaborations();
+          }}
         />
       )}
 
@@ -10565,6 +10653,367 @@ function CustomerModal({ onClose, onSubmit, formData, setFormData, loading, isEd
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated }) {
+  const { t, locale } = useI18n();
+  const [sales, setSales] = useState(elaboration.sales || []);
+  const [loadingSales, setLoadingSales] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [saleForm, setSaleForm] = useState({
+    customerId: "",
+    percentage: "",
+    price: "",
+    date: new Date().toISOString().slice(0, 10)
+  });
+
+  const fetchSales = async () => {
+    try {
+      setLoadingSales(true);
+      const res = await fetch(`/api/client/elaborations/${elaboration.id}/sales`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.sales)) {
+        setSales(data.sales);
+      }
+    } catch (e) {
+      console.error("Error fetching sales:", e);
+    } finally {
+      setLoadingSales(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSales();
+  }, [elaboration.id]);
+
+  const totalSold = useMemo(() => {
+    return Math.round(sales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
+  }, [sales]);
+
+  const availablePercentage = useMemo(() => {
+    return Math.max(0, Math.round((100 - totalSold) * 100) / 100);
+  }, [totalSold]);
+
+  const isFullySold = availablePercentage <= 0.001;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const pct = parseFloat(saleForm.percentage);
+    if (isNaN(pct) || pct <= 0) {
+      alert(t('elaboration_sales.percentage_invalid') || "Por favor introduce un porcentaje válido mayor que 0.");
+      return;
+    }
+
+    if (pct > availablePercentage + 0.001) {
+      alert(
+        (t('elaboration_sales.percentage_exceeded') || "La suma de porcentajes no puede superar el 100%. Porcentaje disponible: {available}%")
+          .replace('{available}', availablePercentage.toString())
+      );
+      return;
+    }
+
+    const prc = parseFloat(saleForm.price);
+    if (isNaN(prc) || prc < 0) {
+      alert(t('elaboration_sales.price_invalid') || "Por favor introduce un precio válido.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/client/elaborations/${elaboration.id}/sales`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: saleForm.customerId || null,
+          percentage: pct,
+          price: prc,
+          date: saleForm.date
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(t('elaboration_sales.sale_saved_success') || "Venta registrada correctamente");
+        setSaleForm({
+          customerId: "",
+          percentage: "",
+          price: "",
+          date: new Date().toISOString().slice(0, 10)
+        });
+        await fetchSales();
+        if (onSaleUpdated) onSaleUpdated();
+      } else {
+        alert(data.message || data.error || t('alerts.request_error'));
+      }
+    } catch (e) {
+      console.error("Error saving sale:", e);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteSale = async (saleId) => {
+    if (!confirm(t('elaboration_sales.delete_sale_confirm') || "¿Estás seguro de que deseas eliminar este registro de venta?")) return;
+    try {
+      const res = await fetch(`/api/client/elaborations/${elaboration.id}/sales/${saleId}`, {
+        method: "DELETE"
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchSales();
+        if (onSaleUpdated) onSaleUpdated();
+      } else {
+        alert(data.error || t('alerts.delete_error'));
+      }
+    } catch (e) {
+      console.error("Error deleting sale:", e);
+      alert(t('alerts.connection_error'));
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <header style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <DollarSign size={24} color="var(--corp-green)" />
+              {t('elaboration_sales.modal_title') || "Registrar venta de elaboración"}
+            </h2>
+            <div style={{ marginTop: '0.4rem', fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <span><strong>{t('traceability_form.elaboration_title')}:</strong> {elaboration.name}</span>
+              {elaboration.recipe?.name && <span>• <strong>{t('dashboard.recipe_name')}:</strong> {elaboration.recipe.name}</span>}
+              <span>• <strong>{t('dashboard.date')}:</strong> {formatDateTimeDDMMYYYY(elaboration.date)}</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
+            <X size={24} />
+          </button>
+        </header>
+
+        {/* Resumen de estado de ventas y barra de progreso */}
+        <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              {t('elaboration_sales.summary_title') || "Estado de ventas de esta elaboración"}
+            </span>
+            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem' }}>
+              <span>
+                <strong>{t('elaboration_sales.total_sold') || "Total vendido"}:</strong>{" "}
+                <span style={{ color: totalSold >= 100 ? 'var(--corp-green)' : '#f59e0b', fontWeight: '800' }}>
+                  {totalSold}%
+                </span>
+              </span>
+              <span>
+                <strong>{t('elaboration_sales.available_to_sell') || "Disponible"}:</strong>{" "}
+                <span style={{ color: availablePercentage > 0 ? 'var(--corp-green)' : 'var(--text-muted)', fontWeight: '800' }}>
+                  {availablePercentage}%
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <div style={{ width: '100%', height: '12px', background: '#e2e8f0', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
+            <div 
+              style={{ 
+                height: '100%', 
+                width: `${Math.min(100, totalSold)}%`, 
+                background: totalSold >= 100 ? 'var(--corp-green)' : '#10b981', 
+                transition: 'width 0.4s ease' 
+              }} 
+            />
+          </div>
+        </div>
+
+        {/* Formulario para registrar nueva venta */}
+        {!isFullySold ? (
+          <form onSubmit={handleSubmit} style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+              {t('elaboration_sales.register_sale') || "Registrar venta"}
+            </h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              {/* Selector de Cliente (Opcional) */}
+              <div style={{ gridColumn: 'span 2' }}>
+                <label className="label">
+                  {t('elaboration_sales.select_customer') || "Cliente (opcional)"}
+                </label>
+                <select
+                  className="input-field"
+                  value={saleForm.customerId}
+                  onChange={(e) => setSaleForm({ ...saleForm, customerId: e.target.value })}
+                  style={{ appearance: 'auto' }}
+                >
+                  <option value="">{t('elaboration_sales.no_customer_option') || "Venta directa / Sin cliente"}</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.commercialName} {c.fiscalName ? `— ${c.fiscalName}` : ''} {c.nif ? `(${c.nif})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Porcentaje */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <label className="label" style={{ margin: 0 }}>
+                    {t('elaboration_sales.sold_percentage') || "Porcentaje vendido (%)"} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setSaleForm({ ...saleForm, percentage: availablePercentage.toString() })}
+                    style={{ background: 'none', border: 'none', color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    100% restante ({availablePercentage}%)
+                  </button>
+                </div>
+                <input 
+                  type="number" 
+                  step="any" 
+                  min="0.01" 
+                  max={availablePercentage}
+                  className="input-field" 
+                  value={saleForm.percentage} 
+                  onChange={(e) => setSaleForm({ ...saleForm, percentage: e.target.value })} 
+                  placeholder={t('elaboration_sales.percentage_placeholder') || "Ej: 25, 50, 100"}
+                  required 
+                />
+              </div>
+
+              {/* Precio de venta */}
+              <div>
+                <label className="label">
+                  {t('elaboration_sales.sale_price') || "Precio de venta"} ({profile?.currency || 'EUR'}) <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  min="0"
+                  className="input-field" 
+                  value={saleForm.price} 
+                  onChange={(e) => setSaleForm({ ...saleForm, price: e.target.value })} 
+                  placeholder={t('elaboration_sales.price_placeholder') || "0.00"}
+                  required 
+                />
+              </div>
+
+              {/* Fecha */}
+              <div style={{ gridColumn: 'span 2' }}>
+                <label className="label">{t('elaboration_sales.sale_date') || "Fecha de la venta"}</label>
+                <input 
+                  type="date" 
+                  className="input-field" 
+                  value={saleForm.date} 
+                  onChange={(e) => setSaleForm({ ...saleForm, date: e.target.value })} 
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={submitting}
+                style={{ padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800' }}
+              >
+                {submitting && <Loader2 size={16} className="animate-spin" />}
+                <Plus size={16} /> {t('elaboration_sales.submit_sale') || "Guardar venta"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '1rem', padding: '1.25rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#166534' }}>
+            <Check size={20} color="var(--corp-green)" />
+            <span style={{ fontWeight: '700', fontSize: '0.95rem' }}>
+              {t('elaboration_sales.fully_sold_badge') || "Esta elaboración ya ha sido vendida al 100%."}
+            </span>
+          </div>
+        )}
+
+        {/* Listado de ventas registradas */}
+        <div>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '1rem' }}>
+            {t('elaboration_sales.sales_history') || "Ventas registradas"} ({sales.length})
+          </h3>
+
+          {loadingSales ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <Loader2 className="animate-spin" size={24} style={{ margin: '0 auto', color: 'var(--corp-green)' }} />
+            </div>
+          ) : sales.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>
+                {t('elaboration_sales.no_sales_yet') || "Aún no se ha registrado ninguna venta para esta elaboración."}
+              </p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '0.75rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+                <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                  <tr>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_date') || "Fecha"}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_customer') || "Cliente"}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_percentage') || "Porcentaje"}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_price') || "Precio"}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', textAlign: 'right' }}>{t('elaboration_sales.col_actions') || "Acciones"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sales.map(s => (
+                    <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)' }}>
+                        {formatDateTimeDDMMYYYY(s.date)}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: '600' }}>
+                        {s.customer ? (
+                          <span style={{ color: 'var(--corp-green)' }}>
+                            {s.customer.commercialName}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                            {t('elaboration_sales.no_customer_option') || "Venta directa / Sin cliente"}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: '700' }}>
+                        <span style={{ background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', padding: '0.2rem 0.5rem', borderRadius: '0.35rem' }}>
+                          {s.percentage}%
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                        {formatPrice(s.price, profile?.currency, locale)}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleDeleteSale(s.id)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.35rem' }}
+                          title={t('common.delete') || "Eliminar"}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="btn-secondary" 
+            style={{ padding: '0.75rem 2rem' }}
+          >
+            {t('common.close') || "Cerrar"}
+          </button>
+        </div>
       </div>
     </div>
   );
