@@ -340,9 +340,14 @@ export default function ClientDashboard() {
 
   const [saleModalElaboration, setSaleModalElaboration] = useState(null);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [customerForSalesModal, setCustomerForSalesModal] = useState(null);
+  const [returnToCustomerSales, setReturnToCustomerSales] = useState(null);
   const handleOpenSaleModal = (elaboration) => {
     setSaleModalElaboration(elaboration);
     setIsSaleModalOpen(true);
+  };
+  const handleOpenCustomerSalesModal = (customer) => {
+    setCustomerForSalesModal(customer);
   };
 
   const [isCleaningExportModalOpen, setIsCleaningExportModalOpen] = useState(false);
@@ -4760,6 +4765,33 @@ export default function ClientDashboard() {
                             </div>
                           )}
                         </div>
+
+                        {/* Botón Ver ventas a este cliente */}
+                        <div style={{ marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '0.85rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCustomerSalesModal(customer)}
+                            style={{
+                              width: '100%',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.5rem',
+                              padding: '0.6rem 1rem',
+                              fontSize: '0.85rem',
+                              fontWeight: '700',
+                              borderRadius: '0.6rem',
+                              color: 'var(--corp-green)',
+                              background: 'rgba(66, 98, 22, 0.06)',
+                              border: '1px solid rgba(66, 98, 22, 0.2)',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <DollarSign size={16} color="var(--corp-green)" />
+                            {t('customers.view_sales_btn') || "Ver ventas a este cliente"}
+                          </button>
+                        </div>
                       </div>
                     ))}
                 </div>
@@ -6788,6 +6820,22 @@ export default function ClientDashboard() {
         />
       )}
 
+      {customerForSalesModal && (
+        <CustomerSalesModal
+          customer={customerForSalesModal}
+          profile={profile}
+          onClose={() => {
+            setCustomerForSalesModal(null);
+            setReturnToCustomerSales(null);
+          }}
+          onViewSaleDetails={(sale) => {
+            setReturnToCustomerSales(customerForSalesModal);
+            setCustomerForSalesModal(null);
+            handleOpenSaleModal(sale.elaboration);
+          }}
+        />
+      )}
+
       {isSaleModalOpen && saleModalElaboration && (
         <ElaborationSaleModal 
           elaboration={saleModalElaboration}
@@ -6796,6 +6844,10 @@ export default function ClientDashboard() {
           onClose={() => {
             setIsSaleModalOpen(false);
             setSaleModalElaboration(null);
+            if (returnToCustomerSales) {
+              setCustomerForSalesModal(returnToCustomerSales);
+              setReturnToCustomerSales(null);
+            }
           }}
           onSaleUpdated={() => {
             fetchElaborations();
@@ -6803,6 +6855,8 @@ export default function ClientDashboard() {
           onNavigateToCustomers={() => {
             setIsSaleModalOpen(false);
             setSaleModalElaboration(null);
+            setReturnToCustomerSales(null);
+            setCustomerForSalesModal(null);
             setActiveTab("clientes");
             setSelectedRecipe(null);
             setSelectedRecords([]);
@@ -10818,6 +10872,390 @@ function CustomerModal({ onClose, onSubmit, formData, setFormData, loading, isEd
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
+  const { t, locale } = useI18n();
+  const [sales, setSales] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filtros de búsqueda
+  const [amountQuery, setAmountQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [lotQuery, setLotQuery] = useState("");
+  const [recipeQuery, setRecipeQuery] = useState("");
+
+  const fetchSales = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/client/customers/${customer.id}/sales`);
+      const data = await res.json();
+      if (data.success) {
+        setSales(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching customer sales:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (customer?.id) {
+      fetchSales();
+    }
+  }, [customer?.id]);
+
+  const hasActiveFilters = Boolean(
+    amountQuery.trim() ||
+    dateFrom ||
+    dateTo ||
+    lotQuery.trim() ||
+    recipeQuery.trim()
+  );
+
+  const handleClearFilters = () => {
+    setAmountQuery("");
+    setDateFrom("");
+    setDateTo("");
+    setLotQuery("");
+    setRecipeQuery("");
+  };
+
+  // Filtrado reactivo
+  const filteredSales = useMemo(() => {
+    return sales.filter((s) => {
+      // 1. Cantidad / Importe del ticket
+      if (amountQuery.trim()) {
+        const queryNum = parseFloat(amountQuery.replace(',', '.'));
+        const priceStr = (s.price ?? "").toString();
+        if (!isNaN(queryNum)) {
+          const matchesNum = Math.abs((s.price || 0) - queryNum) < 0.01;
+          const matchesStr = priceStr.includes(amountQuery.trim());
+          if (!matchesNum && !matchesStr) return false;
+        } else {
+          if (!priceStr.includes(amountQuery.trim())) return false;
+        }
+      }
+
+      // 2. Fecha desde y hasta
+      if (dateFrom) {
+        const sDate = (s.date || s.createdAt || "").slice(0, 10);
+        if (sDate < dateFrom) return false;
+      }
+      if (dateTo) {
+        const sDate = (s.date || s.createdAt || "").slice(0, 10);
+        if (sDate > dateTo) return false;
+      }
+
+      // 3. Lote
+      if (lotQuery.trim()) {
+        const lotName = s.elaboration?.name || "";
+        if (!lotName.toLowerCase().includes(lotQuery.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      // 4. Receta
+      if (recipeQuery.trim()) {
+        const recipeName = s.elaboration?.recipe?.name || "";
+        if (!recipeName.toLowerCase().includes(recipeQuery.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [sales, amountQuery, dateFrom, dateTo, lotQuery, recipeQuery]);
+
+  // Si no hay filtros activos, mostrar las 20 últimas ventas
+  const displayedSales = hasActiveFilters ? filteredSales : sales.slice(0, 20);
+
+  const totalSpent = useMemo(() => {
+    return sales.reduce((sum, s) => sum + (s.price || 0), 0);
+  }, [sales]);
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '980px', width: '95%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
+        {/* Cabecera */}
+        <header style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--corp-green)' }}>
+                <DollarSign size={20} />
+              </div>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+                {(t('customers.sales_modal_title') || "Ventas a: {name}").replace('{name}', customer.commercialName)}
+              </h2>
+            </div>
+            <p style={{ margin: '0.35rem 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+              {t('customers.sales_modal_subtitle') || "Historial de las últimas ventas registradas para este cliente"}
+            </p>
+          </div>
+          <button 
+            onClick={onClose} 
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
+          >
+            <X size={24} />
+          </button>
+        </header>
+
+        {/* Resumen rápido */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '0.85rem', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {t('customers.sales_count') || "Ventas registradas"}
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', marginTop: '0.2rem' }}>
+              {sales.length}
+            </div>
+          </div>
+          <div style={{ background: '#f0fdf4', padding: '1rem 1.25rem', borderRadius: '0.85rem', border: '1px solid #bbf7d0' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--corp-green)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {t('customers.total_spent') || "Total facturado"}
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--corp-green)', marginTop: '0.2rem' }}>
+              {formatPrice(totalSpent, profile?.currency, locale)}
+            </div>
+          </div>
+        </div>
+
+        {/* Formulario de Filtro y Buscador */}
+        <div style={{ background: 'white', padding: '1.25rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.88rem', fontWeight: '800', color: 'var(--text-main)' }}>
+              <Search size={16} color="var(--corp-green)" />
+              <span>{t('dashboard.filters') || "Filtros de búsqueda"}</span>
+            </div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ef4444',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.2rem 0.4rem'
+                }}
+              >
+                <Trash2 size={13} />
+                {t('customers.clear_filters') || "Limpiar filtros"}
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.85rem' }}>
+            {/* Filtro Lote */}
+            <div>
+              <label className="label" style={{ fontSize: '0.72rem' }}>{t('customers.filter_lot') || "Lote"}</label>
+              <input
+                type="text"
+                className="input-field"
+                style={{ paddingTop: '0.45rem', paddingBottom: '0.45rem', fontSize: '0.82rem' }}
+                placeholder={t('traceability_form.elaboration_title_placeholder') || "Buscar por lote..."}
+                value={lotQuery}
+                onChange={(e) => setLotQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Filtro Receta */}
+            <div>
+              <label className="label" style={{ fontSize: '0.72rem' }}>{t('customers.filter_recipe') || "Receta"}</label>
+              <input
+                type="text"
+                className="input-field"
+                style={{ paddingTop: '0.45rem', paddingBottom: '0.45rem', fontSize: '0.82rem' }}
+                placeholder={t('dashboard.search_recipe') || "Buscar receta..."}
+                value={recipeQuery}
+                onChange={(e) => setRecipeQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Filtro Importe Ticket */}
+            <div>
+              <label className="label" style={{ fontSize: '0.72rem' }}>{t('customers.filter_ticket_amount') || "Importe ticket (€)"}</label>
+              <input
+                type="text"
+                className="input-field"
+                style={{ paddingTop: '0.45rem', paddingBottom: '0.45rem', fontSize: '0.82rem' }}
+                placeholder="Ej: 45.00"
+                value={amountQuery}
+                onChange={(e) => setAmountQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Rango Desde */}
+            <div>
+              <label className="label" style={{ fontSize: '0.72rem' }}>{t('customers.filter_date_from') || "Desde"}</label>
+              <input
+                type="date"
+                className="input-field"
+                style={{ paddingTop: '0.45rem', paddingBottom: '0.45rem', fontSize: '0.82rem' }}
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+
+            {/* Rango Hasta */}
+            <div>
+              <label className="label" style={{ fontSize: '0.72rem' }}>{t('customers.filter_date_to') || "Hasta"}</label>
+              <input
+                type="date"
+                className="input-field"
+                style={{ paddingTop: '0.45rem', paddingBottom: '0.45rem', fontSize: '0.82rem' }}
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Indicador de resultados */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+          <span>
+            {hasActiveFilters
+              ? (t('customers.showing_filtered_sales') || "Mostrando {count} venta(s) encontrada(s)").replace('{count}', filteredSales.length.toString())
+              : (t('customers.showing_last_sales') || "Mostrando las 20 últimas ventas")}
+          </span>
+          {sales.length > 20 && !hasActiveFilters && (
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              ({sales.length} en total)
+            </span>
+          )}
+        </div>
+
+        {/* Tabla de Ventas */}
+        {loading ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            {t('common.loading') || "Cargando ventas..."}
+          </div>
+        ) : displayedSales.length === 0 ? (
+          <div style={{ padding: '3rem 2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.35rem' }}>
+              {hasActiveFilters
+                ? (t('customers.no_sales_filtered') || "No se encontraron ventas con los filtros aplicados")
+                : (t('customers.no_sales_recorded') || "Este cliente aún no tiene ventas registradas")}
+            </div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="btn-secondary"
+                style={{ marginTop: '0.75rem', fontSize: '0.82rem', padding: '0.4rem 0.85rem' }}
+              >
+                {t('customers.clear_filters') || "Limpiar filtros"}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '0.85rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '650px', fontSize: '0.85rem' }}>
+              <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                <tr>
+                  <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                    {t('dashboard.date') || "Fecha"}
+                  </th>
+                  <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                    {t('customers.filter_lot') || "Lote"}
+                  </th>
+                  <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                    {t('customers.filter_recipe') || "Receta"}
+                  </th>
+                  <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'center' }}>
+                    {t('elaboration_sales.sold_percentage') || "% Vendido"}
+                  </th>
+                  <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>
+                    {t('elaboration_sales.sale_price') || "Importe"}
+                  </th>
+                  <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'center' }}>
+                    {t('common.actions') || "Acciones"}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedSales.map((sale) => (
+                  <tr key={sale.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.15s' }} className="hover-row">
+                    <td style={{ padding: '1rem 1.25rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                      {formatDateDDMMYYYY(sale.date || sale.createdAt)}
+                    </td>
+                    <td style={{ padding: '1rem 1.25rem', fontWeight: '700', color: 'var(--corp-green)' }}>
+                      {sale.elaboration?.name || "-"}
+                    </td>
+                    <td style={{ padding: '1rem 1.25rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                      {sale.elaboration?.recipe?.name || "-"}
+                    </td>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: '800',
+                        padding: '0.15rem 0.55rem',
+                        borderRadius: '1rem',
+                        background: sale.percentage >= 99.9 ? '#dcfce7' : '#fef3c7',
+                        color: sale.percentage >= 99.9 ? '#166534' : '#92400e'
+                      }}>
+                        {sale.percentage}%
+                      </span>
+                    </td>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '800', color: 'var(--text-main)', fontSize: '0.92rem' }}>
+                      {formatPrice(sale.price, profile?.currency, locale)}
+                    </td>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onViewSaleDetails && sale.elaboration) {
+                            onViewSaleDetails(sale);
+                          }
+                        }}
+                        style={{
+                          background: 'white',
+                          border: '1px solid #cbd5e1',
+                          color: 'var(--corp-green)',
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '0.45rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '700',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                        }}
+                        title={t('customers.view_sale_details') || "Ver detalles de la venta"}
+                      >
+                        <Eye size={14} />
+                        {t('customers.view_sale_details') || "Ver detalles"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pie del modal */}
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-secondary"
+            style={{ padding: '0.6rem 1.5rem', fontSize: '0.88rem' }}
+          >
+            {t('common.close') || "Cerrar"}
+          </button>
+        </div>
       </div>
     </div>
   );
