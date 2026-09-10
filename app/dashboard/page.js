@@ -4089,10 +4089,6 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
                             {t('dashboard.sales_column_header') || "Ventas"}
                           </th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                            {t('dashboard.profit_column_header') || "Beneficio"}
-                          </th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4108,8 +4104,34 @@ export default function ClientDashboard() {
                             </td>
                           <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{formatDateDDMMYYYY(el.date || el.createdAt)}</td>
                           <td style={{ padding: '1.5rem 2rem' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                               <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{el.name}</span>
+                              <div style={{ margin: '0.15rem 0' }}>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateLabelPDF(el);
+                                  }}
+                                  style={{ 
+                                    background: 'white', 
+                                    border: '1px solid #cbd5e1', 
+                                    color: 'var(--text-main)', 
+                                    padding: '0.25rem 0.6rem', 
+                                    borderRadius: '0.375rem', 
+                                    cursor: 'pointer', 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.35rem', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                                  }}
+                                  title={t('traceability_form.label_btn') || "Etiqueta"}
+                                >
+                                  <Printer size={13} color="var(--corp-green)" /> {t('traceability_form.label_btn') || "Etiqueta"}
+                                </button>
+                              </div>
                               <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
                                 <span 
                                   onClick={() => handleViewElaborationOnly(el)} 
@@ -4194,12 +4216,21 @@ export default function ClientDashboard() {
                           {/* Columna Ventas */}
                           {(() => {
                             const elabSales = el.sales || [];
+                            const hasSales = elabSales.length > 0;
                             const totalSoldPct = Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
                             const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
+                            
+                            const rawCost = Number(el.costPrice) || 0;
+                            const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
+                            const hourlyRate = Number(el.laborCostHourlyRate) || 0;
+                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                            const totalCost = rawCost + laborCost;
+
+                            const profit = totalSalesRevenue - totalCost;
 
                             return (
                               <td style={{ padding: '1.5rem 2rem', fontSize: '0.85rem' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '130px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '140px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                                     <span style={{ 
                                       fontSize: '0.75rem', 
@@ -4224,6 +4255,28 @@ export default function ClientDashboard() {
                                       transition: 'width 0.3s ease'
                                     }} />
                                   </div>
+
+                                  {/* Beneficio a continuación */}
+                                  <div style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.1rem' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.profit_label') || "Beneficio"}:</span>
+                                    {!hasSales ? (
+                                      <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>-</span>
+                                    ) : profit > 0 ? (
+                                      <span style={{ color: '#16a34a', fontWeight: '800' }}>
+                                        +{formatPrice(profit, profile?.currency, locale)}
+                                      </span>
+                                    ) : profit < 0 ? (
+                                      <span style={{ color: '#dc2626', fontWeight: '800' }}>
+                                        {formatPrice(profit, profile?.currency, locale)}
+                                      </span>
+                                    ) : (
+                                      <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>
+                                        {formatPrice(0, profile?.currency, locale)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Botón Ver/registrar ventas */}
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -4234,7 +4287,7 @@ export default function ClientDashboard() {
                                       background: 'none',
                                       border: 'none',
                                       padding: 0,
-                                      fontSize: '0.72rem',
+                                      fontSize: '0.75rem',
                                       color: 'var(--corp-green)',
                                       cursor: 'pointer',
                                       textDecoration: 'underline',
@@ -4243,93 +4296,15 @@ export default function ClientDashboard() {
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       gap: '0.25rem',
-                                      marginTop: '0.1rem'
+                                      marginTop: '0.15rem'
                                     }}
                                   >
-                                    <Eye size={13} /> {t('dashboard.view_sales_details') || "Ver detalles"}
+                                    <Eye size={13} /> {t('dashboard.view_register_sales') || "Ver/registrar ventas"}
                                   </button>
                                 </div>
                               </td>
                             );
                           })()}
-
-                          {/* Columna Beneficio */}
-                          {(() => {
-                            const elabSales = el.sales || [];
-                            const hasSales = elabSales.length > 0;
-                            const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
-                            
-                            const rawCost = Number(el.costPrice) || 0;
-                            const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
-                            const hourlyRate = Number(el.laborCostHourlyRate) || 0;
-                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
-                            const totalCost = rawCost + laborCost;
-
-                            const profit = totalSalesRevenue - totalCost;
-
-                            return (
-                              <td style={{ padding: '1.5rem 2rem', fontSize: '0.9rem', fontVariantNumeric: 'tabular-nums' }}>
-                                {!hasSales ? (
-                                  <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>-</span>
-                                ) : profit > 0 ? (
-                                  <span style={{ color: '#16a34a', fontWeight: '800' }}>
-                                    +{formatPrice(profit, profile?.currency, locale)}
-                                  </span>
-                                ) : profit < 0 ? (
-                                  <span style={{ color: '#dc2626', fontWeight: '800' }}>
-                                    {formatPrice(profit, profile?.currency, locale)}
-                                  </span>
-                                ) : (
-                                  <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>
-                                    {formatPrice(0, profile?.currency, locale)}
-                                  </span>
-                                )}
-                              </td>
-                            );
-                          })()}
-                          <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <button 
-                                onClick={() => handleOpenSaleModal(el)}
-                                style={{ 
-                                  background: (el.sales && el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '#f0fdf4' : 'white', 
-                                  border: (el.sales && el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '1px solid #86efac' : '1px solid #e2e8f0', 
-                                  color: (el.sales && el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : 'var(--text-main)', 
-                                  padding: '0.5rem 0.85rem', 
-                                  borderRadius: '0.5rem', 
-                                  cursor: 'pointer', 
-                                  display: 'inline-flex', 
-                                  alignItems: 'center', 
-                                  gap: '0.4rem', 
-                                  fontSize: '0.85rem', 
-                                  fontWeight: '600'
-                                }}
-                                title={t('elaboration_sales.register_sale') || "Registrar venta"}
-                              >
-                                <DollarSign size={16} color="var(--corp-green)" />
-                                {t('elaboration_sales.register_sale') || "Registrar venta"}
-                                {el.sales && el.sales.length > 0 && (
-                                  <span style={{ 
-                                    fontSize: '0.7rem', 
-                                    padding: '0.1rem 0.45rem', 
-                                    borderRadius: '1rem', 
-                                    background: (el.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : '#f59e0b', 
-                                    color: 'white',
-                                    fontWeight: '800',
-                                    marginLeft: '0.2rem'
-                                  }}>
-                                    {Math.round(el.sales.reduce((s, x) => s + (x.percentage || 0), 0))}%
-                                  </span>
-                                )}
-                              </button>
-                              <button 
-                                onClick={() => generateLabelPDF(el)}
-                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
-                              >
-                                <Printer size={16} /> {t('traceability_form.label_btn') || "Etiqueta"}
-                              </button>
-                            </div>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -6348,10 +6323,6 @@ export default function ClientDashboard() {
                         <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           {t('dashboard.sales_column_header') || "Ventas"}
                         </th>
-                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {t('dashboard.profit_column_header') || "Beneficio"}
-                        </th>
-                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -6361,8 +6332,34 @@ export default function ClientDashboard() {
                             {formatDateTimeDDMMYYYY(elab.date)}
                           </td>
                           <td style={{ padding: '1.25rem 1.5rem' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                               <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{elab.name}</span>
+                              <div style={{ margin: '0.15rem 0' }}>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateLabelPDF(elab);
+                                  }}
+                                  style={{ 
+                                    background: 'white', 
+                                    border: '1px solid #cbd5e1', 
+                                    color: 'var(--text-main)', 
+                                    padding: '0.25rem 0.6rem', 
+                                    borderRadius: '0.375rem', 
+                                    cursor: 'pointer', 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.35rem', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                                  }}
+                                  title={t('traceability_form.label_btn') || "Etiqueta"}
+                                >
+                                  <Printer size={13} color="var(--corp-green)" /> {t('traceability_form.label_btn') || "Etiqueta"}
+                                </button>
+                              </div>
                               <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
                                 <span 
                                   onClick={() => handleViewElaborationOnly(elab)} 
@@ -6451,12 +6448,21 @@ export default function ClientDashboard() {
                           {/* Columna Ventas */}
                           {(() => {
                             const elabSales = elab.sales || [];
+                            const hasSales = elabSales.length > 0;
                             const totalSoldPct = Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
                             const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
+                            
+                            const rawCost = Number(elab.costPrice) || 0;
+                            const prepTimeNum = elab.preparationTime ? parseFloat(elab.preparationTime.toString().replace(',', '.')) : 0;
+                            const hourlyRate = Number(elab.laborCostHourlyRate) || 0;
+                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                            const totalCost = rawCost + laborCost;
+
+                            const profit = totalSalesRevenue - totalCost;
 
                             return (
                               <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '130px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '140px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                                     <span style={{ 
                                       fontSize: '0.75rem', 
@@ -6481,6 +6487,28 @@ export default function ClientDashboard() {
                                       transition: 'width 0.3s ease'
                                     }} />
                                   </div>
+
+                                  {/* Beneficio a continuación */}
+                                  <div style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.1rem' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.profit_label') || "Beneficio"}:</span>
+                                    {!hasSales ? (
+                                      <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>-</span>
+                                    ) : profit > 0 ? (
+                                      <span style={{ color: '#16a34a', fontWeight: '800' }}>
+                                        +{formatPrice(profit, profile?.currency, locale)}
+                                      </span>
+                                    ) : profit < 0 ? (
+                                      <span style={{ color: '#dc2626', fontWeight: '800' }}>
+                                        {formatPrice(profit, profile?.currency, locale)}
+                                      </span>
+                                    ) : (
+                                      <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>
+                                        {formatPrice(0, profile?.currency, locale)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Botón Ver/registrar ventas */}
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -6491,7 +6519,7 @@ export default function ClientDashboard() {
                                       background: 'none',
                                       border: 'none',
                                       padding: 0,
-                                      fontSize: '0.72rem',
+                                      fontSize: '0.75rem',
                                       color: 'var(--corp-green)',
                                       cursor: 'pointer',
                                       textDecoration: 'underline',
@@ -6500,98 +6528,20 @@ export default function ClientDashboard() {
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       gap: '0.25rem',
-                                      marginTop: '0.1rem'
+                                      marginTop: '0.15rem'
                                     }}
                                   >
-                                    <Eye size={13} /> {t('dashboard.view_sales_details') || "Ver detalles"}
+                                    <Eye size={13} /> {t('dashboard.view_register_sales') || "Ver/registrar ventas"}
                                   </button>
                                 </div>
                               </td>
                             );
                           })()}
-
-                          {/* Columna Beneficio */}
-                          {(() => {
-                            const elabSales = elab.sales || [];
-                            const hasSales = elabSales.length > 0;
-                            const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
-                            
-                            const rawCost = Number(elab.costPrice) || 0;
-                            const prepTimeNum = elab.preparationTime ? parseFloat(elab.preparationTime.toString().replace(',', '.')) : 0;
-                            const hourlyRate = Number(elab.laborCostHourlyRate) || 0;
-                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
-                            const totalCost = rawCost + laborCost;
-
-                            const profit = totalSalesRevenue - totalCost;
-
-                            return (
-                              <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.9rem', fontVariantNumeric: 'tabular-nums' }}>
-                                {!hasSales ? (
-                                  <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>-</span>
-                                ) : profit > 0 ? (
-                                  <span style={{ color: '#16a34a', fontWeight: '800' }}>
-                                    +{formatPrice(profit, profile?.currency, locale)}
-                                  </span>
-                                ) : profit < 0 ? (
-                                  <span style={{ color: '#dc2626', fontWeight: '800' }}>
-                                    {formatPrice(profit, profile?.currency, locale)}
-                                  </span>
-                                ) : (
-                                  <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>
-                                    {formatPrice(0, profile?.currency, locale)}
-                                  </span>
-                                )}
-                              </td>
-                            );
-                          })()}
-                          <td style={{ padding: '1.25rem 1.5rem' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                              <button 
-                                onClick={() => handleOpenSaleModal(elab)}
-                                style={{ 
-                                  background: (elab.sales && elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '#f0fdf4' : 'white', 
-                                  border: (elab.sales && elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? '1px solid #86efac' : '1px solid #e2e8f0', 
-                                  color: (elab.sales && elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : 'var(--text-main)', 
-                                  padding: '0.5rem 0.85rem', 
-                                  borderRadius: '0.5rem', 
-                                  cursor: 'pointer', 
-                                  display: 'inline-flex', 
-                                  alignItems: 'center', 
-                                  gap: '0.4rem', 
-                                  fontSize: '0.85rem', 
-                                  fontWeight: '600'
-                                }}
-                                title={t('elaboration_sales.register_sale') || "Registrar venta"}
-                              >
-                                <DollarSign size={16} color="var(--corp-green)" />
-                                {t('elaboration_sales.register_sale') || "Registrar venta"}
-                                {elab.sales && elab.sales.length > 0 && (
-                                  <span style={{ 
-                                    fontSize: '0.7rem', 
-                                    padding: '0.1rem 0.45rem', 
-                                    borderRadius: '1rem', 
-                                    background: (elab.sales.reduce((s, x) => s + (x.percentage || 0), 0) >= 99.9) ? 'var(--corp-green)' : '#f59e0b', 
-                                    color: 'white',
-                                    fontWeight: '800',
-                                    marginLeft: '0.2rem'
-                                  }}>
-                                    {Math.round(elab.sales.reduce((s, x) => s + (x.percentage || 0), 0))}%
-                                  </span>
-                                )}
-                              </button>
-                              <button 
-                                onClick={() => generateLabelPDF(elab)}
-                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
-                              >
-                                <Printer size={16} /> {t('traceability_form.label_btn') || "Etiqueta"}
-                              </button>
-                            </div>
-                          </td>
                         </tr>
                       ))}
                       {sortedElaborations.length === 0 && (
                         <tr>
-                          <td colSpan="6" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                          <td colSpan="5" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                             {t('dashboard.no_elaborations_recorded')}
                           </td>
                         </tr>
