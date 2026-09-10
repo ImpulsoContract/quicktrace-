@@ -4082,24 +4082,9 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_title')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
                           {session?.user?.role !== "WORKER" && (
-                            <>
-                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  <span>{t('dashboard.cost_header')}</span>
-                                  <span 
-                                    onClick={(e) => { 
-                                      e.stopPropagation(); 
-                                      setSelectedElaborationForCosts(null);
-                                      setIsIngredientCostsModalOpen(true); 
-                                    }} 
-                                    style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
-                                  >
-                                    {t('dashboard.assign_costs_link')}
-                                  </span>
-                                </div>
-                              </th>
-                              <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.labor_cost_header')}</th>
-                            </>
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                              {t('dashboard.cost_column_header') || "Coste"}
+                            </th>
                           )}
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                         </tr>
@@ -4150,42 +4135,56 @@ export default function ClientDashboard() {
                             </div>
                           </td>
                           <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
-                          {session?.user?.role !== "WORKER" && (
-                            <>
-                              <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                          {session?.user?.role !== "WORKER" && (() => {
+                            const rawCost = Number(el.costPrice) || 0;
+                            const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
+                            const hourlyRate = Number(el.laborCostHourlyRate) || 0;
+                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                            const totalCost = rawCost + laborCost;
+
+                            return (
+                              <td style={{ padding: '1.5rem 2rem', color: 'var(--text-main)', fontSize: '0.85rem' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                                  <span>{el.costPrice ? formatPrice(el.costPrice, profile?.currency, locale) : '-'}</span>
-                                  {el.recipe && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenRecipeCostModal(el);
-                                      }}
-                                      style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        padding: 0,
-                                        fontSize: '0.7rem',
-                                        color: 'var(--corp-green)',
-                                        cursor: 'pointer',
-                                        textDecoration: 'underline',
-                                        fontWeight: '600',
-                                        textAlign: 'left'
-                                      }}
-                                    >
-                                      {t('dashboard.assign_recipe_costs_btn') || "Asigna coste a cada ingrediente de esta receta"}
-                                    </button>
+                                  <div>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.raw_material_cost_label') || "Coste de materias primas"}: </span>
+                                    <span style={{ fontWeight: '700' }}>{formatPrice(rawCost, profile?.currency, locale)}</span>
+                                  </div>
+                                  {(el.recipe || el.recipeId) && (
+                                    <div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenRecipeCostModal(el);
+                                        }}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          padding: 0,
+                                          fontSize: '0.72rem',
+                                          color: 'var(--corp-green)',
+                                          cursor: 'pointer',
+                                          textDecoration: 'underline',
+                                          fontWeight: '600',
+                                          textAlign: 'left'
+                                        }}
+                                      >
+                                        {t('dashboard.assign_recipe_costs_btn') || "Asigna coste a cada ingrediente de esta receta"}
+                                      </button>
+                                    </div>
                                   )}
+                                  <div>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.labor_cost_label') || "Coste de personal"}: </span>
+                                    <span style={{ fontWeight: '700' }}>{formatPrice(laborCost, profile?.currency, locale)}</span>
+                                  </div>
+                                  <div style={{ fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>
+                                    <span>{t('dashboard.total_cost_label') || "Total"}: </span>
+                                    <span>{formatPrice(totalCost, profile?.currency, locale)}</span>
+                                  </div>
                                 </div>
                               </td>
-                              <td style={{ padding: '1.5rem 2rem', fontWeight: '800', color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
-                                {el.preparationTime && (el.laborCostHourlyRate || 0) > 0
-                                  ? formatPrice((parseFloat(el.preparationTime.replace(',', '.')) / 60) * el.laborCostHourlyRate, profile?.currency, locale)
-                                  : formatPrice(0, profile?.currency, locale)}
-                              </td>
-                            </>
-                          )}
+                            );
+                          })()}
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                               <button 
@@ -6242,22 +6241,7 @@ export default function ClientDashboard() {
                           {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                         </th>
                         <th onClick={() => handleSort('costPrice')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span>{t('dashboard.cost_header')} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</span>
-                            <span 
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                setSelectedElaborationForCosts(null);
-                                setIsIngredientCostsModalOpen(true); 
-                              }} 
-                              style={{ fontSize: '0.65rem', textTransform: 'none', color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
-                            >
-                              {t('dashboard.assign_costs_link')}
-                            </span>
-                          </div>
-                        </th>
-                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {t('dashboard.labor_cost_header')}
+                          {t('dashboard.cost_column_header') || "Coste"} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                         </th>
                         <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                       </tr>
@@ -6306,38 +6290,56 @@ export default function ClientDashboard() {
                               {elab.recipe.name}
                             </span>
                           </td>
-                          <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                              <span>{elab.costPrice ? formatPrice(elab.costPrice, profile?.currency, locale) : '-'}</span>
-                              {elab.recipe && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenRecipeCostModal(elab);
-                                  }}
-                                  style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    padding: 0,
-                                    fontSize: '0.7rem',
-                                    color: 'var(--corp-green)',
-                                    cursor: 'pointer',
-                                    textDecoration: 'underline',
-                                    fontWeight: '600',
-                                    textAlign: 'left'
-                                  }}
-                                >
-                                  {t('dashboard.assign_recipe_costs_btn') || "Asigna coste a cada ingrediente de esta receta"}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                          <td style={{ padding: '1.25rem 1.5rem', fontVariantNumeric: 'tabular-nums', fontWeight: '600', color: 'var(--text-main)' }}>
-                            {elab.preparationTime && (elab.laborCostHourlyRate || 0) > 0
-                              ? formatPrice((parseFloat(elab.preparationTime.replace(',', '.')) / 60) * elab.laborCostHourlyRate, profile?.currency, locale)
-                              : formatPrice(0, profile?.currency, locale)}
-                          </td>
+                          {(() => {
+                            const rawCost = Number(elab.costPrice) || 0;
+                            const prepTimeNum = elab.preparationTime ? parseFloat(elab.preparationTime.toString().replace(',', '.')) : 0;
+                            const hourlyRate = Number(elab.laborCostHourlyRate) || 0;
+                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                            const totalCost = rawCost + laborCost;
+
+                            return (
+                              <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                  <div>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.raw_material_cost_label') || "Coste de materias primas"}: </span>
+                                    <span style={{ fontWeight: '700' }}>{formatPrice(rawCost, profile?.currency, locale)}</span>
+                                  </div>
+                                  {(elab.recipe || elab.recipeId) && (
+                                    <div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenRecipeCostModal(elab);
+                                        }}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          padding: 0,
+                                          fontSize: '0.72rem',
+                                          color: 'var(--corp-green)',
+                                          cursor: 'pointer',
+                                          textDecoration: 'underline',
+                                          fontWeight: '600',
+                                          textAlign: 'left'
+                                        }}
+                                      >
+                                        {t('dashboard.assign_recipe_costs_btn') || "Asigna coste a cada ingrediente de esta receta"}
+                                      </button>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.labor_cost_label') || "Coste de personal"}: </span>
+                                    <span style={{ fontWeight: '700' }}>{formatPrice(laborCost, profile?.currency, locale)}</span>
+                                  </div>
+                                  <div style={{ fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>
+                                    <span>{t('dashboard.total_cost_label') || "Total"}: </span>
+                                    <span>{formatPrice(totalCost, profile?.currency, locale)}</span>
+                                  </div>
+                                </div>
+                              </td>
+                            );
+                          })()}
                           <td style={{ padding: '1.25rem 1.5rem' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                               <button 
