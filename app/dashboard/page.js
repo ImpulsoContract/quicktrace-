@@ -4086,6 +4086,12 @@ export default function ClientDashboard() {
                               {t('dashboard.cost_column_header') || "Coste"}
                             </th>
                           )}
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                            {t('dashboard.sales_column_header') || "Ventas"}
+                          </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                            {t('dashboard.profit_column_header') || "Beneficio"}
+                          </th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                         </tr>
                       </thead>
@@ -4182,6 +4188,102 @@ export default function ClientDashboard() {
                                     <span>{formatPrice(totalCost, profile?.currency, locale)}</span>
                                   </div>
                                 </div>
+                              </td>
+                            );
+                          })()}
+                          {/* Columna Ventas */}
+                          {(() => {
+                            const elabSales = el.sales || [];
+                            const totalSoldPct = Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
+                            const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
+
+                            return (
+                              <td style={{ padding: '1.5rem 2rem', fontSize: '0.85rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '130px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                    <span style={{ 
+                                      fontSize: '0.75rem', 
+                                      fontWeight: '800',
+                                      padding: '0.15rem 0.5rem',
+                                      borderRadius: '1rem',
+                                      background: totalSoldPct >= 99.9 ? '#dcfce7' : totalSoldPct > 0 ? '#fef3c7' : '#f1f5f9',
+                                      color: totalSoldPct >= 99.9 ? '#166534' : totalSoldPct > 0 ? '#92400e' : '#64748b'
+                                    }}>
+                                      {totalSoldPct}%
+                                    </span>
+                                    <span style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-main)' }}>
+                                      {formatPrice(totalSalesRevenue, profile?.currency, locale)}
+                                    </span>
+                                  </div>
+                                  <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{ 
+                                      height: '100%', 
+                                      width: `${Math.min(100, totalSoldPct)}%`, 
+                                      background: totalSoldPct >= 99.9 ? 'var(--corp-green)' : totalSoldPct > 0 ? '#10b981' : '#cbd5e1',
+                                      borderRadius: '3px',
+                                      transition: 'width 0.3s ease'
+                                    }} />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenSaleModal(el);
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      padding: 0,
+                                      fontSize: '0.72rem',
+                                      color: 'var(--corp-green)',
+                                      cursor: 'pointer',
+                                      textDecoration: 'underline',
+                                      fontWeight: '700',
+                                      textAlign: 'left',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.25rem',
+                                      marginTop: '0.1rem'
+                                    }}
+                                  >
+                                    <Eye size={13} /> {t('dashboard.view_sales_details') || "Ver detalles"}
+                                  </button>
+                                </div>
+                              </td>
+                            );
+                          })()}
+
+                          {/* Columna Beneficio */}
+                          {(() => {
+                            const elabSales = el.sales || [];
+                            const hasSales = elabSales.length > 0;
+                            const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
+                            
+                            const rawCost = Number(el.costPrice) || 0;
+                            const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
+                            const hourlyRate = Number(el.laborCostHourlyRate) || 0;
+                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                            const totalCost = rawCost + laborCost;
+
+                            const profit = totalSalesRevenue - totalCost;
+
+                            return (
+                              <td style={{ padding: '1.5rem 2rem', fontSize: '0.9rem', fontVariantNumeric: 'tabular-nums' }}>
+                                {!hasSales ? (
+                                  <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>-</span>
+                                ) : profit > 0 ? (
+                                  <span style={{ color: '#16a34a', fontWeight: '800' }}>
+                                    +{formatPrice(profit, profile?.currency, locale)}
+                                  </span>
+                                ) : profit < 0 ? (
+                                  <span style={{ color: '#dc2626', fontWeight: '800' }}>
+                                    {formatPrice(profit, profile?.currency, locale)}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>
+                                    {formatPrice(0, profile?.currency, locale)}
+                                  </span>
+                                )}
                               </td>
                             );
                           })()}
@@ -6243,6 +6345,12 @@ export default function ClientDashboard() {
                         <th onClick={() => handleSort('costPrice')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           {t('dashboard.cost_column_header') || "Coste"} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                         </th>
+                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {t('dashboard.sales_column_header') || "Ventas"}
+                        </th>
+                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {t('dashboard.profit_column_header') || "Beneficio"}
+                        </th>
                         <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elaboration_sales.actions_header') || t('common.actions') || "Acciones"}</th>
                       </tr>
                     </thead>
@@ -6337,6 +6445,102 @@ export default function ClientDashboard() {
                                     <span>{formatPrice(totalCost, profile?.currency, locale)}</span>
                                   </div>
                                 </div>
+                              </td>
+                            );
+                          })()}
+                          {/* Columna Ventas */}
+                          {(() => {
+                            const elabSales = elab.sales || [];
+                            const totalSoldPct = Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
+                            const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
+
+                            return (
+                              <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '130px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                    <span style={{ 
+                                      fontSize: '0.75rem', 
+                                      fontWeight: '800',
+                                      padding: '0.15rem 0.5rem',
+                                      borderRadius: '1rem',
+                                      background: totalSoldPct >= 99.9 ? '#dcfce7' : totalSoldPct > 0 ? '#fef3c7' : '#f1f5f9',
+                                      color: totalSoldPct >= 99.9 ? '#166534' : totalSoldPct > 0 ? '#92400e' : '#64748b'
+                                    }}>
+                                      {totalSoldPct}%
+                                    </span>
+                                    <span style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-main)' }}>
+                                      {formatPrice(totalSalesRevenue, profile?.currency, locale)}
+                                    </span>
+                                  </div>
+                                  <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{ 
+                                      height: '100%', 
+                                      width: `${Math.min(100, totalSoldPct)}%`, 
+                                      background: totalSoldPct >= 99.9 ? 'var(--corp-green)' : totalSoldPct > 0 ? '#10b981' : '#cbd5e1',
+                                      borderRadius: '3px',
+                                      transition: 'width 0.3s ease'
+                                    }} />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenSaleModal(elab);
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      padding: 0,
+                                      fontSize: '0.72rem',
+                                      color: 'var(--corp-green)',
+                                      cursor: 'pointer',
+                                      textDecoration: 'underline',
+                                      fontWeight: '700',
+                                      textAlign: 'left',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.25rem',
+                                      marginTop: '0.1rem'
+                                    }}
+                                  >
+                                    <Eye size={13} /> {t('dashboard.view_sales_details') || "Ver detalles"}
+                                  </button>
+                                </div>
+                              </td>
+                            );
+                          })()}
+
+                          {/* Columna Beneficio */}
+                          {(() => {
+                            const elabSales = elab.sales || [];
+                            const hasSales = elabSales.length > 0;
+                            const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
+                            
+                            const rawCost = Number(elab.costPrice) || 0;
+                            const prepTimeNum = elab.preparationTime ? parseFloat(elab.preparationTime.toString().replace(',', '.')) : 0;
+                            const hourlyRate = Number(elab.laborCostHourlyRate) || 0;
+                            const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                            const totalCost = rawCost + laborCost;
+
+                            const profit = totalSalesRevenue - totalCost;
+
+                            return (
+                              <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.9rem', fontVariantNumeric: 'tabular-nums' }}>
+                                {!hasSales ? (
+                                  <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>-</span>
+                                ) : profit > 0 ? (
+                                  <span style={{ color: '#16a34a', fontWeight: '800' }}>
+                                    +{formatPrice(profit, profile?.currency, locale)}
+                                  </span>
+                                ) : profit < 0 ? (
+                                  <span style={{ color: '#dc2626', fontWeight: '800' }}>
+                                    {formatPrice(profit, profile?.currency, locale)}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>
+                                    {formatPrice(0, profile?.currency, locale)}
+                                  </span>
+                                )}
                               </td>
                             );
                           })()}
@@ -10665,6 +10869,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   const [sales, setSales] = useState(elaboration.sales || []);
   const [loadingSales, setLoadingSales] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingSaleId, setEditingSaleId] = useState(null);
 
   const [saleForm, setSaleForm] = useState({
     customerId: "",
@@ -10700,7 +10905,34 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
     return Math.max(0, Math.round((100 - totalSold) * 100) / 100);
   }, [totalSold]);
 
+  const editingSale = useMemo(() => sales.find(s => s.id === editingSaleId) || null, [sales, editingSaleId]);
+
+  const effectiveAvailablePercentage = useMemo(() => {
+    const freed = editingSale ? (editingSale.percentage || 0) : 0;
+    return Math.max(0, Math.round((100 - (totalSold - freed)) * 100) / 100);
+  }, [totalSold, editingSale]);
+
   const isFullySold = availablePercentage <= 0.001;
+
+  const handleStartEdit = (s) => {
+    setEditingSaleId(s.id);
+    setSaleForm({
+      customerId: s.customerId ? s.customerId.toString() : "",
+      percentage: s.percentage.toString(),
+      price: s.price.toString(),
+      date: s.date ? new Date(s.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSaleId(null);
+    setSaleForm({
+      customerId: "",
+      percentage: "",
+      price: "",
+      date: new Date().toISOString().slice(0, 10)
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -10710,10 +10942,11 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
       return;
     }
 
-    if (pct > availablePercentage + 0.001) {
+    const maxAllowed = editingSaleId ? effectiveAvailablePercentage : availablePercentage;
+    if (pct > maxAllowed + 0.001) {
       alert(
         (t('elaboration_sales.percentage_exceeded') || "La suma de porcentajes no puede superar el 100%. Porcentaje disponible: {available}%")
-          .replace('{available}', availablePercentage.toString())
+          .replace('{available}', maxAllowed.toString())
       );
       return;
     }
@@ -10726,8 +10959,13 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/client/elaborations/${elaboration.id}/sales`, {
-        method: "POST",
+      const url = editingSaleId 
+        ? `/api/client/elaborations/${elaboration.id}/sales/${editingSaleId}`
+        : `/api/client/elaborations/${elaboration.id}/sales`;
+      const method = editingSaleId ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: saleForm.customerId || null,
@@ -10738,13 +10976,11 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
       });
       const data = await res.json();
       if (data.success) {
-        alert(t('elaboration_sales.sale_saved_success') || "Venta registrada correctamente");
-        setSaleForm({
-          customerId: "",
-          percentage: "",
-          price: "",
-          date: new Date().toISOString().slice(0, 10)
-        });
+        alert(editingSaleId 
+          ? (t('elaboration_sales.sale_updated_success') || "Venta actualizada correctamente")
+          : (t('elaboration_sales.sale_saved_success') || "Venta registrada correctamente")
+        );
+        handleCancelEdit();
         await fetchSales();
         if (onSaleUpdated) onSaleUpdated();
       } else {
@@ -10766,6 +11002,9 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
       });
       const data = await res.json();
       if (data.success) {
+        if (editingSaleId === saleId) {
+          handleCancelEdit();
+        }
         await fetchSales();
         if (onSaleUpdated) onSaleUpdated();
       } else {
@@ -10831,12 +11070,24 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
           </div>
         </div>
 
-        {/* Formulario para registrar nueva venta */}
-        {!isFullySold ? (
-          <form onSubmit={handleSubmit} style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
-              {t('elaboration_sales.register_sale') || "Registrar venta"}
-            </h3>
+        {/* Formulario para registrar / editar venta */}
+        {(!isFullySold || editingSaleId) ? (
+          <form onSubmit={handleSubmit} style={{ background: editingSaleId ? '#fffbeb' : 'white', padding: '1.5rem', borderRadius: '1rem', border: editingSaleId ? '1px solid #fcd34d' : '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {editingSaleId ? <Edit size={18} color="#d97706" /> : <Plus size={18} color="var(--corp-green)" />}
+                {editingSaleId ? (t('elaboration_sales.edit_sale') || "Editar venta") : (t('elaboration_sales.register_sale') || "Registrar venta")}
+              </h3>
+              {editingSaleId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  {t('elaboration_sales.cancel_edit') || "Cancelar edición"}
+                </button>
+              )}
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
               {/* Selector de Cliente (Opcional) */}
@@ -10867,17 +11118,17 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                   </label>
                   <button
                     type="button"
-                    onClick={() => setSaleForm({ ...saleForm, percentage: availablePercentage.toString() })}
+                    onClick={() => setSaleForm({ ...saleForm, percentage: (editingSaleId ? effectiveAvailablePercentage : availablePercentage).toString() })}
                     style={{ background: 'none', border: 'none', color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
                   >
-                    100% restante ({availablePercentage}%)
+                    100% restante ({editingSaleId ? effectiveAvailablePercentage : availablePercentage}%)
                   </button>
                 </div>
                 <input 
                   type="number" 
                   step="any" 
                   min="0.01" 
-                  max={availablePercentage}
+                  max={editingSaleId ? effectiveAvailablePercentage : availablePercentage}
                   className="input-field" 
                   value={saleForm.percentage} 
                   onChange={(e) => setSaleForm({ ...saleForm, percentage: e.target.value })} 
@@ -10915,7 +11166,17 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              {editingSaleId && (
+                <button 
+                  type="button" 
+                  onClick={handleCancelEdit}
+                  className="btn-secondary" 
+                  style={{ padding: '0.75rem 1.5rem', fontWeight: '700' }}
+                >
+                  {t('elaboration_sales.cancel_edit') || "Cancelar edición"}
+                </button>
+              )}
               <button 
                 type="submit" 
                 className="btn-primary" 
@@ -10923,7 +11184,8 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                 style={{ padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800' }}
               >
                 {submitting && <Loader2 size={16} className="animate-spin" />}
-                <Plus size={16} /> {t('elaboration_sales.submit_sale') || "Guardar venta"}
+                {editingSaleId ? <Save size={16} /> : <Plus size={16} />} 
+                {editingSaleId ? (t('elaboration_sales.update_sale') || "Actualizar venta") : (t('elaboration_sales.submit_sale') || "Guardar venta")}
               </button>
             </div>
           </form>
@@ -10966,7 +11228,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                 </thead>
                 <tbody>
                   {sales.map(s => (
-                    <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: editingSaleId === s.id ? '#fffbeb' : 'transparent' }}>
                       <td style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)' }}>
                         {formatDateTimeDDMMYYYY(s.date)}
                       </td>
@@ -10990,13 +11252,24 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                         {formatPrice(s.price, profile?.currency, locale)}
                       </td>
                       <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
-                        <button
-                          onClick={() => handleDeleteSale(s.id)}
-                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.35rem' }}
-                          title={t('common.delete') || "Eliminar"}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleStartEdit(s)}
+                            style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', padding: '0.35rem' }}
+                            title={t('elaboration_sales.edit_sale') || "Editar venta"}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSale(s.id)}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.35rem' }}
+                            title={t('common.delete') || "Eliminar"}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
