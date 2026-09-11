@@ -440,7 +440,9 @@
     "recipe_ingredient_costs_desc": "Asigna o modifica el precio de coste de los ingredientes de esta receta para calcular el coste de la elaboración.",
     "ingredient_column": "Ingrediente y Unidad",
     "recipes_column": "Recetas que lo usan",
-    "cost_price_column": "Precio de Coste (por unidad)"
+    "cost_price_column": "Precio de Coste (por unidad)",
+    "ingredient_cost_single_header": "Coste de materia prima",
+    "ingredient_cost_single_desc": "Asigna o modifica el precio de coste unitario de este ingrediente."
   },
   "workers": {
     "title": "Gestión de Trabajadores",
@@ -654,7 +656,11 @@
     "multiply_button": "Multiplicar",
     "reset_original_quantities_button": "Pon las cantidades originales en todos los ingredientes",
     "multiplier_placeholder": "Ej: 2, 0.5...",
-    "invalid_multiplier_alert": "Por favor, introduce un número válido mayor que 0"
+    "invalid_multiplier_alert": "Por favor, introduce un número válido mayor que 0",
+    "cost_price": "Precio de coste",
+    "ingredient_cost": "Coste",
+    "by_quantity": "por",
+    "correct_cost_price": "Corregir precio de coste"
   },
   "goods_receipt_form": {
     "product": "Producto",

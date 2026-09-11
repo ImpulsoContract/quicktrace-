@@ -440,7 +440,9 @@
     "recipe_ingredient_costs_desc": "Assign or modify the cost price of the ingredients of this recipe to calculate the elaboration cost.",
     "ingredient_column": "Ingredient and Unit",
     "recipes_column": "Recipes using it",
-    "cost_price_column": "Cost Price (per unit)"
+    "cost_price_column": "Cost Price (per unit)",
+    "ingredient_cost_single_header": "Raw material cost",
+    "ingredient_cost_single_desc": "Assign or modify the unit cost price of this ingredient."
   },
   "workers": {
     "title": "Worker Management",
@@ -654,7 +656,11 @@
     "multiply_button": "Multiply",
     "reset_original_quantities_button": "Set original quantities for all ingredients",
     "multiplier_placeholder": "E.g., 2, 0.5...",
-    "invalid_multiplier_alert": "Please enter a valid number greater than 0"
+    "invalid_multiplier_alert": "Please enter a valid number greater than 0",
+    "cost_price": "Cost price",
+    "ingredient_cost": "Cost",
+    "by_quantity": "for",
+    "correct_cost_price": "Edit cost price"
   },
   "goods_receipt_form": {
     "product": "Product",

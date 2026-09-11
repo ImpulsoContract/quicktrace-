@@ -436,7 +436,9 @@
     "recipe_ingredient_costs_desc": "Attribuez ou modifiez le prix de revient des ingrédients de cette recette pour calculer le coût de fabrication.",
     "ingredient_column": "Ingrédient et Unité",
     "recipes_column": "Recettes qui l'utilisent",
-    "cost_price_column": "Prix de Revient (par unité)"
+    "cost_price_column": "Prix de Revient (par unité)",
+    "ingredient_cost_single_header": "Coût de la matière première",
+    "ingredient_cost_single_desc": "Attribuez ou modifiez le prix de revient unitaire de cet ingrédient."
   },
   "workers": {
     "title": "Gestion des Travailleurs",
@@ -649,7 +651,11 @@
     "multiply_button": "Multiplier",
     "reset_original_quantities_button": "Mettre les quantités d'origine sur tous les ingrédients",
     "multiplier_placeholder": "Ex : 2, 0.5...",
-    "invalid_multiplier_alert": "Veuillez saisir un nombre valide supérieur à 0"
+    "invalid_multiplier_alert": "Veuillez saisir un nombre valide supérieur à 0",
+    "cost_price": "Prix de revient",
+    "ingredient_cost": "Coût",
+    "by_quantity": "pour",
+    "correct_cost_price": "Corriger le prix de revient"
   },
   "goods_receipt_form": {
     "product": "Produit",

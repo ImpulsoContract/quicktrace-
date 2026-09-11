@@ -534,6 +534,7 @@ export default function ClientDashboard() {
   const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState(false);
   const [isIngredientCostsModalOpen, setIsIngredientCostsModalOpen] = useState(false);
   const [selectedElaborationForCosts, setSelectedElaborationForCosts] = useState(null);
+  const [costModalSingleIngredient, setCostModalSingleIngredient] = useState(null);
   const [isManageMerchantTypesModalOpen, setIsManageMerchantTypesModalOpen] = useState(false);
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   const [workers, setWorkers] = useState([]);
@@ -574,6 +575,7 @@ export default function ClientDashboard() {
       fetchProviders();
       fetchCustomers();
       fetchProfile();
+      fetchIngredientPrices();
     }
   }, [status]);
 
@@ -923,7 +925,19 @@ export default function ClientDashboard() {
 
   const handleOpenRecipeCostModal = (elaboration) => {
     if (!elaboration) return;
+    setCostModalSingleIngredient(null);
     setSelectedElaborationForCosts(elaboration);
+    setIsIngredientCostsModalOpen(true);
+    fetchIngredientPrices();
+  };
+
+  const handleOpenSingleIngredientCost = (ing) => {
+    setCostModalSingleIngredient({
+      name: ing.name,
+      unit: ing.unit,
+      recipeName: selectedRecipe?.name || ""
+    });
+    setSelectedElaborationForCosts(null);
     setIsIngredientCostsModalOpen(true);
     fetchIngredientPrices();
   };
@@ -936,7 +950,7 @@ export default function ClientDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ingredients: pricesToSave,
-          recipeId: selectedElaborationForCosts?.recipeId || selectedElaborationForCosts?.recipe?.id || null,
+          recipeId: selectedRecipe?.id || selectedElaborationForCosts?.recipeId || selectedElaborationForCosts?.recipe?.id || null,
           elaborationId: selectedElaborationForCosts?.id || null
         })
       });
@@ -945,8 +959,11 @@ export default function ClientDashboard() {
         alert(t('alerts.prices_saved') || "Precios guardados correctamente");
         setIsIngredientCostsModalOpen(false);
         setSelectedElaborationForCosts(null);
-        fetchIngredientPrices();
-        fetchElaborations();
+        setCostModalSingleIngredient(null);
+        await fetchIngredientPrices();
+        if (activeTab === "historial") {
+          fetchElaborations();
+        }
       } else {
         alert(data.error || t('alerts.request_error'));
       }
@@ -1626,6 +1643,7 @@ export default function ClientDashboard() {
     setEditingElaboration(null);
     setProportionMasterId(null);
     setMultiplierFactor("");
+    fetchIngredientPrices();
     setIsReadOnlyElab(false);
     
     // Inicializar formulario con valores por defecto buscando en la lista local cargada
@@ -1713,6 +1731,7 @@ export default function ClientDashboard() {
     setSelectedRecipe({ ...elab.recipe, ingredients: sortedRecipeIngredients });
     setProportionMasterId(null);
     setMultiplierFactor("");
+    fetchIngredientPrices();
     setIsReadOnlyElab(false);
 
     if (elab.recipe?.id || elab.recipeId) {
@@ -4368,6 +4387,71 @@ export default function ClientDashboard() {
                                 {t('dashboard.maintain_proportions')}
                               </label>
                             </div>
+                            {(() => {
+                              const normIngName = (ing.name || '').trim().toLowerCase();
+                              const normIngUnit = (ing.unit || '').trim().toLowerCase();
+                              const priceObj = (ingredientPrices || []).find(p => 
+                                (p.name || '').trim().toLowerCase() === normIngName && 
+                                (p.unit || '').trim().toLowerCase() === normIngUnit
+                              ) || (ingredientPrices || []).find(p => (p.name || '').trim().toLowerCase() === normIngName);
+                              
+                              const unitCost = priceObj && priceObj.price !== undefined ? parseFloat(priceObj.price) || 0 : 0;
+                              const currentQtyVal = elaboracionForm.ingredientes[ing.id]?.cantidad !== undefined && elaboracionForm.ingredientes[ing.id]?.cantidad !== "" 
+                                ? elaboracionForm.ingredientes[ing.id]?.cantidad 
+                                : (ing.amount || "0");
+                              const qtyNum = parseFloat(String(currentQtyVal).replace(',', '.')) || 0;
+                              const totalCost = unitCost * qtyNum;
+                              const currencySymbol = ALL_CURRENCIES.find(c => c.code === (profile?.currency || "EUR"))?.symbol || "€";
+
+                              return (
+                                <div style={{ 
+                                  marginTop: '0.6rem', 
+                                  padding: '0.5rem 0.75rem', 
+                                  background: '#ffffff', 
+                                  borderRadius: '0.5rem', 
+                                  border: '1px solid #e2e8f0', 
+                                  display: 'flex', 
+                                  flexDirection: 'column', 
+                                  gap: '0.25rem', 
+                                  fontSize: '0.8rem' 
+                                }}>
+                                  <div style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('traceability_form.cost_price') || "Precio de coste"}:</span>
+                                    <span style={{ fontWeight: '700' }}>{unitCost.toFixed(2)} {currencySymbol}{ing.unit ? ` / ${ing.unit}` : ''}</span>
+                                    <span>{t('traceability_form.by_quantity') || "por"}</span>
+                                    <span style={{ fontWeight: '700' }}>{currentQtyVal}</span>
+                                  </div>
+                                  <div style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>{t('traceability_form.ingredient_cost') || "Coste"}:</span>
+                                    <span style={{ fontWeight: '800', color: 'var(--corp-green)' }}>{totalCost.toFixed(2)} {currencySymbol}</span>
+                                  </div>
+                                  {!isReadOnlyElab && (
+                                    <div style={{ marginTop: '0.2rem' }}>
+                                      <button 
+                                        type="button" 
+                                        onClick={() => handleOpenSingleIngredientCost(ing)}
+                                        style={{ 
+                                          background: 'none', 
+                                          border: 'none', 
+                                          padding: 0, 
+                                          color: '#0284c7', 
+                                          fontSize: '0.75rem', 
+                                          fontWeight: '600', 
+                                          textDecoration: 'underline', 
+                                          cursor: 'pointer', 
+                                          display: 'inline-flex', 
+                                          alignItems: 'center', 
+                                          gap: '0.25rem' 
+                                        }}
+                                      >
+                                        <Edit size={12} />
+                                        <span>{t('traceability_form.correct_cost_price') || "Corregir precio de coste"}</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       ))}
@@ -7443,10 +7527,12 @@ export default function ClientDashboard() {
           onClose={() => {
             setIsIngredientCostsModalOpen(false);
             setSelectedElaborationForCosts(null);
+            setCostModalSingleIngredient(null);
           }}
           onSave={handleSaveIngredientPrices}
           ingredientPrices={ingredientPrices}
           selectedElaboration={selectedElaborationForCosts}
+          singleIngredient={costModalSingleIngredient}
           loading={loading}
           currency={profile?.currency}
         />
@@ -8839,12 +8925,30 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
   );
 }
 
-function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElaboration, loading, currency }) {
+function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElaboration, singleIngredient, loading, currency }) {
   const { t, locale } = useI18n();
   const [localPrices, setLocalPrices] = useState([]);
 
   useEffect(() => {
     if (!ingredientPrices) return;
+
+    if (singleIngredient) {
+      const ingNameNorm = (singleIngredient.name || '').trim().toLowerCase();
+      const ingUnitNorm = (singleIngredient.unit || '').trim().toLowerCase();
+
+      const found = ingredientPrices.find(p => 
+        (p.name || '').trim().toLowerCase() === ingNameNorm &&
+        (!ingUnitNorm || (p.unit || '').trim().toLowerCase() === ingUnitNorm)
+      ) || ingredientPrices.find(p => (p.name || '').trim().toLowerCase() === ingNameNorm);
+
+      setLocalPrices([{
+        name: singleIngredient.name.trim(),
+        unit: singleIngredient.unit || found?.unit || "",
+        recipes: found?.recipes || (singleIngredient.recipeName ? [singleIngredient.recipeName] : []),
+        price: found !== undefined && found.price !== undefined ? found.price : 0
+      }]);
+      return;
+    }
 
     if (selectedElaboration) {
       const recipe = selectedElaboration.recipe;
@@ -8902,7 +9006,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
     } else {
       setLocalPrices(ingredientPrices.map(item => ({ ...item })));
     }
-  }, [ingredientPrices, selectedElaboration]);
+  }, [ingredientPrices, selectedElaboration, singleIngredient]);
 
   const handlePriceChange = (index, value) => {
     const updated = [...localPrices];
@@ -8922,14 +9026,18 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
 
         <div className="modal-header" style={{ display: 'block' }}>
           <h2 className="modal-title" style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--corp-green)', marginBottom: '0.75rem' }}>
-            {selectedElaboration 
-              ? `${t('modals.recipe_ingredient_costs_header') || "Coste de materias primas de la receta"}: ${selectedElaboration.recipe?.name || selectedElaboration.name}`
-              : t('modals.ingredient_costs_header')}
+            {singleIngredient
+              ? `${t('modals.ingredient_cost_single_header') || "Coste de materia prima"}: ${singleIngredient.name}`
+              : selectedElaboration 
+                ? `${t('modals.recipe_ingredient_costs_header') || "Coste de materias primas de la receta"}: ${selectedElaboration.recipe?.name || selectedElaboration.name}`
+                : t('modals.ingredient_costs_header')}
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
-            {selectedElaboration
-              ? (t('modals.recipe_ingredient_costs_desc') || "Asigna o modifica el precio de coste de los ingredientes de esta receta para calcular el coste de la elaboración.")
-              : t('modals.ingredient_costs_desc')}
+            {singleIngredient
+              ? (t('modals.ingredient_cost_single_desc') || "Asigna o modifica el precio de coste unitario de este ingrediente.")
+              : selectedElaboration
+                ? (t('modals.recipe_ingredient_costs_desc') || "Asigna o modifica el precio de coste de los ingredientes de esta receta para calcular el coste de la elaboración.")
+                : t('modals.ingredient_costs_desc')}
           </p>
         </div>
         
