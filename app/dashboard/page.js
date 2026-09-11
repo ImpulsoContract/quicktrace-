@@ -440,6 +440,7 @@ export default function ClientDashboard() {
   const [isSalesReportModalOpen, setIsSalesReportModalOpen] = useState(false);
   const [salesReportLoading, setSalesReportLoading] = useState(false);
   const [inventoryReportLoading, setInventoryReportLoading] = useState(false);
+  const [suggestedLotes, setSuggestedLotes] = useState({});
   const [isGoodsReportModalOpen, setIsGoodsReportModalOpen] = useState(false);
   const [reportDates, setReportDates] = useState({ 
     from: new Date().toISOString().slice(0, 10), 
@@ -1687,6 +1688,19 @@ export default function ClientDashboard() {
     } catch (e) {
       console.error("Error fetching last lotes from goods receipts:", e);
     }
+
+    // Fetch suggested lotes (last 3 from goods and last 3 from elaborations)
+    try {
+      const resLotes = await fetch(`/api/client/ingredient-lotes?recipeId=${recipe.id}`);
+      if (resLotes.ok) {
+        const jsonLotes = await resLotes.json();
+        if (jsonLotes.data) {
+          setSuggestedLotes(jsonLotes.data);
+        }
+      }
+    } catch (e) {
+      console.error("Error fetching suggested ingredient lotes:", e);
+    }
   };
 
   const handleEditElaboration = (elab) => {
@@ -1697,6 +1711,13 @@ export default function ClientDashboard() {
     setSelectedRecipe({ ...elab.recipe, ingredients: sortedRecipeIngredients });
     setProportionMasterId(null);
     setIsReadOnlyElab(false);
+
+    if (elab.recipe?.id || elab.recipeId) {
+      fetch(`/api/client/ingredient-lotes?recipeId=${elab.recipe?.id || elab.recipeId}`)
+        .then(res => res.json())
+        .then(json => { if (json.data) setSuggestedLotes(json.data); })
+        .catch(e => console.error("Error fetching suggested ingredient lotes on edit:", e));
+    }
     
     const initialIngredientes = {};
     // Map existing ingredients by name to match recipe ingredients
@@ -4107,7 +4128,7 @@ export default function ClientDashboard() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {selectedRecipe.ingredients?.map(ing => (
                         <div key={ing.id} style={{ 
-                          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignItems: 'flex-end',
+                          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignItems: 'flex-start',
                           padding: '1.5rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid var(--border)'
                         }}>
                           <div style={{ flex: 1 }}>
@@ -4128,6 +4149,84 @@ export default function ClientDashboard() {
                               required={!isReadOnlyElab && !!ing.loteMandatory} 
                               disabled={isReadOnlyElab}
                             />
+                            {(() => {
+                              const normName = ing.name ? ing.name.trim().toLowerCase() : "";
+                              const suggestions = suggestedLotes[normName] || { goods: [], elaborations: [] };
+                              const goodsLotes = suggestions.goods || [];
+                              const elabLotes = suggestions.elaborations || [];
+                              if ((goodsLotes.length === 0 && elabLotes.length === 0) || isReadOnlyElab) return null;
+
+                              return (
+                                <div style={{ marginTop: '0.45rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                  {goodsLotes.length > 0 && (
+                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.3rem', fontSize: '0.72rem' }}>
+                                      <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        <Truck size={12} style={{ color: '#0284c7' }} />
+                                        <span>{t('traceability_form.recent_goods_lotes') || "Entradas"}:</span>
+                                      </span>
+                                      {goodsLotes.map((lot, lIdx) => {
+                                        const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
+                                        return (
+                                          <button
+                                            key={`gl-${lIdx}`}
+                                            type="button"
+                                            onClick={() => handleIngredientChange(ing.id, 'lote', lot)}
+                                            title={t('traceability_form.click_to_use_lot') || "Hacer clic para usar este lote"}
+                                            style={{
+                                              background: isSelected ? 'rgba(2, 132, 199, 0.15)' : '#ffffff',
+                                              color: isSelected ? '#0369a1' : '#0284c7',
+                                              border: isSelected ? '1.5px solid #0284c7' : '1px solid #bae6fd',
+                                              borderRadius: '0.375rem',
+                                              padding: '0.15rem 0.45rem',
+                                              fontSize: '0.72rem',
+                                              fontWeight: isSelected ? '700' : '600',
+                                              cursor: 'pointer',
+                                              lineHeight: '1.2',
+                                              transition: 'all 0.15s ease'
+                                            }}
+                                          >
+                                            {lot}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                  {elabLotes.length > 0 && (
+                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.3rem', fontSize: '0.72rem' }}>
+                                      <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        <ChefHat size={12} style={{ color: 'var(--corp-green)' }} />
+                                        <span>{t('traceability_form.recent_elab_lotes') || "Elaboraciones"}:</span>
+                                      </span>
+                                      {elabLotes.map((lot, lIdx) => {
+                                        const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
+                                        return (
+                                          <button
+                                            key={`el-${lIdx}`}
+                                            type="button"
+                                            onClick={() => handleIngredientChange(ing.id, 'lote', lot)}
+                                            title={t('traceability_form.click_to_use_lot') || "Hacer clic para usar este lote"}
+                                            style={{
+                                              background: isSelected ? 'rgba(66, 98, 22, 0.15)' : '#ffffff',
+                                              color: isSelected ? '#2d450c' : 'var(--corp-green)',
+                                              border: isSelected ? '1.5px solid var(--corp-green)' : '1px solid #d9f99d',
+                                              borderRadius: '0.375rem',
+                                              padding: '0.15rem 0.45rem',
+                                              fontSize: '0.72rem',
+                                              fontWeight: isSelected ? '700' : '600',
+                                              cursor: 'pointer',
+                                              lineHeight: '1.2',
+                                              transition: 'all 0.15s ease'
+                                            }}
+                                          >
+                                            {lot}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                           <div>
                             <label className="label" style={{ fontSize: '0.75rem' }}>

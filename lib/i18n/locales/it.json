@@ -641,7 +641,10 @@
     "quantity_unit": "Unità di misura",
     "quantity_unit_placeholder": "Es: kg, unità, l...",
     "quantity_unit_help": "Questo campo viene utilizzato per la gestione delle scorte e la registrazione delle vendite di questa lavorazione.",
-    "quantity_produced_placeholder": "Es: 50, 100..."
+    "quantity_produced_placeholder": "Es: 50, 100...",
+    "recent_goods_lotes": "Entrate merci",
+    "recent_elab_lotes": "Lavorazioni",
+    "click_to_use_lot": "Clicca per usare questo lotto"
   },
   "goods_receipt_form": {
     "product": "Prodotto",

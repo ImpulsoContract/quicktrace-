@@ -646,7 +646,10 @@
     "quantity_unit": "Unidad de medida",
     "quantity_unit_placeholder": "Ej: kg, unidades, l...",
     "quantity_unit_help": "Este campo se utiliza para la gestión de stocks y el registro de ventas de esta elaboración.",
-    "quantity_produced_placeholder": "Ej: 50, 100..."
+    "quantity_produced_placeholder": "Ej: 50, 100...",
+    "recent_goods_lotes": "Entradas",
+    "recent_elab_lotes": "Elaboraciones",
+    "click_to_use_lot": "Hacer clic para usar este lote"
   },
   "goods_receipt_form": {
     "product": "Producto",
