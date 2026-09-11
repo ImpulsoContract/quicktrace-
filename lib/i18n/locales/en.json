@@ -286,7 +286,9 @@
     "out_of_stock": "Out of stock",
     "low_stock": "Low stock",
     "stock_remaining_label": "Remaining stock",
-    "sales_report": "Sales Report"
+    "sales_report": "Sales Report",
+    "view_inventory_filter": "View inventory (show only elaborations with stock)",
+    "view_inventory_pdf_btn": "View inventory in PDF"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -1138,5 +1140,15 @@
     "col_price": "Amount",
     "table_total": "TOTAL",
     "direct_sale": "Direct sale"
+  },
+  "inventory_report": {
+    "modal_title": "Inventory Report in PDF",
+    "pdf_title": "INVENTORY REPORT",
+    "generate_btn": "Generate report",
+    "all_stock_btn": "All current stock (no date filter)",
+    "stock_initial": "Quantity produced",
+    "stock_sold": "Quantity sold",
+    "stock_available": "Available stock",
+    "no_records_stock": "No elaborations with available stock found in the selected period."
   }
 }

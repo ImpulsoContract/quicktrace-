@@ -282,7 +282,9 @@
     "out_of_stock": "Esaurito",
     "low_stock": "Scorte basse",
     "stock_remaining_label": "Scorte rimanenti",
-    "sales_report": "Report vendite"
+    "sales_report": "Report vendite",
+    "view_inventory_filter": "Vedi inventario (mostra solo lavorazioni con stock)",
+    "view_inventory_pdf_btn": "Vedi inventario in PDF"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",
@@ -1133,5 +1135,15 @@
     "col_price": "Importo",
     "table_total": "TOTALE",
     "direct_sale": "Vendita diretta"
+  },
+  "inventory_report": {
+    "modal_title": "Report inventario in PDF",
+    "pdf_title": "REPORT INVENTARIO",
+    "generate_btn": "Genera report",
+    "all_stock_btn": "Tutto lo stock attuale (senza limite di data)",
+    "stock_initial": "Quantità prodotta",
+    "stock_sold": "Quantità venduta",
+    "stock_available": "Stock disponibile",
+    "no_records_stock": "Nessuna lavorazione con stock disponibile trovata per il periodo selezionato."
   }
 }

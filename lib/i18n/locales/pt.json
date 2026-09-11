@@ -285,7 +285,9 @@
     "out_of_stock": "Sem stock",
     "low_stock": "Stock baixo",
     "stock_remaining_label": "Stock restante",
-    "sales_report": "Relatório de vendas"
+    "sales_report": "Relatório de vendas",
+    "view_inventory_filter": "Ver inventário (mostrar apenas elaborações com stock)",
+    "view_inventory_pdf_btn": "Ver inventário em PDF"
   },
   "modals": {
     "cleaning_header": "Novo Registo de Limpeza",
@@ -1131,5 +1133,15 @@
     "col_price": "Valor",
     "table_total": "TOTAL",
     "direct_sale": "Venda direta"
+  },
+  "inventory_report": {
+    "modal_title": "Relatório de inventário em PDF",
+    "pdf_title": "RELATÓRIO DE INVENTÁRIO",
+    "generate_btn": "Gerar relatório",
+    "all_stock_btn": "Todo o stock atual (sem limite de data)",
+    "stock_initial": "Quantidade elaborada",
+    "stock_sold": "Quantidade vendida",
+    "stock_available": "Stock disponível",
+    "no_records_stock": "Nenhuma elaboração com stock disponível encontrada no período selecionado."
   }
 }

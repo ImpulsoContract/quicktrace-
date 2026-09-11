@@ -29,6 +29,7 @@ export async function GET(req) {
     const recipeId = searchParams.get("recipeId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const onlyWithStock = searchParams.get("onlyWithStock") === "true";
 
     const skip = (page - 1) * limit;
 
@@ -75,6 +76,52 @@ export async function GET(req) {
         end.setHours(23, 59, 59, 999);
         where.date.lte = end;
       }
+    }
+
+    if (onlyWithStock) {
+      const allMatching = await prisma.elaboration.findMany({
+        where,
+        include: {
+          recipe: {
+            include: {
+              ingredients: {
+                orderBy: [
+                  { order: 'asc' },
+                  { id: 'asc' }
+                ]
+              }
+            }
+          },
+          ingredients: true,
+          sales: {
+            include: { customer: true },
+            orderBy: { date: 'desc' }
+          }
+        },
+        orderBy: {
+          date: 'desc'
+        }
+      });
+
+      const withStock = allMatching.filter(el => {
+        const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.'));
+        if (isNaN(totalProduced) || totalProduced <= 0) return false;
+        const totalSold = (el.sales || []).reduce((sum, s) => {
+          if (s.quantity != null) return sum + s.quantity;
+          if (s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+          return sum;
+        }, 0);
+        return (totalProduced - totalSold) > 0.0001;
+      });
+
+      const paginatedData = withStock.slice(skip, skip + limit);
+      return NextResponse.json({
+        data: paginatedData,
+        total: withStock.length,
+        page,
+        limit,
+        totalPages: Math.ceil(withStock.length / limit)
+      });
     }
 
     const [total, elaborations] = await Promise.all([

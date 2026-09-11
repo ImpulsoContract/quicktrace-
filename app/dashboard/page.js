@@ -371,7 +371,8 @@ export default function ClientDashboard() {
     loteElab: "",
     startDate: "",
     endDate: "",
-    recipeId: "all"
+    recipeId: "all",
+    onlyWithStock: false
   });
   const [cleaningFilters, setCleaningFilters] = useState({ startDate: "", endDate: "" });
   const [tempFilters, setTempFilters] = useState({ startDate: "", endDate: "" });
@@ -438,6 +439,8 @@ export default function ClientDashboard() {
   const [isTraceabilityReportModalOpen, setIsTraceabilityReportModalOpen] = useState(false);
   const [isSalesReportModalOpen, setIsSalesReportModalOpen] = useState(false);
   const [salesReportLoading, setSalesReportLoading] = useState(false);
+  const [isInventoryReportModalOpen, setIsInventoryReportModalOpen] = useState(false);
+  const [inventoryReportLoading, setInventoryReportLoading] = useState(false);
   const [isGoodsReportModalOpen, setIsGoodsReportModalOpen] = useState(false);
   const [reportDates, setReportDates] = useState({ 
     from: new Date().toISOString().slice(0, 10), 
@@ -446,6 +449,10 @@ export default function ClientDashboard() {
   const [salesReportDates, setSalesReportDates] = useState({ 
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10), 
     to: new Date().toISOString().slice(0, 10) 
+  });
+  const [inventoryReportDates, setInventoryReportDates] = useState({ 
+    from: "", 
+    to: "" 
   });
   const [goodsReportDates, setGoodsReportDates] = useState({ 
     from: new Date().toISOString().slice(0, 10), 
@@ -839,7 +846,8 @@ export default function ClientDashboard() {
         loteElab: elabFilters.loteElab,
         recipeId: elabFilters.recipeId,
         startDate: elabFilters.startDate,
-        endDate: elabFilters.endDate
+        endDate: elabFilters.endDate,
+        ...(elabFilters.onlyWithStock ? { onlyWithStock: "true" } : {})
       });
       const res = await fetch(`/api/elaborations?${query}`);
       const data = await res.json();
@@ -2949,6 +2957,206 @@ export default function ClientDashboard() {
     }
   };
 
+  const generateInventoryReportPDF = async (startDate, endDate) => {
+    setInventoryReportLoading(true);
+    try {
+      const query = new URLSearchParams({
+        page: "1",
+        limit: "1000",
+        onlyWithStock: "true"
+      });
+      if (startDate) query.append("startDate", startDate);
+      if (endDate) query.append("endDate", endDate);
+
+      const res = await fetch(`/api/elaborations?${query}`);
+      if (!res.ok) {
+        throw new Error(`Error API: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const rawElabs = data.data || [];
+
+      // Filter to guarantee only positive remaining stock
+      const filtered = rawElabs.filter(el => {
+        const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.'));
+        if (isNaN(totalProduced) || totalProduced <= 0) return false;
+        const totalSold = (el.sales || []).reduce((sum, s) => {
+          if (s.quantity != null) return sum + s.quantity;
+          if (s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+          return sum;
+        }, 0);
+        return (totalProduced - totalSold) > 0.0001;
+      });
+
+      if (filtered.length === 0) {
+        alert(t('inventory_report.no_records_stock') || "No se encontraron elaboraciones con stock disponible en el período seleccionado.");
+        return;
+      }
+
+      const doc = new jsPDF();
+
+      filtered.forEach((el, index) => {
+        if (index > 0) doc.addPage();
+
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.text(t('inventory_report.pdf_title') || "INFORME DE INVENTARIO", 105, 20, { align: 'center' });
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        const dateRangeText = (startDate || endDate)
+          ? `${t('common.from')}: ${startDate ? formatDateDDMMYYYY(startDate) : "-"} ${t('common.to')}: ${endDate ? formatDateDDMMYYYY(endDate) : "-"}`
+          : (t('inventory_report.all_stock_btn') || "Stock actual disponible");
+        doc.text(dateRangeText, 105, 30, { align: 'center' });
+
+        doc.setLineWidth(0.5);
+        doc.line(20, 35, 190, 35);
+
+        // Datos de la elaboración
+        let currentY = 48;
+        doc.setFont("helvetica", "bold");
+        doc.text(t('dashboard.elaboration_recipe_header') + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(el.recipe?.name || "N/A", 90, currentY);
+        currentY += 6.5;
+
+        doc.setFont("helvetica", "bold");
+        doc.text(t('dashboard.lote') + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(el.name || "N/A", 90, currentY);
+        currentY += 6.5;
+
+        doc.setFont("helvetica", "bold");
+        doc.text(t('traceability_form.label_made_by'), 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(el.personName || "N/A", 90, currentY);
+        currentY += 6.5;
+
+        doc.setFont("helvetica", "bold");
+        doc.text(t('traceability_form.label_date') + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(formatDateTimeDDMMYYYY(el.date), 90, currentY);
+        currentY += 6.5;
+
+        const expLabel = el.recipe?.expiryType === "BEST_BEFORE" 
+          ? t('traceability_form.label_best_before') 
+          : t('traceability_form.label_expiration');
+        doc.setFont("helvetica", "bold");
+        doc.text(expLabel + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(formatDateDDMMYYYY(el.expirationDate), 90, currentY);
+        currentY += 6.5;
+
+        // Alérgenos
+        const allergensList = (el.recipe?.allergens || [])
+          .map(a => t(`allergens.list.${a}`))
+          .join(", ");
+        
+        doc.setFont("helvetica", "bold");
+        doc.text(t('allergens.title') + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(allergensList || t('modals.none'), 90, currentY);
+        currentY += 6.5;
+
+        if (el.workshopTemp) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.workshopTemp, 90, currentY);
+          currentY += 6.5;
+        }
+
+        if (el.dryingRoomIn) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.dryingRoomIn, 90, currentY);
+          currentY += 6.5;
+        }
+
+        if (el.dryingRoomOut) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.label_drying_out') || "Salida secadero") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.dryingRoomOut, 90, currentY);
+          currentY += 6.5;
+        }
+
+        // DATOS DE STOCK
+        const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.'));
+        const unit = el.quantityUnit || "";
+        const totalSold = (el.sales || []).reduce((sum, s) => {
+          if (s.quantity != null) return sum + s.quantity;
+          if (s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+          return sum;
+        }, 0);
+        const remainingStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
+        const pctSold = Math.min(100, Math.round((totalSold / totalProduced) * 100));
+
+        currentY += 2;
+        doc.setFont("helvetica", "bold");
+        doc.text((t('inventory_report.stock_initial') || "Cantidad elaborada") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${totalProduced} ${unit}`.trim(), 90, currentY);
+        currentY += 6.5;
+
+        doc.setFont("helvetica", "bold");
+        doc.text((t('inventory_report.stock_sold') || "Cantidad vendida") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${totalSold} ${unit} (${pctSold}%)`.trim(), 90, currentY);
+        currentY += 6.5;
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(66, 98, 22);
+        doc.text((t('inventory_report.stock_available') || "Stock disponible") + ":", 20, currentY);
+        doc.text(`${remainingStock} ${unit}`.trim(), 90, currentY);
+        doc.setTextColor(0, 0, 0);
+        currentY += 8;
+
+        // Tabla de ingredientes
+        doc.setFont("helvetica", "bold");
+        doc.text(t('modals.ingredients') + ":", 20, currentY);
+        
+        const tableBody = (el.ingredients || []).map(ing => [
+          ing.name,
+          ing.lote || "N/A",
+          `${ing.realAmount} ${ing.unit}`
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 4,
+          head: [[t('modals.ing_name'), t('traceability_form.lot'), t('traceability_form.real_amount')]],
+          body: tableBody,
+          theme: 'grid',
+          headStyles: { fillStyle: '#3f6212', textColor: [255, 255, 255] },
+          margin: { left: 20, right: 20 },
+          didDrawPage: (data) => {
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 20, doc.internal.pageSize.height - 12);
+          }
+        });
+
+        // Pie de página
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 20, 285);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`${index + 1} / ${filtered.length}`, 190, 285, { align: 'right' });
+      });
+
+      doc.save(`Informe_Inventario_${startDate || 'actual'}_${endDate || 'actual'}.pdf`);
+      setIsInventoryReportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating inventory report:", error);
+      alert(`${t('alerts.connection_error') || "Error de conexión"} (${error.message})`);
+    } finally {
+      setInventoryReportLoading(false);
+    }
+  };
+
   const handleIngredientChange = (ingId, field, value) => {
     if (field === 'cantidad' && ingId === proportionMasterId) {
       const oldValue = parseFloat(elaboracionForm.ingredientes[ingId].cantidad);
@@ -4099,7 +4307,7 @@ export default function ClientDashboard() {
                     <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>{t('sidebar.history')}</h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{t('dashboard.history_info')}</p>
                   </div>
-                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <button 
                       onClick={() => setIsTraceabilityReportModalOpen(true)}
                       className="btn-secondary"
@@ -4113,6 +4321,13 @@ export default function ClientDashboard() {
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                     >
                       <DollarSign size={18} /> {t('sales_report.btn_label') || "Informe de ventas"}
+                    </button>
+                    <button 
+                      onClick={() => setIsInventoryReportModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <Boxes size={18} /> {t('dashboard.view_inventory_pdf_btn') || "Ver inventario en PDF"}
                     </button>
                     <button 
                       onClick={() => setIsLabelModalOpen(true)}
@@ -4237,9 +4452,39 @@ export default function ClientDashboard() {
                   </select>
                 </div>
 
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setElabFilters(prev => ({ ...prev, onlyWithStock: !prev.onlyWithStock }));
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.75rem',
+                      fontSize: '0.82rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      width: '100%',
+                      transition: 'all 0.2s',
+                      backgroundColor: elabFilters.onlyWithStock ? 'var(--corp-green)' : 'rgba(66, 98, 22, 0.08)',
+                      color: elabFilters.onlyWithStock ? '#ffffff' : 'var(--corp-green)',
+                      border: elabFilters.onlyWithStock ? '1px solid var(--corp-green)' : '1px solid rgba(66, 98, 22, 0.2)',
+                      boxShadow: elabFilters.onlyWithStock ? '0 4px 10px rgba(66, 98, 22, 0.25)' : 'none'
+                    }}
+                  >
+                    <Boxes size={18} />
+                    <span>{t('dashboard.view_inventory_filter') || "Ver inventario (mostrar solo elaboraciones con stock)"}</span>
+                  </button>
+                </div>
+
                 <button 
                   onClick={() => {
-                    setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all" });
+                    setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all", onlyWithStock: false });
                     setCurrentPage(1);
                   }}
                   style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
@@ -7673,6 +7918,76 @@ export default function ClientDashboard() {
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
                   {salesReportLoading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('sales_report.generate_btn') || "Generar informe"}</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isInventoryReportModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                  <Boxes color="var(--corp-green)" />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('inventory_report.modal_title') || "Informe de inventario en PDF"}</h2>
+              </div>
+              <button 
+                onClick={() => setIsInventoryReportModalOpen(false)}
+                className="btn-icon"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label className="label">{t('common.from')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={inventoryReportDates.from}
+                  onChange={(e) => setInventoryReportDates({...inventoryReportDates, from: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="label">{t('common.to')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={inventoryReportDates.to}
+                  onChange={(e) => setInventoryReportDates({...inventoryReportDates, to: e.target.value})}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => generateInventoryReportPDF(inventoryReportDates.from, inventoryReportDates.to)}
+                  disabled={inventoryReportLoading}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem' }}
+                >
+                  {inventoryReportLoading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('inventory_report.generate_btn') || "Generar informe"}</>}
+                </button>
+                <button 
+                  type="button"
+                  className="btn-secondary" 
+                  onClick={() => generateInventoryReportPDF("", "")}
+                  disabled={inventoryReportLoading}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem', padding: '0.75rem' }}
+                >
+                  <Boxes size={16} /> {t('inventory_report.all_stock_btn') || "Todo el stock actual (sin límite de fecha)"}
+                </button>
+                <button 
+                  className="btn-secondary" 
+                  onClick={() => setIsInventoryReportModalOpen(false)}
+                  style={{ border: 'none', color: 'var(--text-muted)', background: 'none', cursor: 'pointer', padding: '0.25rem' }}
+                >
+                  {t('dashboard.cancel')}
                 </button>
               </div>
             </div>

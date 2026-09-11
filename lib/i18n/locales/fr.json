@@ -282,7 +282,9 @@
     "out_of_stock": "Rupture de stock",
     "low_stock": "Stock faible",
     "stock_remaining_label": "Stock restant",
-    "sales_report": "Rapport des ventes"
+    "sales_report": "Rapport des ventes",
+    "view_inventory_filter": "Voir l'inventaire (afficher uniquement les fabrications en stock)",
+    "view_inventory_pdf_btn": "Voir l'inventaire en PDF"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",
@@ -1133,5 +1135,15 @@
     "col_price": "Montant",
     "table_total": "TOTAL",
     "direct_sale": "Vente directe"
+  },
+  "inventory_report": {
+    "modal_title": "Rapport d'inventaire en PDF",
+    "pdf_title": "RAPPORT D'INVENTAIRE",
+    "generate_btn": "Générer le rapport",
+    "all_stock_btn": "Tout le stock actuel (sans limite de date)",
+    "stock_initial": "Quantité produite",
+    "stock_sold": "Quantité vendue",
+    "stock_available": "Stock disponible",
+    "no_records_stock": "Aucune fabrication avec stock disponible trouvée pour la période sélectionnée."
   }
 }
