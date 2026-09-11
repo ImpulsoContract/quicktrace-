@@ -233,14 +233,21 @@ export async function POST(req) {
 
     const priceMap = {};
     existingPrices.forEach(p => {
-      priceMap[`${p.name.toLowerCase()}_${p.unit.toLowerCase()}`] = p.price;
+      const nameKey = (p.name || '').trim().toLowerCase();
+      const unitKey = (p.unit || '').trim().toLowerCase();
+      priceMap[`${nameKey}_${unitKey}`] = p.price;
+      if (!priceMap[nameKey]) {
+        priceMap[nameKey] = p.price;
+      }
     });
 
     let totalCost = 0;
     ingredients.forEach(ing => {
-      const lookupKey = `${ing.name.toLowerCase()}_${ing.unit.toLowerCase()}`;
-      const price = priceMap[lookupKey] || 0;
-      const amount = parseFloat(ing.realAmount.toString().replace(',', '.')) || 0;
+      const nameKey = (ing.name || '').trim().toLowerCase();
+      const unitKey = (ing.unit || '').trim().toLowerCase();
+      const lookupKey = `${nameKey}_${unitKey}`;
+      const price = priceMap[lookupKey] !== undefined ? priceMap[lookupKey] : (priceMap[nameKey] || 0);
+      const amount = parseFloat((ing.realAmount || 0).toString().replace(',', '.')) || 0;
       totalCost += amount * price;
     });
 
@@ -331,7 +338,12 @@ export async function PATCH(req) {
 
     const priceMap = {};
     existingPrices.forEach(p => {
-      priceMap[`${p.name.toLowerCase()}_${p.unit.toLowerCase()}`] = p.price;
+      const nameKey = (p.name || '').trim().toLowerCase();
+      const unitKey = (p.unit || '').trim().toLowerCase();
+      priceMap[`${nameKey}_${unitKey}`] = p.price;
+      if (!priceMap[nameKey]) {
+        priceMap[nameKey] = p.price;
+      }
     });
 
     const updateData = {
@@ -353,9 +365,11 @@ export async function PATCH(req) {
     if (ingredients) {
       let totalCost = 0;
       ingredients.forEach(ing => {
-        const lookupKey = `${ing.name.toLowerCase()}_${ing.unit.toLowerCase()}`;
-        const price = priceMap[lookupKey] || 0;
-        const amount = parseFloat(ing.realAmount.toString().replace(',', '.')) || 0;
+        const nameKey = (ing.name || '').trim().toLowerCase();
+        const unitKey = (ing.unit || '').trim().toLowerCase();
+        const lookupKey = `${nameKey}_${unitKey}`;
+        const price = priceMap[lookupKey] !== undefined ? priceMap[lookupKey] : (priceMap[nameKey] || 0);
+        const amount = parseFloat((ing.realAmount || 0).toString().replace(',', '.')) || 0;
         totalCost += amount * price;
       });
       updateData.costPrice = totalCost;

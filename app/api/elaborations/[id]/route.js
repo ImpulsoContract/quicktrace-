@@ -3,6 +3,10 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { toTitleCase } from "@/lib/utils";
+import {
+  processUpdatedElaborationStock,
+  processDeletedElaborationsStock
+} from "@/lib/stock-utils";
 
 export async function PATCH(req, { params }) {
   try {
@@ -40,11 +44,39 @@ export async function PATCH(req, { params }) {
     // Verificar que la elaboración pertenece al cliente
     const existingElab = await prisma.elaboration.findUnique({
       where: { id: parseInt(id) },
-      include: { recipe: true }
+      include: { recipe: true, ingredients: true }
     });
 
     if (!existingElab || existingElab.recipe.clientProfileId !== profile.id) {
       return NextResponse.json({ error: "No autorizado para modificar esta elaboración" }, { status: 403 });
+    }
+
+    // Calculate Cost Price if ingredients are provided
+    let totalCost = undefined;
+    if (ingredients && Array.isArray(ingredients)) {
+      const existingPrices = await prisma.ingredientPrice.findMany({
+        where: { clientProfileId: profile.id }
+      });
+
+      const priceMap = {};
+      existingPrices.forEach(p => {
+        const nameKey = (p.name || '').trim().toLowerCase();
+        const unitKey = (p.unit || '').trim().toLowerCase();
+        priceMap[`${nameKey}_${unitKey}`] = p.price;
+        if (!priceMap[nameKey]) {
+          priceMap[nameKey] = p.price;
+        }
+      });
+
+      totalCost = 0;
+      ingredients.forEach(ing => {
+        const nameKey = (ing.name || '').trim().toLowerCase();
+        const unitKey = (ing.unit || '').trim().toLowerCase();
+        const lookupKey = `${nameKey}_${unitKey}`;
+        const price = priceMap[lookupKey] !== undefined ? priceMap[lookupKey] : (priceMap[nameKey] || 0);
+        const amount = parseFloat((ing.realAmount || 0).toString().replace(',', '.')) || 0;
+        totalCost += amount * price;
+      });
     }
 
     // Update elaboration and recreate ingredients (simpler than syncing for this case)
@@ -64,6 +96,7 @@ export async function PATCH(req, { params }) {
         netWeight: netWeight !== undefined ? netWeight : undefined,
         unitPrice: unitPrice !== undefined ? (parseFloat(unitPrice?.toString().replace(',', '.')) || 0) : undefined,
         extraInfo: extraInfo !== undefined ? extraInfo : undefined,
+        ...(totalCost !== undefined ? { costPrice: totalCost } : {}),
         ...(ingredients && Array.isArray(ingredients) ? {
           ingredients: {
             deleteMany: {},
@@ -91,6 +124,11 @@ export async function PATCH(req, { params }) {
       }
     });
 
+    // Update stock levels
+    if (ingredients && Array.isArray(ingredients)) {
+      await processUpdatedElaborationStock(profile.id, existingElab.ingredients || [], ingredients);
+    }
+
     return NextResponse.json(elaboration);
   } catch (error) {
     console.error(`Error PATCH /api/elaborations/${params.id}:`, error);
@@ -117,7 +155,7 @@ export async function DELETE(req, { params }) {
     // Verificar que la elaboración pertenece al cliente
     const existingElab = await prisma.elaboration.findUnique({
       where: { id: parseInt(id) },
-      include: { recipe: true }
+      include: { recipe: true, ingredients: true }
     });
 
     if (!existingElab || existingElab.recipe.clientProfileId !== profile.id) {
@@ -127,6 +165,11 @@ export async function DELETE(req, { params }) {
     await prisma.elaboration.delete({
       where: { id: parseInt(id) }
     });
+
+    // Add back quantities to stock
+    if (existingElab.ingredients && existingElab.ingredients.length > 0) {
+      await processDeletedElaborationsStock(profile.id, [existingElab]);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
