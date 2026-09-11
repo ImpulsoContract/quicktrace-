@@ -8192,34 +8192,78 @@ export default function ClientDashboard() {
           }
           .recipe-ingredient-row {
             display: grid !important;
-            grid-template-columns: 1fr auto !important;
+            grid-template-columns: auto 1fr auto !important;
             grid-template-areas:
-              "handle delete"
-              "name name"
-              "amount amount"
-              "unit unit"
-              "checks checks" !important;
-            gap: 0.85rem !important;
-            align-items: center !important;
-            padding: 1rem !important;
+              "handle name delete"
+              "handle amount amount"
+              "handle unit unit"
+              "handle checks checks" !important;
+            gap: 0.75rem !important;
+            align-items: start !important;
+            padding: 0.85rem !important;
           }
           .recipe-ing-handle {
             grid-area: handle !important;
             display: flex !important;
-            flex-direction: row !important;
+            flex-direction: column !important;
             justify-content: flex-start !important;
             align-items: center !important;
-            gap: 0.75rem !important;
+            gap: 0.5rem !important;
+            padding-top: 0.35rem !important;
+            padding-right: 0.6rem !important;
+            border-right: 1px solid #e2e8f0 !important;
+            align-self: stretch !important;
           }
           .recipe-ing-arrows {
             display: flex !important;
-            flex-direction: row !important;
-            gap: 0.5rem !important;
+            flex-direction: column !important;
+            gap: 0.35rem !important;
+            align-items: center !important;
+          }
+          .recipe-ing-arrows button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1 !important;
+            cursor: pointer !important;
+            touch-action: manipulation !important;
+          }
+          .recipe-ing-arrows button:disabled {
+            opacity: 0.35 !important;
+            background: transparent !important;
+            border-color: transparent !important;
+            cursor: default !important;
           }
           .recipe-ing-name { grid-area: name !important; width: 100% !important; }
           .recipe-ing-amount { grid-area: amount !important; width: 100% !important; }
           .recipe-ing-unit { grid-area: unit !important; width: 100% !important; }
-          .recipe-ing-delete { grid-area: delete !important; display: flex !important; justify-content: flex-end !important; }
+          .recipe-ing-delete {
+            grid-area: delete !important;
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: flex-start !important;
+            padding-top: 1.25rem !important;
+          }
+          .recipe-ing-delete:empty {
+            display: none !important;
+          }
+          .recipe-ing-delete button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            background: #fef2f2 !important;
+            color: #ef4444 !important;
+            border: 1px solid #fecaca !important;
+            cursor: pointer !important;
+          }
           .recipe-ing-checks {
             grid-area: checks !important;
             display: flex !important;
