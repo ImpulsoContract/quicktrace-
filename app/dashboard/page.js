@@ -4374,19 +4374,6 @@ export default function ClientDashboard() {
                               required={!isReadOnlyElab && !!ing.quantityMandatory} 
                               disabled={isReadOnlyElab}
                             />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                              <input 
-                                type="checkbox" 
-                                id={`prop-${ing.id}`}
-                                checked={proportionMasterId === ing.id}
-                                onChange={(e) => setProportionMasterId(e.target.checked ? ing.id : null)}
-                                style={{ cursor: 'pointer' }}
-                                disabled={isReadOnlyElab}
-                              />
-                              <label htmlFor={`prop-${ing.id}`} style={{ fontSize: '0.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                                {t('dashboard.maintain_proportions')}
-                              </label>
-                            </div>
                             {(() => {
                               const normIngName = (ing.name || '').trim().toLowerCase();
                               const normIngUnit = (ing.unit || '').trim().toLowerCase();
