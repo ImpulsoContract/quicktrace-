@@ -649,7 +649,12 @@
     "quantity_produced_placeholder": "E.g., 50, 100...",
     "recent_goods_lotes": "Goods receipts",
     "recent_elab_lotes": "Elaborations",
-    "click_to_use_lot": "Click to use this lot"
+    "click_to_use_lot": "Click to use this lot",
+    "multiply_quantities_label": "Multiply the quantities of all ingredients by this number",
+    "multiply_button": "Multiply",
+    "reset_original_quantities_button": "Set original quantities for all ingredients",
+    "multiplier_placeholder": "E.g., 2, 0.5...",
+    "invalid_multiplier_alert": "Please enter a valid number greater than 0"
   },
   "goods_receipt_form": {
     "product": "Product",

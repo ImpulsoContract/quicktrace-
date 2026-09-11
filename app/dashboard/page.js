@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { 
-  ChefHat, History, LogOut, 
+  ChefHat, History, LogOut, Calculator, RotateCcw,
   Search, ClipboardList, Clock,
   ArrowLeft, Save, Beaker, Menu,
   ChevronRight, Loader2, AlertCircle, Trash2,
@@ -441,6 +441,7 @@ export default function ClientDashboard() {
   const [salesReportLoading, setSalesReportLoading] = useState(false);
   const [inventoryReportLoading, setInventoryReportLoading] = useState(false);
   const [suggestedLotes, setSuggestedLotes] = useState({});
+  const [multiplierFactor, setMultiplierFactor] = useState("");
   const [isGoodsReportModalOpen, setIsGoodsReportModalOpen] = useState(false);
   const [reportDates, setReportDates] = useState({ 
     from: new Date().toISOString().slice(0, 10), 
@@ -1624,6 +1625,7 @@ export default function ClientDashboard() {
     setSelectedRecipe({ ...recipe, ingredients: sortedRecipeIngredients });
     setEditingElaboration(null);
     setProportionMasterId(null);
+    setMultiplierFactor("");
     setIsReadOnlyElab(false);
     
     // Inicializar formulario con valores por defecto buscando en la lista local cargada
@@ -1710,6 +1712,7 @@ export default function ClientDashboard() {
       : [];
     setSelectedRecipe({ ...elab.recipe, ingredients: sortedRecipeIngredients });
     setProportionMasterId(null);
+    setMultiplierFactor("");
     setIsReadOnlyElab(false);
 
     if (elab.recipe?.id || elab.recipeId) {
@@ -3364,6 +3367,57 @@ export default function ClientDashboard() {
     }));
   };
 
+  const handleMultiplyQuantities = () => {
+    const rawFactor = String(multiplierFactor).trim().replace(',', '.');
+    const factorNum = parseFloat(rawFactor);
+    if (isNaN(factorNum) || factorNum <= 0) {
+      alert(t('traceability_form.invalid_multiplier_alert') || "Por favor, introduce un número válido mayor que 0");
+      return;
+    }
+
+    setProportionMasterId(null);
+    setElaboracionForm(prev => {
+      const updatedIngredientes = { ...prev.ingredientes };
+      (selectedRecipe?.ingredients || []).forEach(ing => {
+        const currentQtyStr = updatedIngredientes[ing.id]?.cantidad;
+        const baseNum = currentQtyStr !== undefined && currentQtyStr !== ""
+          ? parseFloat(String(currentQtyStr).replace(',', '.'))
+          : parseFloat(String(ing.amount).replace(',', '.'));
+
+        if (!isNaN(baseNum)) {
+          const multiplied = baseNum * factorNum;
+          const rounded = Math.round((multiplied + Number.EPSILON) * 10000) / 10000;
+          updatedIngredientes[ing.id] = {
+            ...updatedIngredientes[ing.id],
+            cantidad: String(rounded)
+          };
+        }
+      });
+      return {
+        ...prev,
+        ingredientes: updatedIngredientes
+      };
+    });
+  };
+
+  const handleResetOriginalQuantities = () => {
+    setProportionMasterId(null);
+    setElaboracionForm(prev => {
+      const updatedIngredientes = { ...prev.ingredientes };
+      (selectedRecipe?.ingredients || []).forEach(ing => {
+        updatedIngredientes[ing.id] = {
+          ...updatedIngredientes[ing.id],
+          cantidad: ing.amount !== undefined && ing.amount !== null ? String(ing.amount) : ""
+        };
+      });
+      return {
+        ...prev,
+        ingredientes: updatedIngredientes
+      };
+    });
+    setMultiplierFactor("");
+  };
+
   const handleBulkDelete = async () => {
     setLoading(true);
     try {
@@ -4121,6 +4175,65 @@ export default function ClientDashboard() {
                           >
                             <Trash2 size={16} /> {t('traceability_form.clear_lotes')}
                           </button>
+                        </div>
+                      )}
+
+                      {!isReadOnlyElab && (
+                        <div style={{
+                          width: '100%',
+                          background: '#f8fafc',
+                          padding: '1rem 1.25rem',
+                          borderRadius: '0.75rem',
+                          border: '1px solid var(--border)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.75rem'
+                        }}>
+                          <label className="label" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: 0 }}>
+                            {t('traceability_form.multiply_quantities_label') || "Multiplica las cantidades de todos los ingredientes por este número"}
+                          </label>
+                          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <input 
+                                type="text" 
+                                className="input-field" 
+                                style={{ width: '130px', padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                                placeholder={t('traceability_form.multiplier_placeholder') || "Ej: 2, 0.5..."}
+                                value={multiplierFactor}
+                                onChange={(e) => setMultiplierFactor(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleMultiplyQuantities();
+                                  }
+                                }}
+                              />
+                              <button 
+                                type="button" 
+                                onClick={handleMultiplyQuantities}
+                                style={{ 
+                                  display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', 
+                                  borderRadius: '0.5rem', background: 'var(--corp-green)', color: '#ffffff', 
+                                  border: 'none', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' 
+                                }}
+                              >
+                                <Calculator size={15} /> {t('traceability_form.multiply_button') || "Multiplicar"}
+                              </button>
+                            </div>
+
+                            <button 
+                              type="button" 
+                              onClick={handleResetOriginalQuantities}
+                              style={{ 
+                                display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', 
+                                borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#ffffff', 
+                                color: 'var(--text-main)', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' 
+                              }}
+                            >
+                              <RotateCcw size={15} style={{ color: 'var(--corp-green)' }} />
+                              {t('traceability_form.reset_original_quantities_button') || "Pon las cantidades originales en todos los ingredientes"}
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>

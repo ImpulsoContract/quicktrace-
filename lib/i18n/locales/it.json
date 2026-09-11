@@ -644,7 +644,12 @@
     "quantity_produced_placeholder": "Es: 50, 100...",
     "recent_goods_lotes": "Entrate merci",
     "recent_elab_lotes": "Lavorazioni",
-    "click_to_use_lot": "Clicca per usare questo lotto"
+    "click_to_use_lot": "Clicca per usare questo lotto",
+    "multiply_quantities_label": "Moltiplica le quantità di tutti gli ingredienti per questo numero",
+    "multiply_button": "Moltiplica",
+    "reset_original_quantities_button": "Imposta le quantità originali per tutti gli ingredienti",
+    "multiplier_placeholder": "Es: 2, 0.5...",
+    "invalid_multiplier_alert": "Per favore, inserisci un numero valido maggiore di 0"
   },
   "goods_receipt_form": {
     "product": "Prodotto",
