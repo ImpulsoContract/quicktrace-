@@ -82,6 +82,24 @@ body {
 }
 
 /* Responsividad */
+.desktop-elabs-table {
+  display: block;
+}
+.mobile-elabs-cards {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .desktop-elabs-table {
+    display: none !important;
+  }
+  .mobile-elabs-cards {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+  }
+}
+
 @media (max-width: 768px) {
   .desktop-only { display: none; }
   .mobile-full { width: 100% !important; }

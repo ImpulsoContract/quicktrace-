@@ -4776,7 +4776,7 @@ export default function ClientDashboard() {
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                  <div style={{ overflowX: 'auto' }}>
+                  <div className="desktop-elabs-table" style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                       <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                         <tr>
@@ -5043,8 +5043,326 @@ export default function ClientDashboard() {
                   </table>
                 </div>
 
-                  {/* Pagination Controls */}
-                  <div style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderTop: '1px solid var(--border)' }}>
+                {/* Mobile & Tablet Card View (Modo Bloque) */}
+                <div className="mobile-elabs-cards" style={{ padding: '1.25rem' }}>
+                  {/* Barra de selección masiva */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem 1rem',
+                    background: '#f8fafc',
+                    borderRadius: '0.75rem',
+                    border: '1px solid var(--border)',
+                    marginBottom: '0.25rem'
+                  }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                      <input 
+                        type="checkbox" 
+                        style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
+                        checked={elaborations.length > 0 && elaborations.every(el => selectedRecords.includes(el.id))}
+                        onChange={() => toggleSelectAll(elaborations)}
+                      />
+                      <span>{t('common.select_all') || "Seleccionar todas"}</span>
+                    </label>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                      {selectedRecords.length} / {elaborations.length} {t('common.selected', { count: selectedRecords.length }) || (t('common.selected') || "{count} seleccionados").replace('{count}', selectedRecords.length)}
+                    </span>
+                  </div>
+
+                  {/* Tarjetas de elaboraciones en modo bloque */}
+                  {elaborations.map(el => {
+                    const isSelected = selectedRecords.includes(el.id);
+                    return (
+                      <div
+                        key={`card-${el.id}`}
+                        style={{
+                          background: isSelected ? '#f0fdf4' : '#ffffff',
+                          border: isSelected ? '2px solid var(--corp-green)' : '1px solid var(--border)',
+                          borderRadius: '1rem',
+                          padding: '1.25rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '1rem',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {/* Cabecera de la tarjeta: Selección, Fecha y Botón Etiqueta */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
+                              checked={isSelected}
+                              onChange={() => toggleSelectRecord(el.id)}
+                            />
+                            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748b' }}>SEL.</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600', marginLeft: '0.25rem' }}>
+                              📅 {formatDateDDMMYYYY(el.date || el.createdAt)}
+                            </span>
+                          </label>
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              generateLabelPDF(el);
+                            }}
+                            style={{ 
+                              background: 'white', 
+                              border: '1px solid #cbd5e1', 
+                              color: 'var(--text-main)', 
+                              padding: '0.35rem 0.75rem', 
+                              borderRadius: '0.375rem', 
+                              cursor: 'pointer', 
+                              display: 'inline-flex', 
+                              alignItems: 'center', 
+                              gap: '0.35rem', 
+                              fontSize: '0.75rem', 
+                              fontWeight: '600',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                            }}
+                            title={t('traceability_form.label_btn') || "Etiqueta"}
+                          >
+                            <Printer size={14} color="var(--corp-green)" /> {t('traceability_form.label_btn') || "Etiqueta"}
+                          </button>
+                        </div>
+
+                        {/* Nombre de Elaboración y Receta */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--corp-green)', letterSpacing: '-0.01em' }}>
+                            {el.name}
+                          </span>
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{t('dashboard.recipe_name') || "Receta"}:</span>
+                            <span style={{ fontWeight: '700' }}>{el.recipe?.name || '-'}</span>
+                          </div>
+                        </div>
+
+                        {/* Enlaces de acciones */}
+                        <div style={{ display: 'flex', gap: '0.85rem', fontSize: '0.8rem', flexWrap: 'wrap', padding: '0.35rem 0', borderTop: '1px dashed #f1f5f9', borderBottom: '1px dashed #f1f5f9' }}>
+                          <span 
+                            onClick={() => handleViewElaborationOnly(el)} 
+                            style={{ color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                          >
+                            {t('dashboard.view_elaboration') || "Ver elaboración"}
+                          </span>
+                          <span 
+                            onClick={() => handleExportElaborationPDF(el)} 
+                            style={{ color: '#0ea5e9', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                          >
+                            {t('dashboard.export_pdf_short') || "Exportar PDF"}
+                          </span>
+                          <span 
+                            onClick={() => handleEditElaboration(el)} 
+                            style={{ color: '#475569', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                          >
+                            {t('common.edit') || "Modificar"}
+                          </span>
+                          <span 
+                            onClick={() => handleDeleteElaboration(el.id)} 
+                            style={{ color: '#ef4444', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                          >
+                            {t('common.delete') || "Eliminar"}
+                          </span>
+                        </div>
+
+                        {/* Bloque de Costes */}
+                        {session?.user?.role !== "WORKER" && (() => {
+                          const rawCost = Number(el.costPrice) || 0;
+                          const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
+                          const hourlyRate = Number(el.laborCostHourlyRate) || 0;
+                          const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                          const totalCost = rawCost + laborCost;
+
+                          return (
+                            <div style={{
+                              padding: '0.85rem 1rem',
+                              background: '#f8fafc',
+                              borderRadius: '0.75rem',
+                              border: '1px solid var(--border)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.35rem',
+                              fontSize: '0.82rem'
+                            }}>
+                              <div style={{ fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.15rem' }}>
+                                {t('dashboard.cost_column_header') || "Coste"}
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.raw_material_cost_label') || "Coste de materias primas"}:</span>
+                                <span style={{ fontWeight: '700' }}>{formatPrice(rawCost, profile?.currency, locale)}</span>
+                              </div>
+                              {(el.recipe || el.recipeId) && (
+                                <div style={{ marginTop: '0.1rem', marginBottom: '0.1rem' }}>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenRecipeCostModal(el);
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      padding: 0,
+                                      fontSize: '0.75rem',
+                                      color: 'var(--corp-green)',
+                                      cursor: 'pointer',
+                                      textDecoration: 'underline',
+                                      fontWeight: '600',
+                                      textAlign: 'left'
+                                    }}
+                                  >
+                                    {t('dashboard.assign_recipe_costs_btn') || "Asigna coste a cada ingrediente de esta receta"}
+                                  </button>
+                                </div>
+                              )}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.labor_cost_label') || "Coste de personal"}:</span>
+                                <span style={{ fontWeight: '700' }}>{formatPrice(laborCost, profile?.currency, locale)}</span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '0.35rem', marginTop: '0.2rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                                <span>{t('dashboard.total_cost_label') || "Total"}:</span>
+                                <span>{formatPrice(totalCost, profile?.currency, locale)}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Bloque de Ventas y Stock */}
+                        {(() => {
+                          const elabSales = el.sales || [];
+                          const hasSales = elabSales.length > 0;
+                          const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
+                          
+                          const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.'));
+                          const hasProducedQty = !isNaN(totalProduced) && totalProduced > 0;
+                          const unit = el.quantityUnit || "";
+
+                          const totalSoldQty = elabSales.reduce((sum, s) => {
+                            if (s.quantity != null) return sum + s.quantity;
+                            if (hasProducedQty && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+                            return sum;
+                          }, 0);
+
+                          const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty) * 1000) / 1000) : null;
+                          const pctSold = hasProducedQty ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
+                          const isOutOfStock = hasProducedQty && remainingStock <= 0.0001;
+                          const isLowStock = hasProducedQty && !isOutOfStock && remainingStock <= totalProduced * 0.2;
+
+                          const rawCost = Number(el.costPrice) || 0;
+                          const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
+                          const hourlyRate = Number(el.laborCostHourlyRate) || 0;
+                          const laborCost = (prepTimeNum > 0 && hourlyRate > 0) ? (prepTimeNum / 60) * hourlyRate : 0;
+                          const totalCost = rawCost + laborCost;
+
+                          const profit = totalSalesRevenue - totalCost;
+
+                          return (
+                            <div style={{
+                              padding: '0.85rem 1rem',
+                              background: '#f8fafc',
+                              borderRadius: '0.75rem',
+                              border: '1px solid var(--border)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.5rem',
+                              fontSize: '0.82rem'
+                            }}>
+                              <div style={{ fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                                {t('dashboard.sales_column_header') || "Ventas"}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <span style={{ 
+                                  fontSize: '0.75rem', 
+                                  fontWeight: '800',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '1rem',
+                                  background: hasProducedQty ? (isOutOfStock ? '#fef2f2' : isLowStock ? '#fef3c7' : '#dcfce7') : '#f1f5f9',
+                                  color: hasProducedQty ? (isOutOfStock ? '#991b1b' : isLowStock ? '#92400e' : '#166534') : '#64748b'
+                                }}>
+                                  {hasProducedQty 
+                                    ? (isOutOfStock 
+                                        ? `${t('dashboard.out_of_stock') || "Sin stock"} (0 ${unit})`.trim()
+                                        : `${t('dashboard.stock_label') || "Stock"}: ${remainingStock} ${unit}`.trim())
+                                    : `${t('dashboard.stock_label') || "Stock"}: -`
+                                  }
+                                </span>
+                                <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                                  {formatPrice(totalSalesRevenue, profile?.currency, locale)}
+                                </span>
+                              </div>
+                              <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ 
+                                  height: '100%', 
+                                  width: `${Math.min(100, pctSold)}%`, 
+                                  background: isOutOfStock ? '#ef4444' : pctSold > 0 ? '#10b981' : '#cbd5e1',
+                                  borderRadius: '3px',
+                                  transition: 'width 0.3s ease'
+                                }} />
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>{t('dashboard.profit_label') || "Beneficio"}:</span>
+                                {!hasSales ? (
+                                  <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>-</span>
+                                ) : profit > 0 ? (
+                                  <span style={{ color: '#16a34a', fontWeight: '800' }}>
+                                    +{formatPrice(profit, profile?.currency, locale)}
+                                  </span>
+                                ) : profit < 0 ? (
+                                  <span style={{ color: '#dc2626', fontWeight: '800' }}>
+                                    {formatPrice(profit, profile?.currency, locale)}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>
+                                    {formatPrice(0, profile?.currency, locale)}
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.35rem' }}>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenSaleModal(el);
+                                  }}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 0,
+                                    fontSize: '0.8rem',
+                                    color: 'var(--corp-green)',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    fontWeight: '700',
+                                    textAlign: 'left',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.35rem'
+                                  }}
+                                >
+                                  <Eye size={14} /> {t('dashboard.view_register_sales') || "Ver/registrar ventas"}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination Controls */}
+                <div style={{ 
+                  padding: '1.25rem 1.5rem', 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                  background: '#f8fafc', 
+                  borderTop: '1px solid var(--border)' 
+                }}>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
                       {t('dashboard.showing_info')
                         .replace('{start}', ((currentPage - 1) * itemsPerPage + 1).toString())
@@ -7777,6 +8095,13 @@ export default function ClientDashboard() {
         .animate-spin { animation: spin 1.5s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+        .desktop-elabs-table {
+          display: block;
+        }
+        .mobile-elabs-cards {
+          display: none;
+        }
+
         @media (max-width: 1024px) {
           .flex-responsive { flex-direction: column !important; }
           .mobile-header { display: flex !important; }
@@ -7815,6 +8140,16 @@ export default function ClientDashboard() {
           
           .action-buttons-mobile > * {
             width: 100% !important;
+          }
+
+          .desktop-elabs-table {
+            display: none !important;
+          }
+
+          .mobile-elabs-cards {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1.25rem !important;
           }
         }
 
