@@ -439,7 +439,6 @@ export default function ClientDashboard() {
   const [isTraceabilityReportModalOpen, setIsTraceabilityReportModalOpen] = useState(false);
   const [isSalesReportModalOpen, setIsSalesReportModalOpen] = useState(false);
   const [salesReportLoading, setSalesReportLoading] = useState(false);
-  const [isInventoryReportModalOpen, setIsInventoryReportModalOpen] = useState(false);
   const [inventoryReportLoading, setInventoryReportLoading] = useState(false);
   const [isGoodsReportModalOpen, setIsGoodsReportModalOpen] = useState(false);
   const [reportDates, setReportDates] = useState({ 
@@ -449,10 +448,6 @@ export default function ClientDashboard() {
   const [salesReportDates, setSalesReportDates] = useState({ 
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10), 
     to: new Date().toISOString().slice(0, 10) 
-  });
-  const [inventoryReportDates, setInventoryReportDates] = useState({ 
-    from: "", 
-    to: "" 
   });
   const [goodsReportDates, setGoodsReportDates] = useState({ 
     from: new Date().toISOString().slice(0, 10), 
@@ -2957,7 +2952,7 @@ export default function ClientDashboard() {
     }
   };
 
-  const generateInventoryReportPDF = async (startDate, endDate) => {
+  const generateInventoryReportPDF = async () => {
     setInventoryReportLoading(true);
     try {
       const query = new URLSearchParams({
@@ -2965,8 +2960,6 @@ export default function ClientDashboard() {
         limit: "1000",
         onlyWithStock: "true"
       });
-      if (startDate) query.append("startDate", startDate);
-      if (endDate) query.append("endDate", endDate);
 
       const res = await fetch(`/api/elaborations?${query}`);
       if (!res.ok) {
@@ -2989,7 +2982,7 @@ export default function ClientDashboard() {
       });
 
       if (filtered.length === 0) {
-        alert(t('inventory_report.no_records_stock') || "No se encontraron elaboraciones con stock disponible en el período seleccionado.");
+        alert(t('inventory_report.no_records_stock') || "No se encontraron elaboraciones con stock disponible en este momento.");
         return;
       }
 
@@ -3004,9 +2997,7 @@ export default function ClientDashboard() {
 
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
-        const dateRangeText = (startDate || endDate)
-          ? `${t('common.from')}: ${startDate ? formatDateDDMMYYYY(startDate) : "-"} ${t('common.to')}: ${endDate ? formatDateDDMMYYYY(endDate) : "-"}`
-          : (t('inventory_report.all_stock_btn') || "Stock actual disponible");
+        const dateRangeText = `${t('inventory_report.all_stock_btn') || "Stock actual disponible"} (${formatDateDDMMYYYY(new Date())})`;
         doc.text(dateRangeText, 105, 30, { align: 'center' });
 
         doc.setLineWidth(0.5);
@@ -3147,8 +3138,7 @@ export default function ClientDashboard() {
         doc.text(`${index + 1} / ${filtered.length}`, 190, 285, { align: 'right' });
       });
 
-      doc.save(`Informe_Inventario_${startDate || 'actual'}_${endDate || 'actual'}.pdf`);
-      setIsInventoryReportModalOpen(false);
+      doc.save(`Informe_Inventario_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (error) {
       console.error("Error generating inventory report:", error);
       alert(`${t('alerts.connection_error') || "Error de conexión"} (${error.message})`);
@@ -4323,11 +4313,13 @@ export default function ClientDashboard() {
                       <DollarSign size={18} /> {t('sales_report.btn_label') || "Informe de ventas"}
                     </button>
                     <button 
-                      onClick={() => setIsInventoryReportModalOpen(true)}
+                      onClick={generateInventoryReportPDF}
+                      disabled={inventoryReportLoading}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                     >
-                      <Boxes size={18} /> {t('dashboard.view_inventory_pdf_btn') || "Ver inventario en PDF"}
+                      {inventoryReportLoading ? <Loader2 className="animate-spin" size={18} /> : <Boxes size={18} />}
+                      <span>{inventoryReportLoading ? (t('inventory_report.generating') || "Generando...") : (t('dashboard.view_inventory_pdf_btn') || "Ver inventario en PDF")}</span>
                     </button>
                     <button 
                       onClick={() => setIsLabelModalOpen(true)}
@@ -7918,76 +7910,6 @@ export default function ClientDashboard() {
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
                   {salesReportLoading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('sales_report.generate_btn') || "Generar informe"}</>}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isInventoryReportModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
-                  <Boxes color="var(--corp-green)" />
-                </div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('inventory_report.modal_title') || "Informe de inventario en PDF"}</h2>
-              </div>
-              <button 
-                onClick={() => setIsInventoryReportModalOpen(false)}
-                className="btn-icon"
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div>
-                <label className="label">{t('common.from')}</label>
-                <input 
-                  type="date" 
-                  className="input-field"
-                  value={inventoryReportDates.from}
-                  onChange={(e) => setInventoryReportDates({...inventoryReportDates, from: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="label">{t('common.to')}</label>
-                <input 
-                  type="date" 
-                  className="input-field"
-                  value={inventoryReportDates.to}
-                  onChange={(e) => setInventoryReportDates({...inventoryReportDates, to: e.target.value})}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button 
-                  className="btn-primary" 
-                  onClick={() => generateInventoryReportPDF(inventoryReportDates.from, inventoryReportDates.to)}
-                  disabled={inventoryReportLoading}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem' }}
-                >
-                  {inventoryReportLoading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('inventory_report.generate_btn') || "Generar informe"}</>}
-                </button>
-                <button 
-                  type="button"
-                  className="btn-secondary" 
-                  onClick={() => generateInventoryReportPDF("", "")}
-                  disabled={inventoryReportLoading}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem', padding: '0.75rem' }}
-                >
-                  <Boxes size={16} /> {t('inventory_report.all_stock_btn') || "Todo el stock actual (sin límite de fecha)"}
-                </button>
-                <button 
-                  className="btn-secondary" 
-                  onClick={() => setIsInventoryReportModalOpen(false)}
-                  style={{ border: 'none', color: 'var(--text-muted)', background: 'none', cursor: 'pointer', padding: '0.25rem' }}
-                >
-                  {t('dashboard.cancel')}
                 </button>
               </div>
             </div>

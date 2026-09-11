@@ -1142,6 +1142,8 @@
     "stock_initial": "Quantidade elaborada",
     "stock_sold": "Quantidade vendida",
     "stock_available": "Stock disponível",
-    "no_records_stock": "Nenhuma elaboração com stock disponível encontrada no período selecionado."
+    "no_records_stock": "Nenhuma elaboração com stock disponível encontrada no período selecionado.",
+    "generating": "A gerar...",
+    "current_stock_label": "Stock atual disponível"
   }
 }

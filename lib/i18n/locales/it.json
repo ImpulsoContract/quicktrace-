@@ -1144,6 +1144,8 @@
     "stock_initial": "Quantità prodotta",
     "stock_sold": "Quantità venduta",
     "stock_available": "Stock disponibile",
-    "no_records_stock": "Nessuna lavorazione con stock disponibile trovata per il periodo selezionato."
+    "no_records_stock": "Nessuna lavorazione con stock disponibile trovata per il periodo selezionato.",
+    "generating": "Generazione...",
+    "current_stock_label": "Stock attuale disponibile"
   }
 }
