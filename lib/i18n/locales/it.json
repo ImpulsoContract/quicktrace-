@@ -281,7 +281,8 @@
     "stock_label": "Scorte",
     "out_of_stock": "Esaurito",
     "low_stock": "Scorte basse",
-    "stock_remaining_label": "Scorte rimanenti"
+    "stock_remaining_label": "Scorte rimanenti",
+    "sales_report": "Report vendite"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",
@@ -1114,5 +1115,23 @@
     "saving_initial_stock": "Salvataggio...",
     "initial_stock_saved_success": "Scorte iniziali salvate con successo.",
     "initial_stock_invalid": "Inserisci una quantità iniziale valida maggiore di 0."
+  },
+  "sales_report": {
+    "btn_label": "Report vendite",
+    "modal_title": "Report vendite",
+    "generate_btn": "Genera report",
+    "generating_btn": "Generazione report...",
+    "no_records": "Nessuna vendita registrata nell'intervallo di date selezionato.",
+    "pdf_title": "REPORT VENDITE",
+    "summary_total_sales": "Totale vendite",
+    "summary_total_revenue": "Fatturato totale",
+    "col_date": "Data",
+    "col_lot": "Lotto",
+    "col_recipe": "Ricetta / Prodotto",
+    "col_customer": "Cliente",
+    "col_quantity": "Quantità",
+    "col_price": "Importo",
+    "table_total": "TOTALE",
+    "direct_sale": "Vendita diretta"
   }
 }

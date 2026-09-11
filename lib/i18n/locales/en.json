@@ -285,7 +285,8 @@
     "stock_label": "Stock",
     "out_of_stock": "Out of stock",
     "low_stock": "Low stock",
-    "stock_remaining_label": "Remaining stock"
+    "stock_remaining_label": "Remaining stock",
+    "sales_report": "Sales Report"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -1119,5 +1120,23 @@
     "saving_initial_stock": "Saving...",
     "initial_stock_saved_success": "Initial stock saved successfully.",
     "initial_stock_invalid": "Please enter a valid initial quantity greater than 0."
+  },
+  "sales_report": {
+    "btn_label": "Sales Report",
+    "modal_title": "Sales Report",
+    "generate_btn": "Generate report",
+    "generating_btn": "Generating report...",
+    "no_records": "No sales records found in the selected date range.",
+    "pdf_title": "SALES REPORT",
+    "summary_total_sales": "Total sales",
+    "summary_total_revenue": "Total revenue",
+    "col_date": "Date",
+    "col_lot": "Lot",
+    "col_recipe": "Recipe / Product",
+    "col_customer": "Customer",
+    "col_quantity": "Quantity",
+    "col_price": "Amount",
+    "table_total": "TOTAL",
+    "direct_sale": "Direct sale"
   }
 }

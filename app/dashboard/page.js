@@ -436,9 +436,15 @@ export default function ClientDashboard() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
   const [isTraceabilityReportModalOpen, setIsTraceabilityReportModalOpen] = useState(false);
+  const [isSalesReportModalOpen, setIsSalesReportModalOpen] = useState(false);
+  const [salesReportLoading, setSalesReportLoading] = useState(false);
   const [isGoodsReportModalOpen, setIsGoodsReportModalOpen] = useState(false);
   const [reportDates, setReportDates] = useState({ 
     from: new Date().toISOString().slice(0, 10), 
+    to: new Date().toISOString().slice(0, 10) 
+  });
+  const [salesReportDates, setSalesReportDates] = useState({ 
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10), 
     to: new Date().toISOString().slice(0, 10) 
   });
   const [goodsReportDates, setGoodsReportDates] = useState({ 
@@ -2796,6 +2802,153 @@ export default function ClientDashboard() {
     }
   };
 
+  const generateSalesReportPDF = async (startDate, endDate) => {
+    setSalesReportLoading(true);
+    try {
+      const query = new URLSearchParams();
+      if (startDate) query.append("startDate", startDate);
+      if (endDate) query.append("endDate", endDate);
+
+      const res = await fetch(`/api/client/sales/report?${query.toString()}`);
+      if (!res.ok) {
+        throw new Error(`Error API: ${res.status}`);
+      }
+
+      const json = await res.json();
+      const sales = json.data || [];
+
+      if (sales.length === 0) {
+        alert(t('sales_report.no_records') || "No se encontraron ventas registradas en el rango de fechas seleccionado.");
+        return;
+      }
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(66, 98, 22); // corp-green #426216
+      doc.text(t('sales_report.pdf_title') || "INFORME DE VENTAS", 14, 22);
+
+      // Subtitle & Profile Info
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100);
+      doc.text(`${t('common.from')}: ${formatDateDDMMYYYY(startDate)}   ${t('common.to')}: ${formatDateDDMMYYYY(endDate)}`, 14, 30);
+      if (profile?.razonSocial || profile?.nif) {
+        doc.text(`${profile?.razonSocial || ''}${profile?.razonSocial && profile?.nif ? ' - ' : ''}${profile?.nif || ''}`, 14, 35);
+      }
+
+      // Calculations for summary
+      const totalSalesCount = sales.length;
+      const totalRevenue = sales.reduce((acc, s) => acc + (parseFloat(s.price) || 0), 0);
+
+      // Summary Box
+      const startBoxY = (profile?.razonSocial || profile?.nif) ? 42 : 38;
+      doc.setFillColor(245, 247, 240);
+      doc.roundedRect(14, startBoxY, pageWidth - 28, 16, 2, 2, 'F');
+      doc.setDrawColor(210, 220, 200);
+      doc.roundedRect(14, startBoxY, pageWidth - 28, 16, 2, 2, 'D');
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(66, 98, 22);
+      doc.text(`${t('sales_report.summary_total_sales') || "Total ventas"}:`, 20, startBoxY + 10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(30);
+      doc.text(`${totalSalesCount}`, 50, startBoxY + 10);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(66, 98, 22);
+      doc.text(`${t('sales_report.summary_total_revenue') || "Total facturado"}:`, 85, startBoxY + 10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(22, 163, 74); // #16a34a
+      doc.text(`${formatPrice(totalRevenue, profile?.currency, locale)}`, 125, startBoxY + 10);
+
+      // Table Data
+      const tableHeaders = [
+        t('sales_report.col_date') || "Fecha",
+        t('sales_report.col_lot') || "Lote",
+        t('sales_report.col_recipe') || "Receta / Producto",
+        t('sales_report.col_customer') || "Cliente",
+        t('sales_report.col_quantity') || "Cantidad",
+        t('sales_report.col_price') || "Importe"
+      ];
+
+      const tableRows = sales.map(sale => {
+        const dateStr = formatDateTimeDDMMYYYY(sale.date);
+        const lotStr = sale.elaboration?.name || "-";
+        const recipeStr = sale.elaboration?.recipe?.name || "-";
+        const customerStr = sale.customer?.commercialName || sale.customer?.fiscalName || t('sales_report.direct_sale') || "Venta directa";
+        const qtyStr = sale.quantity != null 
+          ? `${sale.quantity} ${sale.elaboration?.quantityUnit || ''}`.trim()
+          : `${sale.percentage}%`;
+        const priceStr = formatPrice(sale.price, profile?.currency, locale);
+
+        return [dateStr, lotStr, recipeStr, customerStr, qtyStr, priceStr];
+      });
+
+      autoTable(doc, {
+        head: [tableHeaders],
+        body: tableRows,
+        startY: startBoxY + 22,
+        theme: 'striped',
+        headStyles: { 
+          fillColor: [66, 98, 22], 
+          textColor: [255, 255, 255], 
+          fontStyle: 'bold',
+          fontSize: 9
+        },
+        styles: { 
+          fontSize: 8.5, 
+          cellPadding: 3, 
+          valign: 'middle' 
+        },
+        alternateRowStyles: { 
+          fillColor: [248, 250, 245] 
+        },
+        columnStyles: {
+          0: { cellWidth: 32 },
+          1: { cellWidth: 26 },
+          2: { cellWidth: 38 },
+          3: { cellWidth: 42 },
+          4: { cellWidth: 22, halign: 'right' },
+          5: { cellWidth: 24, halign: 'right', fontStyle: 'bold' }
+        },
+        foot: [[
+          "", 
+          "", 
+          "", 
+          "", 
+          t('sales_report.table_total') || "TOTAL", 
+          formatPrice(totalRevenue, profile?.currency, locale)
+        ]],
+        footStyles: {
+          fillColor: [240, 243, 235],
+          textColor: [66, 98, 22],
+          fontStyle: 'bold',
+          halign: 'right',
+          fontSize: 9
+        },
+        didDrawPage: (data) => {
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 14, doc.internal.pageSize.height - 10);
+          doc.text(`${data.pageNumber}`, doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10, { align: 'right' });
+        }
+      });
+
+      doc.save(`Informe_Ventas_${startDate || 'todas'}_${endDate || 'todas'}.pdf`);
+      setIsSalesReportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating sales report:", error);
+      alert(`${t('alerts.connection_error') || "Error de conexión"} (${error.message})`);
+    } finally {
+      setSalesReportLoading(false);
+    }
+  };
+
   const handleIngredientChange = (ingId, field, value) => {
     if (field === 'cantidad' && ingId === proportionMasterId) {
       const oldValue = parseFloat(elaboracionForm.ingredientes[ingId].cantidad);
@@ -3953,6 +4106,13 @@ export default function ClientDashboard() {
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                     >
                       <FileText size={18} /> {t('dashboard.traceability_report')}
+                    </button>
+                    <button 
+                      onClick={() => setIsSalesReportModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <DollarSign size={18} /> {t('sales_report.btn_label') || "Informe de ventas"}
                     </button>
                     <button 
                       onClick={() => setIsLabelModalOpen(true)}
@@ -7452,6 +7612,67 @@ export default function ClientDashboard() {
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
                   {loading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('dashboard.generate_report')}</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSalesReportModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(66, 98, 22, 0.1)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                  <DollarSign color="var(--corp-green)" />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('sales_report.modal_title') || "Informe de ventas"}</h2>
+              </div>
+              <button 
+                onClick={() => setIsSalesReportModalOpen(false)}
+                className="btn-icon"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label className="label">{t('common.from')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={salesReportDates.from}
+                  onChange={(e) => setSalesReportDates({...salesReportDates, from: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="label">{t('common.to')}</label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={salesReportDates.to}
+                  onChange={(e) => setSalesReportDates({...salesReportDates, to: e.target.value})}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn-secondary" 
+                  onClick={() => setIsSalesReportModalOpen(false)}
+                  style={{ flex: 1 }}
+                >
+                  {t('dashboard.cancel')}
+                </button>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => generateSalesReportPDF(salesReportDates.from, salesReportDates.to)}
+                  disabled={salesReportLoading}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  {salesReportLoading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={18} /> {t('sales_report.generate_btn') || "Generar informe"}</>}
                 </button>
               </div>
             </div>

@@ -285,7 +285,8 @@
     "stock_label": "Stock",
     "out_of_stock": "Sin stock",
     "low_stock": "Stock bajo",
-    "stock_remaining_label": "Stock restante"
+    "stock_remaining_label": "Stock restante",
+    "sales_report": "Informe de ventas"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -1119,5 +1120,23 @@
     "saving_initial_stock": "Guardando...",
     "initial_stock_saved_success": "Stock inicial guardado correctamente.",
     "initial_stock_invalid": "Por favor, introduce una cantidad inicial válida mayor que 0."
+  },
+  "sales_report": {
+    "btn_label": "Informe de ventas",
+    "modal_title": "Informe de ventas",
+    "generate_btn": "Generar informe",
+    "generating_btn": "Generando informe...",
+    "no_records": "No se encontraron ventas registradas en el rango de fechas seleccionado.",
+    "pdf_title": "INFORME DE VENTAS",
+    "summary_total_sales": "Total ventas",
+    "summary_total_revenue": "Total facturado",
+    "col_date": "Fecha",
+    "col_lot": "Lote",
+    "col_recipe": "Receta / Producto",
+    "col_customer": "Cliente",
+    "col_quantity": "Cantidad",
+    "col_price": "Importe",
+    "table_total": "TOTAL",
+    "direct_sale": "Venta directa"
   }
 }

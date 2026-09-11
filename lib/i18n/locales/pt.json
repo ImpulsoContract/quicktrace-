@@ -284,7 +284,8 @@
     "stock_label": "Stock",
     "out_of_stock": "Sem stock",
     "low_stock": "Stock baixo",
-    "stock_remaining_label": "Stock restante"
+    "stock_remaining_label": "Stock restante",
+    "sales_report": "Relatório de vendas"
   },
   "modals": {
     "cleaning_header": "Novo Registo de Limpeza",
@@ -1112,5 +1113,23 @@
     "saving_initial_stock": "A guardar...",
     "initial_stock_saved_success": "Stock inicial guardado com sucesso.",
     "initial_stock_invalid": "Por favor, introduza uma quantidade inicial válida superior a 0."
+  },
+  "sales_report": {
+    "btn_label": "Relatório de vendas",
+    "modal_title": "Relatório de vendas",
+    "generate_btn": "Gerar relatório",
+    "generating_btn": "A gerar relatório...",
+    "no_records": "Nenhuma venda registada no intervalo de datas selecionado.",
+    "pdf_title": "RELATÓRIO DE VENDAS",
+    "summary_total_sales": "Total de vendas",
+    "summary_total_revenue": "Faturação total",
+    "col_date": "Data",
+    "col_lot": "Lote",
+    "col_recipe": "Receita / Produto",
+    "col_customer": "Cliente",
+    "col_quantity": "Quantidade",
+    "col_price": "Valor",
+    "table_total": "TOTAL",
+    "direct_sale": "Venda direta"
   }
 }

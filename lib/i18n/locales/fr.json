@@ -281,7 +281,8 @@
     "stock_label": "Stock",
     "out_of_stock": "Rupture de stock",
     "low_stock": "Stock faible",
-    "stock_remaining_label": "Stock restant"
+    "stock_remaining_label": "Stock restant",
+    "sales_report": "Rapport des ventes"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",
@@ -1114,5 +1115,23 @@
     "saving_initial_stock": "Enregistrement...",
     "initial_stock_saved_success": "Stock initial enregistré avec succès.",
     "initial_stock_invalid": "Veuillez saisir une quantité initiale valide supérieure à 0."
+  },
+  "sales_report": {
+    "btn_label": "Rapport des ventes",
+    "modal_title": "Rapport des ventes",
+    "generate_btn": "Générer le rapport",
+    "generating_btn": "Génération du rapport...",
+    "no_records": "Aucune vente enregistrée dans la plage de dates sélectionnée.",
+    "pdf_title": "RAPPORT DES VENTES",
+    "summary_total_sales": "Total des ventes",
+    "summary_total_revenue": "Chiffre d'affaires total",
+    "col_date": "Date",
+    "col_lot": "Lot",
+    "col_recipe": "Recette / Produit",
+    "col_customer": "Client",
+    "col_quantity": "Quantité",
+    "col_price": "Montant",
+    "table_total": "TOTAL",
+    "direct_sale": "Vente directe"
   }
 }
