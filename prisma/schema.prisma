@@ -292,6 +292,7 @@ model Elaboration {
   sales       ElaborationSale[]
 
   quantityProduced String?
+  quantityUnit     String?
   netWeight        String?
   unitPrice            Float?            @default(0)
   costPrice            Float?            @default(0)
@@ -309,6 +310,7 @@ model ElaborationSale {
   elaboration     Elaboration   @relation(fields: [elaborationId], references: [id], onDelete: Cascade)
   customerId      Int?
   customer        Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  quantity        Float?        // Cantidad vendida de la elaboración
   percentage      Float         // Porcentaje de la elaboración vendido (ej: 25.0)
   price           Float         // Precio de venta
   date            DateTime      @default(now())

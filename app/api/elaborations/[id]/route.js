@@ -22,6 +22,9 @@ export async function PATCH(req, { params }) {
       workshopTemp,
       preparationTime,
       unitPrice,
+      quantityProduced,
+      quantityUnit,
+      netWeight,
       extraInfo
     } = data;
 
@@ -56,6 +59,9 @@ export async function PATCH(req, { params }) {
         dryingRoomOut: dryingRoomOut !== undefined ? dryingRoomOut : undefined,
         workshopTemp: workshopTemp !== undefined ? workshopTemp : undefined,
         preparationTime: preparationTime !== undefined ? preparationTime : undefined,
+        quantityProduced: quantityProduced !== undefined ? quantityProduced : undefined,
+        quantityUnit: quantityUnit !== undefined ? quantityUnit : undefined,
+        netWeight: netWeight !== undefined ? netWeight : undefined,
         unitPrice: unitPrice !== undefined ? (parseFloat(unitPrice?.toString().replace(',', '.')) || 0) : undefined,
         extraInfo: extraInfo !== undefined ? extraInfo : undefined,
         ingredients: {

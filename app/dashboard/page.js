@@ -457,6 +457,7 @@ export default function ClientDashboard() {
     workshopTemp: "",
     preparationTime: "",
     quantityProduced: "",
+    quantityUnit: "",
     netWeight: "",
     unitPrice: "",
     extraInfo: "",
@@ -1634,6 +1635,7 @@ export default function ClientDashboard() {
       date: currentDateTime,
       expirationDate: expirationDate,
       quantityProduced: "",
+      quantityUnit: "",
       netWeight: "",
       unitPrice: "",
       workshopTemp: "",
@@ -1708,6 +1710,7 @@ export default function ClientDashboard() {
       workshopTemp: elab.workshopTemp || "",
       preparationTime: elab.preparationTime || "",
       quantityProduced: elab.quantityProduced || "",
+      quantityUnit: elab.quantityUnit || "",
       netWeight: elab.netWeight || "",
       unitPrice: elab.unitPrice || "",
       extraInfo: elab.extraInfo || "",
@@ -2908,6 +2911,7 @@ export default function ClientDashboard() {
           workshopTemp: elaboracionForm.workshopTemp,
           preparationTime: elaboracionForm.preparationTime,
           quantityProduced: elaboracionForm.quantityProduced,
+          quantityUnit: elaboracionForm.quantityUnit,
           netWeight: elaboracionForm.netWeight,
           unitPrice: elaboracionForm.unitPrice,
           extraInfo: elaboracionForm.extraInfo,
@@ -3560,13 +3564,37 @@ export default function ClientDashboard() {
                     <div>
                       <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.quantity_produced')}</label>
                       <input 
-                        type="text" 
+                        type="number" 
+                        step="any"
+                        min="0"
                         className="input-field" 
                         value={elaboracionForm.quantityProduced} 
-                        onChange={(e) => setElaboracionForm({...elaboracionForm, quantityProduced: e.target.value})}
-                        placeholder="Ej: 50 kg, 100 unidades..."
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || !isNaN(Number(val.replace(',', '.')))) {
+                            setElaboracionForm({...elaboracionForm, quantityProduced: val});
+                          }
+                        }}
+                        placeholder={t('traceability_form.quantity_produced_placeholder') || "Ej: 50, 100..."}
                         disabled={isReadOnlyElab}
                       />
+                    </div>
+
+                    <div>
+                      <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                        {t('traceability_form.quantity_unit') || "Unidad de medida"}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.quantityUnit || ""} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, quantityUnit: e.target.value})}
+                        placeholder={t('traceability_form.quantity_unit_placeholder') || "Ej: kg, unidades, l..."}
+                        disabled={isReadOnlyElab}
+                      />
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
+                        {t('traceability_form.quantity_unit_help') || "Este campo se utiliza para la gestión de stocks y el registro de ventas de esta elaboración."}
+                      </p>
                     </div>
 
                     <div>
@@ -4222,9 +4250,23 @@ export default function ClientDashboard() {
                           {(() => {
                             const elabSales = el.sales || [];
                             const hasSales = elabSales.length > 0;
-                            const totalSoldPct = Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
                             const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
                             
+                            const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.'));
+                            const hasProducedQty = !isNaN(totalProduced) && totalProduced > 0;
+                            const unit = el.quantityUnit || "";
+
+                            const totalSoldQty = elabSales.reduce((sum, s) => {
+                              if (s.quantity != null) return sum + s.quantity;
+                              if (hasProducedQty && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+                              return sum;
+                            }, 0);
+
+                            const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty) * 1000) / 1000) : null;
+                            const pctSold = hasProducedQty ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
+                            const isOutOfStock = hasProducedQty && remainingStock <= 0.0001;
+                            const isLowStock = hasProducedQty && !isOutOfStock && remainingStock <= totalProduced * 0.2;
+
                             const rawCost = Number(el.costPrice) || 0;
                             const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
                             const hourlyRate = Number(el.laborCostHourlyRate) || 0;
@@ -4235,17 +4277,22 @@ export default function ClientDashboard() {
 
                             return (
                               <td style={{ padding: '1.5rem 2rem', fontSize: '0.85rem' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '140px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '150px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                                     <span style={{ 
                                       fontSize: '0.75rem', 
                                       fontWeight: '800',
                                       padding: '0.15rem 0.5rem',
                                       borderRadius: '1rem',
-                                      background: totalSoldPct >= 99.9 ? '#dcfce7' : totalSoldPct > 0 ? '#fef3c7' : '#f1f5f9',
-                                      color: totalSoldPct >= 99.9 ? '#166534' : totalSoldPct > 0 ? '#92400e' : '#64748b'
+                                      background: hasProducedQty ? (isOutOfStock ? '#fef2f2' : isLowStock ? '#fef3c7' : '#dcfce7') : '#f1f5f9',
+                                      color: hasProducedQty ? (isOutOfStock ? '#991b1b' : isLowStock ? '#92400e' : '#166534') : '#64748b'
                                     }}>
-                                      {totalSoldPct}%
+                                      {hasProducedQty 
+                                        ? (isOutOfStock 
+                                            ? `${t('dashboard.out_of_stock') || "Sin stock"} (0 ${unit})`.trim()
+                                            : `${t('dashboard.stock_label') || "Stock"}: ${remainingStock} ${unit}`.trim())
+                                        : `${t('dashboard.stock_label') || "Stock"}: -`
+                                      }
                                     </span>
                                     <span style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-main)' }}>
                                       {formatPrice(totalSalesRevenue, profile?.currency, locale)}
@@ -4254,8 +4301,8 @@ export default function ClientDashboard() {
                                   <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
                                     <div style={{ 
                                       height: '100%', 
-                                      width: `${Math.min(100, totalSoldPct)}%`, 
-                                      background: totalSoldPct >= 99.9 ? 'var(--corp-green)' : totalSoldPct > 0 ? '#10b981' : '#cbd5e1',
+                                      width: `${Math.min(100, pctSold)}%`, 
+                                      background: isOutOfStock ? '#ef4444' : pctSold > 0 ? '#10b981' : '#cbd5e1',
                                       borderRadius: '3px',
                                       transition: 'width 0.3s ease'
                                     }} />
@@ -6481,9 +6528,23 @@ export default function ClientDashboard() {
                           {(() => {
                             const elabSales = elab.sales || [];
                             const hasSales = elabSales.length > 0;
-                            const totalSoldPct = Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
                             const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
                             
+                            const totalProduced = parseFloat(elab.quantityProduced?.toString().replace(',', '.'));
+                            const hasProducedQty = !isNaN(totalProduced) && totalProduced > 0;
+                            const unit = elab.quantityUnit || "";
+
+                            const totalSoldQty = elabSales.reduce((sum, s) => {
+                              if (s.quantity != null) return sum + s.quantity;
+                              if (hasProducedQty && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+                              return sum;
+                            }, 0);
+
+                            const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty) * 1000) / 1000) : null;
+                            const pctSold = hasProducedQty ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
+                            const isOutOfStock = hasProducedQty && remainingStock <= 0.0001;
+                            const isLowStock = hasProducedQty && !isOutOfStock && remainingStock <= totalProduced * 0.2;
+
                             const rawCost = Number(elab.costPrice) || 0;
                             const prepTimeNum = elab.preparationTime ? parseFloat(elab.preparationTime.toString().replace(',', '.')) : 0;
                             const hourlyRate = Number(elab.laborCostHourlyRate) || 0;
@@ -6494,17 +6555,22 @@ export default function ClientDashboard() {
 
                             return (
                               <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '140px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '150px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                                     <span style={{ 
                                       fontSize: '0.75rem', 
                                       fontWeight: '800',
                                       padding: '0.15rem 0.5rem',
                                       borderRadius: '1rem',
-                                      background: totalSoldPct >= 99.9 ? '#dcfce7' : totalSoldPct > 0 ? '#fef3c7' : '#f1f5f9',
-                                      color: totalSoldPct >= 99.9 ? '#166534' : totalSoldPct > 0 ? '#92400e' : '#64748b'
+                                      background: hasProducedQty ? (isOutOfStock ? '#fef2f2' : isLowStock ? '#fef3c7' : '#dcfce7') : '#f1f5f9',
+                                      color: hasProducedQty ? (isOutOfStock ? '#991b1b' : isLowStock ? '#92400e' : '#166534') : '#64748b'
                                     }}>
-                                      {totalSoldPct}%
+                                      {hasProducedQty 
+                                        ? (isOutOfStock 
+                                            ? `${t('dashboard.out_of_stock') || "Sin stock"} (0 ${unit})`.trim()
+                                            : `${t('dashboard.stock_label') || "Stock"}: ${remainingStock} ${unit}`.trim())
+                                        : `${t('dashboard.stock_label') || "Stock"}: -`
+                                      }
                                     </span>
                                     <span style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-main)' }}>
                                       {formatPrice(totalSalesRevenue, profile?.currency, locale)}
@@ -6513,8 +6579,8 @@ export default function ClientDashboard() {
                                   <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
                                     <div style={{ 
                                       height: '100%', 
-                                      width: `${Math.min(100, totalSoldPct)}%`, 
-                                      background: totalSoldPct >= 99.9 ? 'var(--corp-green)' : totalSoldPct > 0 ? '#10b981' : '#cbd5e1',
+                                      width: `${Math.min(100, pctSold)}%`, 
+                                      background: isOutOfStock ? '#ef4444' : pctSold > 0 ? '#10b981' : '#cbd5e1',
                                       borderRadius: '3px',
                                       transition: 'width 0.3s ease'
                                     }} />
@@ -11173,7 +11239,7 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
                     {t('customers.filter_recipe') || "Receta"}
                   </th>
                   <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'center' }}>
-                    {t('elaboration_sales.sold_percentage') || "% Vendido"}
+                    {t('elaboration_sales.col_quantity') || "Cantidad"}
                   </th>
                   <th style={{ padding: '0.9rem 1.25rem', fontWeight: '800', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', textAlign: 'right' }}>
                     {t('elaboration_sales.sale_price') || "Importe"}
@@ -11201,10 +11267,12 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
                         fontWeight: '800',
                         padding: '0.15rem 0.55rem',
                         borderRadius: '1rem',
-                        background: sale.percentage >= 99.9 ? '#dcfce7' : '#fef3c7',
-                        color: sale.percentage >= 99.9 ? '#166534' : '#92400e'
+                        background: 'rgba(66, 98, 22, 0.08)',
+                        color: 'var(--corp-green)'
                       }}>
-                        {sale.percentage}%
+                        {sale.quantity != null 
+                          ? `${sale.quantity} ${sale.elaboration?.quantityUnit || ''}`.trim()
+                          : `${sale.percentage}%`}
                       </span>
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '800', color: 'var(--text-main)', fontSize: '0.92rem' }}>
@@ -11270,7 +11338,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
 
   const [saleForm, setSaleForm] = useState({
     customerId: "",
-    percentage: "",
+    quantity: "",
     price: "",
     date: new Date().toISOString().slice(0, 10)
   });
@@ -11294,28 +11362,49 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
     fetchSales();
   }, [elaboration.id]);
 
-  const totalSold = useMemo(() => {
-    return Math.round(sales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
-  }, [sales]);
+  const totalProduced = useMemo(() => {
+    const val = parseFloat(elaboration.quantityProduced?.toString().replace(',', '.'));
+    return (!isNaN(val) && val > 0) ? val : null;
+  }, [elaboration.quantityProduced]);
 
-  const availablePercentage = useMemo(() => {
-    return Math.max(0, Math.round((100 - totalSold) * 100) / 100);
-  }, [totalSold]);
+  const unit = elaboration.quantityUnit || "";
+
+  const totalSoldQty = useMemo(() => {
+    return Math.round(sales.reduce((sum, s) => {
+      if (s.quantity != null) return sum + s.quantity;
+      if (totalProduced != null && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+      return sum;
+    }, 0) * 1000) / 1000;
+  }, [sales, totalProduced]);
+
+  const availableStock = useMemo(() => {
+    if (totalProduced == null) return null;
+    return Math.max(0, Math.round((totalProduced - totalSoldQty) * 1000) / 1000);
+  }, [totalProduced, totalSoldQty]);
 
   const editingSale = useMemo(() => sales.find(s => s.id === editingSaleId) || null, [sales, editingSaleId]);
 
-  const effectiveAvailablePercentage = useMemo(() => {
-    const freed = editingSale ? (editingSale.percentage || 0) : 0;
-    return Math.max(0, Math.round((100 - (totalSold - freed)) * 100) / 100);
-  }, [totalSold, editingSale]);
+  const effectiveAvailableStock = useMemo(() => {
+    if (totalProduced == null) return null;
+    const freed = editingSale 
+      ? (editingSale.quantity != null 
+          ? editingSale.quantity 
+          : (editingSale.percentage ? (totalProduced * editingSale.percentage / 100) : 0))
+      : 0;
+    return Math.max(0, Math.round((totalProduced - (totalSoldQty - freed)) * 1000) / 1000);
+  }, [totalProduced, totalSoldQty, editingSale]);
 
-  const isFullySold = availablePercentage <= 0.001;
+  const isFullySold = totalProduced != null ? (availableStock <= 0.0001) : false;
+  const soldPercentage = totalProduced != null && totalProduced > 0 ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : 0;
 
   const handleStartEdit = (s) => {
     setEditingSaleId(s.id);
+    const qty = s.quantity != null 
+      ? s.quantity.toString() 
+      : (totalProduced != null && s.percentage != null ? ((totalProduced * s.percentage) / 100).toString() : "");
     setSaleForm({
       customerId: s.customerId ? s.customerId.toString() : "",
-      percentage: s.percentage.toString(),
+      quantity: qty,
       price: s.price.toString(),
       date: s.date ? new Date(s.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
     });
@@ -11325,7 +11414,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
     setEditingSaleId(null);
     setSaleForm({
       customerId: "",
-      percentage: "",
+      quantity: "",
       price: "",
       date: new Date().toISOString().slice(0, 10)
     });
@@ -11333,22 +11422,23 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const pct = parseFloat(saleForm.percentage);
-    if (isNaN(pct) || pct <= 0) {
-      alert(t('elaboration_sales.percentage_invalid') || "Por favor introduce un porcentaje válido mayor que 0.");
+    const qty = parseFloat(saleForm.quantity.toString().replace(',', '.'));
+    if (isNaN(qty) || qty <= 0) {
+      alert(t('elaboration_sales.quantity_invalid') || "Por favor introduce una cantidad válida mayor que 0.");
       return;
     }
 
-    const maxAllowed = editingSaleId ? effectiveAvailablePercentage : availablePercentage;
-    if (pct > maxAllowed + 0.001) {
+    const maxAllowed = editingSaleId ? effectiveAvailableStock : availableStock;
+    if (maxAllowed != null && qty > maxAllowed + 0.0001) {
       alert(
-        (t('elaboration_sales.percentage_exceeded') || "La suma de porcentajes no puede superar el 100%. Porcentaje disponible: {available}%")
+        (t('elaboration_sales.quantity_exceeded') || "La cantidad vendida no puede superar el stock disponible ({available} {unit}).")
           .replace('{available}', maxAllowed.toString())
+          .replace('{unit}', unit)
       );
       return;
     }
 
-    const prc = parseFloat(saleForm.price);
+    const prc = parseFloat(saleForm.price.toString().replace(',', '.'));
     if (isNaN(prc) || prc < 0) {
       alert(t('elaboration_sales.price_invalid') || "Por favor introduce un precio válido.");
       return;
@@ -11366,7 +11456,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: saleForm.customerId || null,
-          percentage: pct,
+          quantity: qty,
           price: prc,
           date: saleForm.date
         })
@@ -11433,25 +11523,35 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
           </button>
         </header>
 
-        {/* Resumen de estado de ventas y barra de progreso */}
+        {/* Resumen de estado de ventas y stock */}
         <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               {t('elaboration_sales.summary_title') || "Estado de ventas de esta elaboración"}
             </span>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem' }}>
+            <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
+              {totalProduced != null && (
+                <span>
+                  <strong>{t('elaboration_sales.total_produced') || "Total elaborado"}:</strong>{" "}
+                  <span style={{ fontWeight: '800', color: 'var(--text-main)' }}>
+                    {totalProduced} {unit}
+                  </span>
+                </span>
+              )}
               <span>
                 <strong>{t('elaboration_sales.total_sold') || "Total vendido"}:</strong>{" "}
-                <span style={{ color: totalSold >= 100 ? 'var(--corp-green)' : '#f59e0b', fontWeight: '800' }}>
-                  {totalSold}%
+                <span style={{ color: (totalProduced != null && totalSoldQty >= totalProduced) ? 'var(--corp-green)' : '#f59e0b', fontWeight: '800' }}>
+                  {totalSoldQty} {unit}
                 </span>
               </span>
-              <span>
-                <strong>{t('elaboration_sales.available_to_sell') || "Disponible"}:</strong>{" "}
-                <span style={{ color: availablePercentage > 0 ? 'var(--corp-green)' : 'var(--text-muted)', fontWeight: '800' }}>
-                  {availablePercentage}%
+              {totalProduced != null && (
+                <span>
+                  <strong>{t('elaboration_sales.stock_available') || "Stock disponible"}:</strong>{" "}
+                  <span style={{ color: availableStock > 0 ? 'var(--corp-green)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {availableStock} {unit}
+                  </span>
                 </span>
-              </span>
+              )}
             </div>
           </div>
 
@@ -11459,8 +11559,8 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
             <div 
               style={{ 
                 height: '100%', 
-                width: `${Math.min(100, totalSold)}%`, 
-                background: totalSold >= 100 ? 'var(--corp-green)' : '#10b981', 
+                width: `${totalProduced != null ? Math.min(100, soldPercentage) : 0}%`, 
+                background: isFullySold ? 'var(--corp-green)' : '#10b981', 
                 transition: 'width 0.4s ease' 
               }} 
             />
@@ -11533,29 +11633,34 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                 </div>
               </div>
 
-              {/* Porcentaje */}
+              {/* Cantidad vendida */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.25rem' }}>
                   <label className="label" style={{ margin: 0 }}>
-                    {t('elaboration_sales.sold_percentage') || "Porcentaje vendido (%)"} <span style={{ color: '#ef4444' }}>*</span>
+                    {t('elaboration_sales.quantity_sold') || "Cantidad vendida"} {unit ? `(${unit})` : ''} <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setSaleForm({ ...saleForm, percentage: (editingSaleId ? effectiveAvailablePercentage : availablePercentage).toString() })}
-                    style={{ background: 'none', border: 'none', color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
-                  >
-                    100% restante ({editingSaleId ? effectiveAvailablePercentage : availablePercentage}%)
-                  </button>
+                  {((editingSaleId ? effectiveAvailableStock : availableStock) != null) && (
+                    <button
+                      type="button"
+                      onClick={() => setSaleForm({ ...saleForm, quantity: (editingSaleId ? effectiveAvailableStock : availableStock).toString() })}
+                      style={{ background: 'none', border: 'none', color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      {(t('elaboration_sales.sell_all_stock') || "Vender todo el stock disponible ({available} {unit})")
+                        .replace('{available}', (editingSaleId ? effectiveAvailableStock : availableStock).toString())
+                        .replace('{unit}', unit)
+                      }
+                    </button>
+                  )}
                 </div>
                 <input 
                   type="number" 
                   step="any" 
-                  min="0.01" 
-                  max={editingSaleId ? effectiveAvailablePercentage : availablePercentage}
+                  min="0.001" 
+                  max={(editingSaleId ? effectiveAvailableStock : availableStock) != null ? (editingSaleId ? effectiveAvailableStock : availableStock) : undefined}
                   className="input-field" 
-                  value={saleForm.percentage} 
-                  onChange={(e) => setSaleForm({ ...saleForm, percentage: e.target.value })} 
-                  placeholder={t('elaboration_sales.percentage_placeholder') || "Ej: 25, 50, 100"}
+                  value={saleForm.quantity} 
+                  onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })} 
+                  placeholder={t('elaboration_sales.quantity_placeholder') || "Ej: 20"}
                   required 
                 />
               </div>
@@ -11616,7 +11721,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
           <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '1rem', padding: '1.25rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#166534' }}>
             <Check size={20} color="var(--corp-green)" />
             <span style={{ fontWeight: '700', fontSize: '0.95rem' }}>
-              {t('elaboration_sales.fully_sold_badge') || "Esta elaboración ya ha sido vendida al 100%."}
+              {t('elaboration_sales.fully_sold_stock_badge') || "Todo el stock de esta elaboración ha sido vendido."}
             </span>
           </div>
         )}
@@ -11644,7 +11749,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                   <tr>
                     <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_date') || "Fecha"}</th>
                     <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_customer') || "Cliente"}</th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_percentage') || "Porcentaje"}</th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_quantity') || "Cantidad"}</th>
                     <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>{t('elaboration_sales.col_price') || "Precio"}</th>
                     <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', textAlign: 'right' }}>{t('elaboration_sales.col_actions') || "Acciones"}</th>
                   </tr>
@@ -11668,7 +11773,9 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                       </td>
                       <td style={{ padding: '0.75rem 1rem', fontWeight: '700' }}>
                         <span style={{ background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', padding: '0.2rem 0.5rem', borderRadius: '0.35rem' }}>
-                          {s.percentage}%
+                          {s.quantity != null 
+                            ? `${s.quantity} ${unit}`.trim()
+                            : (totalProduced != null && s.percentage != null ? `${Math.round((totalProduced * s.percentage / 100) * 1000) / 1000} ${unit}`.trim() : `${s.percentage}%`)}
                         </span>
                       </td>
                       <td style={{ padding: '0.75rem 1rem', fontWeight: '800', color: 'var(--text-main)' }}>

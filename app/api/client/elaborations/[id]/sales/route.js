@@ -39,11 +39,27 @@ export async function GET(req, { params }) {
       orderBy: { date: 'desc' }
     });
 
-    const totalSoldPercentage = sales.reduce((sum, s) => sum + (s.percentage || 0), 0);
+    const totalProduced = parseFloat(elaboration.quantityProduced?.toString().replace(',', '.')) || null;
+    const unit = elaboration.quantityUnit || "";
+
+    const totalSoldQuantity = sales.reduce((sum, s) => {
+      if (s.quantity != null) return sum + s.quantity;
+      if (totalProduced != null && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+      return sum;
+    }, 0);
+
+    const availableQuantity = totalProduced != null ? Math.max(0, totalProduced - totalSoldQuantity) : null;
+    const totalSoldPercentage = totalProduced != null && totalProduced > 0
+      ? (totalSoldQuantity / totalProduced) * 100
+      : sales.reduce((sum, s) => sum + (s.percentage || 0), 0);
 
     return NextResponse.json({
       success: true,
       sales,
+      totalProduced,
+      quantityUnit: unit,
+      totalSoldQuantity: Math.round(totalSoldQuantity * 1000) / 1000,
+      availableQuantity: availableQuantity != null ? Math.round(availableQuantity * 1000) / 1000 : null,
       totalSoldPercentage: Math.min(100, Math.round(totalSoldPercentage * 100) / 100),
       availablePercentage: Math.max(0, Math.round((100 - totalSoldPercentage) * 100) / 100)
     });
@@ -84,11 +100,32 @@ export async function POST(req, { params }) {
     }
 
     const body = await req.json();
-    const { customerId, percentage, price, date } = body;
+    const { customerId, quantity, percentage, price, date } = body;
 
-    const parsedPercentage = parseFloat(percentage);
-    if (isNaN(parsedPercentage) || parsedPercentage <= 0) {
-      return NextResponse.json({ error: "El porcentaje debe ser mayor que 0" }, { status: 400 });
+    const totalProduced = parseFloat(elaboration.quantityProduced?.toString().replace(',', '.')) || null;
+    const unit = elaboration.quantityUnit || "";
+
+    let parsedQuantity = null;
+    let parsedPercentage = null;
+
+    if (quantity !== undefined && quantity !== null && quantity !== "") {
+      parsedQuantity = parseFloat(quantity.toString().replace(',', '.'));
+      if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+        return NextResponse.json({ error: "La cantidad debe ser mayor que 0" }, { status: 400 });
+      }
+      if (totalProduced != null && totalProduced > 0) {
+        parsedPercentage = (parsedQuantity / totalProduced) * 100;
+      } else {
+        parsedPercentage = percentage ? parseFloat(percentage.toString().replace(',', '.')) || 0 : 0;
+      }
+    } else {
+      parsedPercentage = parseFloat(percentage);
+      if (isNaN(parsedPercentage) || parsedPercentage <= 0) {
+        return NextResponse.json({ error: "El porcentaje o la cantidad debe ser mayor que 0" }, { status: 400 });
+      }
+      if (totalProduced != null && totalProduced > 0) {
+        parsedQuantity = (parsedPercentage / 100) * totalProduced;
+      }
     }
 
     const parsedPrice = parseFloat(price);
@@ -96,21 +133,37 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: "El precio debe ser un número válido" }, { status: 400 });
     }
 
-    // Comprobar la suma de porcentajes acumulados
+    // Comprobar ventas existentes
     const existingSales = await prisma.elaborationSale.findMany({
       where: { elaborationId }
     });
 
-    const currentTotal = existingSales.reduce((sum, s) => sum + (s.percentage || 0), 0);
-    const available = Math.max(0, Math.round((100 - currentTotal) * 100) / 100);
+    if (parsedQuantity != null && totalProduced != null && totalProduced > 0) {
+      const currentSoldQuantity = existingSales.reduce((sum, s) => {
+        if (s.quantity != null) return sum + s.quantity;
+        return sum + (totalProduced * (s.percentage || 0) / 100);
+      }, 0);
+      const availableQty = Math.max(0, Math.round((totalProduced - currentSoldQuantity) * 1000) / 1000);
 
-    // Permitir pequeño margen de tolerancia por punto flotante (0.001)
-    if (currentTotal + parsedPercentage > 100.001) {
-      return NextResponse.json({
-        error: "percentage_exceeded",
-        message: `La suma de porcentajes no puede superar el 100%. Porcentaje disponible: ${available}%`,
-        available
-      }, { status: 400 });
+      if (currentSoldQuantity + parsedQuantity > totalProduced + 0.001) {
+        return NextResponse.json({
+          error: "quantity_exceeded",
+          message: `La cantidad vendida no puede superar el stock disponible (${availableQty} ${unit}).`,
+          available: availableQty,
+          unit
+        }, { status: 400 });
+      }
+    } else {
+      const currentTotalPct = existingSales.reduce((sum, s) => sum + (s.percentage || 0), 0);
+      const availablePct = Math.max(0, Math.round((100 - currentTotalPct) * 100) / 100);
+
+      if (currentTotalPct + parsedPercentage > 100.001) {
+        return NextResponse.json({
+          error: "percentage_exceeded",
+          message: `La suma de porcentajes no puede superar el 100%. Porcentaje disponible: ${availablePct}%`,
+          available: availablePct
+        }, { status: 400 });
+      }
     }
 
     let validCustomerId = null;
@@ -130,7 +183,8 @@ export async function POST(req, { params }) {
       data: {
         elaborationId,
         customerId: validCustomerId,
-        percentage: parsedPercentage,
+        quantity: parsedQuantity != null ? Math.round(parsedQuantity * 1000) / 1000 : null,
+        percentage: Math.round(parsedPercentage * 100) / 100,
         price: parsedPrice,
         date: date ? new Date(date) : new Date(),
         clientProfileId: profileId

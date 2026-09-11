@@ -281,7 +281,11 @@
     "scanned_pending_badge": "Pendiente de guardar",
     "save_goods_entry": "Guardar entrada",
     "view_original_image": "Ver albarán original",
-    "delete_scanned_confirm": "¿Estás seguro de que deseas eliminar este albarán escaneado?"
+    "delete_scanned_confirm": "¿Estás seguro de que deseas eliminar este albarán escaneado?",
+    "stock_label": "Stock",
+    "out_of_stock": "Sin stock",
+    "low_stock": "Stock bajo",
+    "stock_remaining_label": "Stock restante"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",
@@ -635,7 +639,11 @@
     "unit_price_help": "Lo podrás usar en la etiqueta. Puedes cambiar la moneda en la configuración de la empresa en el menú principal.",
     "extra_info_label": "Información extra de esta elaboración",
     "extra_info_help": "Este texto podrá salir en la etiqueta. Sirve para poner datos como el origen, formato, etc.",
-    "elaboration_notes": "Notas de esta elaboración"
+    "elaboration_notes": "Notas de esta elaboración",
+    "quantity_unit": "Unidad de medida",
+    "quantity_unit_placeholder": "Ej: kg, unidades, l...",
+    "quantity_unit_help": "Este campo se utiliza para la gestión de stocks y el registro de ventas de esta elaboración.",
+    "quantity_produced_placeholder": "Ej: 50, 100..."
   },
   "goods_receipt_form": {
     "product": "Producto",
@@ -1092,6 +1100,16 @@
     "percentage_invalid": "Por favor introduce un porcentaje válido mayor que 0.",
     "price_invalid": "Por favor introduce un precio válido.",
     "fully_sold_badge": "100% vendido",
-    "partial_sold_badge": "{pct}% vendido"
+    "partial_sold_badge": "{pct}% vendido",
+    "stock_available": "Stock disponible",
+    "total_produced": "Total elaborado",
+    "remaining_stock": "Stock restante",
+    "sell_all_stock": "Vender todo el stock disponible ({available} {unit})",
+    "quantity_sold": "Cantidad vendida",
+    "quantity_placeholder": "Ej: 20",
+    "quantity_invalid": "Por favor introduce una cantidad válida mayor que 0.",
+    "quantity_exceeded": "La cantidad vendida no puede superar el stock disponible ({available} {unit}).",
+    "col_quantity": "Cantidad",
+    "fully_sold_stock_badge": "Todo el stock de esta elaboración ha sido vendido."
   }
 }

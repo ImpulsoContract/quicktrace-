@@ -281,7 +281,11 @@
     "scanned_pending_badge": "Pending to save",
     "save_goods_entry": "Save entry",
     "view_original_image": "View original delivery note",
-    "delete_scanned_confirm": "Are you sure you want to delete this scanned delivery note?"
+    "delete_scanned_confirm": "Are you sure you want to delete this scanned delivery note?",
+    "stock_label": "Stock",
+    "out_of_stock": "Out of stock",
+    "low_stock": "Low stock",
+    "stock_remaining_label": "Remaining stock"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",
@@ -635,7 +639,11 @@
     "unit_price_help": "You can use it on the label. You can change the currency in the business settings in the main menu.",
     "extra_info_label": "Extra information of this production",
     "extra_info_help": "This text can appear on the label. It is used to put data such as origin, format, etc.",
-    "elaboration_notes": "Elaboration notes"
+    "elaboration_notes": "Elaboration notes",
+    "quantity_unit": "Unit of measurement",
+    "quantity_unit_placeholder": "E.g., kg, units, l...",
+    "quantity_unit_help": "This field is used for stock management and sales recording for this elaboration.",
+    "quantity_produced_placeholder": "E.g., 50, 100..."
   },
   "goods_receipt_form": {
     "product": "Product",
@@ -1092,6 +1100,16 @@
     "percentage_invalid": "Please enter a valid percentage greater than 0.",
     "price_invalid": "Please enter a valid price.",
     "fully_sold_badge": "100% sold",
-    "partial_sold_badge": "{pct}% sold"
+    "partial_sold_badge": "{pct}% sold",
+    "stock_available": "Available stock",
+    "total_produced": "Total produced",
+    "remaining_stock": "Remaining stock",
+    "sell_all_stock": "Sell all available stock ({available} {unit})",
+    "quantity_sold": "Quantity sold",
+    "quantity_placeholder": "E.g., 20",
+    "quantity_invalid": "Please enter a valid quantity greater than 0.",
+    "quantity_exceeded": "The quantity sold cannot exceed the available stock ({available} {unit}).",
+    "col_quantity": "Quantity",
+    "fully_sold_stock_badge": "All stock of this elaboration has been sold."
   }
 }

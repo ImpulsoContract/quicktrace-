@@ -277,7 +277,11 @@
     "scanned_pending_badge": "En attente d'enregistrement",
     "save_goods_entry": "Enregistrer l'entrée",
     "view_original_image": "Voir le bon original",
-    "delete_scanned_confirm": "Êtes-vous sûr de vouloir supprimer ce bon scanné ?"
+    "delete_scanned_confirm": "Êtes-vous sûr de vouloir supprimer ce bon scanné ?",
+    "stock_label": "Stock",
+    "out_of_stock": "Rupture de stock",
+    "low_stock": "Stock faible",
+    "stock_remaining_label": "Stock restant"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",
@@ -630,7 +634,11 @@
     "unit_price_help": "Vous pouvez l'utiliser sur l'étiquette. Vous pouvez changer la devise dans les paramètres de l'entreprise dans le menu principal.",
     "extra_info_label": "Informations supplémentaires de cette élaboration",
     "extra_info_help": "Ce texte pourra figurer sur l'étiquette. Il sert à indiquer des informations comme l'origine, le format, etc.",
-    "elaboration_notes": "Notes de cette élaboration"
+    "elaboration_notes": "Notes de cette élaboration",
+    "quantity_unit": "Unité de mesure",
+    "quantity_unit_placeholder": "Ex. : kg, unités, l...",
+    "quantity_unit_help": "Ce champ est utilisé pour la gestion des stocks et l'enregistrement des ventes de cette élaboration.",
+    "quantity_produced_placeholder": "Ex. : 50, 100..."
   },
   "goods_receipt_form": {
     "product": "Produit",
@@ -1087,6 +1095,16 @@
     "percentage_invalid": "Veuillez saisir un pourcentage valide supérieur à 0.",
     "price_invalid": "Veuillez saisir un prix valide.",
     "fully_sold_badge": "100% vendu",
-    "partial_sold_badge": "{pct}% vendu"
+    "partial_sold_badge": "{pct}% vendu",
+    "stock_available": "Stock disponible",
+    "total_produced": "Total produit",
+    "remaining_stock": "Stock restant",
+    "sell_all_stock": "Vendre tout le stock disponible ({available} {unit})",
+    "quantity_sold": "Quantité vendue",
+    "quantity_placeholder": "Ex. : 20",
+    "quantity_invalid": "Veuillez entrer une quantité valide supérieure à 0.",
+    "quantity_exceeded": "La quantité vendue ne peut pas dépasser le stock disponible ({available} {unit}).",
+    "col_quantity": "Quantité",
+    "fully_sold_stock_badge": "Tout le stock de cette élaboration a été vendu."
   }
 }

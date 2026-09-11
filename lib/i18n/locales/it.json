@@ -277,7 +277,11 @@
     "scanned_pending_badge": "In attesa di salvataggio",
     "save_goods_entry": "Salva entrata",
     "view_original_image": "Vedi bolla originale",
-    "delete_scanned_confirm": "Sei sicuro di voler eliminare questa bolla scansionata?"
+    "delete_scanned_confirm": "Sei sicuro di voler eliminare questa bolla scansionata?",
+    "stock_label": "Scorte",
+    "out_of_stock": "Esaurito",
+    "low_stock": "Scorte basse",
+    "stock_remaining_label": "Scorte rimanenti"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",
@@ -630,7 +634,11 @@
     "unit_price_help": "Puoi usarlo sull'etichetta. Puoi cambiare la valuta nelle impostazioni aziendali nel menu principale.",
     "extra_info_label": "Informazioni extra di questa lavorazione",
     "extra_info_help": "Questo testo potrà comparire sull'etichetta. Serve per inserire dati come l'origine, il formato, ecc.",
-    "elaboration_notes": "Note di questa elaborazione"
+    "elaboration_notes": "Note di questa elaborazione",
+    "quantity_unit": "Unità di misura",
+    "quantity_unit_placeholder": "Es: kg, unità, l...",
+    "quantity_unit_help": "Questo campo viene utilizzato per la gestione delle scorte e la registrazione delle vendite di questa lavorazione.",
+    "quantity_produced_placeholder": "Es: 50, 100..."
   },
   "goods_receipt_form": {
     "product": "Prodotto",
@@ -1087,6 +1095,16 @@
     "percentage_invalid": "Inserisci una percentuale valida maggiore di 0.",
     "price_invalid": "Inserisci un prezzo valido.",
     "fully_sold_badge": "100% venduto",
-    "partial_sold_badge": "{pct}% venduto"
+    "partial_sold_badge": "{pct}% venduto",
+    "stock_available": "Scorte disponibili",
+    "total_produced": "Totale prodotto",
+    "remaining_stock": "Scorte rimanenti",
+    "sell_all_stock": "Vendi tutte le scorte disponibili ({available} {unit})",
+    "quantity_sold": "Quantità venduta",
+    "quantity_placeholder": "Es: 20",
+    "quantity_invalid": "Inserisci una quantità valida maggiore di 0.",
+    "quantity_exceeded": "La quantità venduta non può superare le scorte disponibili ({available} {unit}).",
+    "col_quantity": "Quantità",
+    "fully_sold_stock_badge": "Tutte le scorte di questa lavorazione sono state vendute."
   }
 }

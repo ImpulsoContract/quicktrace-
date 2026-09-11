@@ -131,7 +131,7 @@ export async function POST(req) {
     }
 
     const data = await req.json();
-    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime, unitPrice, quantityProduced, netWeight, workshopTemp, extraInfo } = data;
+    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime, unitPrice, quantityProduced, quantityUnit, netWeight, workshopTemp, extraInfo } = data;
 
     const profileId = session.user.profileId;
     if (await isRecipeLimitExceeded(profileId)) {
@@ -208,6 +208,7 @@ export async function POST(req) {
         dryingRoomOut: data.dryingRoomOut,
         workshopTemp: data.workshopTemp,
         quantityProduced: data.quantityProduced,
+        quantityUnit: data.quantityUnit || null,
         netWeight: data.netWeight,
         preparationTime: data.preparationTime,
         unitPrice: parseFloat(data.unitPrice?.toString().replace(',', '.')) || 0,
@@ -260,7 +261,7 @@ export async function PATCH(req) {
     }
 
     const data = await req.json();
-    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, netWeight, preparationTime, unitPrice, extraInfo, ingredients } = data;
+    const { id, name, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, workshopTemp, quantityProduced, quantityUnit, netWeight, preparationTime, unitPrice, extraInfo, ingredients } = data;
 
     if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
@@ -295,6 +296,7 @@ export async function PATCH(req) {
       dryingRoomOut,
       workshopTemp,
       quantityProduced,
+      quantityUnit: quantityUnit !== undefined ? quantityUnit : undefined,
       netWeight,
       preparationTime,
       unitPrice: unitPrice !== undefined ? (parseFloat(unitPrice?.toString().replace(',', '.')) || 0) : undefined,
