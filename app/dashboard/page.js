@@ -5889,7 +5889,7 @@ export default function ClientDashboard() {
                       className="btn-secondary"
                       style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                     >
-                      <Boxes size={18} /> {t('dashboard.view_stock_inventory_btn') || "Ver inventario de stock"}
+                      <Boxes size={18} /> {t('dashboard.view_stock_inventory_btn') || "Ver stock de mercancías"}
                     </button>
                     {profile?.hasIaGoods && (
                     <button 
@@ -8102,6 +8102,13 @@ export default function ClientDashboard() {
           display: none;
         }
 
+        .recipe-ingredient-row {
+          display: grid;
+          grid-template-columns: auto 2fr 1fr 1fr 2fr auto;
+          gap: 1rem;
+          align-items: center;
+        }
+
         @media (max-width: 1024px) {
           .flex-responsive { flex-direction: column !important; }
           .mobile-header { display: flex !important; }
@@ -8150,6 +8157,76 @@ export default function ClientDashboard() {
             display: flex !important;
             flex-direction: column !important;
             gap: 1.25rem !important;
+          }
+
+          .recipe-ingredient-row {
+            grid-template-columns: auto 2.5fr 1fr 1fr auto !important;
+            grid-template-areas:
+              "handle name amount unit delete"
+              "checks checks checks checks checks" !important;
+            gap: 0.85rem !important;
+            align-items: center !important;
+          }
+          .recipe-ing-handle { grid-area: handle !important; }
+          .recipe-ing-name { grid-area: name !important; }
+          .recipe-ing-amount { grid-area: amount !important; }
+          .recipe-ing-unit { grid-area: unit !important; }
+          .recipe-ing-delete { grid-area: delete !important; }
+          .recipe-ing-checks {
+            grid-area: checks !important;
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 1.5rem !important;
+            padding-top: 0.6rem !important;
+            border-top: 1px dashed #e2e8f0 !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .modal-overlay {
+            padding: 0.5rem !important;
+          }
+          .modal-content {
+            padding: 1.25rem !important;
+            border-radius: 1rem !important;
+          }
+          .recipe-ingredient-row {
+            display: grid !important;
+            grid-template-columns: 1fr auto !important;
+            grid-template-areas:
+              "handle delete"
+              "name name"
+              "amount amount"
+              "unit unit"
+              "checks checks" !important;
+            gap: 0.85rem !important;
+            align-items: center !important;
+            padding: 1rem !important;
+          }
+          .recipe-ing-handle {
+            grid-area: handle !important;
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+          }
+          .recipe-ing-arrows {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 0.5rem !important;
+          }
+          .recipe-ing-name { grid-area: name !important; width: 100% !important; }
+          .recipe-ing-amount { grid-area: amount !important; width: 100% !important; }
+          .recipe-ing-unit { grid-area: unit !important; width: 100% !important; }
+          .recipe-ing-delete { grid-area: delete !important; display: flex !important; justify-content: flex-end !important; }
+          .recipe-ing-checks {
+            grid-area: checks !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+            padding-top: 0.5rem !important;
+            border-top: 1px dashed #e2e8f0 !important;
           }
         }
 
@@ -10684,6 +10761,7 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               {formData.ingredients.map((ing, idx) => (
                 <div 
                   key={idx} 
+                  className="recipe-ingredient-row"
                   data-ingredient-row="true"
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -10707,10 +10785,6 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                     setDragOverIngredientIndex(null);
                   }}
                   style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'auto 2fr 1fr 1fr 2fr auto', 
-                    gap: '1rem', 
-                    alignItems: 'center', 
                     padding: '1.25rem', 
                     background: draggedIngredientIndex === idx ? '#f1f5f9' : '#f8fafc', 
                     borderRadius: '1rem', 
@@ -10721,7 +10795,7 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                     transition: 'background 0.15s, border 0.15s, opacity 0.15s'
                   }}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', paddingRight: '0.25rem' }}>
+                  <div className="recipe-ing-handle" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', paddingRight: '0.25rem' }}>
                     <div 
                       draggable
                       onDragStart={(e) => {
@@ -10743,7 +10817,7 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                         color: draggedIngredientIndex === idx ? 'var(--corp-green)' : '#94a3b8', 
                         display: 'flex', 
                         alignItems: 'center', 
-                        justifyContent: 'center',
+                        justifyContent: 'center', 
                         padding: '0.25rem',
                         userSelect: 'none'
                       }}
@@ -10752,7 +10826,7 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                       <GripVertical size={20} />
                     </div>
                     {formData.ingredients.length > 1 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <div className="recipe-ing-arrows" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <button
                           type="button"
                           onClick={() => handleMoveIngredient(idx, idx - 1)}
@@ -10789,7 +10863,7 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                     )}
                   </div>
 
-                  <div>
+                  <div className="recipe-ing-name">
                     <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_name')}</label>
                     <input type="text" className="input-field" value={ing.name} onChange={(e) => onIngredientChange(idx, 'name', e.target.value)} required placeholder={t('modals.ing_name')} />
                     
@@ -10825,15 +10899,15 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                       )}
                     </div>
                   </div>
-                  <div>
+                  <div className="recipe-ing-amount">
                     <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_amount')}</label>
                     <input type="text" className="input-field" value={ing.amount} onChange={(e) => onIngredientChange(idx, 'amount', e.target.value)} placeholder="500" />
                   </div>
-                  <div>
+                  <div className="recipe-ing-unit">
                     <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_unit')}</label>
                     <input type="text" className="input-field" value={ing.unit} onChange={(e) => onIngredientChange(idx, 'unit', e.target.value)} placeholder="g, kg, L..." />
                   </div>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="recipe-ing-checks" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}>
                       <input type="checkbox" checked={ing.loteMandatory} onChange={(e) => onIngredientChange(idx, 'loteMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
                       {t('modals.lote_obligatory')}
@@ -10843,11 +10917,13 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                       {t('modals.real_qty_obligatory')}
                     </label>
                   </div>
-                  {formData.ingredients.length > 1 && (
-                    <button type="button" onClick={() => onRemoveIngredient(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
-                      <Trash2 size={18} />
-                    </button>
-                  )}
+                  <div className="recipe-ing-delete" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    {formData.ingredients.length > 1 && (
+                      <button type="button" onClick={() => onRemoveIngredient(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
 

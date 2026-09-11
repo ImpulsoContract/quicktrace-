@@ -100,9 +100,78 @@ body {
   }
 }
 
+.recipe-ingredient-row {
+  display: grid;
+  grid-template-columns: auto 2fr 1fr 1fr 2fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .recipe-ingredient-row {
+    grid-template-columns: auto 2.5fr 1fr 1fr auto !important;
+    grid-template-areas:
+      "handle name amount unit delete"
+      "checks checks checks checks checks" !important;
+    gap: 0.85rem !important;
+    align-items: center !important;
+  }
+  .recipe-ing-handle { grid-area: handle !important; }
+  .recipe-ing-name { grid-area: name !important; }
+  .recipe-ing-amount { grid-area: amount !important; }
+  .recipe-ing-unit { grid-area: unit !important; }
+  .recipe-ing-delete { grid-area: delete !important; }
+  .recipe-ing-checks {
+    grid-area: checks !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 1.5rem !important;
+    padding-top: 0.6rem !important;
+    border-top: 1px dashed #e2e8f0 !important;
+  }
+}
+
 @media (max-width: 768px) {
   .desktop-only { display: none; }
   .mobile-full { width: 100% !important; }
+  .recipe-ingredient-row {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      "handle delete"
+      "name name"
+      "amount amount"
+      "unit unit"
+      "checks checks" !important;
+    gap: 0.85rem !important;
+    align-items: center !important;
+    padding: 1rem !important;
+  }
+  .recipe-ing-handle {
+    grid-area: handle !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+  }
+  .recipe-ing-arrows {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+  }
+  .recipe-ing-name { grid-area: name !important; width: 100% !important; }
+  .recipe-ing-amount { grid-area: amount !important; width: 100% !important; }
+  .recipe-ing-unit { grid-area: unit !important; width: 100% !important; }
+  .recipe-ing-delete { grid-area: delete !important; display: flex !important; justify-content: flex-end !important; }
+  .recipe-ing-checks {
+    grid-area: checks !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    padding-top: 0.5rem !important;
+    border-top: 1px dashed #e2e8f0 !important;
+  }
 }
 
 /* Botón de Vídeo de Ayuda Unificado */
