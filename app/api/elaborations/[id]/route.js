@@ -64,15 +64,17 @@ export async function PATCH(req, { params }) {
         netWeight: netWeight !== undefined ? netWeight : undefined,
         unitPrice: unitPrice !== undefined ? (parseFloat(unitPrice?.toString().replace(',', '.')) || 0) : undefined,
         extraInfo: extraInfo !== undefined ? extraInfo : undefined,
-        ingredients: {
-          deleteMany: {},
-          create: ingredients.map(ing => ({
-            name: toTitleCase(ing.name),
-            lote: ing.lote,
-            realAmount: ing.realAmount.toString(),
-            unit: ing.unit
-          }))
-        }
+        ...(ingredients && Array.isArray(ingredients) ? {
+          ingredients: {
+            deleteMany: {},
+            create: ingredients.map(ing => ({
+              name: toTitleCase(ing.name),
+              lote: ing.lote,
+              realAmount: ing.realAmount.toString(),
+              unit: ing.unit
+            }))
+          }
+        } : {})
       },
       include: {
         recipe: {

@@ -1105,6 +1105,14 @@
     "quantity_invalid": "Inserisci una quantità valida maggiore di 0.",
     "quantity_exceeded": "La quantità venduta non può superare le scorte disponibili ({available} {unit}).",
     "col_quantity": "Quantità",
-    "fully_sold_stock_badge": "Tutte le scorte di questa lavorazione sono state vendute."
+    "fully_sold_stock_badge": "Tutte le scorte di questa lavorazione sono state vendute.",
+    "open_sale_form_btn": "Registra nuova vendita",
+    "close_sale_form_btn": "Annulla / Nascondi",
+    "initial_stock_required_title": "Scorte iniziali non impostate",
+    "initial_stock_required_desc": "Prima di registrare una vendita, devi inserire la quantità prodotta (scorte iniziali) di questo lotto.",
+    "save_initial_stock_btn": "Salva scorte iniziali",
+    "saving_initial_stock": "Salvataggio...",
+    "initial_stock_saved_success": "Scorte iniziali salvate con successo.",
+    "initial_stock_invalid": "Inserisci una quantità iniziale valida maggiore di 0."
   }
 }

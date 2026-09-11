@@ -1103,6 +1103,14 @@
     "quantity_invalid": "Por favor, introduza uma quantidade válida superior a 0.",
     "quantity_exceeded": "A quantidade vendida não pode exceder o stock disponível ({available} {unit}).",
     "col_quantity": "Quantidade",
-    "fully_sold_stock_badge": "Todo o stock desta elaboração foi vendido."
+    "fully_sold_stock_badge": "Todo o stock desta elaboração foi vendido.",
+    "open_sale_form_btn": "Registar nova venda",
+    "close_sale_form_btn": "Cancelar / Ocultar",
+    "initial_stock_required_title": "Stock inicial não definido",
+    "initial_stock_required_desc": "Antes de registar uma venda, deve introduzir a quantidade produzida (stock inicial) deste lote.",
+    "save_initial_stock_btn": "Guardar stock inicial",
+    "saving_initial_stock": "A guardar...",
+    "initial_stock_saved_success": "Stock inicial guardado com sucesso.",
+    "initial_stock_invalid": "Por favor, introduza uma quantidade inicial válida superior a 0."
   }
 }

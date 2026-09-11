@@ -1110,6 +1110,14 @@
     "quantity_invalid": "Please enter a valid quantity greater than 0.",
     "quantity_exceeded": "The quantity sold cannot exceed the available stock ({available} {unit}).",
     "col_quantity": "Quantity",
-    "fully_sold_stock_badge": "All stock of this elaboration has been sold."
+    "fully_sold_stock_badge": "All stock of this elaboration has been sold.",
+    "open_sale_form_btn": "Record new sale",
+    "close_sale_form_btn": "Cancel / Hide",
+    "initial_stock_required_title": "Initial stock not set",
+    "initial_stock_required_desc": "Before recording a sale, you must enter the quantity produced (initial stock) for this batch.",
+    "save_initial_stock_btn": "Save initial stock",
+    "saving_initial_stock": "Saving...",
+    "initial_stock_saved_success": "Initial stock saved successfully.",
+    "initial_stock_invalid": "Please enter a valid initial quantity greater than 0."
   }
 }

@@ -11331,10 +11331,19 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
 
 function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated, onNavigateToCustomers }) {
   const { t, locale } = useI18n();
+  const [currentElab, setCurrentElab] = useState(elaboration);
   const [sales, setSales] = useState(elaboration.sales || []);
   const [loadingSales, setLoadingSales] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingSaleId, setEditingSaleId] = useState(null);
+  const [showSaleForm, setShowSaleForm] = useState(false);
+
+  // Initial stock setup form
+  const [initialStockForm, setInitialStockForm] = useState({
+    quantity: elaboration.quantityProduced || "",
+    unit: elaboration.quantityUnit || ""
+  });
+  const [savingInitialStock, setSavingInitialStock] = useState(false);
 
   const [saleForm, setSaleForm] = useState({
     customerId: "",
@@ -11343,10 +11352,18 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
     date: new Date().toISOString().slice(0, 10)
   });
 
+  useEffect(() => {
+    setCurrentElab(elaboration);
+    setInitialStockForm({
+      quantity: elaboration.quantityProduced || "",
+      unit: elaboration.quantityUnit || ""
+    });
+  }, [elaboration]);
+
   const fetchSales = async () => {
     try {
       setLoadingSales(true);
-      const res = await fetch(`/api/client/elaborations/${elaboration.id}/sales`);
+      const res = await fetch(`/api/client/elaborations/${currentElab.id}/sales`);
       const data = await res.json();
       if (data.success && Array.isArray(data.sales)) {
         setSales(data.sales);
@@ -11360,14 +11377,14 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
 
   useEffect(() => {
     fetchSales();
-  }, [elaboration.id]);
+  }, [currentElab.id]);
 
   const totalProduced = useMemo(() => {
-    const val = parseFloat(elaboration.quantityProduced?.toString().replace(',', '.'));
+    const val = parseFloat(currentElab.quantityProduced?.toString().replace(',', '.'));
     return (!isNaN(val) && val > 0) ? val : null;
-  }, [elaboration.quantityProduced]);
+  }, [currentElab.quantityProduced]);
 
-  const unit = elaboration.quantityUnit || "";
+  const unit = currentElab.quantityUnit || "";
 
   const totalSoldQty = useMemo(() => {
     return Math.round(sales.reduce((sum, s) => {
@@ -11397,8 +11414,48 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   const isFullySold = totalProduced != null ? (availableStock <= 0.0001) : false;
   const soldPercentage = totalProduced != null && totalProduced > 0 ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : 0;
 
+  const handleSaveInitialStock = async (e) => {
+    e.preventDefault();
+    const initQty = parseFloat(initialStockForm.quantity.toString().replace(',', '.'));
+    if (isNaN(initQty) || initQty <= 0) {
+      alert(t('elaboration_sales.initial_stock_invalid') || "Por favor, introduce una cantidad inicial válida mayor que 0.");
+      return;
+    }
+    const initUnit = initialStockForm.unit.trim();
+    setSavingInitialStock(true);
+    try {
+      const res = await fetch(`/api/elaborations/${currentElab.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quantityProduced: initQty.toString(),
+          quantityUnit: initUnit
+        })
+      });
+      if (res.ok) {
+        setCurrentElab(prev => ({
+          ...prev,
+          quantityProduced: initQty.toString(),
+          quantityUnit: initUnit
+        }));
+        setShowSaleForm(true);
+        if (onSaleUpdated) onSaleUpdated();
+        alert(t('elaboration_sales.initial_stock_saved_success') || "Stock inicial guardado correctamente.");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || t('alerts.request_error'));
+      }
+    } catch (err) {
+      console.error("Error saving initial stock:", err);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setSavingInitialStock(false);
+    }
+  };
+
   const handleStartEdit = (s) => {
     setEditingSaleId(s.id);
+    setShowSaleForm(true);
     const qty = s.quantity != null 
       ? s.quantity.toString() 
       : (totalProduced != null && s.percentage != null ? ((totalProduced * s.percentage) / 100).toString() : "");
@@ -11412,6 +11469,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
 
   const handleCancelEdit = () => {
     setEditingSaleId(null);
+    setShowSaleForm(false);
     setSaleForm({
       customerId: "",
       quantity: "",
@@ -11447,8 +11505,8 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
     setSubmitting(true);
     try {
       const url = editingSaleId 
-        ? `/api/client/elaborations/${elaboration.id}/sales/${editingSaleId}`
-        : `/api/client/elaborations/${elaboration.id}/sales`;
+        ? `/api/client/elaborations/${currentElab.id}/sales/${editingSaleId}`
+        : `/api/client/elaborations/${currentElab.id}/sales`;
       const method = editingSaleId ? "PATCH" : "POST";
 
       const res = await fetch(url, {
@@ -11484,7 +11542,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   const handleDeleteSale = async (saleId) => {
     if (!confirm(t('elaboration_sales.delete_sale_confirm') || "¿Estás seguro de que deseas eliminar este registro de venta?")) return;
     try {
-      const res = await fetch(`/api/client/elaborations/${elaboration.id}/sales/${saleId}`, {
+      const res = await fetch(`/api/client/elaborations/${currentElab.id}/sales/${saleId}`, {
         method: "DELETE"
       });
       const data = await res.json();
@@ -11513,9 +11571,9 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
               {t('elaboration_sales.modal_title') || "Registrar venta de elaboración"}
             </h2>
             <div style={{ marginTop: '0.4rem', fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <span><strong>{t('traceability_form.elaboration_title')}:</strong> {elaboration.name}</span>
-              {elaboration.recipe?.name && <span>• <strong>{t('dashboard.recipe_name')}:</strong> {elaboration.recipe.name}</span>}
-              <span>• <strong>{t('dashboard.date')}:</strong> {formatDateTimeDDMMYYYY(elaboration.date)}</span>
+              <span><strong>{t('traceability_form.elaboration_title')}:</strong> {currentElab.name}</span>
+              {currentElab.recipe?.name && <span>• <strong>{t('dashboard.recipe_name')}:</strong> {currentElab.recipe.name}</span>}
+              <span>• <strong>{t('dashboard.date')}:</strong> {formatDateTimeDDMMYYYY(currentElab.date)}</span>
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
@@ -11530,25 +11588,32 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
               {t('elaboration_sales.summary_title') || "Estado de ventas de esta elaboración"}
             </span>
             <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
-              {totalProduced != null && (
-                <span>
-                  <strong>{t('elaboration_sales.total_produced') || "Total elaborado"}:</strong>{" "}
-                  <span style={{ fontWeight: '800', color: 'var(--text-main)' }}>
-                    {totalProduced} {unit}
+              {totalProduced != null ? (
+                <>
+                  <span>
+                    <strong>{t('elaboration_sales.total_produced') || "Total elaborado"}:</strong>{" "}
+                    <span style={{ fontWeight: '800', color: 'var(--text-main)' }}>
+                      {totalProduced} {unit}
+                    </span>
                   </span>
-                </span>
-              )}
-              <span>
-                <strong>{t('elaboration_sales.total_sold') || "Total vendido"}:</strong>{" "}
-                <span style={{ color: (totalProduced != null && totalSoldQty >= totalProduced) ? 'var(--corp-green)' : '#f59e0b', fontWeight: '800' }}>
-                  {totalSoldQty} {unit}
-                </span>
-              </span>
-              {totalProduced != null && (
+                  <span>
+                    <strong>{t('elaboration_sales.total_sold') || "Total vendido"}:</strong>{" "}
+                    <span style={{ color: totalSoldQty >= totalProduced ? 'var(--corp-green)' : '#f59e0b', fontWeight: '800' }}>
+                      {totalSoldQty} {unit}
+                    </span>
+                  </span>
+                  <span>
+                    <strong>{t('elaboration_sales.stock_available') || "Stock disponible"}:</strong>{" "}
+                    <span style={{ color: availableStock > 0 ? 'var(--corp-green)' : 'var(--text-muted)', fontWeight: '800' }}>
+                      {availableStock} {unit}
+                    </span>
+                  </span>
+                </>
+              ) : (
                 <span>
-                  <strong>{t('elaboration_sales.stock_available') || "Stock disponible"}:</strong>{" "}
-                  <span style={{ color: availableStock > 0 ? 'var(--corp-green)' : 'var(--text-muted)', fontWeight: '800' }}>
-                    {availableStock} {unit}
+                  <strong>{t('elaboration_sales.total_sold') || "Total vendido"}:</strong>{" "}
+                  <span style={{ color: '#f59e0b', fontWeight: '800' }}>
+                    {totalSoldQty} {unit}
                   </span>
                 </span>
               )}
@@ -11567,23 +11632,112 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
           </div>
         </div>
 
-        {/* Formulario para registrar / editar venta */}
-        {(!isFullySold || editingSaleId) ? (
+        {/* Sección 1: Si no tiene stock inicial, pedirlo antes de registrar ventas */}
+        {totalProduced == null ? (
+          <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '1rem', padding: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem', color: '#b45309' }}>
+              <AlertCircle size={22} color="#d97706" />
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800' }}>
+                {t('elaboration_sales.initial_stock_required_title') || "Stock inicial no establecido"}
+              </h3>
+            </div>
+            <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.88rem', color: '#92400e', lineHeight: '1.4' }}>
+              {t('elaboration_sales.initial_stock_required_desc') || "Antes de registrar una venta debes introducir la cantidad elaborada (stock inicial) de este lote."}
+            </p>
+            <form onSubmit={handleSaveInitialStock} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr)) auto', gap: '1rem', alignItems: 'flex-end' }}>
+              <div>
+                <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem', color: '#92400e' }}>
+                  {t('traceability_form.quantity_produced') || "Cantidad elaborada"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  min="0.001"
+                  className="input-field"
+                  value={initialStockForm.quantity}
+                  onChange={(e) => setInitialStockForm({ ...initialStockForm, quantity: e.target.value })}
+                  placeholder={t('traceability_form.quantity_produced_placeholder') || "Ej: 200"}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem', color: '#92400e' }}>
+                  {t('traceability_form.quantity_unit') || "Unidad de medida"}
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={initialStockForm.unit}
+                  onChange={(e) => setInitialStockForm({ ...initialStockForm, unit: e.target.value })}
+                  placeholder={t('traceability_form.quantity_unit_placeholder') || "Ej: kg, unidades, l..."}
+                />
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  disabled={savingInitialStock}
+                  className="btn-primary"
+                  style={{ padding: '0.75rem 1.5rem', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}
+                >
+                  {savingInitialStock ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      {t('elaboration_sales.saving_initial_stock') || "Guardando..."}
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      {t('elaboration_sales.save_initial_stock_btn') || "Guardar stock inicial"}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : isFullySold && !editingSaleId ? (
+          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '1rem', padding: '1.25rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#166534' }}>
+            <Check size={20} color="var(--corp-green)" />
+            <span style={{ fontWeight: '700', fontSize: '0.95rem' }}>
+              {t('elaboration_sales.fully_sold_stock_badge') || "Todo el stock de esta elaboración ha sido vendido."}
+            </span>
+          </div>
+        ) : !showSaleForm && !editingSaleId ? (
+          /* Botón para abrir el formulario de registrar venta */
+          <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'flex-start' }}>
+            <button
+              type="button"
+              onClick={() => setShowSaleForm(true)}
+              className="btn-primary"
+              style={{
+                padding: '0.8rem 1.6rem',
+                fontWeight: '800',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.95rem',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 4px rgba(66, 98, 22, 0.15)'
+              }}
+            >
+              <Plus size={18} />
+              {t('elaboration_sales.open_sale_form_btn') || "Registrar nueva venta"}
+            </button>
+          </div>
+        ) : (
+          /* Formulario para registrar / editar venta */
           <form onSubmit={handleSubmit} style={{ background: editingSaleId ? '#fffbeb' : 'white', padding: '1.5rem', borderRadius: '1rem', border: editingSaleId ? '1px solid #fcd34d' : '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {editingSaleId ? <Edit size={18} color="#d97706" /> : <Plus size={18} color="var(--corp-green)" />}
                 {editingSaleId ? (t('elaboration_sales.edit_sale') || "Editar venta") : (t('elaboration_sales.register_sale') || "Registrar venta")}
               </h3>
-              {editingSaleId && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
-                >
-                  {t('elaboration_sales.cancel_edit') || "Cancelar edición"}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                {editingSaleId ? (t('elaboration_sales.cancel_edit') || "Cancelar edición") : (t('elaboration_sales.close_sale_form_btn') || "Cancelar / Ocultar")}
+              </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
@@ -11695,16 +11849,14 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
-              {editingSaleId && (
-                <button 
-                  type="button" 
-                  onClick={handleCancelEdit}
-                  className="btn-secondary" 
-                  style={{ padding: '0.75rem 1.5rem', fontWeight: '700' }}
-                >
-                  {t('elaboration_sales.cancel_edit') || "Cancelar edición"}
-                </button>
-              )}
+              <button 
+                type="button" 
+                onClick={handleCancelEdit}
+                className="btn-secondary" 
+                style={{ padding: '0.75rem 1.5rem', fontWeight: '700' }}
+              >
+                {t('common.cancel') || "Cancelar"}
+              </button>
               <button 
                 type="submit" 
                 className="btn-primary" 
@@ -11717,13 +11869,6 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
               </button>
             </div>
           </form>
-        ) : (
-          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '1rem', padding: '1.25rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#166534' }}>
-            <Check size={20} color="var(--corp-green)" />
-            <span style={{ fontWeight: '700', fontSize: '0.95rem' }}>
-              {t('elaboration_sales.fully_sold_stock_badge') || "Todo el stock de esta elaboración ha sido vendido."}
-            </span>
-          </div>
         )}
 
         {/* Listado de ventas registradas */}
