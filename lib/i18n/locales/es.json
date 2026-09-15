@@ -1166,5 +1166,15 @@
     "no_records_stock": "No se encontraron elaboraciones con stock disponible en el período seleccionado.",
     "generating": "Generando...",
     "current_stock_label": "Stock actual disponible"
+  },
+  "traceability_report": {
+    "report_type": "Tipo de informe",
+    "type_full": "Informe completo",
+    "type_simple": "Listado sencillo en modo tabla",
+    "simple_pdf_title": "LISTADO DE ELABORACIONES",
+    "col_date": "Fecha",
+    "col_recipe": "Receta",
+    "col_lot_number": "Número de lote",
+    "total_elaborations": "Total elaboraciones"
   }
 }

@@ -447,6 +447,7 @@ export default function ClientDashboard() {
     from: new Date().toISOString().slice(0, 10), 
     to: new Date().toISOString().slice(0, 10) 
   });
+  const [traceabilityReportType, setTraceabilityReportType] = useState("full");
   const [salesReportDates, setSalesReportDates] = useState({ 
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10), 
     to: new Date().toISOString().slice(0, 10) 
@@ -2693,7 +2694,7 @@ export default function ClientDashboard() {
     }
   };
 
-  const generateTraceabilityReportPDF = async (startDate, endDate) => {
+  const generateTraceabilityReportPDF = async (startDate, endDate, reportType = "full") => {
     setLoading(true);
     try {
       // Fetch all elaborations in the date range (limit 1000 to cover most cases)
@@ -2718,6 +2719,79 @@ export default function ClientDashboard() {
 
       const filtered = data.data;
       const doc = new jsPDF();
+      
+      if (reportType === "simple") {
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(66, 98, 22);
+        doc.text(t('traceability_report.simple_pdf_title') || "LISTADO DE ELABORACIONES", 14, 22);
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+        doc.text(`${t('common.from')}: ${formatDateDDMMYYYY(startDate)}   ${t('common.to')}: ${formatDateDDMMYYYY(endDate)}`, 14, 30);
+        if (profile?.razonSocial || profile?.nif) {
+          doc.text(`${profile?.razonSocial || ''}${profile?.razonSocial && profile?.nif ? ' - ' : ''}${profile?.nif || ''}`, 14, 35);
+        }
+
+        const tableStartY = (profile?.razonSocial || profile?.nif) ? 42 : 36;
+        const tableRows = filtered.map(el => [
+          formatDateDDMMYYYY(el.date || el.createdAt),
+          el.recipe?.name || "-",
+          el.name || "-"
+        ]);
+
+        autoTable(doc, {
+          head: [[
+            t('traceability_report.col_date') || "Fecha",
+            t('traceability_report.col_recipe') || "Receta",
+            t('traceability_report.col_lot_number') || "Número de lote"
+          ]],
+          body: tableRows,
+          startY: tableStartY,
+          theme: 'striped',
+          headStyles: { 
+            fillColor: [66, 98, 22], 
+            textColor: [255, 255, 255], 
+            fontStyle: 'bold',
+            fontSize: 9.5
+          },
+          styles: { 
+            fontSize: 9, 
+            cellPadding: 3.5, 
+            valign: 'middle' 
+          },
+          alternateRowStyles: { 
+            fillColor: [248, 250, 245] 
+          },
+          columnStyles: {
+            0: { cellWidth: 35 },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 50 }
+          },
+          foot: [[
+            "", 
+            t('traceability_report.total_elaborations') || "Total elaboraciones", 
+            `${filtered.length}`
+          ]],
+          footStyles: {
+            fillColor: [240, 243, 235],
+            textColor: [66, 98, 22],
+            fontStyle: 'bold',
+            fontSize: 9
+          },
+          didDrawPage: (data) => {
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 14, doc.internal.pageSize.height - 10);
+            doc.text(`${data.pageNumber}`, doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10, { align: 'right' });
+          }
+        });
+
+        doc.save(`Listado_Elaboraciones_${startDate || 'todas'}_${endDate || 'todas'}.pdf`);
+        setIsTraceabilityReportModalOpen(false);
+        return;
+      }
       
       filtered.forEach((el, index) => {
         if (index > 0) doc.addPage();
@@ -4583,7 +4657,10 @@ export default function ClientDashboard() {
                   </div>
                   <div className="action-buttons-mobile" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <button 
-                      onClick={() => setIsTraceabilityReportModalOpen(true)}
+                      onClick={() => {
+                        setTraceabilityReportType("full");
+                        setIsTraceabilityReportModalOpen(true);
+                      }}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                     >
@@ -8586,6 +8663,34 @@ export default function ClientDashboard() {
                 />
               </div>
 
+              <div>
+                <label className="label">{t('traceability_report.report_type') || "Tipo de informe"}</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                    <input 
+                      type="radio" 
+                      name="traceabilityReportType" 
+                      value="full"
+                      checked={traceabilityReportType === "full"} 
+                      onChange={() => setTraceabilityReportType("full")}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                    />
+                    <span>{t('traceability_report.type_full') || "Informe completo"}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                    <input 
+                      type="radio" 
+                      name="traceabilityReportType" 
+                      value="simple"
+                      checked={traceabilityReportType === "simple"} 
+                      onChange={() => setTraceabilityReportType("simple")}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                    />
+                    <span>{t('traceability_report.type_simple') || "Listado sencillo en modo tabla"}</span>
+                  </label>
+                </div>
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button 
                   className="btn-secondary" 
@@ -8596,7 +8701,7 @@ export default function ClientDashboard() {
                 </button>
                 <button 
                   className="btn-primary" 
-                  onClick={() => generateTraceabilityReportPDF(reportDates.from, reportDates.to)}
+                  onClick={() => generateTraceabilityReportPDF(reportDates.from, reportDates.to, traceabilityReportType)}
                   disabled={loading}
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >

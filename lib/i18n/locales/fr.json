@@ -1161,5 +1161,15 @@
     "no_records_stock": "Aucune fabrication avec stock disponible trouvée pour la période sélectionnée.",
     "generating": "Génération...",
     "current_stock_label": "Stock actuel disponible"
+  },
+  "traceability_report": {
+    "report_type": "Type de rapport",
+    "type_full": "Rapport complet",
+    "type_simple": "Liste simple sous forme de tableau",
+    "simple_pdf_title": "LISTE DES ÉLABORATIONS",
+    "col_date": "Date",
+    "col_recipe": "Recette",
+    "col_lot_number": "Numéro de lot",
+    "total_elaborations": "Total des élaborations"
   }
 }

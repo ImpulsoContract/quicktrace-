@@ -1166,5 +1166,15 @@
     "no_records_stock": "No elaborations with available stock found in the selected period.",
     "generating": "Generating...",
     "current_stock_label": "Current available stock"
+  },
+  "traceability_report": {
+    "report_type": "Report type",
+    "type_full": "Full report",
+    "type_simple": "Simple table list",
+    "simple_pdf_title": "LIST OF ELABORATIONS",
+    "col_date": "Date",
+    "col_recipe": "Recipe",
+    "col_lot_number": "Lot number",
+    "total_elaborations": "Total elaborations"
   }
 }
