@@ -8,12 +8,8 @@ export const dynamic = "force-dynamic";
 export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    if (session.user.role === "WORKER" && !session.user.permissions?.hasTraceability) {
-      return NextResponse.json({ error: "No tienes permiso para acceder a trazabilidad ni ventas" }, { status: 403 });
     }
 
     const profileId = session.user.profileId;

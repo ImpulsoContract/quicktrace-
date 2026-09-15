@@ -33,11 +33,8 @@ export async function PATCH(req, { params }) {
     } = data;
 
     // Buscar el perfil del cliente
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
@@ -47,7 +44,7 @@ export async function PATCH(req, { params }) {
       include: { recipe: true, ingredients: true }
     });
 
-    if (!existingElab || existingElab.recipe.clientProfileId !== profile.id) {
+    if (!existingElab || (session.user.role !== "ADMIN" && existingElab.recipe.clientProfileId !== profileId)) {
       return NextResponse.json({ error: "No autorizado para modificar esta elaboración" }, { status: 403 });
     }
 
@@ -55,7 +52,7 @@ export async function PATCH(req, { params }) {
     let totalCost = undefined;
     if (ingredients && Array.isArray(ingredients)) {
       const existingPrices = await prisma.ingredientPrice.findMany({
-        where: { clientProfileId: profile.id }
+        where: { clientProfileId: profileId }
       });
 
       const priceMap = {};
@@ -126,7 +123,7 @@ export async function PATCH(req, { params }) {
 
     // Update stock levels
     if (ingredients && Array.isArray(ingredients)) {
-      await processUpdatedElaborationStock(profile.id, existingElab.ingredients || [], ingredients);
+      await processUpdatedElaborationStock(profileId, existingElab.ingredients || [], ingredients);
     }
 
     return NextResponse.json(elaboration);
@@ -144,11 +141,8 @@ export async function DELETE(req, { params }) {
     const { id } = params;
 
     // Buscar el perfil del cliente
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: parseInt(session.user.id) }
-    });
-
-    if (!profile) {
+    const profileId = session.user.profileId;
+    if (!profileId) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
@@ -158,7 +152,7 @@ export async function DELETE(req, { params }) {
       include: { recipe: true, ingredients: true }
     });
 
-    if (!existingElab || existingElab.recipe.clientProfileId !== profile.id) {
+    if (!existingElab || (session.user.role !== "ADMIN" && existingElab.recipe.clientProfileId !== profileId)) {
       return NextResponse.json({ error: "No autorizado para eliminar esta elaboración" }, { status: 403 });
     }
 
@@ -168,7 +162,7 @@ export async function DELETE(req, { params }) {
 
     // Add back quantities to stock
     if (existingElab.ingredients && existingElab.ingredients.length > 0) {
-      await processDeletedElaborationsStock(profile.id, [existingElab]);
+      await processDeletedElaborationsStock(profileId, [existingElab]);
     }
 
     return NextResponse.json({ success: true });

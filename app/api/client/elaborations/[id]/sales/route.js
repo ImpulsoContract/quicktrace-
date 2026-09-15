@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(req, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
@@ -71,7 +71,7 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 

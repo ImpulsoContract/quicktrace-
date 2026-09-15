@@ -914,6 +914,7 @@ export default function ClientDashboard() {
   };
 
   const fetchIngredientPrices = async () => {
+    if (session?.user?.role === "WORKER") return;
     try {
       const res = await fetch("/api/ingredient-prices");
       const data = await res.json();
@@ -4374,7 +4375,7 @@ export default function ClientDashboard() {
                               required={!isReadOnlyElab && !!ing.quantityMandatory} 
                               disabled={isReadOnlyElab}
                             />
-                            {(() => {
+                            {session?.user?.role !== "WORKER" && (() => {
                               const normIngName = (ing.name || '').trim().toLowerCase();
                               const normIngUnit = (ing.unit || '').trim().toLowerCase();
                               const priceObj = (ingredientPrices || []).find(p => 
@@ -4588,13 +4589,15 @@ export default function ClientDashboard() {
                     >
                       <FileText size={18} /> {t('dashboard.traceability_report')}
                     </button>
-                    <button 
-                      onClick={() => setIsSalesReportModalOpen(true)}
-                      className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                    >
-                      <DollarSign size={18} /> {t('sales_report.btn_label') || "Informe de ventas"}
-                    </button>
+                    {session?.user?.role !== "WORKER" && (
+                      <button 
+                        onClick={() => setIsSalesReportModalOpen(true)}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                      >
+                        <DollarSign size={18} /> {t('sales_report.btn_label') || "Informe de ventas"}
+                      </button>
+                    )}
                     <button 
                       onClick={generateInventoryReportPDF}
                       disabled={inventoryReportLoading}
@@ -4799,9 +4802,11 @@ export default function ClientDashboard() {
                               {t('dashboard.cost_column_header') || "Coste"}
                             </th>
                           )}
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                            {t('dashboard.sales_column_header') || "Ventas"}
-                          </th>
+                          {session?.user?.role !== "WORKER" && (
+                            <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                              {t('dashboard.sales_column_header') || "Ventas"}
+                            </th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -4927,7 +4932,7 @@ export default function ClientDashboard() {
                             );
                           })()}
                           {/* Columna Ventas */}
-                          {(() => {
+                          {session?.user?.role !== "WORKER" && (() => {
                             const elabSales = el.sales || [];
                             const hasSales = elabSales.length > 0;
                             const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
@@ -5230,7 +5235,7 @@ export default function ClientDashboard() {
                         })()}
 
                         {/* Bloque de Ventas y Stock */}
-                        {(() => {
+                        {session?.user?.role !== "WORKER" && (() => {
                           const elabSales = el.sales || [];
                           const hasSales = elabSales.length > 0;
                           const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
@@ -5877,13 +5882,15 @@ export default function ClientDashboard() {
                     >
                       <Settings size={18} /> {t('modals.manage_merchant_types') || "Gestionar tipos de mercancía"}
                     </button>
-                    <button
-                      onClick={() => setIsIngredientCostsModalOpen(true)}
-                      className="btn-secondary"
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
-                    >
-                      <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
-                    </button>
+                    {session?.user?.role !== "WORKER" && (
+                      <button
+                        onClick={() => setIsIngredientCostsModalOpen(true)}
+                        className="btn-secondary"
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                      >
+                        <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
+                      </button>
+                    )}
                     <button 
                       onClick={() => setIsInventoryModalOpen(true)}
                       className="btn-secondary"
@@ -7394,12 +7401,16 @@ export default function ClientDashboard() {
                         <th onClick={() => handleSort('recipe')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           {t('dashboard.elaboration_recipe_header')} {sortConfig.key === 'recipe' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th onClick={() => handleSort('costPrice')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {t('dashboard.cost_column_header') || "Coste"} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                        </th>
-                        <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {t('dashboard.sales_column_header') || "Ventas"}
-                        </th>
+                        {session?.user?.role !== "WORKER" && (
+                          <>
+                            <th onClick={() => handleSort('costPrice')} style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              {t('dashboard.cost_column_header') || "Coste"} {sortConfig.key === 'costPrice' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                            </th>
+                            <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              {t('dashboard.sales_column_header') || "Ventas"}
+                            </th>
+                          </>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -7472,7 +7483,7 @@ export default function ClientDashboard() {
                               {elab.recipe.name}
                             </span>
                           </td>
-                          {(() => {
+                          {session?.user?.role !== "WORKER" && (() => {
                             const rawCost = Number(elab.costPrice) || 0;
                             const prepTimeNum = elab.preparationTime ? parseFloat(elab.preparationTime.toString().replace(',', '.')) : 0;
                             const hourlyRate = Number(elab.laborCostHourlyRate) || 0;
@@ -7523,7 +7534,7 @@ export default function ClientDashboard() {
                             );
                           })()}
                           {/* Columna Ventas */}
-                          {(() => {
+                          {session?.user?.role !== "WORKER" && (() => {
                             const elabSales = elab.sales || [];
                             const hasSales = elabSales.length > 0;
                             const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
@@ -7827,7 +7838,7 @@ export default function ClientDashboard() {
         />
       )}
 
-      {isIngredientCostsModalOpen && (
+      {isIngredientCostsModalOpen && session?.user?.role !== "WORKER" && (
         <IngredientCostModal 
           onClose={() => {
             setIsIngredientCostsModalOpen(false);
@@ -7902,7 +7913,7 @@ export default function ClientDashboard() {
         />
       )}
 
-      {isSaleModalOpen && saleModalElaboration && (
+      {isSaleModalOpen && saleModalElaboration && session?.user?.role !== "WORKER" && (
         <ElaborationSaleModal 
           elaboration={saleModalElaboration}
           customers={customers}
@@ -8597,7 +8608,7 @@ export default function ClientDashboard() {
         </div>
       )}
 
-      {isSalesReportModalOpen && (
+      {isSalesReportModalOpen && session?.user?.role !== "WORKER" && (
         <div className="modal-overlay">
           <div className="modal-content glass-card" style={{ maxWidth: '450px', width: '90%', padding: '2.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>

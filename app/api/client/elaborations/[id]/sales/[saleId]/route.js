@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 
 export async function DELETE(req, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
@@ -52,7 +52,7 @@ export async function DELETE(req, { params }) {
 
 export async function PATCH(req, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
