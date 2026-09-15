@@ -107,6 +107,7 @@ model ClientProfile {
   currency                   String            @default("EUR")
   laborCostHourlyRate        Float?            @default(0)
   isPreparationTimeMandatory Boolean           @default(false)
+  lotFormat                  String?           @default("YYYYMMDDHHmmINICIALES")
   wasteCollections           WasteCollection[]
   ingredientStocks           IngredientStock[]
   scannedDeliveryNotes       ScannedDeliveryNote[]

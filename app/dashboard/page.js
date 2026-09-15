@@ -11,7 +11,7 @@ import {
   Package, Boxes, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
-  Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin
+  Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -229,6 +229,42 @@ const formatDateTimeDDMMYYYY = (dateInput) => {
   } catch (e) {
     return "-";
   }
+};
+
+const DEFAULT_LOT_FORMAT = "YYYYMMDDHHmmINICIALES";
+
+const generateLotNumber = (format, recipe, nextElabNum, date = new Date()) => {
+  const lotFormat = format || DEFAULT_LOT_FORMAT;
+  const d = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
+  const year = d.getFullYear().toString();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  
+  const initials = (recipe?.name || "")
+    .split(/\s+/)
+    .filter(word => word.length > 0)
+    .map(word => word[0].toUpperCase())
+    .join('');
+  
+  const recipeName = recipe?.name || "";
+  const elabNum = (nextElabNum != null && nextElabNum > 0 ? nextElabNum : 1).toString();
+
+  return lotFormat.replace(/(YYYY|MM|DD|HH|mm|NUM|RECETA|INICIALES|-)/g, (match) => {
+    switch (match) {
+      case "YYYY": return year;
+      case "MM": return month;
+      case "DD": return day;
+      case "HH": return hours;
+      case "mm": return minutes;
+      case "NUM": return elabNum;
+      case "RECETA": return recipeName;
+      case "INICIALES": return initials;
+      case "-": return "-";
+      default: return match;
+    }
+  });
 };
 
 const DEFAULT_LABEL_CONFIG = {
@@ -1660,9 +1696,12 @@ export default function ClientDashboard() {
       initialIngredientes[ing.id] = { lote: defaultLote, cantidad: ing.amount };
     });
 
+    const nextElabNumber = (profile?.totalElaborations ?? totalElabs) + 1;
+    const lotTitle = generateLotNumber(profile?.lotFormat, recipe, nextElabNumber, now);
+
     setElaboracionForm({
       recipeId: recipe.id,
-      titulo: `${dateStr}${initials}`,
+      titulo: lotTitle,
       personName: lastPerson,
       date: currentDateTime,
       expirationDate: expirationDate,
@@ -1972,7 +2011,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -9156,6 +9195,7 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
   const [isPreparationTimeMandatory, setIsPreparationTimeMandatory] = useState(profile?.isPreparationTimeMandatory || false);
   const [merchantTypes, setMerchantTypes] = useState(profile?.merchantTypes || []);
   const [newMerchantType, setNewMerchantType] = useState("");
+  const [lotFormat, setLotFormat] = useState(profile?.lotFormat || DEFAULT_LOT_FORMAT);
 
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
@@ -9167,6 +9207,7 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
       setLaborCostHourlyRate(profile.laborCostHourlyRate || 0);
       setIsPreparationTimeMandatory(profile.isPreparationTimeMandatory || false);
       setMerchantTypes(profile.merchantTypes || []);
+      setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
     }
   }, [profile]);
 
@@ -9175,7 +9216,8 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
       currency: selectedCurrency,
       merchantTypes: merchantTypes,
       laborCostHourlyRate,
-      isPreparationTimeMandatory
+      isPreparationTimeMandatory,
+      lotFormat: lotFormat || DEFAULT_LOT_FORMAT
     });
   };
 
@@ -9193,11 +9235,57 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
     setMerchantTypes(merchantTypes.filter(t => t !== typeToRemove));
   };
 
+  const lotButtons = [
+    { id: "day", label: t('business_config.btn_day'), token: "DD" },
+    { id: "month", label: t('business_config.btn_month'), token: "MM" },
+    { id: "year", label: t('business_config.btn_year'), token: "YYYY" },
+    { id: "hour", label: t('business_config.btn_hour'), token: "HH" },
+    { id: "minute", label: t('business_config.btn_minute'), token: "mm" },
+    { id: "elab_number", label: t('business_config.btn_elab_number'), token: "NUM" },
+    { id: "recipe_name", label: t('business_config.btn_recipe_name'), token: "RECETA" },
+    { id: "recipe_initials", label: t('business_config.btn_recipe_initials'), token: "INICIALES" },
+    { id: "separator", label: t('business_config.btn_separator'), token: "-" }
+  ];
+
+  const handleAddToken = (token) => {
+    setLotFormat(prev => (prev || "") + token);
+  };
+
+  const handleDeleteLastToken = () => {
+    const tokens = (lotFormat || "").match(/(YYYY|MM|DD|HH|mm|NUM|RECETA|INICIALES|-)/g) || [];
+    if (tokens.length > 0) {
+      tokens.pop();
+      setLotFormat(tokens.join(""));
+    } else {
+      setLotFormat("");
+    }
+  };
+
+  const handleClearFormat = () => {
+    setLotFormat("");
+  };
+
+  const handleResetDefaultFormat = () => {
+    setLotFormat(DEFAULT_LOT_FORMAT);
+  };
+
+  const nextElabNumExample = (profile?.totalElaborations || 0) + 1;
+  const exampleLotNumber = useMemo(() => {
+    if (!lotFormat) return "";
+    return generateLotNumber(
+      lotFormat, 
+      { name: t('business_config.example_recipe_name') || "Nombre De La Receta" }, 
+      nextElabNumExample, 
+      new Date()
+    );
+  }, [lotFormat, nextElabNumExample, t]);
+
   // Check if anything changed to enable save button
   const hasChanges = selectedCurrency !== profile?.currency || 
                     JSON.stringify(merchantTypes) !== JSON.stringify(profile?.merchantTypes || []) ||
                     laborCostHourlyRate !== (profile?.laborCostHourlyRate || 0) ||
-                    isPreparationTimeMandatory !== (profile?.isPreparationTimeMandatory || false);
+                    isPreparationTimeMandatory !== (profile?.isPreparationTimeMandatory || false) ||
+                    (lotFormat || DEFAULT_LOT_FORMAT) !== (profile?.lotFormat || DEFAULT_LOT_FORMAT);
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '800px', paddingBottom: '4rem' }}>
@@ -9456,6 +9544,206 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
               {t('business_config.save_reminder')}
             </div>
           </div>
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+            <button 
+              onClick={handleSave}
+              className="btn-primary" 
+              disabled={loading || !hasChanges}
+              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
+            </button>
+          </div>
+        </section>
+
+        {/* Lot Number Format Configuration */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <Hash size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.lot_format_section')}</h3>
+          </div>
+          
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
+            {t('business_config.lot_format_desc')}
+          </p>
+
+          {/* Help box */}
+          <div style={{ marginBottom: '2rem', padding: '1rem 1.25rem', background: 'rgba(66, 98, 22, 0.06)', borderRadius: '0.75rem', border: '1px solid rgba(66, 98, 22, 0.15)', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+            <Info size={20} color="var(--corp-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <p style={{ fontSize: '0.85rem', color: '#2d450c', margin: 0, lineHeight: '1.5', fontWeight: '500' }}>
+              {t('business_config.lot_format_help')}
+            </p>
+          </div>
+
+          {/* 9 Buttons in requested order */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+              {t('business_config.lot_format_section')}
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+              {lotButtons.map(btn => (
+                <button
+                  key={btn.id}
+                  type="button"
+                  onClick={() => handleAddToken(btn.token)}
+                  style={{
+                    padding: '0.6rem 1rem',
+                    borderRadius: '0.6rem',
+                    border: '1.5px solid var(--border)',
+                    background: '#f8fafc',
+                    color: 'var(--text-main)',
+                    fontWeight: '600',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.15s ease',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = 'var(--corp-green)';
+                    e.currentTarget.style.background = 'rgba(66, 98, 22, 0.05)';
+                    e.currentTarget.style.color = 'var(--corp-green)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                    e.currentTarget.style.background = '#f8fafc';
+                    e.currentTarget.style.color = 'var(--text-main)';
+                  }}
+                >
+                  <span style={{ 
+                    fontSize: '0.75rem', 
+                    padding: '0.15rem 0.4rem', 
+                    borderRadius: '0.35rem', 
+                    background: 'rgba(66, 98, 22, 0.1)', 
+                    color: 'var(--corp-green)',
+                    fontWeight: '800',
+                    fontFamily: 'monospace'
+                  }}>
+                    {btn.token}
+                  </span>
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Auxiliary control buttons: delete last, clear, reset default */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+            <button
+              type="button"
+              onClick={handleDeleteLastToken}
+              disabled={!lotFormat}
+              style={{
+                padding: '0.4rem 0.85rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--border)',
+                background: 'white',
+                color: '#dc2626',
+                fontWeight: '600',
+                fontSize: '0.8rem',
+                cursor: lotFormat ? 'pointer' : 'not-allowed',
+                opacity: lotFormat ? 1 : 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}
+            >
+              <RotateCcw size={14} />
+              {t('business_config.btn_delete_last')}
+            </button>
+            <button
+              type="button"
+              onClick={handleClearFormat}
+              disabled={!lotFormat}
+              style={{
+                padding: '0.4rem 0.85rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--border)',
+                background: 'white',
+                color: '#64748b',
+                fontWeight: '600',
+                fontSize: '0.8rem',
+                cursor: lotFormat ? 'pointer' : 'not-allowed',
+                opacity: lotFormat ? 1 : 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}
+            >
+              <Trash2 size={14} />
+              {t('business_config.btn_clear')}
+            </button>
+            <button
+              type="button"
+              onClick={handleResetDefaultFormat}
+              style={{
+                padding: '0.4rem 0.85rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--border)',
+                background: 'white',
+                color: 'var(--corp-green)',
+                fontWeight: '600',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}
+            >
+              <Check size={14} />
+              {t('business_config.btn_reset_default')}
+            </button>
+          </div>
+
+          {/* Two display fields: Format text and Real-time Example preview */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            {/* 1. Format text */}
+            <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                {t('business_config.lot_format_label')}
+              </label>
+              <div style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: '700', 
+                fontFamily: 'monospace', 
+                color: lotFormat ? 'var(--text-main)' : 'var(--text-muted)',
+                minHeight: '2.2rem',
+                wordBreak: 'break-all',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                {lotFormat || <span style={{ fontStyle: 'italic', fontWeight: '400', fontSize: '0.9rem' }}>({t('modals.none') || 'Vacío'})</span>}
+              </div>
+            </div>
+
+            {/* 2. Real-time Example Preview */}
+            <div style={{ background: 'rgba(66, 98, 22, 0.04)', padding: '1.25rem', borderRadius: '0.75rem', border: '1.5px solid rgba(66, 98, 22, 0.25)' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--corp-green)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                {t('business_config.lot_format_example')}
+              </label>
+              <div style={{ 
+                fontSize: '1.2rem', 
+                fontWeight: '800', 
+                fontFamily: 'monospace', 
+                color: 'var(--corp-green)',
+                minHeight: '2.2rem',
+                wordBreak: 'break-all',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                {exampleLotNumber || <span style={{ fontStyle: 'italic', fontWeight: '400', fontSize: '0.9rem', color: 'var(--text-muted)' }}>({t('modals.none') || 'Vacío'})</span>}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+              <AlertCircle size={16} /> {t('business_config.save_reminder')}
+            </div>
+          </div>
+
           <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
             <button 
               onClick={handleSave}

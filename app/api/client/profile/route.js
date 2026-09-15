@@ -57,7 +57,11 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(profile);
+    const totalElaborations = await prisma.elaboration.count({
+      where: { recipe: { clientProfileId: profile.id } }
+    });
+
+    return NextResponse.json({ ...profile, totalElaborations });
   } catch (error) {
     console.error("Error fetching client profile:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -87,7 +91,8 @@ export async function PATCH(request) {
       merchantTypes,
       currency,
       laborCostHourlyRate,
-      isPreparationTimeMandatory
+      isPreparationTimeMandatory,
+      lotFormat
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -106,12 +111,17 @@ export async function PATCH(request) {
         merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
         currency: currency !== undefined ? currency : undefined,
         laborCostHourlyRate: laborCostHourlyRate !== undefined ? laborCostHourlyRate : undefined,
-        isPreparationTimeMandatory: isPreparationTimeMandatory !== undefined ? isPreparationTimeMandatory : undefined
+        isPreparationTimeMandatory: isPreparationTimeMandatory !== undefined ? isPreparationTimeMandatory : undefined,
+        lotFormat: lotFormat !== undefined ? lotFormat : undefined
       },
       include: { plan: true }
     });
 
-    return NextResponse.json(updatedProfile);
+    const totalElaborations = await prisma.elaboration.count({
+      where: { recipe: { clientProfileId: updatedProfile.id } }
+    });
+
+    return NextResponse.json({ ...updatedProfile, totalElaborations });
   } catch (error) {
     console.error("Error updating client profile:", error);
     return NextResponse.json({ error: "Error al actualizar el perfil" }, { status: 500 });
