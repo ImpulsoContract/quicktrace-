@@ -11,7 +11,8 @@ import {
   Package, Boxes, Truck, FileCheck, Camera, X, Crown, Zap, Settings,
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
-  Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash
+  Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
+  Key, Copy, EyeOff, RefreshCw
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -7148,7 +7149,9 @@ export default function ClientDashboard() {
           ) : activeTab === 'configuracion' ? (
             <BusinessConfigView 
               profile={profile}
+              chambers={chambers}
               onUpdate={handleUpdateProfile}
+              onProfileRefresh={fetchProfile}
               loading={loading}
             />
           ) : activeTab === 'afiliados' ? (
@@ -9188,7 +9191,7 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
   );
 }
 
-function BusinessConfigView({ profile, onUpdate, loading }) {
+function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh, loading }) {
   const { t } = useI18n();
   const [selectedCurrency, setSelectedCurrency] = useState(profile?.currency || "EUR");
   const [laborCostHourlyRate, setLaborCostHourlyRate] = useState(profile?.laborCostHourlyRate || 0);
@@ -9196,6 +9199,11 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
   const [merchantTypes, setMerchantTypes] = useState(profile?.merchantTypes || []);
   const [newMerchantType, setNewMerchantType] = useState("");
   const [lotFormat, setLotFormat] = useState(profile?.lotFormat || DEFAULT_LOT_FORMAT);
+  const [apiKey, setApiKey] = useState(profile?.apiKey || null);
+  const [apiKeyCreatedAt, setApiKeyCreatedAt] = useState(profile?.apiKeyCreatedAt || null);
+  const [isKeyVisible, setIsKeyVisible] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
+  const [keyLoading, setKeyLoading] = useState(false);
 
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
@@ -9208,8 +9216,67 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
       setIsPreparationTimeMandatory(profile.isPreparationTimeMandatory || false);
       setMerchantTypes(profile.merchantTypes || []);
       setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
+      setApiKey(profile.apiKey || null);
+      setApiKeyCreatedAt(profile.apiKeyCreatedAt || null);
     }
   }, [profile]);
+
+  const handleGenerateApiKey = async () => {
+    if (apiKey) {
+      if (!confirm(t('business_config.api_key_confirm_regenerate'))) {
+        return;
+      }
+    }
+    setKeyLoading(true);
+    try {
+      const res = await fetch("/api/client/api-key", { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setApiKey(data.apiKey);
+        setApiKeyCreatedAt(data.apiKeyCreatedAt);
+        setIsKeyVisible(true);
+        if (onProfileRefresh) onProfileRefresh();
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (e) {
+      console.error("Error generating API key:", e);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setKeyLoading(false);
+    }
+  };
+
+  const handleRevokeApiKey = async () => {
+    if (!confirm(t('business_config.api_key_confirm_revoke'))) {
+      return;
+    }
+    setKeyLoading(true);
+    try {
+      const res = await fetch("/api/client/api-key", { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setApiKey(null);
+        setApiKeyCreatedAt(null);
+        setIsKeyVisible(false);
+        if (onProfileRefresh) onProfileRefresh();
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (e) {
+      console.error("Error revoking API key:", e);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setKeyLoading(false);
+    }
+  };
+
+  const handleCopyApiKey = () => {
+    if (!apiKey) return;
+    navigator.clipboard.writeText(apiKey);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2500);
+  };
 
   const handleSave = () => {
     onUpdate({ 
@@ -9753,6 +9820,222 @@ function BusinessConfigView({ profile, onUpdate, loading }) {
             >
               {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
             </button>
+          </div>
+        </section>
+
+        {/* API & Temperature Sensors Configuration */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <Cpu size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.api_key_section')}</h3>
+          </div>
+
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
+            {t('business_config.api_key_desc')}
+          </p>
+
+          {/* Key Management Box */}
+          <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2rem' }}>
+            {!apiKey ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                  {t('business_config.api_key_no_key')}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleGenerateApiKey}
+                  disabled={keyLoading}
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem' }}
+                >
+                  {keyLoading ? <Loader2 className="animate-spin" size={18} /> : <><Key size={18} /> {t('business_config.api_key_generate_btn')}</>}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    API Key
+                  </label>
+                  {apiKeyCreatedAt && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {t('business_config.api_key_created_at')} {formatDateDDMMYYYY(apiKeyCreatedAt)}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+                    <input
+                      type={isKeyVisible ? "text" : "password"}
+                      readOnly
+                      value={apiKey}
+                      className="input-field"
+                      style={{ 
+                        fontFamily: 'monospace', 
+                        fontSize: '0.95rem', 
+                        paddingRight: '2.5rem', 
+                        background: 'white',
+                        fontWeight: '600',
+                        color: 'var(--text-main)'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsKeyVisible(!isKeyVisible)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        padding: '0.25rem'
+                      }}
+                      title={isKeyVisible ? "Ocultar" : "Mostrar"}
+                    >
+                      {isKeyVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyApiKey}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.75rem 1rem', fontSize: '0.85rem' }}
+                  >
+                    {copiedKey ? <Check size={16} color="var(--corp-green)" /> : <Copy size={16} />}
+                    <span>{copiedKey ? t('business_config.api_key_copied') : t('business_config.api_key_copy_btn')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateApiKey}
+                    disabled={keyLoading}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.75rem 1rem', fontSize: '0.85rem' }}
+                    title={t('business_config.api_key_regenerate_btn')}
+                  >
+                    {keyLoading ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />}
+                    <span>{t('business_config.api_key_regenerate_btn')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRevokeApiKey}
+                    disabled={keyLoading}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.85rem',
+                      background: '#fef2f2',
+                      border: '1px solid #fee2e2',
+                      color: '#ef4444',
+                      borderRadius: '0.75rem',
+                      cursor: 'pointer',
+                      fontWeight: '600'
+                    }}
+                    title={t('business_config.api_key_revoke_btn')}
+                  >
+                    <Trash2 size={16} />
+                    <span>{t('business_config.api_key_revoke_btn')}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Documentation & Integration Guide */}
+          <div style={{ background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)', padding: '1.5rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: '0 0 1rem 0', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Info size={18} color="var(--corp-green)" />
+              {t('business_config.api_docs_title')}
+            </h4>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Endpoint */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                  {t('business_config.api_docs_endpoint_label')}
+                </label>
+                <div style={{ background: 'white', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', fontFamily: 'monospace', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ background: 'var(--corp-green)', color: 'white', fontWeight: '800', padding: '0.15rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem' }}>POST</span>
+                  <span style={{ color: 'var(--text-main)', wordBreak: 'break-all' }}>https://quicktrace.es/api/sensors/temperatures</span>
+                </div>
+              </div>
+
+              {/* Headers */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                  {t('business_config.api_docs_headers_label')}
+                </label>
+                <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '1rem', borderRadius: '0.5rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0 }}>
+{`Content-Type: application/json
+Authorization: Bearer ${apiKey || 'TU_CLAVE_API'}`}
+                </pre>
+              </div>
+
+              {/* Chambers registered in user account */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                  {t('business_config.api_docs_chambers_registered')}
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {chambers && chambers.length > 0 ? (
+                    chambers.map(c => (
+                      <span key={c.id} style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', fontWeight: '700', fontSize: '0.8rem', padding: '0.3rem 0.6rem', borderRadius: '0.4rem', border: '1px solid rgba(66, 98, 22, 0.2)' }}>
+                        "{c.name}"
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ fontSize: '0.85rem', color: '#f59e0b', fontStyle: 'italic' }}>
+                      No tienes cámaras configuradas todavía. Crea tus cámaras en el menú de Cámaras para poder registrar sus temperaturas.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Body format */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                  {t('business_config.api_docs_body_label')}
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Envío individual:</span>
+                    <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0 }}>
+{`{
+  "chamber": "${chambers?.[0]?.name || 'Cámara 1'}",
+  "temperature": 4.2
+}`}
+                    </pre>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Envío múltiple (varias cámaras a la vez):</span>
+                    <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0 }}>
+{`{
+  "temperatures": [
+    { "chamber": "${chambers?.[0]?.name || 'Cámara 1'}", "temperature": 4.2 },
+    { "chamber": "${chambers?.[1]?.name || 'Congelador'}", "temperature": -18.5 }
+  ]
+}`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notice */}
+              <div style={{ padding: '0.75rem 1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '0.5rem', border: '1px solid rgba(59, 130, 246, 0.15)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <AlertCircle size={16} color="#3b82f6" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: '500' }}>
+                  {t('business_config.api_docs_note')}
+                </span>
+              </div>
+            </div>
           </div>
         </section>
 

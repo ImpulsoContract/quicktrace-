@@ -108,6 +108,8 @@ model ClientProfile {
   laborCostHourlyRate        Float?            @default(0)
   isPreparationTimeMandatory Boolean           @default(false)
   lotFormat                  String?           @default("YYYYMMDDHHmmINICIALES")
+  apiKey                     String?           @unique
+  apiKeyCreatedAt            DateTime?
   wasteCollections           WasteCollection[]
   ingredientStocks           IngredientStock[]
   scannedDeliveryNotes       ScannedDeliveryNote[]
