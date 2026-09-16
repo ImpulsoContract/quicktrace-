@@ -185,7 +185,8 @@
     "api_docs_headers_label": "Required headers",
     "api_docs_body_label": "Body format (JSON)",
     "api_docs_note": "Each record will be saved with the exact date and time of the call, stating in notes: 'Entrada creada automáticamente desde el api de los sensores.'.",
-    "api_docs_chambers_registered": "Your registered chambers to submit"
+    "api_docs_chambers_registered": "Your registered chambers to submit",
+    "btn_week": "Elaboration week"
   },
   "dashboard": {
     "welcome": "Hello",

@@ -234,12 +234,26 @@ const formatDateTimeDDMMYYYY = (dateInput) => {
 
 const DEFAULT_LOT_FORMAT = "YYYYMMDDHHmmINICIALES";
 
+const getWeekNumber = (date) => {
+  try {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return String(weekNo).padStart(2, '0');
+  } catch (e) {
+    return '01';
+  }
+};
+
 const generateLotNumber = (format, recipe, nextElabNum, date = new Date()) => {
   const lotFormat = format || DEFAULT_LOT_FORMAT;
   const d = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
   const year = d.getFullYear().toString();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
+  const week = getWeekNumber(d);
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   
@@ -252,11 +266,14 @@ const generateLotNumber = (format, recipe, nextElabNum, date = new Date()) => {
   const recipeName = recipe?.name || "";
   const elabNum = (nextElabNum != null && nextElabNum > 0 ? nextElabNum : 1).toString();
 
-  return lotFormat.replace(/(YYYY|MM|DD|HH|mm|NUM|RECETA|INICIALES|-)/g, (match) => {
+  return lotFormat.replace(/(YYYY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g, (match) => {
     switch (match) {
       case "YYYY": return year;
       case "MM": return month;
       case "DD": return day;
+      case "WW":
+      case "SEM":
+      case "SEMANA": return week;
       case "HH": return hours;
       case "mm": return minutes;
       case "NUM": return elabNum;
@@ -9306,6 +9323,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     { id: "day", label: t('business_config.btn_day'), token: "DD" },
     { id: "month", label: t('business_config.btn_month'), token: "MM" },
     { id: "year", label: t('business_config.btn_year'), token: "YYYY" },
+    { id: "week", label: t('business_config.btn_week'), token: "WW" },
     { id: "hour", label: t('business_config.btn_hour'), token: "HH" },
     { id: "minute", label: t('business_config.btn_minute'), token: "mm" },
     { id: "elab_number", label: t('business_config.btn_elab_number'), token: "NUM" },
@@ -9319,7 +9337,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   };
 
   const handleDeleteLastToken = () => {
-    const tokens = (lotFormat || "").match(/(YYYY|MM|DD|HH|mm|NUM|RECETA|INICIALES|-)/g) || [];
+    const tokens = (lotFormat || "").match(/(YYYY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g) || [];
     if (tokens.length > 0) {
       tokens.pop();
       setLotFormat(tokens.join(""));

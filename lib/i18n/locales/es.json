@@ -185,7 +185,8 @@
     "api_docs_headers_label": "Cabeceras requeridas",
     "api_docs_body_label": "Formato del cuerpo (JSON)",
     "api_docs_note": "Cada registro se guardará con la fecha y hora exacta de la llamada, indicando en notas: 'Entrada creada automáticamente desde el api de los sensores.'.",
-    "api_docs_chambers_registered": "Tus cámaras registradas para enviar"
+    "api_docs_chambers_registered": "Tus cámaras registradas para enviar",
+    "btn_week": "Semana de elaboración"
   },
   "dashboard": {
     "welcome": "Hola",

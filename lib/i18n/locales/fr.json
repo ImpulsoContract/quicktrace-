@@ -185,7 +185,8 @@
     "api_docs_headers_label": "En-têtes requis",
     "api_docs_body_label": "Format du corps (JSON)",
     "api_docs_note": "Chaque enregistrement sera sauvegardé avec la date et l'heure exactes de l'appel, indiquant dans les notes : 'Entrada creada automáticamente desde el api de los sensores.'.",
-    "api_docs_chambers_registered": "Vos chambres enregistrées à envoyer"
+    "api_docs_chambers_registered": "Vos chambres enregistrées à envoyer",
+    "btn_week": "Semaine de fabrication"
   },
   "dashboard": {
     "welcome": "Bonjour",

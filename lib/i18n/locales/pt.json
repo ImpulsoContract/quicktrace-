@@ -185,7 +185,8 @@
     "api_docs_headers_label": "Cabeçalhos obrigatórios",
     "api_docs_body_label": "Formato do corpo (JSON)",
     "api_docs_note": "Cada registo será guardado com a data e hora exatas da chamada, indicando nas notas: 'Entrada creada automáticamente desde el api de los sensores.'.",
-    "api_docs_chambers_registered": "As suas câmaras registadas para envio"
+    "api_docs_chambers_registered": "As suas câmaras registadas para envio",
+    "btn_week": "Semana de elaboração"
   },
   "dashboard": {
     "welcome": "Olá",
