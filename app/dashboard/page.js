@@ -12,7 +12,7 @@ import {
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
-  Key, Copy, EyeOff, RefreshCw, BookOpen
+  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -612,6 +612,23 @@ export default function ClientDashboard() {
     to: new Date().toISOString().slice(0, 10) 
   });
 
+  // Cutting Traceability State
+  const [cuttingRecords, setCuttingRecords] = useState([]);
+  const [cuttingLoading, setCuttingLoading] = useState(false);
+  const [cuttingSearch, setCuttingSearch] = useState("");
+  const [isCuttingModalOpen, setIsCuttingModalOpen] = useState(false);
+  const [editingCuttingRecord, setEditingCuttingRecord] = useState(null);
+  const [cuttingForm, setCuttingForm] = useState({
+    lote: "",
+    pieceName: "",
+    notes: "",
+    openDate: "",
+    closeDate: "",
+    labelPhoto: ""
+  });
+  const [cuttingPhotoUploading, setCuttingPhotoUploading] = useState(false);
+  const [viewingCuttingPhoto, setViewingCuttingPhoto] = useState(null);
+
   useEffect(() => {
     if (isIngredientCostsModalOpen) {
       fetchIngredientPrices();
@@ -653,6 +670,12 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (activeTab === "afiliados" && profile?.isAffiliate) {
       fetchAffiliateStats();
+    }
+  }, [activeTab, profile]);
+
+  useEffect(() => {
+    if (activeTab === "despiece" && profile?.hasCuttingTraceability) {
+      fetchCuttingRecords();
     }
   }, [activeTab, profile]);
 
@@ -1383,6 +1406,154 @@ export default function ClientDashboard() {
     }
   };
 
+  const fetchCuttingRecords = async (searchQuery = "") => {
+    try {
+      setCuttingLoading(true);
+      const url = searchQuery
+        ? `/api/client/cutting-records?q=${encodeURIComponent(searchQuery)}`
+        : "/api/client/cutting-records";
+      const res = await fetch(url);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setCuttingRecords(data);
+      }
+    } catch (error) {
+      console.error("Error fetching cutting records:", error);
+    } finally {
+      setCuttingLoading(false);
+    }
+  };
+
+  const filteredCuttingRecords = useMemo(() => {
+    if (!cuttingSearch.trim()) return cuttingRecords;
+    const term = cuttingSearch.toLowerCase();
+    return cuttingRecords.filter(r => 
+      (r.lote || "").toLowerCase().includes(term) ||
+      (r.pieceName || "").toLowerCase().includes(term) ||
+      (r.notes || "").toLowerCase().includes(term)
+    );
+  }, [cuttingRecords, cuttingSearch]);
+
+  const handleOpenNewCuttingModal = () => {
+    setEditingCuttingRecord(null);
+    setCuttingForm({
+      lote: "",
+      pieceName: "",
+      notes: "",
+      openDate: "",
+      closeDate: "",
+      labelPhoto: ""
+    });
+    setIsCuttingModalOpen(true);
+  };
+
+  const handleEditCuttingRecord = (record) => {
+    setEditingCuttingRecord(record);
+    setCuttingForm({
+      lote: record.lote || "",
+      pieceName: record.pieceName || "",
+      notes: record.notes || "",
+      openDate: record.openDate ? new Date(record.openDate).toISOString().split('T')[0] : "",
+      closeDate: record.closeDate ? new Date(record.closeDate).toISOString().split('T')[0] : "",
+      labelPhoto: record.labelPhoto || ""
+    });
+    setIsCuttingModalOpen(true);
+  };
+
+  const handleSaveCuttingRecord = async (e) => {
+    e.preventDefault();
+    if (!cuttingForm.lote || !cuttingForm.lote.trim()) {
+      alert(t('alerts.fill_required_fields') || "El número de lote es obligatorio");
+      return;
+    }
+    if (!cuttingForm.pieceName || !cuttingForm.pieceName.trim()) {
+      alert(t('alerts.fill_required_fields') || "El nombre de la pieza es obligatorio");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const url = editingCuttingRecord
+        ? `/api/client/cutting-records/${editingCuttingRecord.id}`
+        : "/api/client/cutting-records";
+      const method = editingCuttingRecord ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cuttingForm)
+      });
+
+      const data = await res.json();
+      if (res.ok && !data.error) {
+        setIsCuttingModalOpen(false);
+        setEditingCuttingRecord(null);
+        fetchCuttingRecords(cuttingSearch);
+        alert(
+          editingCuttingRecord
+            ? t('cutting_traceability.success_updated')
+            : t('cutting_traceability.success_created')
+        );
+      } else {
+        alert(data.error || t('alerts.request_error'));
+      }
+    } catch (error) {
+      console.error("Error saving cutting record:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCuttingRecord = async (id) => {
+    if (!confirm(t('cutting_traceability.delete_confirm'))) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/client/cutting-records/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        fetchCuttingRecords(cuttingSearch);
+        alert(t('cutting_traceability.success_deleted'));
+      } else {
+        alert(data.error || t('alerts.delete_error'));
+      }
+    } catch (error) {
+      console.error("Error deleting cutting record:", error);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCuttingPhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCuttingPhotoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/client/cutting-records/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setCuttingForm(prev => ({ ...prev, labelPhoto: data.url }));
+      } else {
+        alert(data.error || "Error al subir la imagen");
+      }
+    } catch (err) {
+      console.error("Error uploading cutting label photo:", err);
+      alert(t('alerts.connection_error'));
+    } finally {
+      setCuttingPhotoUploading(false);
+      e.target.value = "";
+    }
+  };
+
   const handleCreateZone = async (name) => {
     try {
       const res = await fetch("/api/client/cleaning-zones", {
@@ -2029,7 +2200,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -3962,6 +4133,14 @@ export default function ClientDashboard() {
                   active={activeTab === 'trazabilidad'} 
                   onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
+                {profile?.hasCuttingTraceability && (
+                  <SidebarBtn 
+                    icon={<Scissors size={20} />} 
+                    label={t('sidebar.cutting_traceability')} 
+                    active={activeTab === "despiece"} 
+                    onClick={() => { setActiveTab("despiece"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                  />
+                )}
                 <SidebarBtn 
                   icon={<History size={20} />} 
                   label={t('sidebar.history')} 
@@ -4700,6 +4879,265 @@ export default function ClientDashboard() {
                           </div>
                         </div>
                       ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : activeTab === 'despiece' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Scissors size={32} color="var(--corp-green)" />
+                    {t('cutting_traceability.title')}
+                  </h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: '0.35rem 0 0 0' }}>
+                    {t('cutting_traceability.subtitle')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenNewCuttingModal}
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '800' }}
+                >
+                  <PlusCircle size={20} />
+                  {t('cutting_traceability.new_record_btn')}
+                </button>
+              </header>
+
+              {/* Search Bar */}
+              <div style={{ marginBottom: '2rem', maxWidth: '500px' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Search size={20} style={{ position: 'absolute', left: '1.25rem', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder={t('cutting_traceability.search_placeholder')}
+                    value={cuttingSearch}
+                    onChange={(e) => setCuttingSearch(e.target.value)}
+                    className="input-field"
+                    style={{ paddingLeft: '3.25rem', height: '3.25rem', fontSize: '0.95rem', borderRadius: '0.75rem' }}
+                  />
+                  {cuttingSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setCuttingSearch("")}
+                      style={{ position: 'absolute', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Table / Cards */}
+              {cuttingLoading ? (
+                <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <Loader2 className="animate-spin" size={36} color="var(--corp-green)" style={{ margin: '0 auto 1rem' }} />
+                  <p style={{ color: 'var(--text-muted)', margin: 0 }}>{t('common.loading') || "Cargando..."}</p>
+                </div>
+              ) : filteredCuttingRecords.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '5rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                    <Scissors size={36} color="var(--border)" />
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                    {t('cutting_traceability.no_records')}
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+                    {t('cutting_traceability.no_records_hint')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleOpenNewCuttingModal}
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem' }}
+                  >
+                    <PlusCircle size={18} />
+                    {t('cutting_traceability.new_record_btn')}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table */}
+                  <div className="desktop-elabs-table" style={{ background: 'white', borderRadius: '1.25rem', overflow: 'hidden', border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '780px' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
+                            <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                              {t('cutting_traceability.field_lote')}
+                            </th>
+                            <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                              {t('cutting_traceability.field_piece_name')}
+                            </th>
+                            <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                              {t('cutting_traceability.field_open_date')}
+                            </th>
+                            <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                              {t('cutting_traceability.field_close_date')}
+                            </th>
+                            <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center' }}>
+                              {t('cutting_traceability.field_label_photo')}
+                            </th>
+                            <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                              {t('cutting_traceability.field_notes')}
+                            </th>
+                            <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>
+                              {t('common.actions') || "Acciones"}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredCuttingRecords.map(record => (
+                            <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                              <td style={{ padding: '1rem 1.25rem' }}>
+                                <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '0.9rem', color: 'var(--corp-green)', background: 'rgba(66, 98, 22, 0.08)', padding: '0.25rem 0.6rem', borderRadius: '0.4rem' }}>
+                                  {record.lote}
+                                </span>
+                              </td>
+                              <td style={{ padding: '1rem 1.25rem', fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                                {record.pieceName}
+                              </td>
+                              <td style={{ padding: '1rem 1.25rem', color: record.openDate ? 'var(--text-main)' : 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                {record.openDate ? formatDateDDMMYYYY(record.openDate) : "-"}
+                              </td>
+                              <td style={{ padding: '1rem 1.25rem', color: record.closeDate ? 'var(--text-main)' : 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                {record.closeDate ? formatDateDDMMYYYY(record.closeDate) : "-"}
+                              </td>
+                              <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
+                                {record.labelPhoto ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setViewingCuttingPhoto({ url: record.labelPhoto, title: `${record.pieceName} - ${record.lote}` })}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                    title={t('cutting_traceability.view_photo')}
+                                  >
+                                    <img
+                                      src={record.labelPhoto}
+                                      alt="Etiqueta"
+                                      style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '0.5rem', border: '1.5px solid var(--border)', transition: 'transform 0.15s ease' }}
+                                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                    />
+                                  </button>
+                                ) : (
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                    {t('cutting_traceability.no_photo')}
+                                  </span>
+                                )}
+                              </td>
+                              <td style={{ padding: '1rem 1.25rem', color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {record.notes || "-"}
+                              </td>
+                              <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
+                                <div style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditCuttingRecord(record)}
+                                    className="btn-secondary"
+                                    style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                                  >
+                                    <Edit size={14} />
+                                    <span>{t('common.edit') || "Editar"}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteCuttingRecord(record.id)}
+                                    style={{ color: '#ef4444', background: '#fef2f2', border: '1px solid #fee2e2', cursor: 'pointer', padding: '0.45rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                                    title={t('common.delete') || "Eliminar"}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#fee2e2'}
+                                    onMouseLeave={e => e.currentTarget.style.background = '#fef2f2'}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Mobile Cards (screens <= 1024px) */}
+                  <div className="mobile-elabs-cards" style={{ display: 'none', flexDirection: 'column', gap: '1rem' }}>
+                    {filteredCuttingRecords.map(record => (
+                      <div
+                        key={record.id}
+                        className="glass-card"
+                        style={{ padding: '1.25rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                          <div>
+                            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '0.85rem', color: 'var(--corp-green)', background: 'rgba(66, 98, 22, 0.08)', padding: '0.2rem 0.5rem', borderRadius: '0.35rem' }}>
+                              {record.lote}
+                            </span>
+                            <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)', margin: '0.5rem 0 0 0' }}>
+                              {record.pieceName}
+                            </h3>
+                          </div>
+                          {record.labelPhoto && (
+                            <button
+                              type="button"
+                              onClick={() => setViewingCuttingPhoto({ url: record.labelPhoto, title: `${record.pieceName} - ${record.lote}` })}
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}
+                            >
+                              <img
+                                src={record.labelPhoto}
+                                alt="Etiqueta"
+                                style={{ width: '54px', height: '54px', objectFit: 'cover', borderRadius: '0.5rem', border: '1.5px solid var(--border)' }}
+                              />
+                            </button>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', background: '#f8fafc', padding: '0.75rem', borderRadius: '0.75rem', fontSize: '0.8rem' }}>
+                          <div>
+                            <span style={{ color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>
+                              {t('cutting_traceability.field_open_date')}
+                            </span>
+                            <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                              {record.openDate ? formatDateDDMMYYYY(record.openDate) : "-"}
+                            </span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>
+                              {t('cutting_traceability.field_close_date')}
+                            </span>
+                            <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                              {record.closeDate ? formatDateDDMMYYYY(record.closeDate) : "-"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {record.notes && (
+                          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                            "{record.notes}"
+                          </p>
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleEditCuttingRecord(record)}
+                            className="btn-secondary"
+                            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                          >
+                            <Edit size={14} />
+                            <span>{t('common.edit') || "Editar"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCuttingRecord(record.id)}
+                            style={{ color: '#ef4444', background: '#fef2f2', border: '1px solid #fee2e2', cursor: 'pointer', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}
+                          >
+                            <Trash2 size={14} />
+                            <span>{t('common.delete') || "Eliminar"}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </>
               )}
@@ -9106,6 +9544,309 @@ export default function ClientDashboard() {
         </div>
       )}
 
+      {/* Cutting Record Modal */}
+      {isCuttingModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content" style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <header style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Scissors size={22} color="var(--corp-green)" />
+                  <span>{editingCuttingRecord ? t('cutting_traceability.modal_edit_title') : t('cutting_traceability.modal_new_title')}</span>
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0.25rem 0 0 0' }}>
+                  {t('cutting_traceability.modal_subtitle')}
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsCuttingModalOpen(false)} 
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <form onSubmit={handleSaveCuttingRecord} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem' }}>
+                    {t('cutting_traceability.field_lote')} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    required
+                    value={cuttingForm.lote}
+                    onChange={(e) => setCuttingForm({ ...cuttingForm, lote: e.target.value })}
+                    placeholder="Ej. LOT-2026-001"
+                    style={{ fontFamily: 'monospace', fontWeight: '600' }}
+                  />
+                </div>
+                <div>
+                  <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem' }}>
+                    {t('cutting_traceability.field_piece_name')} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    required
+                    value={cuttingForm.pieceName}
+                    onChange={(e) => setCuttingForm({ ...cuttingForm, pieceName: e.target.value })}
+                    placeholder="Ej. Solomillo de ternera"
+                  />
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem', margin: 0 }}>
+                      {t('cutting_traceability.field_open_date')}
+                    </label>
+                  </div>
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={cuttingForm.openDate}
+                    onChange={(e) => setCuttingForm({ ...cuttingForm, openDate: e.target.value })}
+                    style={{ marginBottom: '0.4rem' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCuttingForm({ ...cuttingForm, openDate: new Date().toISOString().split('T')[0] })}
+                    style={{
+                      background: 'rgba(66, 98, 22, 0.08)',
+                      border: '1px solid rgba(66, 98, 22, 0.2)',
+                      color: 'var(--corp-green)',
+                      borderRadius: '0.4rem',
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem'
+                    }}
+                  >
+                    <Calendar size={12} />
+                    <span>{t('cutting_traceability.btn_today')}</span>
+                  </button>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem', margin: 0 }}>
+                      {t('cutting_traceability.field_close_date')}
+                    </label>
+                  </div>
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={cuttingForm.closeDate}
+                    onChange={(e) => setCuttingForm({ ...cuttingForm, closeDate: e.target.value })}
+                    style={{ marginBottom: '0.4rem' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCuttingForm({ ...cuttingForm, closeDate: new Date().toISOString().split('T')[0] })}
+                    style={{
+                      background: 'rgba(66, 98, 22, 0.08)',
+                      border: '1px solid rgba(66, 98, 22, 0.2)',
+                      color: 'var(--corp-green)',
+                      borderRadius: '0.4rem',
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem'
+                    }}
+                  >
+                    <Calendar size={12} />
+                    <span>{t('cutting_traceability.btn_today')}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Photo Upload */}
+              <div>
+                <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>
+                  {t('cutting_traceability.field_label_photo')}
+                </label>
+                {cuttingForm.labelPhoto ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: '#f8fafc', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                    <img
+                      src={cuttingForm.labelPhoto}
+                      alt="Etiqueta"
+                      style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid var(--border)' }}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label
+                        style={{
+                          background: 'white',
+                          border: '1px solid var(--border)',
+                          padding: '0.4rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.8rem',
+                          fontWeight: '700',
+                          color: 'var(--text-main)',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          width: 'fit-content'
+                        }}
+                      >
+                        <Upload size={14} />
+                        <span>{cuttingPhotoUploading ? (t('common.loading') || 'Cargando...') : t('cutting_traceability.change_photo')}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          disabled={cuttingPhotoUploading}
+                          onChange={handleCuttingPhotoUpload}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setCuttingForm({ ...cuttingForm, labelPhoto: "" })}
+                        style={{
+                          background: '#fef2f2',
+                          border: '1px solid #fee2e2',
+                          padding: '0.4rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.8rem',
+                          fontWeight: '700',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          width: 'fit-content'
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        <span>{t('cutting_traceability.remove_photo')}</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '1.75rem 1rem',
+                      border: '2px dashed var(--border)',
+                      borderRadius: '0.75rem',
+                      background: '#f8fafc',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.background = 'rgba(66, 98, 22, 0.02)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = '#f8fafc'; }}
+                  >
+                    {cuttingPhotoUploading ? (
+                      <Loader2 className="animate-spin" size={28} color="var(--corp-green)" />
+                    ) : (
+                      <>
+                        <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(66, 98, 22, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--corp-green)' }}>
+                          <ImageIcon size={22} />
+                        </div>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                          {t('cutting_traceability.upload_photo_click')}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {t('cutting_traceability.upload_formats')}
+                        </span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      disabled={cuttingPhotoUploading}
+                      onChange={handleCuttingPhotoUpload}
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="label" style={{ fontWeight: '700', fontSize: '0.85rem' }}>
+                  {t('cutting_traceability.field_notes')}
+                </label>
+                <textarea
+                  className="input-field"
+                  rows={3}
+                  value={cuttingForm.notes}
+                  onChange={(e) => setCuttingForm({ ...cuttingForm, notes: e.target.value })}
+                  placeholder="Información adicional, observaciones..."
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsCuttingModalOpen(false)}
+                  className="btn-secondary"
+                  style={{ padding: '0.65rem 1.25rem', fontWeight: '700' }}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={loading || cuttingPhotoUploading}
+                  style={{ minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.65rem 1.5rem', fontWeight: '700' }}
+                >
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : (editingCuttingRecord ? t('common.save') : t('cutting_traceability.new_record_btn'))}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Viewing Photo Lightbox Modal */}
+      {viewingCuttingPhoto && (
+        <div 
+          className="modal-overlay" 
+          style={{ zIndex: 1200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setViewingCuttingPhoto(null)}
+        >
+          <div 
+            className="modal-content" 
+            style={{ maxWidth: '850px', background: 'transparent', boxShadow: 'none', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', color: 'white', padding: '0 0.5rem' }}>
+              <span style={{ fontWeight: '700', fontSize: '1rem' }}>{viewingCuttingPhoto.title || t('cutting_traceability.field_label_photo')}</span>
+              <button
+                type="button"
+                onClick={() => setViewingCuttingPhoto(null)}
+                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <img 
+              src={viewingCuttingPhoto.url} 
+              alt="Etiqueta" 
+              style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '0.75rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }} 
+            />
+          </div>
+        </div>
+      )}
+
     </div>
 );
 }
@@ -9222,6 +9963,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [copiedKey, setCopiedKey] = useState(false);
   const [keyLoading, setKeyLoading] = useState(false);
   const [isApiDocsModalOpen, setIsApiDocsModalOpen] = useState(false);
+  const [hasCuttingTraceability, setHasCuttingTraceability] = useState(profile?.hasCuttingTraceability || false);
 
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
@@ -9236,6 +9978,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
       setApiKey(profile.apiKey || null);
       setApiKeyCreatedAt(profile.apiKeyCreatedAt || null);
+      setHasCuttingTraceability(profile.hasCuttingTraceability || false);
     }
   }, [profile]);
 
@@ -9302,7 +10045,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       merchantTypes: merchantTypes,
       laborCostHourlyRate,
       isPreparationTimeMandatory,
-      lotFormat: lotFormat || DEFAULT_LOT_FORMAT
+      lotFormat: lotFormat || DEFAULT_LOT_FORMAT,
+      hasCuttingTraceability
     });
   };
 
@@ -9371,7 +10115,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     JSON.stringify(merchantTypes) !== JSON.stringify(profile?.merchantTypes || []) ||
                     laborCostHourlyRate !== (profile?.laborCostHourlyRate || 0) ||
                     isPreparationTimeMandatory !== (profile?.isPreparationTimeMandatory || false) ||
-                    (lotFormat || DEFAULT_LOT_FORMAT) !== (profile?.lotFormat || DEFAULT_LOT_FORMAT);
+                    (lotFormat || DEFAULT_LOT_FORMAT) !== (profile?.lotFormat || DEFAULT_LOT_FORMAT) ||
+                    hasCuttingTraceability !== (profile?.hasCuttingTraceability || false);
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '800px', paddingBottom: '4rem' }}>
@@ -10151,6 +10896,48 @@ Authorization: Bearer ${apiKey || 'TU_CLAVE_API'}`}
               </div>
             </div>
           )}
+        </section>
+
+        {/* Cutting Traceability Section */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <Scissors size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.cutting_traceability_section')}</h3>
+          </div>
+
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+            {t('business_config.cutting_traceability_desc')}
+          </p>
+
+          <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+            <div style={{ position: 'relative', width: '48px', height: '24px', background: hasCuttingTraceability ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+              <div style={{ position: 'absolute', left: hasCuttingTraceability ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+            </div>
+            <input 
+              type="checkbox" 
+              style={{ display: 'none' }}
+              checked={hasCuttingTraceability} 
+              onChange={(e) => setHasCuttingTraceability(e.target.checked)} 
+            />
+            <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.cutting_traceability_enable')}</span>
+          </label>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+              <AlertCircle size={16} /> {t('business_config.save_reminder')}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+            <button 
+              onClick={handleSave}
+              className="btn-primary" 
+              disabled={loading || !hasChanges}
+              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save')}</>}
+            </button>
+          </div>
         </section>
 
         {/* Global Save Button */}

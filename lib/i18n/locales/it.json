@@ -116,7 +116,8 @@
     "logout": "Chiudi sessione",
     "waste": "Rifiuti",
     "inventory": "Inventario",
-    "customers": "Clienti"
+    "customers": "Clienti",
+    "cutting_traceability": "Tracciabilità di sezionamento"
   },
   "inventory": {
     "title": "Gestione dell'Inventario",
@@ -192,7 +193,10 @@
     "api_docs_modal_subtitle": "Specifiche tecniche ed esempi per connettere sonde IoT e registrare automaticamente le temperature.",
     "api_docs_single_example_label": "Invio singolo (una camera):",
     "api_docs_batch_example_label": "Invio multiplo (più camere contemporaneamente):",
-    "api_docs_no_chambers_warning": "Non hai ancora configurato nessuna camera. Crea le tue camere nella sezione Camere per registrare le loro temperature."
+    "api_docs_no_chambers_warning": "Non hai ancora configurato nessuna camera. Crea le tue camere nella sezione Camere per registrare le loro temperature.",
+    "cutting_traceability_section": "Tracciabilità di sezionamento",
+    "cutting_traceability_desc": "Attiva o disattiva la tracciabilità di sezionamento. Quando abilitata, sarà disponibile una sezione dedicata nel menu principale per registrare e consultare tagli, numeri di lotto, date di vendita e foto delle etichette.",
+    "cutting_traceability_enable": "Abilita tracciabilità di sezionamento"
   },
   "dashboard": {
     "welcome": "Ciao",
@@ -1214,5 +1218,33 @@
     "col_recipe": "Ricetta",
     "col_lot_number": "Numero di lotto",
     "total_elaborations": "Totale elaborazioni"
+  },
+  "cutting_traceability": {
+    "title": "Tracciabilità di sezionamento",
+    "subtitle": "Gestione e registrazione dei tagli, lotti, date di vendita ed etichette.",
+    "new_record_btn": "Nuovo record",
+    "modal_new_title": "Nuovo record di sezionamento",
+    "modal_edit_title": "Modifica record di sezionamento",
+    "modal_subtitle": "Inserisci le informazioni sul taglio e sull'etichetta.",
+    "field_lote": "Lotto",
+    "field_piece_name": "Nome del taglio",
+    "field_notes": "Note",
+    "field_open_date": "Data di apertura o inizio vendita",
+    "field_close_date": "Data di fine vendita",
+    "field_label_photo": "Foto dell'etichetta",
+    "btn_today": "Imposta la data di oggi",
+    "upload_photo_click": "Fai clic per caricare o scattare una foto dell'etichetta",
+    "upload_formats": "JPG, PNG o WEBP (fino a 10MB)",
+    "change_photo": "Cambia foto",
+    "remove_photo": "Rimuovi foto",
+    "view_photo": "Visualizza foto",
+    "no_photo": "Nessuna foto",
+    "search_placeholder": "Cerca per lotto, taglio o note...",
+    "no_records": "Nessun record di sezionamento finora.",
+    "no_records_hint": "Crea il tuo primo record facendo clic sul pulsante 'Nuovo record'.",
+    "delete_confirm": "Sei sicuro di voler eliminare questo record di sezionamento?",
+    "success_created": "Record di sezionamento creato con successo",
+    "success_updated": "Record di sezionamento aggiornato con successo",
+    "success_deleted": "Record di sezionamento eliminato con successo"
   }
 }

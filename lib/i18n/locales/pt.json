@@ -116,7 +116,8 @@
     "logout": "Sair",
     "waste": "Resíduos",
     "inventory": "Estoque",
-    "customers": "Clientes"
+    "customers": "Clientes",
+    "cutting_traceability": "Rastreabilidade de desmanche"
   },
   "inventory": {
     "title": "Controle de Estoque",
@@ -192,7 +193,10 @@
     "api_docs_modal_subtitle": "Especificação técnica e exemplos para conectar sondas IoT e registrar temperaturas automaticamente.",
     "api_docs_single_example_label": "Envio individual (uma câmara):",
     "api_docs_batch_example_label": "Envio múltiplo (várias câmaras ao mesmo tempo):",
-    "api_docs_no_chambers_warning": "Você ainda não tem câmaras configuradas. Crie suas câmaras na seção Câmaras para poder registrar suas temperaturas."
+    "api_docs_no_chambers_warning": "Você ainda não tem câmaras configuradas. Crie suas câmaras na seção Câmaras para poder registrar suas temperaturas.",
+    "cutting_traceability_section": "Rastreabilidade de desmanche",
+    "cutting_traceability_desc": "Ative ou desative a rastreabilidade de desmanche. Ao ativá-la, você terá uma seção dedicada no menu principal para registrar e consultar peças, números de lote, datas de venda e fotos de etiquetas.",
+    "cutting_traceability_enable": "Ativar rastreabilidade de desmanche"
   },
   "dashboard": {
     "welcome": "Olá",
@@ -1212,5 +1216,33 @@
     "col_recipe": "Receita",
     "col_lot_number": "Número de lote",
     "total_elaborations": "Total de elaborações"
+  },
+  "cutting_traceability": {
+    "title": "Rastreabilidade de desmanche",
+    "subtitle": "Gestão e registro de peças de desmanche, lotes, datas de venda e fotos de etiquetas.",
+    "new_record_btn": "Novo registro",
+    "modal_new_title": "Novo registro de desmanche",
+    "modal_edit_title": "Editar registro de desmanche",
+    "modal_subtitle": "Insira as informações da peça e da etiqueta.",
+    "field_lote": "Lote",
+    "field_piece_name": "Nome da peça",
+    "field_notes": "Notas",
+    "field_open_date": "Data de abertura ou início de venda",
+    "field_close_date": "Data de término da venda",
+    "field_label_photo": "Foto da etiqueta",
+    "btn_today": "Definir a data de hoje",
+    "upload_photo_click": "Clique para enviar ou tirar foto da etiqueta",
+    "upload_formats": "JPG, PNG ou WEBP (até 10MB)",
+    "change_photo": "Alterar foto",
+    "remove_photo": "Remover foto",
+    "view_photo": "Ver foto",
+    "no_photo": "Sem foto",
+    "search_placeholder": "Buscar por lote, peça ou notas...",
+    "no_records": "Nenhum registro de desmanche ainda.",
+    "no_records_hint": "Crie seu primeiro registro clicando no botão 'Novo registro'.",
+    "delete_confirm": "Tem certeza de que deseja excluir este registro de desmanche?",
+    "success_created": "Registro de desmanche criado com sucesso",
+    "success_updated": "Registro de desmanche atualizado com sucesso",
+    "success_deleted": "Registro de desmanche excluído com sucesso"
   }
 }

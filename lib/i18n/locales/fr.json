@@ -116,7 +116,8 @@
     "logout": "Se déconnecter",
     "waste": "Déchets",
     "inventory": "Inventaire",
-    "customers": "Clients"
+    "customers": "Clients",
+    "cutting_traceability": "Traçabilité de découpe"
   },
   "inventory": {
     "title": "Gestion des Stocks",
@@ -192,7 +193,10 @@
     "api_docs_modal_subtitle": "Spécifications techniques et exemples pour connecter des sondes IoT et enregistrer automatiquement les températures.",
     "api_docs_single_example_label": "Envoi individuel (une chambre):",
     "api_docs_batch_example_label": "Envoi multiple (plusieurs chambres à la fois):",
-    "api_docs_no_chambers_warning": "Vous n'avez pas encore configuré de chambres. Créez vos chambres dans la section Chambres pour enregistrer leurs températures."
+    "api_docs_no_chambers_warning": "Vous n'avez pas encore configuré de chambres. Créez vos chambres dans la section Chambres pour enregistrer leurs températures.",
+    "cutting_traceability_section": "Traçabilité de découpe",
+    "cutting_traceability_desc": "Activez ou désactivez la traçabilité de découpe. Une fois activée, une section dédiée sera disponible dans le menu principal pour enregistrer et consulter les pièces, numéros de lot, dates de vente et photos d'étiquettes.",
+    "cutting_traceability_enable": "Activer la traçabilité de découpe"
   },
   "dashboard": {
     "welcome": "Bonjour",
@@ -1214,5 +1218,33 @@
     "col_recipe": "Recette",
     "col_lot_number": "Numéro de lot",
     "total_elaborations": "Total des élaborations"
+  },
+  "cutting_traceability": {
+    "title": "Traçabilité de découpe",
+    "subtitle": "Gestion et enregistrement des pièces de découpe, lots, dates de vente et étiquettes.",
+    "new_record_btn": "Nouvel enregistrement",
+    "modal_new_title": "Nouvel enregistrement de découpe",
+    "modal_edit_title": "Modifier l'enregistrement de découpe",
+    "modal_subtitle": "Saisissez les informations sur la pièce et l'étiquette.",
+    "field_lote": "Lot",
+    "field_piece_name": "Nom de la pièce",
+    "field_notes": "Remarques",
+    "field_open_date": "Date d'ouverture ou début de vente",
+    "field_close_date": "Date de fin de vente",
+    "field_label_photo": "Photo de l'étiquette",
+    "btn_today": "Mettre la date d'aujourd'hui",
+    "upload_photo_click": "Cliquez pour télécharger ou prendre une photo de l'étiquette",
+    "upload_formats": "JPG, PNG ou WEBP (jusqu'à 10Mo)",
+    "change_photo": "Changer la photo",
+    "remove_photo": "Supprimer la photo",
+    "view_photo": "Voir la photo",
+    "no_photo": "Sans photo",
+    "search_placeholder": "Rechercher par lot, pièce ou remarques...",
+    "no_records": "Aucun enregistrement de découpe pour le moment.",
+    "no_records_hint": "Créez votre premier enregistrement en cliquant sur le bouton 'Nouvel enregistrement'.",
+    "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement de découpe ?",
+    "success_created": "Enregistrement de découpe créé avec succès",
+    "success_updated": "Enregistrement de découpe mis à jour avec succès",
+    "success_deleted": "Enregistrement de découpe supprimé avec succès"
   }
 }

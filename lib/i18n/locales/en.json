@@ -116,7 +116,8 @@
     "logout": "Logout",
     "waste": "Waste",
     "inventory": "Inventory",
-    "customers": "Customers"
+    "customers": "Customers",
+    "cutting_traceability": "Cutting traceability"
   },
   "inventory": {
     "title": "Inventory Management",
@@ -192,7 +193,10 @@
     "api_docs_modal_subtitle": "Technical specification and examples to connect IoT probes and log temperatures automatically.",
     "api_docs_single_example_label": "Single reading (one chamber):",
     "api_docs_batch_example_label": "Batch reading (multiple chambers at once):",
-    "api_docs_no_chambers_warning": "You don't have any chambers configured yet. Create your chambers in the Chambers section to log their temperatures."
+    "api_docs_no_chambers_warning": "You don't have any chambers configured yet. Create your chambers in the Chambers section to log their temperatures.",
+    "cutting_traceability_section": "Cutting traceability",
+    "cutting_traceability_desc": "Enable or disable cutting traceability. When enabled, a dedicated section will be available in the main menu to log and view pieces, lot numbers, sale dates, and label photos.",
+    "cutting_traceability_enable": "Enable cutting traceability"
   },
   "dashboard": {
     "welcome": "Hello",
@@ -1219,5 +1223,33 @@
     "col_recipe": "Recipe",
     "col_lot_number": "Lot number",
     "total_elaborations": "Total elaborations"
+  },
+  "cutting_traceability": {
+    "title": "Cutting traceability",
+    "subtitle": "Management and logging of cut pieces, lot numbers, sale start/end dates, and labels.",
+    "new_record_btn": "New record",
+    "modal_new_title": "New cutting record",
+    "modal_edit_title": "Edit cutting record",
+    "modal_subtitle": "Enter piece and label information.",
+    "field_lote": "Lot",
+    "field_piece_name": "Piece name",
+    "field_notes": "Notes",
+    "field_open_date": "Opening or sale start date",
+    "field_close_date": "Sale end date",
+    "field_label_photo": "Label photo",
+    "btn_today": "Set today's date",
+    "upload_photo_click": "Click to upload or take label photo",
+    "upload_formats": "JPG, PNG or WEBP (up to 10MB)",
+    "change_photo": "Change photo",
+    "remove_photo": "Remove photo",
+    "view_photo": "View photo",
+    "no_photo": "No photo",
+    "search_placeholder": "Search by lot, piece or notes...",
+    "no_records": "No cutting records yet.",
+    "no_records_hint": "Create your first cutting record by clicking the 'New record' button.",
+    "delete_confirm": "Are you sure you want to delete this cutting record?",
+    "success_created": "Cutting record created successfully",
+    "success_updated": "Cutting record updated successfully",
+    "success_deleted": "Cutting record deleted successfully"
   }
 }

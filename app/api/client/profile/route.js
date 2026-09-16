@@ -92,7 +92,8 @@ export async function PATCH(request) {
       currency,
       laborCostHourlyRate,
       isPreparationTimeMandatory,
-      lotFormat
+      lotFormat,
+      hasCuttingTraceability
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -112,7 +113,8 @@ export async function PATCH(request) {
         currency: currency !== undefined ? currency : undefined,
         laborCostHourlyRate: laborCostHourlyRate !== undefined ? laborCostHourlyRate : undefined,
         isPreparationTimeMandatory: isPreparationTimeMandatory !== undefined ? isPreparationTimeMandatory : undefined,
-        lotFormat: lotFormat !== undefined ? lotFormat : undefined
+        lotFormat: lotFormat !== undefined ? lotFormat : undefined,
+        hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined
       },
       include: { plan: true }
     });

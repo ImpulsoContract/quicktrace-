@@ -116,7 +116,8 @@
     "logout": "Cerrar Sesión",
     "waste": "Residuos",
     "inventory": "Inventario",
-    "customers": "Clientes"
+    "customers": "Clientes",
+    "cutting_traceability": "Trazabilidad de despiece"
   },
   "inventory": {
     "title": "Gestión de Inventario",
@@ -192,7 +193,10 @@
     "api_docs_modal_subtitle": "Especificación técnica y ejemplos para conectar sondas IoT y registrar temperaturas automáticamente.",
     "api_docs_single_example_label": "Envío individual (una cámara):",
     "api_docs_batch_example_label": "Envío múltiple (varias cámaras a la vez):",
-    "api_docs_no_chambers_warning": "No tienes cámaras configuradas todavía. Crea tus cámaras en el apartado de Cámaras para poder registrar sus temperaturas."
+    "api_docs_no_chambers_warning": "No tienes cámaras configuradas todavía. Crea tus cámaras en el apartado de Cámaras para poder registrar sus temperaturas.",
+    "cutting_traceability_section": "Trazabilidad del despiece",
+    "cutting_traceability_desc": "Activa o desactiva la trazabilidad del despiece. Al activarla, tendrás disponible un apartado específico en el menú principal para registrar y consultar piezas, lotes, fechas de venta y fotos de etiquetas.",
+    "cutting_traceability_enable": "Activar trazabilidad del despiece"
   },
   "dashboard": {
     "welcome": "Hola",
@@ -1219,5 +1223,33 @@
     "col_recipe": "Receta",
     "col_lot_number": "Número de lote",
     "total_elaborations": "Total elaboraciones"
+  },
+  "cutting_traceability": {
+    "title": "Trazabilidad de despiece",
+    "subtitle": "Control y registro de piezas de despiece, lotes, fechas de apertura, fin de venta y fotos de etiquetas.",
+    "new_record_btn": "Nuevo registro",
+    "modal_new_title": "Nuevo registro de despiece",
+    "modal_edit_title": "Editar registro de despiece",
+    "modal_subtitle": "Introduce los datos de la pieza y su etiqueta.",
+    "field_lote": "Lote",
+    "field_piece_name": "Nombre de la pieza",
+    "field_notes": "Notas",
+    "field_open_date": "Fecha de apertura o inicio de venta",
+    "field_close_date": "Fecha de finalización de la venta",
+    "field_label_photo": "Foto de la etiqueta",
+    "btn_today": "Poner la fecha de hoy",
+    "upload_photo_click": "Haz clic para subir o tomar foto de la etiqueta",
+    "upload_formats": "JPG, PNG o WEBP (hasta 10MB)",
+    "change_photo": "Cambiar foto",
+    "remove_photo": "Eliminar foto",
+    "view_photo": "Ver foto",
+    "no_photo": "Sin foto",
+    "search_placeholder": "Buscar por lote, pieza o notas...",
+    "no_records": "No hay registros de despiece todavía.",
+    "no_records_hint": "Crea tu primer registro de despiece pulsando en el botón 'Nuevo registro'.",
+    "delete_confirm": "¿Estás seguro de que deseas eliminar este registro de despiece?",
+    "success_created": "Registro de despiece creado correctamente",
+    "success_updated": "Registro de despiece actualizado correctamente",
+    "success_deleted": "Registro de despiece eliminado correctamente"
   }
 }

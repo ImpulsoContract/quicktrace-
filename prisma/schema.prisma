@@ -115,6 +115,8 @@ model ClientProfile {
   scannedDeliveryNotes       ScannedDeliveryNote[]
   customers                  Customer[]
   elaborationSales           ElaborationSale[]
+  hasCuttingTraceability     Boolean           @default(false)
+  cuttingRecords             CuttingRecord[]
 }
 
 model Customer {
@@ -579,5 +581,24 @@ model ScannedDeliveryNote {
   updatedAt       DateTime      @updatedAt
 
   @@index([clientProfileId])
+}
+
+model CuttingRecord {
+  id              Int           @id @default(autoincrement())
+  lote            String
+  pieceName       String
+  notes           String?       @db.Text
+  openDate        DateTime?
+  closeDate       DateTime?
+  labelPhoto      String?       @db.Text
+
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([clientProfileId])
+  @@index([lote])
 }
 
