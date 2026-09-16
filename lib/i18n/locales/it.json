@@ -186,7 +186,13 @@
     "api_docs_body_label": "Formato del corpo (JSON)",
     "api_docs_note": "Ogni registrazione verrà salvata con la data e l'ora esatte della chiamata, indicando nelle note: 'Entrada creada automáticamente desde el api de los sensores.'.",
     "api_docs_chambers_registered": "Le tue celle registrate per l'invio",
-    "btn_week": "Settimana di lavorazione"
+    "btn_week": "Settimana di lavorazione",
+    "api_docs_view_btn": "Visualizza documentazione",
+    "api_docs_btn_desc": "Consulta i dettagli di integrazione, gli endpoint, le intestazioni e gli esempi per i tuoi sensori.",
+    "api_docs_modal_subtitle": "Specifiche tecniche ed esempi per connettere sonde IoT e registrare automaticamente le temperature.",
+    "api_docs_single_example_label": "Invio singolo (una camera):",
+    "api_docs_batch_example_label": "Invio multiplo (più camere contemporaneamente):",
+    "api_docs_no_chambers_warning": "Non hai ancora configurato nessuna camera. Crea le tue camere nella sezione Camere per registrare le loro temperature."
   },
   "dashboard": {
     "welcome": "Ciao",

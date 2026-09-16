@@ -12,7 +12,7 @@ import {
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
-  Key, Copy, EyeOff, RefreshCw
+  Key, Copy, EyeOff, RefreshCw, BookOpen
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -9221,6 +9221,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [isKeyVisible, setIsKeyVisible] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [keyLoading, setKeyLoading] = useState(false);
+  const [isApiDocsModalOpen, setIsApiDocsModalOpen] = useState(false);
 
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
@@ -9967,94 +9968,189 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             )}
           </div>
 
-          {/* Documentation & Integration Guide */}
-          <div style={{ background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)', padding: '1.5rem' }}>
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: '0 0 1rem 0', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Info size={18} color="var(--corp-green)" />
-              {t('business_config.api_docs_title')}
-            </h4>
+          {/* Documentation Trigger Button */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            flexWrap: 'wrap', 
+            gap: '1rem', 
+            padding: '1.25rem 1.5rem', 
+            background: '#f8fafc', 
+            borderRadius: '1rem', 
+            border: '1px solid var(--border)' 
+          }}>
+            <div style={{ flex: 1, minWidth: '240px' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: '800', margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <BookOpen size={18} color="var(--corp-green)" />
+                {t('business_config.api_docs_title')}
+              </h4>
+              <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                {t('business_config.api_docs_btn_desc')}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsApiDocsModalOpen(true)}
+              className="btn-secondary"
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                padding: '0.75rem 1.25rem', 
+                fontWeight: '700', 
+                fontSize: '0.9rem', 
+                color: 'var(--corp-green)', 
+                borderColor: 'var(--corp-green)', 
+                background: 'white',
+                borderRadius: '0.75rem',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <BookOpen size={18} />
+              {t('business_config.api_docs_view_btn')}
+            </button>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {/* Endpoint */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
-                  {t('business_config.api_docs_endpoint_label')}
-                </label>
-                <div style={{ background: 'white', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', fontFamily: 'monospace', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ background: 'var(--corp-green)', color: 'white', fontWeight: '800', padding: '0.15rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem' }}>POST</span>
-                  <span style={{ color: 'var(--text-main)', wordBreak: 'break-all' }}>https://quicktrace.es/api/sensors/temperatures</span>
-                </div>
-              </div>
+          {/* API Documentation Popup Modal */}
+          {isApiDocsModalOpen && (
+            <div 
+              className="modal-overlay" 
+              onClick={() => setIsApiDocsModalOpen(false)}
+              style={{ zIndex: 9999 }}
+            >
+              <div 
+                className="modal-content" 
+                onClick={e => e.stopPropagation()}
+                style={{ 
+                  maxWidth: '750px', 
+                  width: '95%',
+                  maxHeight: '90vh', 
+                  overflowY: 'auto',
+                  borderRadius: '1.25rem',
+                  padding: '2rem'
+                }}
+              >
+                <header style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <BookOpen size={22} color="var(--corp-green)" />
+                      {t('business_config.api_docs_title')}
+                    </h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.35rem', margin: 0 }}>
+                      {t('business_config.api_docs_modal_subtitle')}
+                    </p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setIsApiDocsModalOpen(false)} 
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                    onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} 
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <X size={22} />
+                  </button>
+                </header>
 
-              {/* Headers */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
-                  {t('business_config.api_docs_headers_label')}
-                </label>
-                <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '1rem', borderRadius: '0.5rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {/* Endpoint */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+                      {t('business_config.api_docs_endpoint_label')}
+                    </label>
+                    <div style={{ background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)', fontFamily: 'monospace', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                      <span style={{ background: 'var(--corp-green)', color: 'white', fontWeight: '800', padding: '0.2rem 0.6rem', borderRadius: '0.35rem', fontSize: '0.75rem' }}>POST</span>
+                      <span style={{ color: 'var(--text-main)', fontWeight: '600', wordBreak: 'break-all' }}>https://quicktrace.es/api/sensors/temperatures</span>
+                    </div>
+                  </div>
+
+                  {/* Headers */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+                      {t('business_config.api_docs_headers_label')}
+                    </label>
+                    <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '1rem', borderRadius: '0.6rem', fontSize: '0.85rem', overflowX: 'auto', margin: 0, fontFamily: 'monospace', lineHeight: '1.5' }}>
 {`Content-Type: application/json
 Authorization: Bearer ${apiKey || 'TU_CLAVE_API'}`}
-                </pre>
-              </div>
+                    </pre>
+                  </div>
 
-              {/* Chambers registered in user account */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                  {t('business_config.api_docs_chambers_registered')}
-                </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {chambers && chambers.length > 0 ? (
-                    chambers.map(c => (
-                      <span key={c.id} style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', fontWeight: '700', fontSize: '0.8rem', padding: '0.3rem 0.6rem', borderRadius: '0.4rem', border: '1px solid rgba(66, 98, 22, 0.2)' }}>
-                        "{c.name}"
-                      </span>
-                    ))
-                  ) : (
-                    <span style={{ fontSize: '0.85rem', color: '#f59e0b', fontStyle: 'italic' }}>
-                      No tienes cámaras configuradas todavía. Crea tus cámaras en el menú de Cámaras para poder registrar sus temperaturas.
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Body format */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
-                  {t('business_config.api_docs_body_label')}
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                  {/* Chambers registered in user account */}
                   <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Envío individual:</span>
-                    <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0 }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                      {t('business_config.api_docs_chambers_registered')}
+                    </label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {chambers && chambers.length > 0 ? (
+                        chambers.map(c => (
+                          <span key={c.id} style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', fontWeight: '700', fontSize: '0.85rem', padding: '0.35rem 0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(66, 98, 22, 0.25)' }}>
+                            "{c.name}"
+                          </span>
+                        ))
+                      ) : (
+                        <span style={{ fontSize: '0.85rem', color: '#f59e0b', fontStyle: 'italic', background: '#fffbeb', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #fef3c7' }}>
+                          {t('business_config.api_docs_no_chambers_warning')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Body format */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+                      {t('business_config.api_docs_body_label')}
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                      <div>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                          {t('business_config.api_docs_single_example_label')}
+                        </span>
+                        <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '0.85rem', borderRadius: '0.6rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0, fontFamily: 'monospace', lineHeight: '1.4' }}>
 {`{
   "chamber": "${chambers?.[0]?.name || 'Cámara 1'}",
   "temperature": 4.2
 }`}
-                    </pre>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Envío múltiple (varias cámaras a la vez):</span>
-                    <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0 }}>
+                        </pre>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                          {t('business_config.api_docs_batch_example_label')}
+                        </span>
+                        <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '0.85rem', borderRadius: '0.6rem', fontSize: '0.8rem', overflowX: 'auto', margin: 0, fontFamily: 'monospace', lineHeight: '1.4' }}>
 {`{
   "temperatures": [
     { "chamber": "${chambers?.[0]?.name || 'Cámara 1'}", "temperature": 4.2 },
     { "chamber": "${chambers?.[1]?.name || 'Congelador'}", "temperature": -18.5 }
   ]
 }`}
-                    </pre>
+                        </pre>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notice */}
+                  <div style={{ padding: '0.85rem 1.25rem', background: 'rgba(59, 130, 246, 0.06)', borderRadius: '0.6rem', border: '1px solid rgba(59, 130, 246, 0.2)', display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                    <AlertCircle size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.85rem', color: '#1e40af', fontWeight: '500', lineHeight: '1.4' }}>
+                      {t('business_config.api_docs_note')}
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Notice */}
-              <div style={{ padding: '0.75rem 1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '0.5rem', border: '1px solid rgba(59, 130, 246, 0.15)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <AlertCircle size={16} color="#3b82f6" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: '500' }}>
-                  {t('business_config.api_docs_note')}
-                </span>
+                <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setIsApiDocsModalOpen(false)}
+                    className="btn-secondary"
+                    style={{ padding: '0.6rem 1.5rem', fontWeight: '700' }}
+                  >
+                    {t('common.close') || 'Cerrar'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </section>
 
         {/* Global Save Button */}

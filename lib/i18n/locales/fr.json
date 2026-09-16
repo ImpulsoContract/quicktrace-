@@ -186,7 +186,13 @@
     "api_docs_body_label": "Format du corps (JSON)",
     "api_docs_note": "Chaque enregistrement sera sauvegardé avec la date et l'heure exactes de l'appel, indiquant dans les notes : 'Entrada creada automáticamente desde el api de los sensores.'.",
     "api_docs_chambers_registered": "Vos chambres enregistrées à envoyer",
-    "btn_week": "Semaine de fabrication"
+    "btn_week": "Semaine de fabrication",
+    "api_docs_view_btn": "Voir la documentation",
+    "api_docs_btn_desc": "Consultez les détails d'intégration, les points de terminaison, les en-têtes et les exemples pour vos capteurs.",
+    "api_docs_modal_subtitle": "Spécifications techniques et exemples pour connecter des sondes IoT et enregistrer automatiquement les températures.",
+    "api_docs_single_example_label": "Envoi individuel (une chambre):",
+    "api_docs_batch_example_label": "Envoi multiple (plusieurs chambres à la fois):",
+    "api_docs_no_chambers_warning": "Vous n'avez pas encore configuré de chambres. Créez vos chambres dans la section Chambres pour enregistrer leurs températures."
   },
   "dashboard": {
     "welcome": "Bonjour",

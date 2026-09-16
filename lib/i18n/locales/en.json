@@ -186,7 +186,13 @@
     "api_docs_body_label": "Body format (JSON)",
     "api_docs_note": "Each record will be saved with the exact date and time of the call, stating in notes: 'Entrada creada automáticamente desde el api de los sensores.'.",
     "api_docs_chambers_registered": "Your registered chambers to submit",
-    "btn_week": "Elaboration week"
+    "btn_week": "Elaboration week",
+    "api_docs_view_btn": "View documentation",
+    "api_docs_btn_desc": "Check integration details, endpoints, headers, and payload examples for your sensors.",
+    "api_docs_modal_subtitle": "Technical specification and examples to connect IoT probes and log temperatures automatically.",
+    "api_docs_single_example_label": "Single reading (one chamber):",
+    "api_docs_batch_example_label": "Batch reading (multiple chambers at once):",
+    "api_docs_no_chambers_warning": "You don't have any chambers configured yet. Create your chambers in the Chambers section to log their temperatures."
   },
   "dashboard": {
     "welcome": "Hello",
