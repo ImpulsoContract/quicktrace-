@@ -11276,15 +11276,19 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
       const units = new Set();
       recipes.forEach(recipe => {
         recipe.ingredients?.forEach(ing => {
-          if (ing.name === ingName && ing.unit) {
-            units.add(ing.unit.trim());
+          if (ing && ing.name === ingName && ing.unit) {
+            units.add(String(ing.unit).trim());
           }
         });
       });
       const sortedUnits = Array.from(units).sort();
-      sortedUnits.forEach(unit => {
-        list.push({ name: ingName, unit });
-      });
+      if (sortedUnits.length === 0) {
+        list.push({ name: ingName, unit: "kg" });
+      } else {
+        sortedUnits.forEach(unit => {
+          list.push({ name: ingName, unit });
+        });
+      }
     });
     return list;
   };
@@ -11556,8 +11560,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
 
       {isLinkModalOpen && (
         <div className="modal-overlay" style={{ zIndex: 1150 }}>
-          <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
-            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '650px', width: '92%', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '90vh', overflow: 'hidden' }}>
+            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexShrink: 0 }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
                   {t('goods_receipt_form.link_ingredients_title') || "Relacionar esta entrada con ingredientes"}
@@ -11572,14 +11576,14 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   setIsLinkModalOpen(false);
                   setIngSearchTerm("");
                 }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
               >
                 <X size={20} />
               </button>
             </header>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
-              <div className="form-group">
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem', minHeight: 0 }}>
+              <div className="form-group" style={{ margin: 0, flexShrink: 0 }}>
                 <input 
                   type="text" 
                   className="input-field" 
@@ -11590,7 +11594,20 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                 />
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '0.5rem', 
+                maxHeight: '200px', 
+                minHeight: '130px', 
+                flexShrink: 0, 
+                overflowY: 'auto', 
+                padding: '0.75rem', 
+                background: '#f8fafc', 
+                borderRadius: '0.75rem', 
+                border: '1px solid var(--border)',
+                alignContent: 'flex-start'
+              }}>
                 {allIngredients
                   .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
                   .map((ing, idx) => {
@@ -11614,7 +11631,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                           border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
                           background: isSelected ? 'var(--corp-green)' : 'white',
                           color: isSelected ? 'white' : 'var(--text-main)',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
                         }}
                       >
                         {ing}
@@ -11624,7 +11642,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               </div>
 
               {rowIngredients.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', flexShrink: 0 }}>
                   <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
                     {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
                   </h4>
@@ -11636,7 +11654,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                       const key = `${item.name}:${item.unit}`;
                       const val = rowQuantities[key] || "";
                       return (
-                        <div className="form-group" key={idx}>
+                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`}>
                           <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
                             {`Cantidad de ${item.name} (${item.unit})`}
                           </label>
@@ -11662,7 +11680,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               )}
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem', flexShrink: 0 }}>
               <button 
                 type="button" 
                 className="btn-secondary" 
@@ -15144,15 +15162,19 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
       const units = new Set();
       recipes.forEach(recipe => {
         recipe.ingredients?.forEach(ing => {
-          if (ing.name === ingName && ing.unit) {
-            units.add(ing.unit.trim());
+          if (ing && ing.name === ingName && ing.unit) {
+            units.add(String(ing.unit).trim());
           }
         });
       });
       const sortedUnits = Array.from(units).sort();
-      sortedUnits.forEach(unit => {
-        list.push({ name: ingName, unit });
-      });
+      if (sortedUnits.length === 0) {
+        list.push({ name: ingName, unit: "kg" });
+      } else {
+        sortedUnits.forEach(unit => {
+          list.push({ name: ingName, unit });
+        });
+      }
     });
     return list;
   };
@@ -15697,8 +15719,8 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
 
       {linkRowIndex !== null && (
         <div className="modal-overlay" style={{ zIndex: 1150 }}>
-          <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
-            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '650px', width: '92%', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '90vh', overflow: 'hidden' }}>
+            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexShrink: 0 }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
                   {t('goods_receipt_form.link_ingredients_title') || "Relacionar esta entrada con ingredientes"}
@@ -15713,14 +15735,14 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                   setLinkRowIndex(null);
                   setIngSearchTerm("");
                 }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
               >
                 <X size={20} />
               </button>
             </header>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
-              <div className="form-group">
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem', minHeight: 0 }}>
+              <div className="form-group" style={{ margin: 0, flexShrink: 0 }}>
                 <input 
                   type="text" 
                   className="input-field" 
@@ -15731,7 +15753,20 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                 />
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '0.5rem', 
+                maxHeight: '200px', 
+                minHeight: '130px', 
+                flexShrink: 0, 
+                overflowY: 'auto', 
+                padding: '0.75rem', 
+                background: '#f8fafc', 
+                borderRadius: '0.75rem', 
+                border: '1px solid var(--border)',
+                alignContent: 'flex-start'
+              }}>
                 {allIngredients
                   .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
                   .map((ing, idx) => {
@@ -15755,7 +15790,8 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                           border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
                           background: isSelected ? 'var(--corp-green)' : 'white',
                           color: isSelected ? 'white' : 'var(--text-main)',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
                         }}
                       >
                         {ing}
@@ -15765,7 +15801,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
               </div>
 
               {rowIngredients.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', flexShrink: 0 }}>
                   <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
                     {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
                   </h4>
@@ -15777,7 +15813,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                       const key = `${item.name}:${item.unit}`;
                       const val = rowQuantities[key] || "";
                       return (
-                        <div className="form-group" key={idx}>
+                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`}>
                           <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
                             {`Cantidad de ${item.name} (${item.unit})`}
                           </label>
@@ -15803,7 +15839,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
               )}
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem', flexShrink: 0 }}>
               <button 
                 type="button" 
                 className="btn-secondary" 
@@ -15976,15 +16012,19 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
       const units = new Set();
       recipes.forEach(recipe => {
         recipe.ingredients?.forEach(ing => {
-          if (ing.name === ingName && ing.unit) {
-            units.add(ing.unit.trim());
+          if (ing && ing.name === ingName && ing.unit) {
+            units.add(String(ing.unit).trim());
           }
         });
       });
       const sortedUnits = Array.from(units).sort();
-      sortedUnits.forEach(unit => {
-        list.push({ name: ingName, unit });
-      });
+      if (sortedUnits.length === 0) {
+        list.push({ name: ingName, unit: "kg" });
+      } else {
+        sortedUnits.forEach(unit => {
+          list.push({ name: ingName, unit });
+        });
+      }
     });
     return list;
   };
@@ -16755,8 +16795,8 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
       {/* Raw Ingredients Link Submodal */}
       {linkRowIndex !== null && (
         <div className="modal-overlay" style={{ zIndex: 1150 }}>
-          <div className="modal-content glass-card" style={{ maxWidth: '600px', width: '90%', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '85vh', overflow: 'hidden' }}>
-            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '650px', width: '92%', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '90vh', overflow: 'hidden' }}>
+            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexShrink: 0 }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
                   {t('goods_receipt_form.link_ingredients_title') || "Vincular a materias primas"}
@@ -16771,14 +16811,14 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                   setLinkRowIndex(null);
                   setIngSearchTerm("");
                 }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
               >
                 <X size={20} />
               </button>
             </header>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
-              <div className="form-group">
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem', minHeight: 0 }}>
+              <div className="form-group" style={{ margin: 0, flexShrink: 0 }}>
                 <input 
                   type="text" 
                   className="input-field" 
@@ -16789,7 +16829,20 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                 />
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '0.5rem', 
+                maxHeight: '200px', 
+                minHeight: '130px', 
+                flexShrink: 0, 
+                overflowY: 'auto', 
+                padding: '0.75rem', 
+                background: '#f8fafc', 
+                borderRadius: '0.75rem', 
+                border: '1px solid var(--border)',
+                alignContent: 'flex-start'
+              }}>
                 {allIngredients
                   .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
                   .map((ing, idx) => {
@@ -16813,7 +16866,8 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                           border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
                           background: isSelected ? 'var(--corp-green)' : 'white',
                           color: isSelected ? 'white' : 'var(--text-main)',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
                         }}
                       >
                         {ing}
@@ -16823,7 +16877,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
               </div>
 
               {rowIngredients.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', flexShrink: 0 }}>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.25rem' }}>
                     {t('goods_receipt_form.stock_control_title')}
                   </h4>
@@ -16835,7 +16889,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                       const key = `${item.name}:${item.unit}`;
                       const val = rowQuantities[key] || "";
                       return (
-                        <div className="form-group" key={idx}>
+                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`}>
                           <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
                             {`Cantidad de ${item.name} (${item.unit})`}
                           </label>
@@ -16861,7 +16915,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
               )}
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem', flexShrink: 0 }}>
               <button 
                 type="button" 
                 className="btn-secondary" 
