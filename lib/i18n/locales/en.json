@@ -335,7 +335,10 @@
     "stock_remaining_label": "Remaining stock",
     "sales_report": "Sales Report",
     "view_inventory_filter": "View inventory (show only elaborations with stock)",
-    "view_inventory_pdf_btn": "View inventory in PDF"
+    "view_inventory_pdf_btn": "View inventory in PDF",
+    "showing_temp_info": "Showing {start} - {end} of {total} records",
+    "no_temp_records": "No temperature records yet",
+    "no_temp_records_desc": "Click on 'NEW RECORD' to add your first temperature reading."
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",

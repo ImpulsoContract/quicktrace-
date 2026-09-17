@@ -331,7 +331,10 @@
     "stock_remaining_label": "Scorte rimanenti",
     "sales_report": "Report vendite",
     "view_inventory_filter": "Vedi inventario (mostra solo lavorazioni con stock)",
-    "view_inventory_pdf_btn": "Vedi inventario in PDF"
+    "view_inventory_pdf_btn": "Vedi inventario in PDF",
+    "showing_temp_info": "Visualizzazione di {start} - {end} su {total} record",
+    "no_temp_records": "Nessun record di temperatura ancora",
+    "no_temp_records_desc": "Fai clic su 'NUOVO REGISTRO' per aggiungere la tua prima lettura della temperatura."
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",

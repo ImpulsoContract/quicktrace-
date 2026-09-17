@@ -430,6 +430,42 @@ export default function ClientDashboard() {
   });
   const [cleaningFilters, setCleaningFilters] = useState({ startDate: "", endDate: "" });
   const [tempFilters, setTempFilters] = useState({ startDate: "", endDate: "" });
+  const [tempPage, setTempPage] = useState(1);
+  const tempItemsPerPage = 20;
+
+  const sortedAndFilteredTempRecords = useMemo(() => {
+    const list = [...tempRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (!tempFilters.startDate && !tempFilters.endDate) {
+      return list;
+    }
+    return list.filter(record => {
+      const date = new Date(record.date);
+      if (tempFilters.startDate && tempFilters.endDate) {
+        const start = new Date(tempFilters.startDate);
+        const end = new Date(tempFilters.endDate);
+        end.setHours(23, 59, 59, 999);
+        return date >= start && date <= end;
+      }
+      if (tempFilters.startDate) {
+        const start = new Date(tempFilters.startDate);
+        return date >= start;
+      }
+      if (tempFilters.endDate) {
+        const end = new Date(tempFilters.endDate);
+        end.setHours(23, 59, 59, 999);
+        return date <= end;
+      }
+      return true;
+    });
+  }, [tempRecords, tempFilters]);
+
+  const totalTempRecords = sortedAndFilteredTempRecords.length;
+  const totalTempPages = Math.ceil(totalTempRecords / tempItemsPerPage) || 1;
+  const paginatedTempRecords = useMemo(() => {
+    const startIndex = (tempPage - 1) * tempItemsPerPage;
+    return sortedAndFilteredTempRecords.slice(startIndex, startIndex + tempItemsPerPage);
+  }, [sortedAndFilteredTempRecords, tempPage, tempItemsPerPage]);
+
   const [goodsFilters, setGoodsFilters] = useState({ startDate: "", endDate: "", merchantType: "", productName: "", providerName: "", lote: "", limit: "40" });
   const filteredGoodsReceipts = useMemo(() => {
     return goodsReceipts.filter(r => {
@@ -678,6 +714,17 @@ export default function ClientDashboard() {
       fetchCuttingRecords();
     }
   }, [activeTab, profile]);
+
+  useEffect(() => {
+    if (activeTab === "temperaturas") {
+      fetchTempRecords();
+      setTempPage(1);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    setTempPage(1);
+  }, [tempFilters]);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -7073,139 +7120,189 @@ export default function ClientDashboard() {
                   />
                 </div>
                 <button 
-                  onClick={() => setTempFilters({ startDate: "", endDate: "" })}
+                  onClick={() => {
+                    setTempFilters({ startDate: "", endDate: "" });
+                    setTempPage(1);
+                  }}
                   style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
                 >
                   {t('dashboard.cancel')}
                 </button>
               </div>
 
-              {(!tempFilters.startDate || !tempFilters.endDate) ? (
-                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
+              {tempRecords.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '5rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem' }}>
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-                    <Calendar size={40} color="var(--border)" />
+                    <Thermometer size={40} color="var(--border)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{t('dashboard.temp_consultation')}</h3>
-                  <p>{t('dashboard.temp_range_desc')}</p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                    {t('dashboard.no_temp_records') || "No hay registros de temperatura todavía"}
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                    {t('dashboard.no_temp_records_desc') || "Pulsa en 'NUEVO REGISTRO' para añadir tu primera lectura de temperatura."}
+                  </p>
                 </div>
-              ) : tempRecords.filter(record => {
-                const date = new Date(record.date);
-                const start = new Date(tempFilters.startDate);
-                const end = new Date(tempFilters.endDate);
-                end.setHours(23, 59, 59, 999);
-                return date >= start && date <= end;
-              }).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem' }}>
+              ) : sortedAndFilteredTempRecords.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '5rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem' }}>
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <Thermometer size={40} color="var(--border)" />
                   </div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('dashboard.no_records_range')}</h3>
                   <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_temp_found')}</p>
+                  <button
+                    type="button"
+                    onClick={() => { setTempFilters({ startDate: "", endDate: "" }); setTempPage(1); }}
+                    className="btn-secondary"
+                    style={{ marginTop: '1.25rem', padding: '0.5rem 1.25rem', fontSize: '0.85rem', fontWeight: '700' }}
+                  >
+                    {t('dashboard.cancel') || "Limpiar filtro"}
+                  </button>
                 </div>
               ) : (
-                <div className="glass-card" style={{ background: 'white', border: '1px solid var(--border)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                      <tr>
-                        <th style={{ padding: '0.75rem 1rem', width: '60px', textAlign: 'center', borderRight: '1px solid var(--border)', background: '#f1f5f9' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '800' }}>SEL.</span>
-                            <input 
-                              type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
-                              checked={tempRecords.length > 0 && tempRecords.filter(r => {
-                                const date = new Date(r.date);
-                                const start = new Date(tempFilters.startDate);
-                                const end = new Date(tempFilters.endDate);
-                                end.setHours(23, 59, 59, 999);
-                                return date >= start && date <= end;
-                              }).every(r => selectedRecords.includes(r.id))}
-                              onChange={() => toggleSelectAll(tempRecords.filter(r => {
-                                const date = new Date(r.date);
-                                const start = new Date(tempFilters.startDate);
-                                const end = new Date(tempFilters.endDate);
-                                end.setHours(23, 59, 59, 999);
-                                return date >= start && date <= end;
-                              }))}
-                            />
-                          </div>
-                        </th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha y Hora</th>
-                        {chambers.map(chamber => (
-                          <th key={chamber.id} style={{ padding: '1.25rem 2rem', textAlign: 'center', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{chamber.name}</th>
-                        ))}
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('common.notes_corrective')}</th>
-                        <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tempRecords
-                        .filter(record => {
-                          const date = new Date(record.date);
-                          const start = new Date(tempFilters.startDate);
-                          const end = new Date(tempFilters.endDate);
-                          end.setHours(23, 59, 59, 999);
-                          return date >= start && date <= end;
-                        })
-                        .map(record => (
-                        <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(record.id) ? '#f0fdf4' : 'white' }}>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center', borderRight: '1px solid var(--border)', background: selectedRecords.includes(record.id) ? '#f0fdf4' : '#f8fafc' }}>
-                            <input 
-                              type="checkbox" 
-                              style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem', display: 'block', margin: '0 auto' }}
-                              checked={selectedRecords.includes(record.id)}
-                              onChange={() => toggleSelectRecord(record.id)}
-                            />
-                          </td>
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
-                            {new Date(record.date).toLocaleString('es-ES', { 
-                              day: '2-digit', month: '2-digit', year: 'numeric',
-                              hour: '2-digit', minute: '2-digit'
-                            })}
-                          </td>
-                          {chambers.map(chamber => {
-                            const val = record.values.find(v => v.chamberId === chamber.id);
-                            return (
-                              <td key={chamber.id} style={{ padding: '1.5rem 2rem', textAlign: 'center' }}>
-                                <span style={{ 
-                                  padding: '0.4rem 0.85rem', 
-                                  background: val ? 'rgba(66, 98, 22, 0.05)' : '#f1f5f9', 
-                                  color: val ? 'var(--corp-green)' : '#94a3b8',
-                                  borderRadius: '0.75rem', 
-                                  fontWeight: '800',
-                                  fontSize: '1rem',
-                                  border: val ? '1px solid rgba(66, 98, 22, 0.15)' : '1px solid #e2e8f0'
-                                }}>
-                                  {val ? `${val.value} ºC` : 'N/A'}
-                                </span>
-                              </td>
-                            );
-                          })}
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.notes || ""}>
-                            {record.notes || "-"}
-                          </td>
-                          <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                              <button 
-                                onClick={() => handleEditTemp(record)}
-                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Edit size={16} />
-                              </button>
-                              {session?.user?.role !== "WORKER" && (
-                                <button 
-                                  onClick={() => handleDeleteTemp(record.id)}
-                                  style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              )}
+                <div className="glass-card" style={{ background: 'white', border: '1px solid var(--border)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                        <tr>
+                          <th style={{ padding: '0.75rem 1rem', width: '60px', textAlign: 'center', borderRight: '1px solid var(--border)', background: '#f1f5f9' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '800' }}>SEL.</span>
+                              <input 
+                                type="checkbox" 
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
+                                checked={paginatedTempRecords.length > 0 && paginatedTempRecords.every(r => selectedRecords.includes(r.id))}
+                                onChange={() => toggleSelectAll(paginatedTempRecords)}
+                              />
                             </div>
-                          </td>
+                          </th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha y Hora</th>
+                          {chambers.map(chamber => (
+                            <th key={chamber.id} style={{ padding: '1.25rem 2rem', textAlign: 'center', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{chamber.name}</th>
+                          ))}
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('common.notes_corrective')}</th>
+                          <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acciones</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {paginatedTempRecords.map(record => (
+                          <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(record.id) ? '#f0fdf4' : 'white' }}>
+                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', borderRight: '1px solid var(--border)', background: selectedRecords.includes(record.id) ? '#f0fdf4' : '#f8fafc' }}>
+                              <input 
+                                type="checkbox" 
+                                style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem', display: 'block', margin: '0 auto' }}
+                                checked={selectedRecords.includes(record.id)}
+                                onChange={() => toggleSelectRecord(record.id)}
+                              />
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                              {new Date(record.date).toLocaleString('es-ES', { 
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              })}
+                            </td>
+                            {chambers.map(chamber => {
+                              const val = record.values.find(v => v.chamberId === chamber.id);
+                              return (
+                                <td key={chamber.id} style={{ padding: '1.5rem 2rem', textAlign: 'center' }}>
+                                  <span style={{ 
+                                    padding: '0.4rem 0.85rem', 
+                                    background: val ? 'rgba(66, 98, 22, 0.05)' : '#f1f5f9', 
+                                    color: val ? 'var(--corp-green)' : '#94a3b8',
+                                    borderRadius: '0.75rem', 
+                                    fontWeight: '800',
+                                    fontSize: '1rem',
+                                    border: val ? '1px solid rgba(66, 98, 22, 0.15)' : '1px solid #e2e8f0'
+                                  }}>
+                                    {val ? `${val.value} ºC` : 'N/A'}
+                                  </span>
+                                </td>
+                              );
+                            })}
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.notes || ""}>
+                              {record.notes || "-"}
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                <button 
+                                  onClick={() => handleEditTemp(record)}
+                                  style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                {session?.user?.role !== "WORKER" && (
+                                  <button 
+                                    onClick={() => handleDeleteTemp(record.id)}
+                                    style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalTempRecords > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderTop: '1px solid var(--border)', background: '#f8fafc', flexWrap: 'wrap', gap: '1rem' }}>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                        {(t('dashboard.showing_temp_info') || "Mostrando {start} - {end} de {total} registros")
+                          .replace('{start}', ((tempPage - 1) * tempItemsPerPage + 1).toString())
+                          .replace('{end}', Math.min(tempPage * tempItemsPerPage, totalTempRecords).toString())
+                          .replace('{total}', totalTempRecords.toString())}
+                      </div>
+                      {totalTempPages > 1 && (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button 
+                            disabled={tempPage === 1}
+                            onClick={() => setTempPage(prev => Math.max(1, prev - 1))}
+                            className="btn-secondary"
+                            style={{ padding: '0.45rem 0.85rem', borderRadius: '0.5rem', cursor: tempPage === 1 ? 'not-allowed' : 'pointer', opacity: tempPage === 1 ? 0.5 : 1, fontSize: '0.85rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                          >
+                            <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} />
+                            <span>{t('common.previous') || "Anterior"}</span>
+                          </button>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            {[...Array(totalTempPages)].map((_, i) => {
+                              const pageNum = i + 1;
+                              if (pageNum === 1 || pageNum === totalTempPages || (pageNum >= tempPage - 1 && pageNum <= tempPage + 1)) {
+                                return (
+                                  <button 
+                                    key={pageNum}
+                                    onClick={() => setTempPage(pageNum)}
+                                    style={{ 
+                                      minWidth: '32px', height: '32px', padding: '0 0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      border: '1px solid var(--border)', background: tempPage === pageNum ? 'var(--corp-green)' : 'white',
+                                      color: tempPage === pageNum ? 'white' : 'var(--text-main)', cursor: 'pointer', fontWeight: '800', fontSize: '0.85rem',
+                                      transition: 'all 0.2s'
+                                    }}
+                                  >
+                                    {pageNum}
+                                  </button>
+                                );
+                              }
+                              if (pageNum === tempPage - 2 || pageNum === tempPage + 2) {
+                                return <span key={pageNum} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', color: 'var(--text-muted)' }}>...</span>;
+                              }
+                              return null;
+                            })}
+                          </div>
+                          <button 
+                            disabled={tempPage >= totalTempPages}
+                            onClick={() => setTempPage(prev => Math.min(totalTempPages, prev + 1))}
+                            className="btn-secondary"
+                            style={{ padding: '0.45rem 0.85rem', borderRadius: '0.5rem', cursor: tempPage >= totalTempPages ? 'not-allowed' : 'pointer', opacity: tempPage >= totalTempPages ? 0.5 : 1, fontSize: '0.85rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                          >
+                            <span>{t('common.next') || "Siguiente"}</span>
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
