@@ -1248,12 +1248,17 @@
   "traceability_report": {
     "report_type": "Report type",
     "type_full": "Full report",
+    "type_simplified_ingredients": "Simplified ingredient report",
     "type_simple": "Simple table list",
     "simple_pdf_title": "LIST OF ELABORATIONS",
     "col_date": "Date",
     "col_recipe": "Recipe",
     "col_lot_number": "Lot number",
-    "total_elaborations": "Total elaborations"
+    "total_elaborations": "Total elaborations",
+    "simplified_pdf_title": "SIMPLIFIED INGREDIENT REPORT",
+    "col_lot": "Lot",
+    "col_product": "Product",
+    "col_quantity": "Quantity"
   },
   "cutting_traceability": {
     "title": "Cutting traceability",

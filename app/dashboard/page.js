@@ -3066,6 +3066,110 @@ export default function ClientDashboard() {
         doc.save(`Listado_Elaboraciones_${startDate || 'todas'}_${endDate || 'todas'}.pdf`);
         setIsTraceabilityReportModalOpen(false);
         return;
+      } else if (reportType === "simplified_ingredients") {
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(66, 98, 22);
+        doc.text(t('traceability_report.simplified_pdf_title') || "INFORME SIMPLIFICADO DE INGREDIENTES", 14, 22);
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+        doc.text(`${t('common.from')}: ${formatDateDDMMYYYY(startDate)}   ${t('common.to')}: ${formatDateDDMMYYYY(endDate)}`, 14, 30);
+        if (profile?.razonSocial || profile?.nif) {
+          doc.text(`${profile?.razonSocial || ''}${profile?.razonSocial && profile?.nif ? ' - ' : ''}${profile?.nif || ''}`, 14, 35);
+        }
+
+        const tableStartY = (profile?.razonSocial || profile?.nif) ? 42 : 36;
+        const tableRows = [];
+        const elabRowIndices = new Set();
+
+        filtered.forEach(el => {
+          elabRowIndices.add(tableRows.length);
+          const elabQty = el.quantityProduced ? `${el.quantityProduced} ${el.quantityUnit || ''}`.trim() : "-";
+          tableRows.push([
+            el.name || "-",
+            formatDateDDMMYYYY(el.date || el.createdAt),
+            el.recipe?.name || "-",
+            elabQty
+          ]);
+
+          if (Array.isArray(el.ingredients)) {
+            el.ingredients.forEach(ing => {
+              const ingQty = ing.realAmount ? `${ing.realAmount} ${ing.unit || ''}`.trim() : "-";
+              tableRows.push([
+                ing.lote || "-",
+                "",
+                ing.name || "-",
+                ingQty
+              ]);
+            });
+          }
+        });
+
+        autoTable(doc, {
+          head: [[
+            t('traceability_report.col_lot') || "Lote",
+            t('traceability_report.col_date') || "Fecha",
+            t('traceability_report.col_product') || "Producto",
+            t('traceability_report.col_quantity') || "Cantidad"
+          ]],
+          body: tableRows,
+          startY: tableStartY,
+          theme: 'grid',
+          headStyles: { 
+            fillColor: [66, 98, 22], 
+            textColor: [255, 255, 255], 
+            fontStyle: 'bold',
+            fontSize: 9.5
+          },
+          styles: { 
+            fontSize: 8.5, 
+            cellPadding: 3, 
+            valign: 'middle' 
+          },
+          columnStyles: {
+            0: { cellWidth: 42 },
+            1: { cellWidth: 26 },
+            2: { cellWidth: 'auto' },
+            3: { cellWidth: 32 }
+          },
+          didParseCell: (data) => {
+            if (data.section === 'body') {
+              if (elabRowIndices.has(data.row.index)) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [238, 245, 230];
+                data.cell.styles.textColor = [40, 60, 15];
+              } else {
+                data.cell.styles.fontStyle = 'normal';
+                data.cell.styles.textColor = [70, 70, 70];
+                data.cell.styles.fillColor = [255, 255, 255];
+              }
+            }
+          },
+          foot: [[
+            "", 
+            "", 
+            t('traceability_report.total_elaborations') || "Total elaboraciones", 
+            `${filtered.length}`
+          ]],
+          footStyles: {
+            fillColor: [240, 243, 235],
+            textColor: [66, 98, 22],
+            fontStyle: 'bold',
+            fontSize: 9
+          },
+          didDrawPage: (data) => {
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Informe generado por Quicktrace. Más información en https://quicktrace.es", 14, doc.internal.pageSize.height - 10);
+            doc.text(`${data.pageNumber}`, doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10, { align: 'right' });
+          }
+        });
+
+        doc.save(`Informe_Simplificado_Ingredientes_${startDate || 'todas'}_${endDate || 'todas'}.pdf`);
+        setIsTraceabilityReportModalOpen(false);
+        return;
       }
       
       filtered.forEach((el, index) => {
@@ -9270,6 +9374,17 @@ export default function ClientDashboard() {
                       style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
                     />
                     <span>{t('traceability_report.type_full') || "Informe completo"}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                    <input 
+                      type="radio" 
+                      name="traceabilityReportType" 
+                      value="simplified_ingredients"
+                      checked={traceabilityReportType === "simplified_ingredients"} 
+                      onChange={() => setTraceabilityReportType("simplified_ingredients")}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                    />
+                    <span>{t('traceability_report.type_simplified_ingredients') || "Informe simplificado de ingredientes"}</span>
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>
                     <input 

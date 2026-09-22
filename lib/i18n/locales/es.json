@@ -1248,12 +1248,17 @@
   "traceability_report": {
     "report_type": "Tipo de informe",
     "type_full": "Informe completo",
+    "type_simplified_ingredients": "Informe simplificado de ingredientes",
     "type_simple": "Listado sencillo en modo tabla",
     "simple_pdf_title": "LISTADO DE ELABORACIONES",
     "col_date": "Fecha",
     "col_recipe": "Receta",
     "col_lot_number": "Número de lote",
-    "total_elaborations": "Total elaboraciones"
+    "total_elaborations": "Total elaboraciones",
+    "simplified_pdf_title": "INFORME SIMPLIFICADO DE INGREDIENTES",
+    "col_lot": "Lote",
+    "col_product": "Producto",
+    "col_quantity": "Cantidad"
   },
   "cutting_traceability": {
     "title": "Trazabilidad de despiece",
