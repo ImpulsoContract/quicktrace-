@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { sendTemperatureOutOfRangeEmail } from "@/lib/temperatureAlert";
 
 export async function POST(req) {
   try {
@@ -31,7 +32,8 @@ export async function POST(req) {
       where: { apiKey },
       include: {
         plan: true,
-        chambers: true
+        chambers: true,
+        user: true
       }
     });
 
@@ -89,6 +91,7 @@ export async function POST(req) {
 
     // 5. Validate each reading and match to client's chambers
     const processedReadings = [];
+    const outOfRangeAlerts = [];
     const availableChamberNames = profile.chambers.map(c => c.name);
 
     for (let i = 0; i < rawItems.length; i++) {
@@ -147,6 +150,20 @@ export async function POST(req) {
         chamberName: matchedChamber.name,
         value: tempVal
       });
+
+      // Check if out of range and notifications enabled
+      if (matchedChamber.notifyOutOfRange) {
+        const isBelow = matchedChamber.minTemp !== null && matchedChamber.minTemp !== undefined && tempVal < matchedChamber.minTemp;
+        const isAbove = matchedChamber.maxTemp !== null && matchedChamber.maxTemp !== undefined && tempVal > matchedChamber.maxTemp;
+        if (isBelow || isAbove) {
+          outOfRangeAlerts.push({
+            chamberName: matchedChamber.name,
+            value: tempVal,
+            minTemp: matchedChamber.minTemp,
+            maxTemp: matchedChamber.maxTemp
+          });
+        }
+      }
     }
 
     // 6. Create TemperatureRecord with exact required notes and current timestamp
@@ -171,6 +188,18 @@ export async function POST(req) {
         }
       }
     });
+
+    // 7. Send email alerts if any chambers are out of range and have notifications enabled
+    if (outOfRangeAlerts.length > 0 && profile.user?.email) {
+      sendTemperatureOutOfRangeEmail({
+        recipientEmail: profile.user.email,
+        businessName: profile.razonSocial || profile.personName,
+        alerts: outOfRangeAlerts,
+        date: record.date,
+        registeredBy: "API / Sensores automáticos",
+        language: profile.user.lastLoginLanguage || "es"
+      }).catch(err => console.error("Error sending sensor temperature alert email:", err));
+    }
 
     return NextResponse.json(
       {

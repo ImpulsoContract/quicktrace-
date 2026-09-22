@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isRecipeLimitExceeded } from "@/lib/planLimits";
+import { sendTemperatureOutOfRangeEmail } from "@/lib/temperatureAlert";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -77,6 +78,7 @@ export async function POST(req) {
       where: { id: profileId },
       include: { 
         plan: true,
+        user: true,
         _count: { select: { temperatureRecords: true } }
       }
     });
@@ -113,6 +115,53 @@ export async function POST(req) {
         }
       }
     });
+
+    // Check out-of-range chambers with notification enabled
+    try {
+      const chamberIds = Object.keys(values).map(k => parseInt(k)).filter(n => !isNaN(n));
+      if (chamberIds.length > 0) {
+        const chambers = await prisma.chamber.findMany({
+          where: { id: { in: chamberIds } }
+        });
+
+        const outOfRangeAlerts = [];
+        for (const ch of chambers) {
+          const rawVal = values[ch.id];
+          if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
+            const val = parseFloat(rawVal);
+            if (!isNaN(val)) {
+              const isBelow = ch.minTemp !== null && ch.minTemp !== undefined && val < ch.minTemp;
+              const isAbove = ch.maxTemp !== null && ch.maxTemp !== undefined && val > ch.maxTemp;
+              if ((isBelow || isAbove) && ch.notifyOutOfRange) {
+                outOfRangeAlerts.push({
+                  chamberName: ch.name,
+                  value: val,
+                  minTemp: ch.minTemp,
+                  maxTemp: ch.maxTemp
+                });
+              }
+            }
+          }
+        }
+
+        if (outOfRangeAlerts.length > 0 && profile.user?.email) {
+          const registeredBy = session.user.role === "WORKER"
+            ? `${session.user.name || 'Trabajador'} (${session.user.email})`
+            : `${session.user.name || profile.razonSocial || 'Administrador'}`;
+
+          sendTemperatureOutOfRangeEmail({
+            recipientEmail: profile.user.email,
+            businessName: profile.razonSocial || profile.personName,
+            alerts: outOfRangeAlerts,
+            date: record.date,
+            registeredBy,
+            language: profile.user.lastLoginLanguage || "es"
+          }).catch(err => console.error("Error sending temperature alert email:", err));
+        }
+      }
+    } catch (alertErr) {
+      console.error("Error evaluating temperature alerts:", alertErr);
+    }
 
     return NextResponse.json({ success: true, record });
   } catch (error) {
@@ -156,6 +205,58 @@ export async function PATCH(req) {
         }
       }
     });
+
+    // Check out-of-range chambers with notification enabled on PATCH
+    try {
+      const profile = await prisma.clientProfile.findUnique({
+        where: { id: session.user.profileId },
+        include: { user: true }
+      });
+
+      const chamberIds = Object.keys(values).map(k => parseInt(k)).filter(n => !isNaN(n));
+      if (chamberIds.length > 0 && profile?.user?.email) {
+        const chambers = await prisma.chamber.findMany({
+          where: { id: { in: chamberIds } }
+        });
+
+        const outOfRangeAlerts = [];
+        for (const ch of chambers) {
+          const rawVal = values[ch.id];
+          if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
+            const val = parseFloat(rawVal);
+            if (!isNaN(val)) {
+              const isBelow = ch.minTemp !== null && ch.minTemp !== undefined && val < ch.minTemp;
+              const isAbove = ch.maxTemp !== null && ch.maxTemp !== undefined && val > ch.maxTemp;
+              if ((isBelow || isAbove) && ch.notifyOutOfRange) {
+                outOfRangeAlerts.push({
+                  chamberName: ch.name,
+                  value: val,
+                  minTemp: ch.minTemp,
+                  maxTemp: ch.maxTemp
+                });
+              }
+            }
+          }
+        }
+
+        if (outOfRangeAlerts.length > 0) {
+          const registeredBy = session.user.role === "WORKER"
+            ? `${session.user.name || 'Trabajador'} (${session.user.email})`
+            : `${session.user.name || profile.razonSocial || 'Administrador'}`;
+
+          sendTemperatureOutOfRangeEmail({
+            recipientEmail: profile.user.email,
+            businessName: profile.razonSocial || profile.personName,
+            alerts: outOfRangeAlerts,
+            date: record.date,
+            registeredBy,
+            language: profile.user.lastLoginLanguage || "es"
+          }).catch(err => console.error("Error sending temperature alert email:", err));
+        }
+      }
+    } catch (alertErr) {
+      console.error("Error evaluating temperature alerts on update:", alertErr);
+    }
 
     return NextResponse.json({ success: true, record });
   } catch (error) {

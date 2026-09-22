@@ -34,14 +34,20 @@ export async function POST(req) {
   }
 
   try {
-    const { clientId, name } = await req.json();
-    if (!clientId || !name) {
+    const { clientId, name, minTemp, maxTemp, notifyOutOfRange } = await req.json();
+    if (!clientId || !name || !name.trim()) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
+    const parsedMin = (minTemp !== undefined && minTemp !== null && minTemp !== "") ? parseFloat(minTemp) : null;
+    const parsedMax = (maxTemp !== undefined && maxTemp !== null && maxTemp !== "") ? parseFloat(maxTemp) : null;
+
     const chamber = await prisma.chamber.create({
       data: {
-        name,
+        name: name.trim(),
+        minTemp: parsedMin !== null && !isNaN(parsedMin) ? parsedMin : null,
+        maxTemp: parsedMax !== null && !isNaN(parsedMax) ? parsedMax : null,
+        notifyOutOfRange: Boolean(notifyOutOfRange),
         clientProfileId: parseInt(clientId)
       }
     });
@@ -59,14 +65,22 @@ export async function PATCH(req) {
   }
 
   try {
-    const { id, name } = await req.json();
-    if (!id || !name) {
+    const { id, name, minTemp, maxTemp, notifyOutOfRange } = await req.json();
+    if (!id || !name || !name.trim()) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
+    const parsedMin = (minTemp !== undefined && minTemp !== null && minTemp !== "") ? parseFloat(minTemp) : null;
+    const parsedMax = (maxTemp !== undefined && maxTemp !== null && maxTemp !== "") ? parseFloat(maxTemp) : null;
+
     const chamber = await prisma.chamber.update({
       where: { id: parseInt(id) },
-      data: { name }
+      data: { 
+        name: name.trim(),
+        minTemp: parsedMin !== null && !isNaN(parsedMin) ? parsedMin : null,
+        maxTemp: parsedMax !== null && !isNaN(parsedMax) ? parsedMax : null,
+        notifyOutOfRange: Boolean(notifyOutOfRange)
+      }
     });
     return NextResponse.json({ success: true, chamber });
   } catch (error) {

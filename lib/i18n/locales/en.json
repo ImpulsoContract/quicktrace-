@@ -492,7 +492,15 @@
     "recipes_column": "Recipes using it",
     "cost_price_column": "Cost Price (per unit)",
     "ingredient_cost_single_header": "Raw material cost",
-    "ingredient_cost_single_desc": "Assign or modify the unit cost price of this ingredient."
+    "ingredient_cost_single_desc": "Assign or modify the unit cost price of this ingredient.",
+    "chamber_min_temp": "Minimum temperature (ºC)",
+    "chamber_max_temp": "Maximum temperature (ºC)",
+    "chamber_notify_checkbox": "I want to receive an email if a temperature outside this range is recorded",
+    "chamber_range_hint_both": "Normal values from {min}ºC to {max}ºC",
+    "chamber_range_hint_min": "Normal values from {min}ºC",
+    "chamber_range_hint_max": "Normal values up to {max}ºC",
+    "chamber_normal_range": "Normal range",
+    "chamber_email_alert_badge": "Email alert active"
   },
   "workers": {
     "title": "Worker Management",
@@ -559,7 +567,10 @@
     "duplicate_confirm_recipe": "Are you sure you want to duplicate this recipe?",
     "recipe_duplicated": "Recipe duplicated successfully",
     "no_linked_goods_receipts": "No related goods receipts were found for these ingredients.",
-    "auto_filled_lotes_from_goods": "Auto-filled {count} batches from goods receipts."
+    "auto_filled_lotes_from_goods": "Auto-filled {count} batches from goods receipts.",
+    "temp_out_of_range_warning": "Warning: Temperatures outside the normal range were detected:",
+    "temp_out_of_range_confirm": "Do you want to save this record anyway?",
+    "habitual_range": "Normal range"
   },
   "affiliate": {
     "sidebar_link": "Earn money with Quicktrace",
@@ -1287,5 +1298,18 @@
     "success_created": "Cutting record created successfully",
     "success_updated": "Cutting record updated successfully",
     "success_deleted": "Cutting record deleted successfully"
+  },
+  "temperature_alert_email": {
+    "subject_single": "⚠️ [Quicktrace Alert] Temperature out of range in chamber: {chamber}",
+    "subject_multiple": "⚠️ [Quicktrace Alert] Temperatures out of range in {count} chambers",
+    "title": "Temperature Out of Range Alert",
+    "intro": "A temperature reading outside the configured normal range has been recorded for the following chambers in your Quicktrace account:",
+    "col_chamber": "Chamber",
+    "col_recorded": "Recorded Temperature",
+    "col_range": "Configured Range",
+    "date_label": "Record date and time",
+    "registered_by_label": "Recorded by",
+    "registered_by_api": "API / Automatic temperature sensors",
+    "footer": "This is an automatic food safety alert message issued by Quicktrace."
   }
 }

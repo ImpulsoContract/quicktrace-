@@ -488,7 +488,15 @@
     "recipes_column": "Recettes qui l'utilisent",
     "cost_price_column": "Prix de Revient (par unité)",
     "ingredient_cost_single_header": "Coût de la matière première",
-    "ingredient_cost_single_desc": "Attribuez ou modifiez le prix de revient unitaire de cet ingrédient."
+    "ingredient_cost_single_desc": "Attribuez ou modifiez le prix de revient unitaire de cet ingrédient.",
+    "chamber_min_temp": "Température minimale (ºC)",
+    "chamber_max_temp": "Température maximale (ºC)",
+    "chamber_notify_checkbox": "Je souhaite recevoir un e-mail si une température hors de cette plage est enregistrée",
+    "chamber_range_hint_both": "Valeurs habituelles de {min}ºC à {max}ºC",
+    "chamber_range_hint_min": "Valeurs habituelles à partir de {min}ºC",
+    "chamber_range_hint_max": "Valeurs habituelles jusqu'à {max}ºC",
+    "chamber_normal_range": "Plage habituelle",
+    "chamber_email_alert_badge": "Alerte e-mail active"
   },
   "workers": {
     "title": "Gestion des Travailleurs",
@@ -554,7 +562,10 @@
     "duplicate_confirm_recipe": "Êtes-vous sûr de vouloir dupliquer cette recette ?",
     "recipe_duplicated": "Recette dupliquée avec succès",
     "no_linked_goods_receipts": "Aucune réception de marchandises associée n'a été trouvée pour ces ingrédients.",
-    "auto_filled_lotes_from_goods": "{count} lots ont été auto-remplis à partir des réceptions de marchandises."
+    "auto_filled_lotes_from_goods": "{count} lots ont été auto-remplis à partir des réceptions de marchandises.",
+    "temp_out_of_range_warning": "Avertissement: Des températures hors de la plage habituelle ont été détectées:",
+    "temp_out_of_range_confirm": "Souhaitez-vous quand même enregistrer cet enregistrement?",
+    "habitual_range": "Plage habituelle"
   },
   "affiliate": {
     "sidebar_link": "Gagnez de l'argent avec Quicktrace",
@@ -1282,5 +1293,18 @@
     "success_created": "Enregistrement de découpe créé avec succès",
     "success_updated": "Enregistrement de découpe mis à jour avec succès",
     "success_deleted": "Enregistrement de découpe supprimé avec succès"
+  },
+  "temperature_alert_email": {
+    "subject_single": "⚠️ [Alerte Quicktrace] Température hors plage dans la chambre: {chamber}",
+    "subject_multiple": "⚠️ [Alerte Quicktrace] Températures hors plage dans {count} chambres",
+    "title": "Alerte de Température Hors Plage",
+    "intro": "Un relevé de température en dehors de la plage habituelle configurée a été enregistré pour les chambres suivantes sur votre compte Quicktrace:",
+    "col_chamber": "Chambre",
+    "col_recorded": "Température Enregistrée",
+    "col_range": "Plage Configurée",
+    "date_label": "Date et heure de l'enregistrement",
+    "registered_by_label": "Enregistré par",
+    "registered_by_api": "API / Capteurs automatiques de température",
+    "footer": "Ceci est un message d'alerte automatique de sécurité alimentaire émis par Quicktrace."
   }
 }

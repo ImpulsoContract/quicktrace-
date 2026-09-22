@@ -1390,12 +1390,12 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleCreateChamber = async (name) => {
+  const handleCreateChamber = async (name, minTemp = null, maxTemp = null, notifyOutOfRange = false) => {
     try {
       const res = await fetch("/api/client/chambers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, minTemp, maxTemp, notifyOutOfRange })
       });
       const data = await res.json();
       if (data.success) {
@@ -1413,12 +1413,12 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleEditChamber = async (id, name) => {
+  const handleEditChamber = async (id, name, minTemp = null, maxTemp = null, notifyOutOfRange = false) => {
     try {
       const res = await fetch("/api/client/chambers", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, name })
+        body: JSON.stringify({ id, name, minTemp, maxTemp, notifyOutOfRange })
       });
       const data = await res.json();
       if (data.success) {
@@ -4100,6 +4100,45 @@ export default function ClientDashboard() {
       setIsRecipeOverlimitModalOpen(true);
       return;
     }
+
+    // Check if any chambers have values out of configured range
+    const outOfRangeAlerts = [];
+    chambers.forEach(chamber => {
+      const rawVal = tempForm.values[chamber.id];
+      if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
+        const numVal = parseFloat(rawVal);
+        if (!isNaN(numVal)) {
+          const isBelow = chamber.minTemp !== null && chamber.minTemp !== undefined && numVal < chamber.minTemp;
+          const isAbove = chamber.maxTemp !== null && chamber.maxTemp !== undefined && numVal > chamber.maxTemp;
+          if (isBelow || isAbove) {
+            let rangeStr = "";
+            if (chamber.minTemp !== null && chamber.maxTemp !== null) {
+              rangeStr = `${chamber.minTemp}ºC a ${chamber.maxTemp}ºC`;
+            } else if (chamber.minTemp !== null) {
+              rangeStr = `>= ${chamber.minTemp}ºC`;
+            } else {
+              rangeStr = `<= ${chamber.maxTemp}ºC`;
+            }
+            outOfRangeAlerts.push({
+              chamberName: chamber.name,
+              value: numVal,
+              rangeStr
+            });
+          }
+        }
+      }
+    });
+
+    if (outOfRangeAlerts.length > 0) {
+      const alertLines = outOfRangeAlerts.map(a => 
+        `• ${a.chamberName}: ${a.value}ºC (${t('alerts.habitual_range') || 'Rango habitual'}: ${a.rangeStr})`
+      ).join("\n");
+      const confirmMsg = `${t('alerts.temp_out_of_range_warning') || 'Aviso: Se han detectado temperaturas fuera del rango habitual:'}\n\n${alertLines}\n\n${t('alerts.temp_out_of_range_confirm') || '¿Deseas guardar este registro de todas formas?'}`;
+      if (!window.confirm(confirmMsg)) {
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const url = "/api/temperature-records";
@@ -11826,6 +11865,19 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
                     />
                     <span style={{ fontWeight: '800', color: 'var(--text-muted)' }}>ºC</span>
                   </div>
+                  {(chamber.minTemp !== null || chamber.maxTemp !== null) && (
+                    <div style={{ fontSize: '0.75rem', color: '#0369a1', marginTop: '0.4rem', fontWeight: '500' }}>
+                      {chamber.minTemp !== null && chamber.maxTemp !== null
+                        ? (t('modals.chamber_range_hint_both') || "Valores habituales desde {min}ºC a {max}ºC")
+                            .replace("{min}", chamber.minTemp)
+                            .replace("{max}", chamber.maxTemp)
+                        : chamber.minTemp !== null
+                        ? (t('modals.chamber_range_hint_min') || "Valores habituales desde {min}ºC")
+                            .replace("{min}", chamber.minTemp)
+                        : (t('modals.chamber_range_hint_max') || "Valores habituales hasta {max}ºC")
+                            .replace("{max}", chamber.maxTemp)}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -12595,20 +12647,40 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
 function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) {
   const { t } = useI18n();
   const [newName, setNewName] = useState("");
+  const [newMinTemp, setNewMinTemp] = useState("");
+  const [newMaxTemp, setNewMaxTemp] = useState("");
+  const [newNotify, setNewNotify] = useState(false);
+
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editMinTemp, setEditMinTemp] = useState("");
+  const [editMaxTemp, setEditMaxTemp] = useState("");
+  const [editNotify, setEditNotify] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    const success = await onCreate(newName);
-    if (success) setNewName("");
+    const success = await onCreate(newName.trim(), newMinTemp, newMaxTemp, newNotify);
+    if (success) {
+      setNewName("");
+      setNewMinTemp("");
+      setNewMaxTemp("");
+      setNewNotify(false);
+    }
+  };
+
+  const handleStartEdit = (chamber) => {
+    setEditingId(chamber.id);
+    setEditName(chamber.name);
+    setEditMinTemp(chamber.minTemp !== null && chamber.minTemp !== undefined ? chamber.minTemp : "");
+    setEditMaxTemp(chamber.maxTemp !== null && chamber.maxTemp !== undefined ? chamber.maxTemp : "");
+    setEditNotify(Boolean(chamber.notifyOutOfRange));
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editName.trim()) return;
-    const success = await onEdit(editingId, editName);
+    const success = await onEdit(editingId, editName.trim(), editMinTemp, editMaxTemp, editNotify);
     if (success) setEditingId(null);
   };
 
@@ -12625,9 +12697,9 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_chamber')}</label>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_chamber')}</label>
             <input 
               type="text" 
               className="input-field" 
@@ -12635,7 +12707,52 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               required
+              style={{ margin: 0 }}
             />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                {t('modals.chamber_min_temp') || "Temperatura mínima (ºC)"}
+              </label>
+              <input 
+                type="number" 
+                step="any"
+                className="input-field" 
+                placeholder="Ej: -2"
+                value={newMinTemp}
+                onChange={(e) => setNewMinTemp(e.target.value)}
+                style={{ margin: 0 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                {t('modals.chamber_max_temp') || "Temperatura máxima (ºC)"}
+              </label>
+              <input 
+                type="number" 
+                step="any"
+                className="input-field" 
+                placeholder="Ej: 2"
+                value={newMaxTemp}
+                onChange={(e) => setNewMaxTemp(e.target.value)}
+                style={{ margin: 0 }}
+              />
+            </div>
+          </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-main)', marginTop: '0.25rem' }}>
+            <input 
+              type="checkbox" 
+              checked={newNotify} 
+              onChange={(e) => setNewNotify(e.target.checked)} 
+              style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+            />
+            <span>{t('modals.chamber_notify_checkbox') || "Quiero recibir un email si se registra una temperatura fuera de este rango"}</span>
+          </label>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
             <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>{t('modals.add_btn')}</button>
           </div>
         </form>
@@ -12644,23 +12761,91 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
           {chambers.map(chamber => (
             <div key={chamber.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1rem' }}>
               {editingId === chamber.id ? (
-                <form onSubmit={handleUpdate} style={{ flex: 1, display: 'flex', gap: '0.5rem' }}>
+                <form onSubmit={handleUpdate} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <input 
                     type="text" 
                     className="input-field" 
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
+                    required
                     autoFocus
+                    style={{ margin: 0 }}
                   />
-                  <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }}><Save size={16} /></button>
-                  <button type="button" className="btn-secondary" onClick={() => setEditingId(null)} style={{ padding: '0.5rem 1rem' }}><X size={16} /></button>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                        {t('modals.chamber_min_temp') || "Temperatura mínima (ºC)"}
+                      </label>
+                      <input 
+                        type="number" 
+                        step="any"
+                        className="input-field" 
+                        placeholder="Ej: -2"
+                        value={editMinTemp}
+                        onChange={(e) => setEditMinTemp(e.target.value)}
+                        style={{ margin: 0, padding: '0.5rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                        {t('modals.chamber_max_temp') || "Temperatura máxima (ºC)"}
+                      </label>
+                      <input 
+                        type="number" 
+                        step="any"
+                        className="input-field" 
+                        placeholder="Ej: 2"
+                        value={editMaxTemp}
+                        onChange={(e) => setEditMaxTemp(e.target.value)}
+                        style={{ margin: 0, padding: '0.5rem' }}
+                      />
+                    </div>
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={editNotify} 
+                      onChange={(e) => setEditNotify(e.target.checked)} 
+                      style={{ width: '16px', height: '16px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                    />
+                    <span>{t('modals.chamber_notify_checkbox') || "Quiero recibir un email si se registra una temperatura fuera de este rango"}</span>
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+                    <button type="button" className="btn-secondary" onClick={() => setEditingId(null)} style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <X size={16} /> {t('common.cancel') || "Cancelar"}
+                    </button>
+                    <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Save size={16} /> {t('common.save') || "Guardar"}
+                    </button>
+                  </div>
                 </form>
               ) : (
                 <>
-                  <span style={{ fontWeight: '700', fontSize: '1rem' }}>{chamber.name}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <span style={{ fontWeight: '700', fontSize: '1rem' }}>{chamber.name}</span>
+                      {chamber.notifyOutOfRange && (
+                        <span title={t('modals.chamber_email_alert_badge') || "Alerta por email activa"} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '1rem', background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', fontWeight: '600' }}>
+                          <Mail size={12} /> {t('modals.chamber_email_alert_badge') || "Alerta email"}
+                        </span>
+                      )}
+                    </div>
+                    {(chamber.minTemp !== null || chamber.maxTemp !== null) && (
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {t('modals.chamber_normal_range') || "Rango habitual"}:{" "}
+                        <strong style={{ color: 'var(--text-main)' }}>
+                          {chamber.minTemp !== null && chamber.maxTemp !== null
+                            ? `${chamber.minTemp}ºC a ${chamber.maxTemp}ºC`
+                            : chamber.minTemp !== null
+                            ? `>= ${chamber.minTemp}ºC`
+                            : `<= ${chamber.maxTemp}ºC`}
+                        </strong>
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button 
-                      onClick={() => { setEditingId(chamber.id); setEditName(chamber.name); }}
+                      onClick={() => handleStartEdit(chamber)}
                       style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', color: 'var(--corp-green)', cursor: 'pointer' }}
                     >
                       <Edit size={16} />

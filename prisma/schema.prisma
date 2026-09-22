@@ -380,10 +380,13 @@ model CleaningLogZone {
 }
 
 model Chamber {
-  id              Int           @id @default(autoincrement())
-  name            String
-  clientProfileId Int
-  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  id               Int           @id @default(autoincrement())
+  name             String
+  minTemp          Float?
+  maxTemp          Float?
+  notifyOutOfRange Boolean       @default(false)
+  clientProfileId  Int
+  clientProfile    ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
   values TemperatureValue[]
 

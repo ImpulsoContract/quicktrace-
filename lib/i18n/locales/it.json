@@ -488,7 +488,15 @@
     "recipes_column": "Ricette che lo utilizzano",
     "cost_price_column": "Prezzo di Costo (per unità)",
     "ingredient_cost_single_header": "Costo materia prima",
-    "ingredient_cost_single_desc": "Assegna o modifica il prezzo di costo unitario di questo ingrediente."
+    "ingredient_cost_single_desc": "Assegna o modifica il prezzo di costo unitario di questo ingrediente.",
+    "chamber_min_temp": "Temperatura minima (ºC)",
+    "chamber_max_temp": "Temperatura massima (ºC)",
+    "chamber_notify_checkbox": "Desidero ricevere un'e-mail se viene registrata una temperatura al di fuori di questo intervallo",
+    "chamber_range_hint_both": "Valori abituali da {min}ºC a {max}ºC",
+    "chamber_range_hint_min": "Valori abituali a partire da {min}ºC",
+    "chamber_range_hint_max": "Valori abituali fino a {max}ºC",
+    "chamber_normal_range": "Intervallo abituale",
+    "chamber_email_alert_badge": "Avviso e-mail attivo"
   },
   "workers": {
     "title": "Gestione dei Lavoratori",
@@ -554,7 +562,10 @@
     "duplicate_confirm_recipe": "Sei sicuro di voler duplicare questa ricetta?",
     "recipe_duplicated": "Ricetta duplicata correttamente",
     "no_linked_goods_receipts": "Non sono state trovate entrate merci correlate per questi ingredienti.",
-    "auto_filled_lotes_from_goods": "Compilati automaticamente {count} lotti da entrate merci."
+    "auto_filled_lotes_from_goods": "Compilati automaticamente {count} lotti da entrate merci.",
+    "temp_out_of_range_warning": "Attenzione: Sono state rilevate temperature al di fuori dell'intervallo abituale:",
+    "temp_out_of_range_confirm": "Desideri salvare questa registrazione comunque?",
+    "habitual_range": "Intervallo abituale"
   },
   "affiliate": {
     "sidebar_link": "Guadagna con Quicktrace",
@@ -1282,5 +1293,18 @@
     "success_created": "Record di sezionamento creato con successo",
     "success_updated": "Record di sezionamento aggiornato con successo",
     "success_deleted": "Record di sezionamento eliminato con successo"
+  },
+  "temperature_alert_email": {
+    "subject_single": "⚠️ [Avviso Quicktrace] Temperatura fuori intervallo nella camera: {chamber}",
+    "subject_multiple": "⚠️ [Avviso Quicktrace] Temperature fuori intervallo in {count} camere",
+    "title": "Avviso di Temperatura Fuori Intervallo",
+    "intro": "È stata registrata una lettura della temperatura al di fuori dell'intervallo abituale configurato per le seguenti camere nel tuo account Quicktrace:",
+    "col_chamber": "Camera",
+    "col_recorded": "Temperatura Registrata",
+    "col_range": "Intervallo Configurato",
+    "date_label": "Data e ora della registrazione",
+    "registered_by_label": "Registrato da",
+    "registered_by_api": "API / Sensori automatici di temperatura",
+    "footer": "Questo è un messaggio automatico di allerta sulla sicurezza alimentare inviato da Quicktrace."
   }
 }

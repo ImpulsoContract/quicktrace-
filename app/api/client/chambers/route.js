@@ -47,14 +47,20 @@ export async function POST(req) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
-    const { name } = await req.json();
-    if (!name) {
+    const { name, minTemp, maxTemp, notifyOutOfRange } = await req.json();
+    if (!name || !name.trim()) {
       return NextResponse.json({ error: "Nombre de cámara requerido" }, { status: 400 });
     }
 
+    const parsedMin = (minTemp !== undefined && minTemp !== null && minTemp !== "") ? parseFloat(minTemp) : null;
+    const parsedMax = (maxTemp !== undefined && maxTemp !== null && maxTemp !== "") ? parseFloat(maxTemp) : null;
+
     const chamber = await prisma.chamber.create({
       data: {
-        name,
+        name: name.trim(),
+        minTemp: parsedMin !== null && !isNaN(parsedMin) ? parsedMin : null,
+        maxTemp: parsedMax !== null && !isNaN(parsedMax) ? parsedMax : null,
+        notifyOutOfRange: Boolean(notifyOutOfRange),
         clientProfileId: profile.id
       }
     });
@@ -77,8 +83,8 @@ export async function PATCH(req) {
       where: { userId: parseInt(session.user.id) }
     });
 
-    const { id, name } = await req.json();
-    if (!id || !name) {
+    const { id, name, minTemp, maxTemp, notifyOutOfRange } = await req.json();
+    if (!id || !name || !name.trim()) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
@@ -90,9 +96,17 @@ export async function PATCH(req) {
       return NextResponse.json({ error: "Cámara no encontrada o no pertenece al cliente" }, { status: 403 });
     }
 
+    const parsedMin = (minTemp !== undefined && minTemp !== null && minTemp !== "") ? parseFloat(minTemp) : null;
+    const parsedMax = (maxTemp !== undefined && maxTemp !== null && maxTemp !== "") ? parseFloat(maxTemp) : null;
+
     const updated = await prisma.chamber.update({
       where: { id: parseInt(id) },
-      data: { name }
+      data: { 
+        name: name.trim(),
+        minTemp: parsedMin !== null && !isNaN(parsedMin) ? parsedMin : null,
+        maxTemp: parsedMax !== null && !isNaN(parsedMax) ? parsedMax : null,
+        notifyOutOfRange: Boolean(notifyOutOfRange)
+      }
     });
 
     return NextResponse.json({ success: true, chamber: updated });

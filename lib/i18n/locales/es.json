@@ -492,7 +492,15 @@
     "recipes_column": "Recetas que lo usan",
     "cost_price_column": "Precio de Coste (por unidad)",
     "ingredient_cost_single_header": "Coste de materia prima",
-    "ingredient_cost_single_desc": "Asigna o modifica el precio de coste unitario de este ingrediente."
+    "ingredient_cost_single_desc": "Asigna o modifica el precio de coste unitario de este ingrediente.",
+    "chamber_min_temp": "Temperatura mínima (ºC)",
+    "chamber_max_temp": "Temperatura máxima (ºC)",
+    "chamber_notify_checkbox": "Quiero recibir un email si se registra una temperatura fuera de este rango",
+    "chamber_range_hint_both": "Valores habituales desde {min}ºC a {max}ºC",
+    "chamber_range_hint_min": "Valores habituales desde {min}ºC",
+    "chamber_range_hint_max": "Valores habituales hasta {max}ºC",
+    "chamber_normal_range": "Rango habitual",
+    "chamber_email_alert_badge": "Alerta por email activa"
   },
   "workers": {
     "title": "Gestión de Trabajadores",
@@ -559,7 +567,10 @@
     "duplicate_confirm_recipe": "¿Seguro que quieres duplicar esta receta?",
     "recipe_duplicated": "Receta duplicada correctamente",
     "no_linked_goods_receipts": "No se encontraron entradas de mercancías relacionadas para estos ingredientes.",
-    "auto_filled_lotes_from_goods": "Se han auto-rellenado {count} lotes desde entradas de mercancías."
+    "auto_filled_lotes_from_goods": "Se han auto-rellenado {count} lotes desde entradas de mercancías.",
+    "temp_out_of_range_warning": "Aviso: Se han detectado temperaturas fuera del rango habitual:",
+    "temp_out_of_range_confirm": "¿Deseas guardar este registro de todas formas?",
+    "habitual_range": "Rango habitual"
   },
   "affiliate": {
     "sidebar_link": "Gana dinero con Quicktrace",
@@ -1287,5 +1298,18 @@
     "success_created": "Registro de despiece creado correctamente",
     "success_updated": "Registro de despiece actualizado correctamente",
     "success_deleted": "Registro de despiece eliminado correctamente"
+  },
+  "temperature_alert_email": {
+    "subject_single": "⚠️ [Alerta Quicktrace] Temperatura fuera de rango en cámara: {chamber}",
+    "subject_multiple": "⚠️ [Alerta Quicktrace] Temperaturas fuera de rango en {count} cámaras",
+    "title": "Alerta de Temperatura Fuera de Rango",
+    "intro": "Se ha registrado una lectura de temperatura fuera del rango habitual configurado para las siguientes cámaras en su cuenta de Quicktrace:",
+    "col_chamber": "Cámara",
+    "col_recorded": "Temperatura Registrada",
+    "col_range": "Rango Configurado",
+    "date_label": "Fecha y hora del registro",
+    "registered_by_label": "Registrado por",
+    "registered_by_api": "API / Sensores automáticos de temperatura",
+    "footer": "Este es un mensaje automático de alerta de seguridad alimentaria emitido por Quicktrace."
   }
 }
