@@ -149,14 +149,19 @@ export async function POST(req) {
             ? `${session.user.name || 'Trabajador'} (${session.user.email})`
             : `${session.user.name || profile.razonSocial || 'Administrador'}`;
 
-          sendTemperatureOutOfRangeEmail({
+          const emailResult = await sendTemperatureOutOfRangeEmail({
             recipientEmail: profile.user.email,
             businessName: profile.razonSocial || profile.personName,
             alerts: outOfRangeAlerts,
             date: record.date,
             registeredBy,
             language: profile.user.lastLoginLanguage || "es"
-          }).catch(err => console.error("Error sending temperature alert email:", err));
+          });
+          if (!emailResult?.success) {
+            console.error("Error sending temperature alert email:", emailResult?.error);
+          } else {
+            console.log("Temperature alert email sent successfully to", profile.user.email, "MessageId:", emailResult?.messageId);
+          }
         }
       }
     } catch (alertErr) {
@@ -239,19 +244,24 @@ export async function PATCH(req) {
           }
         }
 
-        if (outOfRangeAlerts.length > 0) {
+        if (outOfRangeAlerts.length > 0 && profile?.user?.email) {
           const registeredBy = session.user.role === "WORKER"
             ? `${session.user.name || 'Trabajador'} (${session.user.email})`
             : `${session.user.name || profile.razonSocial || 'Administrador'}`;
 
-          sendTemperatureOutOfRangeEmail({
+          const emailResult = await sendTemperatureOutOfRangeEmail({
             recipientEmail: profile.user.email,
             businessName: profile.razonSocial || profile.personName,
             alerts: outOfRangeAlerts,
             date: record.date,
             registeredBy,
             language: profile.user.lastLoginLanguage || "es"
-          }).catch(err => console.error("Error sending temperature alert email:", err));
+          });
+          if (!emailResult?.success) {
+            console.error("Error sending temperature alert email on update:", emailResult?.error);
+          } else {
+            console.log("Temperature alert email sent successfully on update to", profile.user.email, "MessageId:", emailResult?.messageId);
+          }
         }
       }
     } catch (alertErr) {

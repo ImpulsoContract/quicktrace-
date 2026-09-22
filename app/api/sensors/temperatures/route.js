@@ -191,14 +191,23 @@ export async function POST(req) {
 
     // 7. Send email alerts if any chambers are out of range and have notifications enabled
     if (outOfRangeAlerts.length > 0 && profile.user?.email) {
-      sendTemperatureOutOfRangeEmail({
-        recipientEmail: profile.user.email,
-        businessName: profile.razonSocial || profile.personName,
-        alerts: outOfRangeAlerts,
-        date: record.date,
-        registeredBy: "API / Sensores automáticos",
-        language: profile.user.lastLoginLanguage || "es"
-      }).catch(err => console.error("Error sending sensor temperature alert email:", err));
+      try {
+        const emailResult = await sendTemperatureOutOfRangeEmail({
+          recipientEmail: profile.user.email,
+          businessName: profile.razonSocial || profile.personName,
+          alerts: outOfRangeAlerts,
+          date: record.date,
+          registeredBy: "API / Sensores automáticos",
+          language: profile.user.lastLoginLanguage || "es"
+        });
+        if (!emailResult?.success) {
+          console.error("Error sending sensor temperature alert email:", emailResult?.error);
+        } else {
+          console.log("Sensor temperature alert email sent successfully to", profile.user.email, "MessageId:", emailResult?.messageId);
+        }
+      } catch (err) {
+        console.error("Error sending sensor temperature alert email:", err);
+      }
     }
 
     return NextResponse.json(
