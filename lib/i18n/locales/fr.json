@@ -905,7 +905,8 @@
       "sync_stripe": "Sync avec Stripe",
       "sync_clientify": "Sync avec Clientify",
       "view_terms": "Voir Accettation des Termes",
-      "delete_client": "SUPPRIMER CLIENT"
+      "delete_client": "SUPPRIMER CLIENT",
+      "manage_api_key": "Gérer la clé API"
     },
     "delete": {
       "confirm_msg": "Confirmer la suppression totale des données pour {name} ? Ses recettes, élaborations, enregistrements et son compte seront définitivement supprimés.",
@@ -1021,6 +1022,33 @@
     "edit": {
       "ia_config": "Configuration de l'IA",
       "ia_goods": "Activer le système d'IA pour les réceptions de marchandises"
+    },
+    "api_key": {
+      "title": "Gérer la clé API",
+      "subtitle": "Gestion de l'accès à l'API pour les sondes de température externes",
+      "client_label": "Client :",
+      "status_active": "Clé API active",
+      "status_inactive": "Aucune clé API",
+      "created_at": "Créée le :",
+      "no_key_warning": "Ce client n'a pas de clé API configurée. Les capteurs externes ne pourront pas enregistrer de relevés de température.",
+      "input_label": "Clé API (Générée ou manuelle)",
+      "input_placeholder": "Tapez une clé personnalisée ou générez-en une aléatoire...",
+      "generate_random_btn": "Générer une clé aléatoire",
+      "save_btn": "Enregistrer la clé",
+      "saving": "Enregistrement...",
+      "revoke_btn": "Révoquer / Supprimer la clé",
+      "revoking": "Révocation...",
+      "confirm_revoke": "Êtes-vous sûr de vouloir révoquer et supprimer la clé API de ce client ? Les capteurs externes cesseront immédiatement de fonctionner.",
+      "copied": "Copiée !",
+      "copy_btn": "Copier",
+      "show_key": "Afficher la clé",
+      "hide_key": "Masquer la clé",
+      "save_success": "Clé API enregistrée et mise à jour avec succès.",
+      "revoke_success": "Clé API révoquée avec succès.",
+      "tech_details_title": "Informations techniques pour intégrer les capteurs",
+      "endpoint_label": "Point de terminaison :",
+      "headers_label": "En-têtes requis :",
+      "body_example_label": "Exemple de payload JSON :"
     }
   },
   "providers": {

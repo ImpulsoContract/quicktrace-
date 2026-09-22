@@ -903,7 +903,8 @@
       "sync_stripe": "Sincronizar com Stripe",
       "sync_clientify": "Sincronizar com Clientify",
       "view_terms": "Ver aceitação de condições",
-      "delete_client": "ELIMINAR CLIENTE"
+      "delete_client": "ELIMINAR CLIENTE",
+      "manage_api_key": "Gerenciar chave de API"
     },
     "delete": {
       "confirm_msg": "Confirmar eliminação total de datos para {name}? As suas receitas, elaborações, registos e conta serão apagados permanentemente.",
@@ -1019,6 +1020,33 @@
     "edit": {
       "ia_config": "Configuração de IA",
       "ia_goods": "Ativar sistema de IA para recebimento de mercadorias"
+    },
+    "api_key": {
+      "title": "Gerenciar Chave de API",
+      "subtitle": "Gerenciamento de acesso à API para sensores externos de temperatura",
+      "client_label": "Cliente:",
+      "status_active": "Chave de API ativa",
+      "status_inactive": "Sem chave de API",
+      "created_at": "Criada em:",
+      "no_key_warning": "Este cliente não tem nenhuma chave de API configurada. Os sensores externos não poderão registrar leituras de temperatura.",
+      "input_label": "Chave de API (Gerada ou manual)",
+      "input_placeholder": "Digite uma chave personalizada ou gere uma aleatória...",
+      "generate_random_btn": "Gerar chave aleatória",
+      "save_btn": "Salvar chave",
+      "saving": "Salvando...",
+      "revoke_btn": "Revogar / Excluir chave",
+      "revoking": "Revogando...",
+      "confirm_revoke": "Tem certeza de que deseja revogar e excluir a chave de API deste cliente? Os sensores externos pararão de funcionar imediatamente.",
+      "copied": "Copiada!",
+      "copy_btn": "Copiar",
+      "show_key": "Mostrar chave",
+      "hide_key": "Ocultar chave",
+      "save_success": "Chave de API salva e atualizada com sucesso.",
+      "revoke_success": "Chave de API revogada com sucesso.",
+      "tech_details_title": "Informações técnicas para conectar os sensores",
+      "endpoint_label": "Endpoint de ingestão:",
+      "headers_label": "Cabeçalhos necessários:",
+      "body_example_label": "Exemplo de payload JSON:"
     }
   },
   "providers": {

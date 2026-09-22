@@ -905,7 +905,8 @@
       "sync_stripe": "Sincronizza con Stripe",
       "sync_clientify": "Sincronizza con Clientify",
       "view_terms": "Vedi Accettazione Termini",
-      "delete_client": "ELIMINA CLIENTE"
+      "delete_client": "ELIMINA CLIENTE",
+      "manage_api_key": "Gestisci chiave API"
     },
     "delete": {
       "confirm_msg": "Confermare l'eliminazione totale dei dati per {name}? Le sue ricette, lavorazioni, record e account verranno eliminati in modo permanente.",
@@ -1021,6 +1022,33 @@
     "edit": {
       "ia_config": "Configurazione IA",
       "ia_goods": "Abilita il sistema IA per le entrate merci"
+    },
+    "api_key": {
+      "title": "Gestisci Chiave API",
+      "subtitle": "Gestione dell'accesso API per sonde di temperatura esterne",
+      "client_label": "Cliente:",
+      "status_active": "Chiave API attiva",
+      "status_inactive": "Nessuna chiave API",
+      "created_at": "Creata il:",
+      "no_key_warning": "Questo cliente non ha alcuna chiave API configurata. I sensori esterni non potranno registrare letture di temperatura.",
+      "input_label": "Chiave API (Generata o manuale)",
+      "input_placeholder": "Digita una chiave personalizzata o generane una casuale...",
+      "generate_random_btn": "Genera chiave casuale",
+      "save_btn": "Salva chiave",
+      "saving": "Salvataggio...",
+      "revoke_btn": "Revoca / Elimina chiave",
+      "revoking": "Revoca in corso...",
+      "confirm_revoke": "Sei sicuro di voler revocare ed eliminare la chiave API di questo cliente? I sensori esterni smetteranno immediatamente di funzionare.",
+      "copied": "Copiata!",
+      "copy_btn": "Copia",
+      "show_key": "Mostra chiave",
+      "hide_key": "Nascondi chiave",
+      "save_success": "Chiave API salvata e aggiornata con successo.",
+      "revoke_success": "Chiave API revocata con successo.",
+      "tech_details_title": "Informazioni tecniche per connettere i sensori",
+      "endpoint_label": "Endpoint di ricezione:",
+      "headers_label": "Intestazioni richieste:",
+      "body_example_label": "Esempio payload JSON:"
     }
   },
   "providers": {

@@ -8,7 +8,8 @@ import {
   Search, ShieldCheck, ChevronRight,
   MoreVertical, Edit, Plus, Trash2,
   X, AlertCircle, Loader2, LogOut,
-  Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu, ExternalLink
+  Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu, ExternalLink,
+  Key, Eye, EyeOff, Copy, Check
 } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 
@@ -33,6 +34,7 @@ export default function AdminDashboard() {
   const [manageCleaningZonesModal, setManageCleaningZonesModal] = useState(null);
   const [manageChambersModal, setManageChambersModal] = useState(null);
   const [termsModal, setTermsModal] = useState(null);
+  const [apiKeyModal, setApiKeyModal] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -873,6 +875,7 @@ export default function AdminDashboard() {
             <MenuBtn icon={<ChefHat size={16} />} text={t('admin.actions.manage_recipes')} onClick={() => { setManageRecipesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<CheckSquare size={16} />} text={t('admin.actions.cleaning_zones')} onClick={() => { setManageCleaningZonesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
             <MenuBtn icon={<Thermometer size={16} />} text={t('admin.actions.chambers')} onClick={() => { setManageChambersModal(activeMenu.clientProfile); setActiveMenu(null); }} />
+            <MenuBtn icon={<Key size={16} />} text={t('admin.actions.manage_api_key')} onClick={() => { setApiKeyModal(activeMenu); setActiveMenu(null); }} />
             <MenuBtn icon={<RefreshCw size={16} />} text={t('admin.actions.sync_stripe')} onClick={() => handleResyncStripe(activeMenu.id)} />
             <MenuBtn icon={<UserPlus size={16} />} text={t('admin.actions.sync_clientify')} onClick={() => handleSyncClientify(activeMenu.id)} />
             <MenuBtn icon={<Mail size={16} />} text="Enviar email de recuperación de contraseña" onClick={() => handleSendPasswordReset(activeMenu.email)} />
@@ -1033,6 +1036,36 @@ export default function AdminDashboard() {
         <ManageChambersModal 
           profile={manageChambersModal} 
           onClose={() => setManageChambersModal(null)} 
+        />
+      )}
+
+      {apiKeyModal && (
+        <ManageApiKeyModal 
+          client={apiKeyModal} 
+          onClose={() => setApiKeyModal(null)} 
+          onUpdateClient={(updatedApiKey, updatedCreatedAt) => {
+            setClients(prev => prev.map(c => {
+              if (c.id === apiKeyModal.id) {
+                return {
+                  ...c,
+                  clientProfile: {
+                    ...c.clientProfile,
+                    apiKey: updatedApiKey,
+                    apiKeyCreatedAt: updatedCreatedAt
+                  }
+                };
+              }
+              return c;
+            }));
+            setApiKeyModal(prev => prev ? ({
+              ...prev,
+              clientProfile: {
+                ...prev.clientProfile,
+                apiKey: updatedApiKey,
+                apiKeyCreatedAt: updatedCreatedAt
+              }
+            }) : null);
+          }}
         />
       )}
 
@@ -1533,6 +1566,394 @@ function ChangePasswordModal({ user, onClose }) {
           </button>
         </div>
       </form>
+    </Modal>
+  );
+}
+
+function ManageApiKeyModal({ client, onClose, onUpdateClient }) {
+  const { t, locale } = useI18n();
+  const [apiKey, setApiKey] = useState(client.clientProfile?.apiKey || "");
+  const [apiKeyCreatedAt, setApiKeyCreatedAt] = useState(client.clientProfile?.apiKeyCreatedAt || null);
+  const [isKeyVisible, setIsKeyVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [showTechDetails, setShowTechDetails] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFreshKey = async () => {
+      try {
+        const res = await fetch(`/api/admin/clients/api-key/${client.id}`);
+        const data = await res.json();
+        if (isMounted && res.ok && data.success) {
+          if (data.apiKey !== undefined) setApiKey(data.apiKey || "");
+          if (data.apiKeyCreatedAt !== undefined) setApiKeyCreatedAt(data.apiKeyCreatedAt || null);
+        }
+      } catch (e) {
+        console.error("Error fetching fresh API key:", e);
+      }
+    };
+    fetchFreshKey();
+    return () => { isMounted = false; };
+  }, [client.id]);
+
+  const handleGenerateRandom = () => {
+    const randomHex = Array.from(window.crypto.getRandomValues(new Uint8Array(24)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    const newKey = `qt_live_${randomHex}`;
+    setApiKey(newKey);
+    setIsKeyVisible(true);
+    setError("");
+  };
+
+  const handleCopy = () => {
+    if (!apiKey) return;
+    navigator.clipboard.writeText(apiKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const trimmed = apiKey.trim();
+    if (!trimmed) {
+      setError(t('admin.api_key.no_key_warning') || "La clave de API no puede estar vacía. Si deseas eliminarla, pulsa en revocar.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccessMsg("");
+
+    try {
+      const res = await fetch(`/api/admin/clients/api-key/${client.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: trimmed })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setApiKey(data.apiKey);
+        setApiKeyCreatedAt(data.apiKeyCreatedAt);
+        setSuccessMsg(t('admin.api_key.save_success') || "Clave de API guardada y actualizada con éxito.");
+        if (onUpdateClient) {
+          onUpdateClient(data.apiKey, data.apiKeyCreatedAt);
+        }
+      } else {
+        setError(data.error || "Error al actualizar la clave de API");
+      }
+    } catch (err) {
+      setError("Error de conexión con el servidor");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevoke = async () => {
+    if (!confirm(t('admin.api_key.confirm_revoke') || "¿Estás seguro de que deseas revocar la clave de API de este cliente?")) {
+      return;
+    }
+
+    setRevoking(true);
+    setError("");
+    setSuccessMsg("");
+
+    try {
+      const res = await fetch(`/api/admin/clients/api-key/${client.id}`, {
+        method: "DELETE"
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setApiKey("");
+        setApiKeyCreatedAt(null);
+        setIsKeyVisible(false);
+        setSuccessMsg(t('admin.api_key.revoke_success') || "Clave de API revocada con éxito.");
+        if (onUpdateClient) {
+          onUpdateClient(null, null);
+        }
+      } else {
+        setError(data.error || "Error al revocar la clave de API");
+      }
+    } catch (err) {
+      setError("Error de conexión con el servidor");
+    } finally {
+      setRevoking(false);
+    }
+  };
+
+  const hasActiveKey = Boolean(apiKeyCreatedAt || (apiKey && client.clientProfile?.apiKey === apiKey));
+
+  return (
+    <Modal title={t('admin.api_key.title') || "Gestionar Clave de API"} onClose={onClose}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Client Info Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '1.25rem', borderBottom: '1px solid #f1f5f9' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Key size={24} color="var(--corp-green)" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', margin: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              {client.clientProfile?.razonSocial || client.name || client.email}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.2rem 0 0 0', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              {client.email}
+            </p>
+          </div>
+        </div>
+
+        {/* Status Card */}
+        <div style={{ 
+          background: hasActiveKey ? 'rgba(34, 197, 94, 0.06)' : '#f8fafc', 
+          border: hasActiveKey ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid var(--border)',
+          borderRadius: '0.75rem', 
+          padding: '1rem 1.25rem' 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{
+                display: 'inline-block',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: hasActiveKey ? '#16a34a' : '#94a3b8'
+              }} />
+              <strong style={{ fontSize: '0.9rem', color: hasActiveKey ? '#15803d' : 'var(--text-muted)' }}>
+                {hasActiveKey 
+                  ? (t('admin.api_key.status_active') || "Clave de API activa") 
+                  : (t('admin.api_key.status_inactive') || "Sin clave de API")}
+              </strong>
+            </div>
+            {apiKeyCreatedAt && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {t('admin.api_key.created_at')} {new Date(apiKeyCreatedAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES')}
+              </span>
+            )}
+          </div>
+          {!hasActiveKey && (
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.825rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+              {t('admin.api_key.no_key_warning')}
+            </p>
+          )}
+        </div>
+
+        {/* Feedback messages */}
+        {error && (
+          <div style={{ color: '#ef4444', background: '#fef2f2', padding: '0.75rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #fee2e2' }}>
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {successMsg && (
+          <div style={{ color: '#15803d', background: '#f0fdf4', padding: '0.75rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #bbf7d0' }}>
+            <Check size={18} style={{ flexShrink: 0 }} />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        {/* API Key Form */}
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <label className="label" style={{ margin: 0, fontWeight: '700' }}>
+                {t('admin.api_key.input_label') || "Clave de API (Generada o manual)"}
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <input 
+                  type={isKeyVisible ? "text" : "password"}
+                  className="input-field" 
+                  value={apiKey} 
+                  onChange={(e) => {
+                    setApiKey(e.target.value);
+                    setError("");
+                    setSuccessMsg("");
+                  }} 
+                  placeholder={t('admin.api_key.input_placeholder') || "Escribe una clave personalizada o genera una aleatoria..."}
+                  style={{ 
+                    margin: 0, 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.9rem', 
+                    paddingRight: '2.5rem',
+                    fontWeight: '600'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsKeyVisible(!isKeyVisible)}
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                  title={isKeyVisible ? (t('admin.api_key.hide_key') || "Ocultar") : (t('admin.api_key.show_key') || "Mostrar")}
+                >
+                  {isKeyVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={!apiKey}
+                className="btn-secondary"
+                style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.4rem', 
+                  padding: '0.75rem 1rem', 
+                  fontSize: '0.85rem',
+                  whiteSpace: 'nowrap'
+                }}
+                title={t('admin.api_key.copy_btn')}
+              >
+                {copied ? <Check size={16} color="var(--corp-green)" /> : <Copy size={16} />}
+                <span>{copied ? (t('admin.api_key.copied') || "¡Copiada!") : (t('admin.api_key.copy_btn') || "Copiar")}</span>
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <button
+              type="button"
+              onClick={handleGenerateRandom}
+              className="btn-secondary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.85rem',
+                padding: '0.6rem 1rem',
+                borderColor: 'var(--corp-green)',
+                color: 'var(--corp-green)',
+                fontWeight: '700',
+                background: 'white'
+              }}
+            >
+              <RefreshCw size={16} />
+              {t('admin.api_key.generate_random_btn') || "Generar clave aleatoria"}
+            </button>
+          </div>
+
+          {/* Collapsible Technical Details */}
+          <div style={{ border: '1px solid #e2e8f0', borderRadius: '0.75rem', overflow: 'hidden' }}>
+            <button
+              type="button"
+              onClick={() => setShowTechDetails(!showTechDetails)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.75rem 1rem',
+                background: '#f8fafc',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                color: 'var(--text-main)',
+                textAlign: 'left'
+              }}
+            >
+              <span>{t('admin.api_key.tech_details_title') || "Información técnica para conectar los sensores"}</span>
+              {showTechDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+
+            {showTechDetails && (
+              <div style={{ padding: '1rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.8rem', borderTop: '1px solid #e2e8f0' }}>
+                <div>
+                  <strong style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>
+                    {t('admin.api_key.endpoint_label') || "Endpoint de ingesta:"}
+                  </strong>
+                  <div style={{ background: '#f8fafc', padding: '0.5rem 0.75rem', borderRadius: '0.35rem', fontFamily: 'monospace', border: '1px solid var(--border)' }}>
+                    POST https://quicktrace.es/api/sensors/temperatures
+                  </div>
+                </div>
+
+                <div>
+                  <strong style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>
+                    {t('admin.api_key.headers_label') || "Cabeceras requeridas:"}
+                  </strong>
+                  <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '0.75rem', borderRadius: '0.35rem', margin: 0, fontFamily: 'monospace', fontSize: '0.75rem' }}>
+{`Content-Type: application/json
+Authorization: Bearer ${apiKey || '<CLAVE_API>'}`}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Modal Actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', paddingTop: '1.25rem', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
+            <div>
+              {hasActiveKey && (
+                <button
+                  type="button"
+                  onClick={handleRevoke}
+                  disabled={revoking || loading}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.65rem 1rem',
+                    background: '#fef2f2',
+                    border: '1px solid #fee2e2',
+                    color: '#ef4444',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: '700'
+                  }}
+                >
+                  {revoking ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  <span>{t('admin.api_key.revoke_btn') || "Revocar / Eliminar clave"}</span>
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={onClose}
+                disabled={loading || revoking}
+                style={{ padding: '0.65rem 1.25rem', fontSize: '0.85rem' }}
+              >
+                {t('common.close')}
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading || revoking || !apiKey.trim()}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 1.5rem',
+                  fontSize: '0.85rem'
+                }}
+              >
+                {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                <span>{t('admin.api_key.save_btn') || "Guardar clave"}</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </Modal>
   );
 }

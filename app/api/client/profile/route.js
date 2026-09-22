@@ -61,7 +61,8 @@ export async function GET() {
       where: { recipe: { clientProfileId: profile.id } }
     });
 
-    return NextResponse.json({ ...profile, totalElaborations });
+    const { apiKey, apiKeyCreatedAt, ...safeProfile } = profile;
+    return NextResponse.json({ ...safeProfile, totalElaborations });
   } catch (error) {
     console.error("Error fetching client profile:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

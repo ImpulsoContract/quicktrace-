@@ -910,7 +910,8 @@
       "sync_stripe": "Sync with Stripe",
       "sync_clientify": "Sync with Clientify",
       "view_terms": "View Terms Acceptance",
-      "delete_client": "DELETE CLIENT"
+      "delete_client": "DELETE CLIENT",
+      "manage_api_key": "Manage API Key"
     },
     "delete": {
       "confirm_msg": "Confirm total data deletion for {name}? Their recipes, elaborations, records and account will be permanently deleted.",
@@ -1026,6 +1027,33 @@
     "edit": {
       "ia_config": "AI Configuration",
       "ia_goods": "Enable AI system for goods receipts"
+    },
+    "api_key": {
+      "title": "Manage API Key",
+      "subtitle": "API access management for external temperature sensors",
+      "client_label": "Client:",
+      "status_active": "Active API Key",
+      "status_inactive": "No API Key",
+      "created_at": "Created on:",
+      "no_key_warning": "This client has no API key configured. External sensors will not be able to log temperature readings.",
+      "input_label": "API Key (Generated or manual)",
+      "input_placeholder": "Type a custom key or generate a random one...",
+      "generate_random_btn": "Generate random key",
+      "save_btn": "Save key",
+      "saving": "Saving...",
+      "revoke_btn": "Revoke / Delete key",
+      "revoking": "Revoking...",
+      "confirm_revoke": "Are you sure you want to revoke and delete this client's API key? Their external sensors will stop working immediately.",
+      "copied": "Copied!",
+      "copy_btn": "Copy",
+      "show_key": "Show key",
+      "hide_key": "Hide key",
+      "save_success": "API key saved and updated successfully.",
+      "revoke_success": "API key revoked successfully.",
+      "tech_details_title": "Technical info for sensor integration",
+      "endpoint_label": "Ingestion endpoint:",
+      "headers_label": "Required headers:",
+      "body_example_label": "JSON payload example:"
     }
   },
   "providers": {

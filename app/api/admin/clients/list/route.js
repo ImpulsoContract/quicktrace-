@@ -42,6 +42,8 @@ export async function GET() {
             fbclid: true,
             plan: true,
             hasIaGoods: true,
+            apiKey: true,
+            apiKeyCreatedAt: true,
             _count: {
               select: { recipes: true }
             }

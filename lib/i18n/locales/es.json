@@ -910,7 +910,8 @@
       "sync_stripe": "Sincronizar con Stripe",
       "sync_clientify": "Sincronizar con Clientify",
       "view_terms": "Ver aceptación de condiciones",
-      "delete_client": "ELIMINAR CLIENTE"
+      "delete_client": "ELIMINAR CLIENTE",
+      "manage_api_key": "Gestionar clave de API"
     },
     "delete": {
       "confirm_msg": "¿Confirmar eliminación total de datos para {name}? Se borrarán permanentemente sus recetas, elaboraciones, registros y cuenta.",
@@ -1026,6 +1027,33 @@
     "edit": {
       "ia_config": "Configuración IA",
       "ia_goods": "Activar sistema IA para entrada de mercancías"
+    },
+    "api_key": {
+      "title": "Gestionar Clave de API",
+      "subtitle": "Gestión de acceso a la API para sensores externos de temperatura",
+      "client_label": "Cliente:",
+      "status_active": "Clave de API activa",
+      "status_inactive": "Sin clave de API",
+      "created_at": "Creada el:",
+      "no_key_warning": "Este cliente no tiene ninguna clave de API configurada. Sus sensores externos no podrán registrar lecturas de temperatura.",
+      "input_label": "Clave de API (Generada o manual)",
+      "input_placeholder": "Escribe una clave personalizada o genera una aleatoria...",
+      "generate_random_btn": "Generar clave aleatoria",
+      "save_btn": "Guardar clave",
+      "saving": "Guardando...",
+      "revoke_btn": "Revocar / Eliminar clave",
+      "revoking": "Revocando...",
+      "confirm_revoke": "¿Estás seguro de que deseas revocar y eliminar la clave de API de este cliente? Sus sensores externos dejarán de funcionar de inmediato.",
+      "copied": "¡Copiada!",
+      "copy_btn": "Copiar",
+      "show_key": "Mostrar clave",
+      "hide_key": "Ocultar clave",
+      "save_success": "Clave de API guardada y actualizada con éxito.",
+      "revoke_success": "Clave de API revocada con éxito.",
+      "tech_details_title": "Información técnica para conectar los sensores",
+      "endpoint_label": "Endpoint de ingesta:",
+      "headers_label": "Cabeceras requeridas:",
+      "body_example_label": "Ejemplo de payload JSON:"
     }
   },
   "providers": {
