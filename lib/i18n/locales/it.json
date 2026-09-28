@@ -334,7 +334,10 @@
     "view_inventory_pdf_btn": "Vedi inventario in PDF",
     "showing_temp_info": "Visualizzazione di {start} - {end} su {total} record",
     "no_temp_records": "Nessun record di temperatura ancora",
-    "no_temp_records_desc": "Fai clic su 'NUOVO REGISTRO' per aggiungere la tua prima lettura della temperatura."
+    "no_temp_records_desc": "Fai clic su 'NUOVO REGISTRO' per aggiungere la tua prima lettura della temperatura.",
+    "automate_records_btn": "Come automatizzare le registrazioni",
+    "automate_records_modal_title": "In questo video ti mostriamo come automatizzare il controllo giornaliero delle temperature delle tue celle",
+    "automate_records_more_info_btn": "Voglio maggiori informazioni sul sistema di sensori"
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",

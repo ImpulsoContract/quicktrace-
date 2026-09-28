@@ -334,7 +334,10 @@
     "view_inventory_pdf_btn": "Voir l'inventaire en PDF",
     "showing_temp_info": "Affichage de {start} - {end} sur {total} enregistrements",
     "no_temp_records": "Aucun enregistrement de température pour l'instant",
-    "no_temp_records_desc": "Cliquez sur 'NOUVEL ENREGISTREMENT' pour ajouter votre premier relevé de température."
+    "no_temp_records_desc": "Cliquez sur 'NOUVEL ENREGISTREMENT' pour ajouter votre premier relevé de température.",
+    "automate_records_btn": "Comment automatiser les relevés",
+    "automate_records_modal_title": "Dans cette vidéo, nous vous montrons comment automatiser le contrôle quotidien des températures de vos chambres",
+    "automate_records_more_info_btn": "Je souhaite plus d'informations sur le système de capteurs"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",

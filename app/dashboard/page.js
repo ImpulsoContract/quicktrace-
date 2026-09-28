@@ -523,6 +523,7 @@ export default function ClientDashboard() {
   });
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
+  const [isAutomateTempModalOpen, setIsAutomateTempModalOpen] = useState(false);
   const [isManageZonesModalOpen, setIsManageZonesModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
@@ -7194,7 +7195,15 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.25rem' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.temperature_info')}</p>
-                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="action-buttons-mobile" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {!profile?.hasApiKey && (
+                      <button 
+                        onClick={() => setIsAutomateTempModalOpen(true)}
+                        className="btn-automate-records"
+                      >
+                        <Sparkles size={18} /> {t('dashboard.automate_records_btn') || "Cómo automatizar registros"}
+                      </button>
+                    )}
                     <button 
                       onClick={() => setVideoModal({ isOpen: true, videoId: locale === 'en' ? 'BLOFFbJGTdw' : "TKl-sUpuDGg" })}
                       className="btn-help-video"
@@ -9356,6 +9365,145 @@ export default function ClientDashboard() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowFullScreen
               ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {isAutomateTempModalOpen && (
+        <div 
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '1.5rem',
+            backdropFilter: 'blur(6px)'
+          }}
+          onClick={() => setIsAutomateTempModalOpen(false)}
+        >
+          <div 
+            className="modal-content glass-card"
+            style={{ 
+              maxWidth: '750px', 
+              width: '100%', 
+              padding: '2rem', 
+              background: '#ffffff',
+              borderRadius: '1.5rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              position: 'relative',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%)', 
+                  padding: '0.75rem', 
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Sparkles size={24} color="#d97706" />
+                </div>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)', margin: 0, lineHeight: '1.4' }}>
+                  {t('dashboard.automate_records_modal_title') || "En este video te enseñamos cómo automatizar el control diario de las temperaturas de tus cámaras"}
+                </h2>
+              </div>
+              <button 
+                onClick={() => setIsAutomateTempModalOpen(false)}
+                className="btn-icon"
+                style={{ 
+                  background: '#f1f5f9', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  padding: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'background 0.2s'
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Embedded YouTube Video */}
+            <div style={{ 
+              position: 'relative', 
+              paddingBottom: '56.25%', 
+              height: 0, 
+              borderRadius: '1rem', 
+              overflow: 'hidden', 
+              background: '#000000',
+              boxShadow: '0 8px 20px -4px rgba(0, 0, 0, 0.15)',
+              marginBottom: '1.75rem'
+            }}>
+              <iframe 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                src="https://www.youtube.com/embed/BSzwKYN4HUM?rel=0"
+                title={t('dashboard.automate_records_modal_title') || "Cómo automatizar registros"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowFullScreen
+              />
+            </div>
+
+            {/* WhatsApp CTA Button */}
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <a
+                href="https://w.app/camarasqt"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  width: '100%',
+                  maxWidth: '520px',
+                  padding: '0.95rem 1.75rem',
+                  background: '#25D366',
+                  color: '#ffffff',
+                  fontWeight: '800',
+                  fontSize: '1rem',
+                  borderRadius: '0.85rem',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 14px rgba(37, 211, 102, 0.35)',
+                  transition: 'all 0.25s ease-in-out',
+                  cursor: 'pointer',
+                  textAlign: 'center'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#20ba59';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(37, 211, 102, 0.45)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = '#25D366';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(37, 211, 102, 0.35)';
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                  <path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.477-.15-.678.15-.2.301-.778.98-.954 1.18-.175.201-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.494-.894-.799-1.498-1.786-1.674-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.2-.301.301-.502.1-.201.05-.376-.025-.526-.075-.15-.678-1.633-.929-2.238-.244-.59-.493-.51-.678-.52l-.578-.01c-.2 0-.527.075-.803.376s-1.054 1.03-1.054 2.51c0 1.48 1.08 2.909 1.23 3.11.15.201 2.124 3.244 5.146 4.55.719.311 1.28.497 1.718.636.722.23 1.378.197 1.898.12.578-.087 1.78-.727 2.03-1.43.251-.703.251-1.305.176-1.43-.075-.126-.276-.201-.577-.351zM12.042 21.84a9.78 9.78 0 0 1-4.99-1.365l-.358-.213-3.71.973.99-3.616-.233-.371A9.782 9.782 0 0 1 2.25 12.04c0-5.405 4.396-9.8 9.8-9.8 2.617 0 5.076 1.019 6.928 2.87A9.75 9.75 0 0 1 21.85 12.04c0 5.405-4.398 9.8-9.808 9.8z"/>
+                </svg>
+                <span>{t('dashboard.automate_records_more_info_btn') || "Quiero más información sobre el sistema de sensores"}</span>
+              </a>
             </div>
           </div>
         </div>
