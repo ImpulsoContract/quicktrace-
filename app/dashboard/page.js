@@ -23,7 +23,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { normalizeProviderName } from "@/lib/utils";
+import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
   { code: "EUR", symbol: "€" },
@@ -1312,7 +1312,7 @@ export default function ClientDashboard() {
     // Initial instant preview with currently loaded receipts matching this provider
     const localMatches = goodsReceipts.filter(r => 
       r.providerId === provider.id || 
-      (r.providerName && normalizeProviderName(r.providerName) === normalizeProviderName(provider.name))
+      (r.providerName && matchProviderNames(r.providerName, provider.name))
     );
     setProviderReceipts(localMatches);
 
@@ -6903,7 +6903,7 @@ export default function ClientDashboard() {
                               <Truck size={16} /> {receipt.providerName || 'Sin proveedor'}
                             </p>
                             {(() => {
-                              const matchingProvider = providers.find(p => p.id === receipt.providerId || (receipt.providerName && normalizeProviderName(p.name) === normalizeProviderName(receipt.providerName)));
+                              const matchingProvider = providers.find(p => p.id === receipt.providerId || (receipt.providerName && matchProviderNames(p.name, receipt.providerName)));
                               if (matchingProvider) {
                                 return (
                                   <button 
@@ -11281,7 +11281,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   value={formData.providerName} 
                   onChange={(e) => {
                     const val = e.target.value;
-                    const foundProvider = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(val));
+                    const foundProvider = providers.find(p => matchProviderNames(p.name, val));
                     setFormData({
                       ...formData, 
                       providerName: val,
@@ -15319,7 +15319,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
         id: idx,
         productName: item.product || "",
         providerName: data.provider || "",
-        providerId: providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(data.provider))?.id || null,
+        providerId: providers.find(p => matchProviderNames(p.name, data.provider))?.id || null,
         lote: item.lote || "",
         quantity: item.quantity || "",
         invoiceNumber: "",
@@ -15344,7 +15344,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
     setAiRows(prev => prev.map((row, idx) => {
       if (idx === index) {
         if (field === "providerName") {
-          const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(value));
+          const found = providers.find(p => matchProviderNames(p.name, value));
           return {
             ...row,
             providerName: value,
@@ -15401,7 +15401,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
     try {
       let finalProviderId = row.providerId;
       if (!finalProviderId && row.providerName) {
-        const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(row.providerName));
+        const found = providers.find(p => matchProviderNames(p.name, row.providerName));
         if (found) finalProviderId = found.id;
       }
 
@@ -16172,7 +16172,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
           goodsReceiptId: matchingReceipt.id,
           productName: matchingReceipt.productName || it.productName || "",
           providerName: matchingReceipt.providerName || note.providerName || "",
-          providerId: matchingReceipt.providerId || providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(matchingReceipt.providerName || note.providerName))?.id || null,
+          providerId: matchingReceipt.providerId || providers.find(p => matchProviderNames(p.name, matchingReceipt.providerName || note.providerName))?.id || null,
           lote: matchingReceipt.lote || it.lote || "",
           quantity: matchingReceipt.quantity || it.quantity || "",
           invoiceNumber: matchingReceipt.invoiceNumber || "",
@@ -16192,7 +16192,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
         goodsReceiptId: it.goodsReceiptId || null,
         productName: it.productName || "",
         providerName: note.providerName || "",
-        providerId: providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(note.providerName))?.id || null,
+        providerId: providers.find(p => matchProviderNames(p.name, note.providerName))?.id || null,
         lote: it.lote || "",
         quantity: it.quantity || "",
         invoiceNumber: "",
@@ -16217,7 +16217,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
     setEditableRows(prev => prev.map((row, idx) => {
       if (idx === index) {
         if (field === "providerName") {
-          const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(value));
+          const found = providers.find(p => matchProviderNames(p.name, value));
           return {
             ...row,
             providerName: value,
@@ -16276,7 +16276,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
     try {
       let finalProviderId = row.providerId;
       if (!finalProviderId && row.providerName) {
-        const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(row.providerName));
+        const found = providers.find(p => matchProviderNames(p.name, row.providerName));
         if (found) finalProviderId = found.id;
       }
 

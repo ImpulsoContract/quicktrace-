@@ -8,7 +8,7 @@ import {
   processUpdatedGoodsReceiptStock, 
   processDeletedGoodsReceiptsStock 
 } from "@/lib/stock-utils";
-import { normalizeProviderName } from "@/lib/utils";
+import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -160,8 +160,7 @@ export async function POST(req) {
         where: { clientProfileId: profile.id },
         select: { id: true, name: true }
       });
-      const normName = normalizeProviderName(providerName);
-      const matchedProvider = allProviders.find(p => normalizeProviderName(p.name) === normName);
+      const matchedProvider = allProviders.find(p => matchProviderNames(p.name, providerName));
       if (matchedProvider) {
         resolvedProviderId = matchedProvider.id;
       }
@@ -284,8 +283,7 @@ export async function PATCH(req) {
         where: { clientProfileId: profileId },
         select: { id: true, name: true }
       });
-      const normName = normalizeProviderName(providerName);
-      const matchedProvider = allProviders.find(p => normalizeProviderName(p.name) === normName);
+      const matchedProvider = allProviders.find(p => matchProviderNames(p.name, providerName));
       if (matchedProvider) {
         resolvedProviderId = matchedProvider.id;
       }

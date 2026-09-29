@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { normalizeProviderName } from "@/lib/utils";
+import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 export async function GET(req, { params }) {
   const session = await getServerSession(authOptions);
@@ -60,8 +60,7 @@ export async function GET(req, { params }) {
     const providerToReceiptIds = new Map();
     for (const r of unlinkedReceipts) {
       if (!r.providerName || !r.providerName.trim()) continue;
-      const normR = normalizeProviderName(r.providerName);
-      const matched = allProviders.find(p => normalizeProviderName(p.name) === normR);
+      const matched = allProviders.find(p => matchProviderNames(p.name, r.providerName));
       if (matched) {
         if (!providerToReceiptIds.has(matched.id)) {
           providerToReceiptIds.set(matched.id, []);
