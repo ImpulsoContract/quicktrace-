@@ -15,6 +15,7 @@ export async function GET(req) {
     const profileId = session.user.profileId;
     const { searchParams } = new URL(req.url);
     const recipeIdStr = searchParams.get("recipeId");
+    const isV2 = searchParams.get("v") === "2" || searchParams.get("detailed") === "true";
 
     let targetIngredientNames = [];
     if (recipeIdStr) {
@@ -119,21 +120,27 @@ export async function GET(req) {
         if (!result[name]) {
           result[name] = { goods: [], elaborations: [] };
         }
-        const alreadyExists = result[name].goods.some(g => g.id === gr.id || (g.lote === lot && String(g.date) === String(gr.date)));
-        if (!alreadyExists && result[name].goods.length < 50) {
-          result[name].goods.push({
-            id: gr.id,
-            lote: lot,
-            date: gr.date,
-            productName: gr.productName,
-            providerName: gr.providerName || "",
-            invoiceNumber: gr.invoiceNumber || "",
-            quantity: gr.quantity || "",
-            manufacturingTemp: gr.manufacturingTemp || "",
-            endDate: gr.endDate || "",
-            typeAndOrigin: gr.typeAndOrigin || "",
-            merchantTypes: gr.merchantTypes || []
-          });
+        if (isV2) {
+          const alreadyExists = result[name].goods.some(g => g.id === gr.id || (g.lote === lot && String(g.date) === String(gr.date)));
+          if (!alreadyExists && result[name].goods.length < 50) {
+            result[name].goods.push({
+              id: gr.id,
+              lote: lot,
+              date: gr.date,
+              productName: gr.productName,
+              providerName: gr.providerName || "",
+              invoiceNumber: gr.invoiceNumber || "",
+              quantity: gr.quantity || "",
+              manufacturingTemp: gr.manufacturingTemp || "",
+              endDate: gr.endDate || "",
+              typeAndOrigin: gr.typeAndOrigin || "",
+              merchantTypes: gr.merchantTypes || []
+            });
+          }
+        } else {
+          if (result[name].goods.length < 3 && !result[name].goods.includes(lot)) {
+            result[name].goods.push(lot);
+          }
         }
       });
     });
@@ -154,13 +161,19 @@ export async function GET(req) {
         result[name] = { goods: [], elaborations: [] };
       }
 
-      const alreadyIn = result[name].elaborations.some(e => e.lote === lot);
-      if (result[name].elaborations.length < 3 && !alreadyIn) {
-        result[name].elaborations.push({
-          lote: lot,
-          recipeName: ei.elaboration?.recipe?.name || "",
-          date: ei.elaboration?.date || ei.createdAt
-        });
+      if (isV2) {
+        const alreadyIn = result[name].elaborations.some(e => (typeof e === 'object' ? e.lote : e) === lot);
+        if (result[name].elaborations.length < 3 && !alreadyIn) {
+          result[name].elaborations.push({
+            lote: lot,
+            recipeName: ei.elaboration?.recipe?.name || "",
+            date: ei.elaboration?.date || ei.createdAt
+          });
+        }
+      } else {
+        if (result[name].elaborations.length < 3 && !result[name].elaborations.includes(lot)) {
+          result[name].elaborations.push(lot);
+        }
       }
     });
 

@@ -2024,7 +2024,7 @@ export default function ClientDashboard() {
 
     // Fetch suggested lotes (last 3 from goods and last 3 from elaborations)
     try {
-      const resLotes = await fetch(`/api/client/ingredient-lotes?recipeId=${recipe.id}`);
+      const resLotes = await fetch(`/api/client/ingredient-lotes?recipeId=${recipe.id}&v=2`);
       if (resLotes.ok) {
         const jsonLotes = await resLotes.json();
         if (jsonLotes.data) {
@@ -2048,7 +2048,7 @@ export default function ClientDashboard() {
     setIsReadOnlyElab(false);
 
     if (elab.recipe?.id || elab.recipeId) {
-      fetch(`/api/client/ingredient-lotes?recipeId=${elab.recipe?.id || elab.recipeId}`)
+      fetch(`/api/client/ingredient-lotes?recipeId=${elab.recipe?.id || elab.recipeId}&v=2`)
         .then(res => res.json())
         .then(json => { if (json.data) setSuggestedLotes(json.data); })
         .catch(e => console.error("Error fetching suggested ingredient lotes on edit:", e));
@@ -3706,7 +3706,20 @@ export default function ClientDashboard() {
     }
   };
 
+  const getLotString = (val) => {
+    if (!val) return "";
+    if (typeof val === "string") return val;
+    if (typeof val === "number") return String(val);
+    if (typeof val === "object") {
+      if (typeof val.lote === "string") return val.lote;
+      if (typeof val.lote === "number") return String(val.lote);
+      if (val.lote) return String(val.lote);
+    }
+    return "";
+  };
+
   const handleIngredientChange = (ingId, field, value) => {
+    const safeValue = field === 'lote' ? getLotString(value) : value;
     if (field === 'cantidad' && ingId === proportionMasterId) {
       const oldValue = parseFloat(elaboracionForm.ingredientes[ingId].cantidad);
       const newValue = parseFloat(value);
@@ -3742,7 +3755,7 @@ export default function ClientDashboard() {
         ...prev.ingredientes,
         [ingId]: {
           ...prev.ingredientes[ingId],
-          [field]: value
+          [field]: safeValue
         }
       }
     }));
@@ -3781,14 +3794,15 @@ export default function ClientDashboard() {
   };
 
   const handleUseLot = (ingId, lot) => {
-    if (!lot) return;
-    handleIngredientChange(ingId, 'lote', lot);
+    const lotStr = getLotString(lot);
+    if (!lotStr) return;
+    handleIngredientChange(ingId, 'lote', lotStr);
     if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(lot).catch(e => console.error("Clipboard error:", e));
+      navigator.clipboard.writeText(lotStr).catch(e => console.error("Clipboard error:", e));
     }
-    setCopiedLotFeedback(lot);
+    setCopiedLotFeedback(lotStr);
     setTimeout(() => {
-      setCopiedLotFeedback(prev => prev === lot ? null : prev);
+      setCopiedLotFeedback(prev => prev === lotStr ? null : prev);
     }, 2000);
   };
 
@@ -4905,7 +4919,7 @@ export default function ClientDashboard() {
                                         <span>{t('traceability_form.recent_goods_lotes') || "Entradas"}:</span>
                                       </span>
                                       {goodsLotes.slice(0, 3).map((item, lIdx) => {
-                                        const lot = typeof item === 'object' && item !== null ? item.lote : item;
+                                        const lot = getLotString(item);
                                         const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
                                         const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
                                         return (
@@ -5002,8 +5016,8 @@ export default function ClientDashboard() {
                                         <span>{t('traceability_form.recent_elab_lotes') || "Elaboraciones"}:</span>
                                       </span>
                                       {elabLotes.slice(0, 3).map((item, lIdx) => {
-                                        const lot = typeof item === 'object' && item !== null ? item.lote : item;
-                                        const recipeName = typeof item === 'object' && item !== null ? item.recipeName : "";
+                                        const lot = getLotString(item);
+                                        const recipeName = typeof item === 'object' && item !== null ? String(item.recipeName || "") : "";
                                         const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
                                         const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
 
@@ -10769,7 +10783,7 @@ export default function ClientDashboard() {
                 <tbody>
                   {moreGoodsModalData.goods && moreGoodsModalData.goods.length > 0 ? (
                     moreGoodsModalData.goods.map((item, idx) => {
-                      const lotVal = typeof item === 'object' && item !== null ? item.lote : item;
+                      const lotVal = getLotString(item);
                       const dateVal = typeof item === 'object' && item !== null ? item.date : null;
                       const isCopied = copiedLotFeedback === lotVal;
                       const isCurrentLot = elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.lote === lotVal;
@@ -10916,7 +10930,7 @@ export default function ClientDashboard() {
                   {t('dashboard.lote') || "Lote"}
                 </span>
                 <p style={{ margin: '0.25rem 0 0 0', fontFamily: 'monospace', fontWeight: '800', fontSize: '1.05rem', color: '#0369a1' }}>
-                  {goodsReceiptDetailModalData.lote || "-"}
+                  {getLotString(goodsReceiptDetailModalData.lote) || "-"}
                 </p>
               </div>
 
