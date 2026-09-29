@@ -8,6 +8,7 @@ import {
   processUpdatedGoodsReceiptStock, 
   processDeletedGoodsReceiptsStock 
 } from "@/lib/stock-utils";
+import { normalizeProviderName } from "@/lib/utils";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -153,6 +154,19 @@ export async function POST(req) {
       return NextResponse.json({ error: "Producto y fecha son obligatorios" }, { status: 400 });
     }
 
+    let resolvedProviderId = providerId ? parseInt(providerId) : null;
+    if (!resolvedProviderId && providerName && providerName.trim()) {
+      const allProviders = await prisma.provider.findMany({
+        where: { clientProfileId: profile.id },
+        select: { id: true, name: true }
+      });
+      const normName = normalizeProviderName(providerName);
+      const matchedProvider = allProviders.find(p => normalizeProviderName(p.name) === normName);
+      if (matchedProvider) {
+        resolvedProviderId = matchedProvider.id;
+      }
+    }
+
     const receipt = await prisma.goodsReceipt.create({
       data: {
         providerName,
@@ -168,7 +182,7 @@ export async function POST(req) {
         merchantTypes: merchantTypes || [],
         relatedIngredients: relatedIngredients || [],
         relatedQuantities: relatedQuantities || {},
-        providerId: providerId ? parseInt(providerId) : null,
+        providerId: resolvedProviderId,
         clientProfileId: profile.id,
         scannedDeliveryNoteId: scannedDeliveryNoteId ? parseInt(scannedDeliveryNoteId) : null
       }
@@ -264,6 +278,19 @@ export async function PATCH(req) {
       return NextResponse.json({ error: "Registro no encontrado" }, { status: 404 });
     }
 
+    let resolvedProviderId = providerId ? parseInt(providerId) : null;
+    if (!resolvedProviderId && providerName && providerName.trim()) {
+      const allProviders = await prisma.provider.findMany({
+        where: { clientProfileId: profileId },
+        select: { id: true, name: true }
+      });
+      const normName = normalizeProviderName(providerName);
+      const matchedProvider = allProviders.find(p => normalizeProviderName(p.name) === normName);
+      if (matchedProvider) {
+        resolvedProviderId = matchedProvider.id;
+      }
+    }
+
     const receipt = await prisma.goodsReceipt.update({
       where: { 
         id: parseInt(id),
@@ -283,7 +310,7 @@ export async function PATCH(req) {
         merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
         relatedIngredients: relatedIngredients !== undefined ? relatedIngredients : undefined,
         relatedQuantities: relatedQuantities !== undefined ? relatedQuantities : undefined,
-        providerId: providerId ? parseInt(providerId) : null
+        providerId: resolvedProviderId
       }
     });
 

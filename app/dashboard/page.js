@@ -23,6 +23,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { normalizeProviderName } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
   { code: "EUR", symbol: "€" },
@@ -584,6 +585,8 @@ export default function ClientDashboard() {
   // Provider Receipts View State
   const [isProviderReceiptsModalOpen, setIsProviderReceiptsModalOpen] = useState(false);
   const [selectedProviderForReceipts, setSelectedProviderForReceipts] = useState(null);
+  const [providerReceipts, setProviderReceipts] = useState([]);
+  const [loadingProviderReceipts, setLoadingProviderReceipts] = useState(false);
 
   // Goods Receipt Form State
   const [goodsForm, setGoodsForm] = useState({
@@ -1301,9 +1304,31 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleViewProviderReceipts = (provider) => {
+  const handleViewProviderReceipts = async (provider) => {
     setSelectedProviderForReceipts(provider);
     setIsProviderReceiptsModalOpen(true);
+    setLoadingProviderReceipts(true);
+
+    // Initial instant preview with currently loaded receipts matching this provider
+    const localMatches = goodsReceipts.filter(r => 
+      r.providerId === provider.id || 
+      (r.providerName && normalizeProviderName(r.providerName) === normalizeProviderName(provider.name))
+    );
+    setProviderReceipts(localMatches);
+
+    try {
+      const res = await fetch(`/api/client/providers/${provider.id}/receipts`);
+      const data = await res.json();
+      if (data.receipts) {
+        setProviderReceipts(data.receipts);
+      }
+      // Re-sync goods receipts list so newly linked providerIds are reflected in dashboard
+      fetchGoodsReceipts(goodsFilters);
+    } catch (err) {
+      console.error("Error fetching provider receipts:", err);
+    } finally {
+      setLoadingProviderReceipts(false);
+    }
   };
 
   const fetchCustomers = async () => {
@@ -6878,7 +6903,7 @@ export default function ClientDashboard() {
                               <Truck size={16} /> {receipt.providerName || 'Sin proveedor'}
                             </p>
                             {(() => {
-                              const matchingProvider = providers.find(p => p.id === receipt.providerId || (receipt.providerName && p.name === receipt.providerName));
+                              const matchingProvider = providers.find(p => p.id === receipt.providerId || (receipt.providerName && normalizeProviderName(p.name) === normalizeProviderName(receipt.providerName)));
                               if (matchingProvider) {
                                 return (
                                   <button 
@@ -9863,23 +9888,17 @@ export default function ClientDashboard() {
             </div>
 
             <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              {(() => {
-                const filteredReceipts = goodsReceipts.filter(r => 
-                  r.providerId === selectedProviderForReceipts.id || 
-                  (!r.providerId && r.providerName === selectedProviderForReceipts.name)
-                );
-
-                if (filteredReceipts.length === 0) {
-                  return (
-                    <div style={{ textAlign: 'center', padding: '3rem' }}>
-                      <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_receipts_for_provider')}</p>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+              {loadingProviderReceipts && providerReceipts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                  <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto', color: 'var(--corp-green)' }} />
+                </div>
+              ) : providerReceipts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                  <p style={{ color: 'var(--text-muted)' }}>{t('dashboard.no_receipts_for_provider')}</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                     <thead>
                       <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('dashboard.date')}</th>
@@ -9890,7 +9909,7 @@ export default function ClientDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredReceipts.map(receipt => (
+                      {providerReceipts.map(receipt => (
                         <tr key={receipt.id} style={{ borderBottom: '1px solid var(--border)' }}>
                           <td style={{ padding: '1rem' }}>{new Date(receipt.date).toLocaleDateString()}</td>
                           <td style={{ padding: '1rem', fontWeight: '700' }}>{receipt.productName}</td>
@@ -9921,7 +9940,10 @@ export default function ClientDashboard() {
                               </button>
                               {session?.user?.role !== "WORKER" && (
                                 <button 
-                                  onClick={() => handleDeleteGoods(receipt.id)}
+                                  onClick={async () => {
+                                    await handleDeleteGoods(receipt.id);
+                                    setProviderReceipts(prev => prev.filter(r => r.id !== receipt.id));
+                                  }}
                                   className="btn-secondary"
                                   style={{ color: '#ef4444', fontSize: '0.75rem', padding: '0.4rem 0.6rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                                   title={t('common.delete')}
@@ -9936,8 +9958,7 @@ export default function ClientDashboard() {
                     </tbody>
                   </table>
                 </div>
-                );
-              })()}
+              )}
             </div>
           </div>
         </div>
@@ -11260,7 +11281,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                   value={formData.providerName} 
                   onChange={(e) => {
                     const val = e.target.value;
-                    const foundProvider = providers.find(p => p.name === val);
+                    const foundProvider = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(val));
                     setFormData({
                       ...formData, 
                       providerName: val,
@@ -15298,7 +15319,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
         id: idx,
         productName: item.product || "",
         providerName: data.provider || "",
-        providerId: providers.find(p => p.name === data.provider)?.id || null,
+        providerId: providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(data.provider))?.id || null,
         lote: item.lote || "",
         quantity: item.quantity || "",
         invoiceNumber: "",
@@ -15323,7 +15344,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
     setAiRows(prev => prev.map((row, idx) => {
       if (idx === index) {
         if (field === "providerName") {
-          const found = providers.find(p => p.name === value);
+          const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(value));
           return {
             ...row,
             providerName: value,
@@ -15378,6 +15399,12 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
     setAiRows(prev => prev.map((r, idx) => idx === index ? { ...r, saving: true } : r));
 
     try {
+      let finalProviderId = row.providerId;
+      if (!finalProviderId && row.providerName) {
+        const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(row.providerName));
+        if (found) finalProviderId = found.id;
+      }
+
       const payload = {
         providerName: row.providerName,
         productName: row.productName,
@@ -15389,7 +15416,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
         manufacturingTemp: row.manufacturingTemp,
         endDate: row.endDate,
         typeAndOrigin: row.typeAndOrigin,
-        providerId: row.providerId,
+        providerId: finalProviderId,
         merchantTypes: [],
         relatedIngredients: row.relatedIngredients,
         relatedQuantities: row.relatedQuantities,
@@ -16145,7 +16172,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
           goodsReceiptId: matchingReceipt.id,
           productName: matchingReceipt.productName || it.productName || "",
           providerName: matchingReceipt.providerName || note.providerName || "",
-          providerId: matchingReceipt.providerId || providers.find(p => p.name === (matchingReceipt.providerName || note.providerName))?.id || null,
+          providerId: matchingReceipt.providerId || providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(matchingReceipt.providerName || note.providerName))?.id || null,
           lote: matchingReceipt.lote || it.lote || "",
           quantity: matchingReceipt.quantity || it.quantity || "",
           invoiceNumber: matchingReceipt.invoiceNumber || "",
@@ -16165,7 +16192,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
         goodsReceiptId: it.goodsReceiptId || null,
         productName: it.productName || "",
         providerName: note.providerName || "",
-        providerId: providers.find(p => p.name === note.providerName)?.id || null,
+        providerId: providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(note.providerName))?.id || null,
         lote: it.lote || "",
         quantity: it.quantity || "",
         invoiceNumber: "",
@@ -16190,7 +16217,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
     setEditableRows(prev => prev.map((row, idx) => {
       if (idx === index) {
         if (field === "providerName") {
-          const found = providers.find(p => p.name === value);
+          const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(value));
           return {
             ...row,
             providerName: value,
@@ -16247,6 +16274,12 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
     setEditableRows(prev => prev.map((r, idx) => idx === index ? { ...r, saving: true } : r));
 
     try {
+      let finalProviderId = row.providerId;
+      if (!finalProviderId && row.providerName) {
+        const found = providers.find(p => normalizeProviderName(p.name) === normalizeProviderName(row.providerName));
+        if (found) finalProviderId = found.id;
+      }
+
       const payload = {
         providerName: row.providerName,
         productName: row.productName,
@@ -16258,7 +16291,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
         manufacturingTemp: row.manufacturingTemp,
         endDate: row.endDate,
         typeAndOrigin: row.typeAndOrigin,
-        providerId: row.providerId,
+        providerId: finalProviderId,
         merchantTypes: row.merchantTypes || [],
         relatedIngredients: row.relatedIngredients,
         relatedQuantities: row.relatedQuantities,
