@@ -724,7 +724,19 @@
     "cost_price": "Precio de coste",
     "ingredient_cost": "Coste",
     "by_quantity": "por",
-    "correct_cost_price": "Corregir precio de coste"
+    "correct_cost_price": "Corregir precio de coste",
+    "cost_summary_title": "Resumen de costes de la elaboración",
+    "raw_materials_cost": "Coste de materias primas (ingredientes)",
+    "raw_materials_desc": "Suma de los precios de coste de todos los ingredientes según cantidades",
+    "labor_cost_title": "Coste de elaboración (personal)",
+    "at_rate": "a",
+    "missing_hourly_rate_msg": "Falta configurar el precio por hora en la configuración del negocio.",
+    "enter_hourly_rate_btn": "Introducir este dato",
+    "missing_prep_time_msg": "Puedes rellenar este dato en el campo que hay encima de los ingredientes que se llama 'Tiempo que se ha tardado en hacer esta elaboración'.",
+    "total_cost_title": "Coste total de la elaboración",
+    "breakdown_prefix": "Materias primas",
+    "labor_prefix": "Personal",
+    "total_cost_partial_notice": "(Solo materias primas. Falta añadir personal para el total completo)"
   },
   "goods_receipt_form": {
     "product": "Producto",

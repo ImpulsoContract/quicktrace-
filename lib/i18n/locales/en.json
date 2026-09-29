@@ -724,7 +724,19 @@
     "cost_price": "Cost price",
     "ingredient_cost": "Cost",
     "by_quantity": "for",
-    "correct_cost_price": "Edit cost price"
+    "correct_cost_price": "Edit cost price",
+    "cost_summary_title": "Elaboration cost summary",
+    "raw_materials_cost": "Raw materials cost (ingredients)",
+    "raw_materials_desc": "Sum of cost prices of all ingredients according to quantities",
+    "labor_cost_title": "Labor cost (preparation)",
+    "at_rate": "at",
+    "missing_hourly_rate_msg": "Hourly labor rate is missing in business configuration.",
+    "enter_hourly_rate_btn": "Enter this information",
+    "missing_prep_time_msg": "You can fill in this information in the field above the ingredients named 'Time spent on this elaboration'.",
+    "total_cost_title": "Total elaboration cost",
+    "breakdown_prefix": "Raw materials",
+    "labor_prefix": "Labor",
+    "total_cost_partial_notice": "(Raw materials only. Add labor information for full total)"
   },
   "goods_receipt_form": {
     "product": "Product",

@@ -719,7 +719,19 @@
     "cost_price": "Prezzo di costo",
     "ingredient_cost": "Costo",
     "by_quantity": "per",
-    "correct_cost_price": "Correggi prezzo di costo"
+    "correct_cost_price": "Correggi prezzo di costo",
+    "cost_summary_title": "Riepilogo dei costi dell'elaborazione",
+    "raw_materials_cost": "Costo delle materie prime (ingredienti)",
+    "raw_materials_desc": "Somma dei prezzi di costo di tutti gli ingredienti in base alle quantità",
+    "labor_cost_title": "Costo del personale (elaborazione)",
+    "at_rate": "a",
+    "missing_hourly_rate_msg": "Manca la tariffa oraria del personale nella configurazione aziendale.",
+    "enter_hourly_rate_btn": "Inserisci questo dato",
+    "missing_prep_time_msg": "Puoi inserire questo dato nel campo sopra gli ingredienti chiamato 'Tempo impiegato per questa elaborazione'.",
+    "total_cost_title": "Costo totale dell'elaborazione",
+    "breakdown_prefix": "Materie prime",
+    "labor_prefix": "Personale",
+    "total_cost_partial_notice": "(Solo materie prime. Aggiungi i dati sul personale per il totale completo)"
   },
   "goods_receipt_form": {
     "product": "Prodotto",

@@ -719,7 +719,19 @@
     "cost_price": "Prix de revient",
     "ingredient_cost": "Coût",
     "by_quantity": "pour",
-    "correct_cost_price": "Corriger le prix de revient"
+    "correct_cost_price": "Corriger le prix de revient",
+    "cost_summary_title": "Résumé des coûts de l'élaboration",
+    "raw_materials_cost": "Coût des matières premières (ingrédients)",
+    "raw_materials_desc": "Somme des prix de revient de tous les ingrédients selon les quantités",
+    "labor_cost_title": "Coût de main-d'œuvre (élaboration)",
+    "at_rate": "à",
+    "missing_hourly_rate_msg": "Le taux horaire de main-d'œuvre est manquant dans la configuration de l'entreprise.",
+    "enter_hourly_rate_btn": "Saisir cette information",
+    "missing_prep_time_msg": "Vous pouvez renseigner cette information dans le champ situé au-dessus des ingrédients intitulé 'Temps passé sur cette élaboration'.",
+    "total_cost_title": "Coût total de l'élaboration",
+    "breakdown_prefix": "Matières premières",
+    "labor_prefix": "Main-d'œuvre",
+    "total_cost_partial_notice": "(Matières premières uniquement. Ajoutez les informations de main-d'œuvre pour le total complet)"
   },
   "goods_receipt_form": {
     "product": "Produit",

@@ -434,6 +434,12 @@ export default function ClientDashboard() {
   const [tempPage, setTempPage] = useState(1);
   const tempItemsPerPage = 20;
 
+  // Modal to enter labor cost per hour from elaboration cost summary
+  const [isLaborCostModalOpen, setIsLaborCostModalOpen] = useState(false);
+  const [tempLaborCostHourlyRate, setTempLaborCostHourlyRate] = useState(0);
+  const [tempIsPrepTimeMandatory, setTempIsPrepTimeMandatory] = useState(false);
+  const [savingLaborCostConfig, setSavingLaborCostConfig] = useState(false);
+
   const sortedAndFilteredTempRecords = useMemo(() => {
     const list = [...tempRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
     if (!tempFilters.startDate && !tempFilters.endDate) {
@@ -2284,6 +2290,32 @@ export default function ClientDashboard() {
       return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveLaborCostFromModal = async () => {
+    setSavingLaborCostConfig(true);
+    try {
+      const res = await fetch("/api/client/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          laborCostHourlyRate: tempLaborCostHourlyRate,
+          isPreparationTimeMandatory: tempIsPrepTimeMandatory
+        })
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setProfile(data);
+        setIsLaborCostModalOpen(false);
+      } else {
+        alert(data.error || t('alerts.request_error') || "Error al actualizar la configuración");
+      }
+    } catch (err) {
+      console.error("Error saving labor cost:", err);
+      alert(t('alerts.connection_error') || "Error de conexión");
+    } finally {
+      setSavingLaborCostConfig(false);
     }
   };
 
@@ -4669,6 +4701,7 @@ export default function ClientDashboard() {
                       <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.preparation_time') || "Tiempo que se ha tardado en hacer esta elaboración"}</label>
                       <input 
                         type="text" 
+                        id="elaboration-preparation-time-input"
                         className="input-field" 
                         value={elaboracionForm.preparationTime} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, preparationTime: e.target.value})} 
@@ -4971,6 +5004,200 @@ export default function ClientDashboard() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Bloque de coste total de la elaboración */}
+                  {session?.user?.role !== "WORKER" && (() => {
+                    const rawCost = (selectedRecipe.ingredients || []).reduce((sum, ing) => {
+                      const normIngName = (ing.name || '').trim().toLowerCase();
+                      const normIngUnit = (ing.unit || '').trim().toLowerCase();
+                      const priceObj = (ingredientPrices || []).find(p => 
+                        (p.name || '').trim().toLowerCase() === normIngName && 
+                        (p.unit || '').trim().toLowerCase() === normIngUnit
+                      ) || (ingredientPrices || []).find(p => (p.name || '').trim().toLowerCase() === normIngName);
+                      
+                      const unitCost = priceObj && priceObj.price !== undefined ? parseFloat(priceObj.price) || 0 : 0;
+                      const currentQtyVal = elaboracionForm.ingredientes[ing.id]?.cantidad !== undefined && elaboracionForm.ingredientes[ing.id]?.cantidad !== "" 
+                        ? elaboracionForm.ingredientes[ing.id]?.cantidad 
+                        : (ing.amount || "0");
+                      const qtyNum = parseFloat(String(currentQtyVal).replace(',', '.')) || 0;
+                      return sum + (unitCost * qtyNum);
+                    }, 0);
+
+                    const prepTimeNum = elaboracionForm.preparationTime 
+                      ? parseFloat(String(elaboracionForm.preparationTime).replace(',', '.')) 
+                      : 0;
+                    const hourlyRate = Number(profile?.laborCostHourlyRate) || 0;
+                    const hasHourlyRate = hourlyRate > 0;
+                    const hasPrepTime = prepTimeNum > 0;
+                    const canCalculateLabor = hasHourlyRate && hasPrepTime;
+                    const laborCost = canCalculateLabor ? (prepTimeNum / 60) * hourlyRate : 0;
+                    const totalCost = rawCost + laborCost;
+                    const currencySymbol = ALL_CURRENCIES.find(c => c.code === (profile?.currency || "EUR"))?.symbol || "€";
+
+                    return (
+                      <div style={{
+                        marginTop: '2rem',
+                        padding: '1.5rem',
+                        background: '#ffffff',
+                        borderRadius: '1rem',
+                        border: '2px solid var(--corp-green)',
+                        boxShadow: '0 4px 16px rgba(66, 98, 22, 0.08)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1.25rem'
+                      }}>
+                        {/* Cabecera del bloque */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', color: 'var(--corp-green)' }}>
+                          <Calculator size={22} />
+                          <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
+                            {t('traceability_form.cost_summary_title')}
+                          </h4>
+                        </div>
+
+                        {/* Fila: Coste de materias primas */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1.25rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid #e2e8f0', flexWrap: 'wrap', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '0.5rem', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--corp-green)', flexShrink: 0 }}>
+                              <Beaker size={18} />
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: '700', fontSize: '0.92rem', color: 'var(--text-main)' }}>
+                                {t('traceability_form.raw_materials_cost')}
+                              </div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                {t('traceability_form.raw_materials_desc')}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                            {rawCost.toFixed(2)} {currencySymbol}
+                          </div>
+                        </div>
+
+                        {/* Fila: Coste de personal / elaboración */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.85rem 1.25rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{ width: '36px', height: '36px', borderRadius: '0.5rem', background: canCalculateLabor ? 'rgba(66, 98, 22, 0.1)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: canCalculateLabor ? 'var(--corp-green)' : 'var(--text-muted)', flexShrink: 0 }}>
+                                <Clock size={18} />
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: '700', fontSize: '0.92rem', color: 'var(--text-main)' }}>
+                                  {t('traceability_form.labor_cost_title')}
+                                </div>
+                                {canCalculateLabor ? (
+                                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                    {prepTimeNum} min {t('traceability_form.at_rate')} {hourlyRate.toFixed(2)} {currencySymbol}/h
+                                  </div>
+                                ) : (
+                                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                    {hasHourlyRate ? `${hourlyRate.toFixed(2)} ${currencySymbol}/h` : ""}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: '800', color: canCalculateLabor ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                              {canCalculateLabor ? `${laborCost.toFixed(2)} ${currencySymbol}` : "—"}
+                            </div>
+                          </div>
+
+                          {/* Alerta si falta el precio hora en la configuración */}
+                          {!hasHourlyRate && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.6rem', padding: '0.75rem 1rem', background: '#fffbeb', borderRadius: '0.5rem', border: '1px solid #fde68a' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', color: '#92400e' }}>
+                                <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                                <span>{t('traceability_form.missing_hourly_rate_msg')}</span>
+                              </div>
+                              {!isReadOnlyElab && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTempLaborCostHourlyRate(profile?.laborCostHourlyRate || 0);
+                                    setTempIsPrepTimeMandatory(profile?.isPreparationTimeMandatory || false);
+                                    setIsLaborCostModalOpen(true);
+                                  }}
+                                  style={{
+                                    background: 'var(--corp-green)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    padding: '0.4rem 0.85rem',
+                                    borderRadius: '0.375rem',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.35rem'
+                                  }}
+                                >
+                                  <PlusCircle size={15} />
+                                  <span>{t('traceability_form.enter_hourly_rate_btn')}</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Mensaje de ayuda si falta el tiempo de elaboración */}
+                          {!hasPrepTime && (
+                            <div 
+                              onClick={() => {
+                                const el = document.getElementById('elaboration-preparation-time-input');
+                                if (el) {
+                                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  el.focus();
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.75rem 1rem',
+                                background: '#eff6ff',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #bfdbfe',
+                                fontSize: '0.82rem',
+                                color: '#1e40af',
+                                cursor: 'pointer'
+                              }}
+                              title="Hacer clic para ir al campo"
+                            >
+                              <Clock size={16} style={{ flexShrink: 0 }} />
+                              <span>{t('traceability_form.missing_prep_time_msg')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Fila destacada: Coste total de la elaboración */}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '1.25rem 1.5rem',
+                          background: 'rgba(66, 98, 22, 0.08)',
+                          borderRadius: '0.75rem',
+                          border: '1.5px solid var(--corp-green)',
+                          flexWrap: 'wrap',
+                          gap: '0.75rem'
+                        }}>
+                          <div>
+                            <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+                              {t('traceability_form.total_cost_title')}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                              {canCalculateLabor ? (
+                                `${t('traceability_form.breakdown_prefix')}: ${rawCost.toFixed(2)} ${currencySymbol} + ${t('traceability_form.labor_prefix')}: ${laborCost.toFixed(2)} ${currencySymbol}`
+                              ) : (
+                                t('traceability_form.total_cost_partial_notice')
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--corp-green)', letterSpacing: '-0.02em' }}>
+                            {totalCost.toFixed(2)} {currencySymbol}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <div style={{ marginTop: '2rem' }}>
                     <label className="label" style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.75rem', display: 'block' }}>
@@ -10263,6 +10490,102 @@ export default function ClientDashboard() {
               alt="Etiqueta" 
               style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '0.75rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }} 
             />
+          </div>
+        </div>
+      )}
+
+      {/* Labor Cost Hourly Rate Modal (Popup from Elaboration Cost Summary) */}
+      {isLaborCostModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '650px', width: '92%', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)' }}>
+                <Clock size={24} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                  {t('business_config.labor_cost_section')}
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsLaborCostModalOpen(false)} 
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                  {t('business_config.labor_cost_per_hour')}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: '600' }}>
+                    {ALL_CURRENCIES.find(c => c.code === (profile?.currency || "EUR"))?.symbol || "€"}
+                  </span>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    className="input-field" 
+                    style={{ paddingLeft: '2.5rem' }}
+                    value={tempLaborCostHourlyRate} 
+                    onChange={(e) => setTempLaborCostHourlyRate(parseFloat(e.target.value) || 0)} 
+                    placeholder="0.00"
+                  />
+                </div>
+                <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  {t('business_config.labor_cost_help')}
+                </p>
+                <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', gap: '0.75rem' }}>
+                  <AlertTriangle size={18} color="#f59e0b" style={{ flexShrink: 0 }} />
+                  <p style={{ fontSize: '0.8rem', color: '#92400e', margin: 0, fontWeight: '500' }}>
+                    {t('business_config.labor_cost_warning')}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                  {t('business_config.mandatory_prep_time')}
+                </label>
+                <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                  <div style={{ position: 'relative', width: '48px', height: '24px', background: tempIsPrepTimeMandatory ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+                    <div style={{ position: 'absolute', left: tempIsPrepTimeMandatory ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    style={{ display: 'none' }}
+                    checked={tempIsPrepTimeMandatory} 
+                    onChange={(e) => setTempIsPrepTimeMandatory(e.target.checked)} 
+                  />
+                  <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.mandatory_prep_time')}</span>
+                </label>
+                <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  {t('business_config.mandatory_prep_time_help')}
+                </p>
+              </div>
+            </div>
+
+            <footer style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+              <button 
+                type="button" 
+                onClick={() => setIsLaborCostModalOpen(false)} 
+                className="btn-secondary"
+                disabled={savingLaborCostConfig}
+              >
+                {t('common.cancel')}
+              </button>
+              <button 
+                type="button" 
+                onClick={handleSaveLaborCostFromModal} 
+                className="btn-primary"
+                disabled={savingLaborCostConfig}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                {savingLaborCostConfig ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {t('common.save')}
+              </button>
+            </footer>
           </div>
         </div>
       )}
