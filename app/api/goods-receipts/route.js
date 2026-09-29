@@ -27,6 +27,7 @@ export async function GET(req) {
     }
 
     const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const productName = searchParams.get("productName");
@@ -35,6 +36,9 @@ export async function GET(req) {
     const limit = searchParams.get("limit");
 
     const where = { clientProfileId: profileId };
+    if (id) {
+      where.id = parseInt(id, 10);
+    }
     let take = limit ? parseInt(limit, 10) : 40;
     if (isNaN(take)) {
       take = 40;

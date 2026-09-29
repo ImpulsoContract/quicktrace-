@@ -736,7 +736,15 @@
     "total_cost_title": "Total elaboration cost",
     "breakdown_prefix": "Raw materials",
     "labor_prefix": "Labor",
-    "total_cost_partial_notice": "(Raw materials only. Add labor information for full total)"
+    "total_cost_partial_notice": "(Raw materials only. Add labor information for full total)",
+    "view_details": "View details",
+    "view_more_goods_lotes": "View more goods receipts",
+    "goods_receipt_details_title": "Goods receipt details",
+    "more_goods_modal_title": "Goods receipts for:",
+    "col_lot": "Lot number",
+    "col_date": "Date",
+    "copy_and_use_lot": "Copy and use",
+    "lot_copied": "Lot assigned and copied!"
   },
   "goods_receipt_form": {
     "product": "Product",

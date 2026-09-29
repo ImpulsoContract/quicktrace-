@@ -728,7 +728,15 @@
     "total_cost_title": "Custo total da elaboração",
     "breakdown_prefix": "Matérias-primas",
     "labor_prefix": "Mão de obra",
-    "total_cost_partial_notice": "(Apenas matérias-primas. Adicione as informações de mão de obra para o total completo)"
+    "total_cost_partial_notice": "(Apenas matérias-primas. Adicione as informações de mão de obra para o total completo)",
+    "view_details": "Ver detalhes",
+    "view_more_goods_lotes": "Ver mais entradas de mercadorias",
+    "goods_receipt_details_title": "Detalhes da entrada de mercadoria",
+    "more_goods_modal_title": "Entradas de mercadorias para:",
+    "col_lot": "Número do lote",
+    "col_date": "Data",
+    "copy_and_use_lot": "Copiar e usar",
+    "lot_copied": "Lote atribuído e copiado!"
   },
   "goods_receipt_form": {
     "product": "Produto",

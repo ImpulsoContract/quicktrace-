@@ -539,6 +539,10 @@ export default function ClientDashboard() {
   const [salesReportLoading, setSalesReportLoading] = useState(false);
   const [inventoryReportLoading, setInventoryReportLoading] = useState(false);
   const [suggestedLotes, setSuggestedLotes] = useState({});
+  const [moreGoodsModalData, setMoreGoodsModalData] = useState(null);
+  const [goodsReceiptDetailModalData, setGoodsReceiptDetailModalData] = useState(null);
+  const [loadingGoodsReceiptDetail, setLoadingGoodsReceiptDetail] = useState(false);
+  const [copiedLotFeedback, setCopiedLotFeedback] = useState(null);
   const [multiplierFactor, setMultiplierFactor] = useState("");
   const [isGoodsReportModalOpen, setIsGoodsReportModalOpen] = useState(false);
   const [reportDates, setReportDates] = useState({ 
@@ -3744,6 +3748,50 @@ export default function ClientDashboard() {
     }));
   };
 
+  const formatLoteDate = (dateVal) => {
+    if (!dateVal) return "";
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleDateString();
+    } catch (e) {
+      return "";
+    }
+  };
+
+  const handleOpenGoodsReceiptDetails = async (item) => {
+    if (!item) return;
+    setGoodsReceiptDetailModalData(item);
+    if (item.id) {
+      setLoadingGoodsReceiptDetail(true);
+      try {
+        const res = await fetch(`/api/goods-receipts?id=${item.id}`);
+        if (res.ok) {
+          const receipts = await res.json();
+          if (Array.isArray(receipts) && receipts.length > 0) {
+            setGoodsReceiptDetailModalData(receipts[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching full goods receipt detail:", err);
+      } finally {
+        setLoadingGoodsReceiptDetail(false);
+      }
+    }
+  };
+
+  const handleUseLot = (ingId, lot) => {
+    if (!lot) return;
+    handleIngredientChange(ingId, 'lote', lot);
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lot).catch(e => console.error("Clipboard error:", e));
+    }
+    setCopiedLotFeedback(lot);
+    setTimeout(() => {
+      setCopiedLotFeedback(prev => prev === lot ? null : prev);
+    }, 2000);
+  };
+
   const handleSubmitElaboracion = async (e) => {
     e.preventDefault();
     
@@ -4851,46 +4899,123 @@ export default function ClientDashboard() {
                               return (
                                 <div style={{ marginTop: '0.45rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                   {goodsLotes.length > 0 && (
-                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.3rem', fontSize: '0.72rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem', fontSize: '0.72rem' }}>
                                       <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                                         <Truck size={12} style={{ color: '#0284c7' }} />
                                         <span>{t('traceability_form.recent_goods_lotes') || "Entradas"}:</span>
                                       </span>
-                                      {goodsLotes.map((lot, lIdx) => {
+                                      {goodsLotes.slice(0, 3).map((item, lIdx) => {
+                                        const lot = typeof item === 'object' && item !== null ? item.lote : item;
+                                        const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
                                         const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
                                         return (
-                                          <button
+                                          <span
                                             key={`gl-${lIdx}`}
-                                            type="button"
-                                            onClick={() => handleIngredientChange(ing.id, 'lote', lot)}
-                                            title={t('traceability_form.click_to_use_lot') || "Hacer clic para usar este lote"}
                                             style={{
-                                              background: isSelected ? 'rgba(2, 132, 199, 0.15)' : '#ffffff',
-                                              color: isSelected ? '#0369a1' : '#0284c7',
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              gap: '0.3rem',
+                                              background: isSelected ? 'rgba(2, 132, 199, 0.12)' : '#ffffff',
                                               border: isSelected ? '1.5px solid #0284c7' : '1px solid #bae6fd',
                                               borderRadius: '0.375rem',
                                               padding: '0.15rem 0.45rem',
                                               fontSize: '0.72rem',
-                                              fontWeight: isSelected ? '700' : '600',
-                                              cursor: 'pointer',
-                                              lineHeight: '1.2',
-                                              transition: 'all 0.15s ease'
+                                              lineHeight: '1.2'
                                             }}
                                           >
-                                            {lot}
-                                          </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleIngredientChange(ing.id, 'lote', lot)}
+                                              title={t('traceability_form.click_to_use_lot') || "Hacer clic para usar este lote"}
+                                              style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: 0,
+                                                color: isSelected ? '#0369a1' : '#0284c7',
+                                                fontWeight: isSelected ? '700' : '600',
+                                                cursor: 'pointer',
+                                                fontSize: '0.72rem'
+                                              }}
+                                            >
+                                              {lot}
+                                            </button>
+                                            {dateStr && (
+                                              <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>
+                                                ({dateStr})
+                                              </span>
+                                            )}
+                                            <button
+                                              type="button"
+                                              onClick={() => handleOpenGoodsReceiptDetails(item)}
+                                              title={t('traceability_form.view_details') || "Ver detalles"}
+                                              style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: '0 0.1rem',
+                                                color: '#0284c7',
+                                                textDecoration: 'underline',
+                                                fontSize: '0.68rem',
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.15rem'
+                                              }}
+                                            >
+                                              <Eye size={10} />
+                                              <span>{t('traceability_form.view_details') || "Ver detalles"}</span>
+                                            </button>
+                                          </span>
                                         );
                                       })}
+                                      {goodsLotes.length > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setMoreGoodsModalData({
+                                            ingredientId: ing.id,
+                                            ingredientName: ing.name || "",
+                                            goods: goodsLotes
+                                          })}
+                                          style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: '0.15rem 0.35rem',
+                                            color: '#0369a1',
+                                            textDecoration: 'underline',
+                                            fontSize: '0.72rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.2rem'
+                                          }}
+                                        >
+                                          <ExternalLink size={11} />
+                                          <span>{t('traceability_form.view_more_goods_lotes') || "Ver más entradas de mercancías"}</span>
+                                        </button>
+                                      )}
                                     </div>
                                   )}
                                   {elabLotes.length > 0 && (
-                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.3rem', fontSize: '0.72rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem', fontSize: '0.72rem' }}>
                                       <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                                         <ChefHat size={12} style={{ color: 'var(--corp-green)' }} />
                                         <span>{t('traceability_form.recent_elab_lotes') || "Elaboraciones"}:</span>
                                       </span>
-                                      {elabLotes.map((lot, lIdx) => {
+                                      {elabLotes.slice(0, 3).map((item, lIdx) => {
+                                        const lot = typeof item === 'object' && item !== null ? item.lote : item;
+                                        const recipeName = typeof item === 'object' && item !== null ? item.recipeName : "";
+                                        const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
                                         const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
+
+                                        let extraInfo = "";
+                                        if (recipeName && dateStr) {
+                                          extraInfo = `(${recipeName} - ${dateStr})`;
+                                        } else if (recipeName) {
+                                          extraInfo = `(${recipeName})`;
+                                        } else if (dateStr) {
+                                          extraInfo = `(${dateStr})`;
+                                        }
+
                                         return (
                                           <button
                                             key={`el-${lIdx}`}
@@ -4907,10 +5032,18 @@ export default function ClientDashboard() {
                                               fontWeight: isSelected ? '700' : '600',
                                               cursor: 'pointer',
                                               lineHeight: '1.2',
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              gap: '0.25rem',
                                               transition: 'all 0.15s ease'
                                             }}
                                           >
-                                            {lot}
+                                            <span>{lot}</span>
+                                            {extraInfo && (
+                                              <span style={{ fontWeight: '400', opacity: 0.85, fontSize: '0.68rem' }}>
+                                                {extraInfo}
+                                              </span>
+                                            )}
                                           </button>
                                         );
                                       })}
@@ -10584,6 +10717,333 @@ export default function ClientDashboard() {
               >
                 {savingLaborCostConfig ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 {t('common.save')}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* More Goods Receipts Modal */}
+      {moreGoodsModalData && (
+        <div className="modal-overlay" style={{ zIndex: 1150 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '850px', width: '95%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', padding: '2rem' }}>
+            <header style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(2, 132, 199, 0.1)', padding: '0.6rem', borderRadius: '0.75rem' }}>
+                  <Truck color="#0284c7" size={24} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.3rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                    {t('traceability_form.more_goods_modal_title') || "Entradas de mercancías para:"} <span style={{ color: '#0284c7' }}>{moreGoodsModalData.ingredientName}</span>
+                  </h2>
+                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    {moreGoodsModalData.goods?.length || 0} {(moreGoodsModalData.goods?.length === 1 ? 'registro' : 'registros')}
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setMoreGoodsModalData(null)}
+                className="btn-icon"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.4rem', borderRadius: '0.5rem' }}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '0.75rem', background: '#ffffff' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', borderBottom: '2px solid var(--border)', zIndex: 1 }}>
+                  <tr>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                      {t('traceability_form.col_lot') || "Número de lote"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                      {t('traceability_form.col_date') || "Fecha"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)', textAlign: 'right' }}>
+                      {t('dashboard.actions') || "Acciones"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {moreGoodsModalData.goods && moreGoodsModalData.goods.length > 0 ? (
+                    moreGoodsModalData.goods.map((item, idx) => {
+                      const lotVal = typeof item === 'object' && item !== null ? item.lote : item;
+                      const dateVal = typeof item === 'object' && item !== null ? item.date : null;
+                      const isCopied = copiedLotFeedback === lotVal;
+                      const isCurrentLot = elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.lote === lotVal;
+
+                      return (
+                        <tr 
+                          key={`mg-${idx}`} 
+                          style={{ 
+                            borderBottom: '1px solid var(--border)',
+                            background: isCurrentLot ? 'rgba(2, 132, 199, 0.05)' : (idx % 2 === 0 ? '#ffffff' : '#fcfcfc'),
+                            transition: 'background 0.15s ease'
+                          }}
+                        >
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                              <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '0.9rem', color: isCurrentLot ? '#0369a1' : 'var(--text-main)' }}>
+                                {lotVal}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleUseLot(moreGoodsModalData.ingredientId, lotVal)}
+                                className="btn-secondary"
+                                style={{
+                                  fontSize: '0.72rem',
+                                  padding: '0.25rem 0.55rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  borderRadius: '0.375rem',
+                                  background: isCopied ? '#dcfce7' : (isCurrentLot ? '#e0f2fe' : '#f1f5f9'),
+                                  color: isCopied ? '#166534' : (isCurrentLot ? '#0369a1' : 'var(--text-main)'),
+                                  border: isCopied ? '1px solid #86efac' : (isCurrentLot ? '1px solid #7dd3fc' : '1px solid #cbd5e1'),
+                                  fontWeight: '600'
+                                }}
+                                title={t('traceability_form.copy_and_use_lot') || "Copiar y usar lote"}
+                              >
+                                {isCopied ? <Check size={12} color="#166534" /> : <Copy size={12} />}
+                                <span>{isCopied ? (t('traceability_form.lot_copied') || "¡Copiado!") : (t('traceability_form.copy_and_use_lot') || "Copiar y usar")}</span>
+                              </button>
+                            </div>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)' }}>
+                            {formatLoteDate(dateVal) || "-"}
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenGoodsReceiptDetails(item)}
+                              className="btn-secondary"
+                              style={{
+                                fontSize: '0.75rem',
+                                padding: '0.3rem 0.65rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                color: '#0284c7',
+                                borderColor: '#bae6fd',
+                                background: '#f0f9ff'
+                              }}
+                            >
+                              <Eye size={13} />
+                              <span>{t('traceability_form.view_details') || "Ver detalle"}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={3} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        {t('dashboard.no_data') || "No hay registros disponibles"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <footer style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                type="button" 
+                onClick={() => setMoreGoodsModalData(null)}
+                className="btn-secondary"
+                style={{ padding: '0.6rem 1.4rem' }}
+              >
+                {t('common.close') || "Cerrar"}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Goods Receipt Detail Modal */}
+      {goodsReceiptDetailModalData && (
+        <div className="modal-overlay" style={{ zIndex: 1200 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '620px', width: '92%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
+            <header style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(2, 132, 199, 0.1)', padding: '0.6rem', borderRadius: '0.75rem' }}>
+                  <Truck color="#0284c7" size={22} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                    {t('traceability_form.goods_receipt_details_title') || "Detalles de la entrada de mercancía"}
+                  </h2>
+                  {loadingGoodsReceiptDetail && (
+                    <span style={{ fontSize: '0.75rem', color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Loader2 size={12} className="animate-spin" /> {t('common.loading') || "Cargando..."}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setGoodsReceiptDetailModalData(null)}
+                className="btn-icon"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.4rem', borderRadius: '0.5rem' }}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                  {t('goods_receipt_form.product') || "Producto"}
+                </span>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)' }}>
+                  {goodsReceiptDetailModalData.productName || "-"}
+                </p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                  {t('goods_receipt_form.provider') || "Proveedor"}
+                </span>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                  {goodsReceiptDetailModalData.providerName || "-"}
+                </p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                  {t('dashboard.lote') || "Lote"}
+                </span>
+                <p style={{ margin: '0.25rem 0 0 0', fontFamily: 'monospace', fontWeight: '800', fontSize: '1.05rem', color: '#0369a1' }}>
+                  {goodsReceiptDetailModalData.lote || "-"}
+                </p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                  {t('dashboard.date') || "Fecha"}
+                </span>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                  {formatLoteDate(goodsReceiptDetailModalData.date) || "-"}
+                </p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                  {t('goods_receipt_form.invoice_number') || "Número de factura"}
+                </span>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                  {goodsReceiptDetailModalData.invoiceNumber || "-"}
+                </p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                  {t('goods_receipt_form.quantity') || "Cantidad"}
+                </span>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                  {goodsReceiptDetailModalData.quantity || "-"}
+                </p>
+              </div>
+
+              {goodsReceiptDetailModalData.manufacturingTemp && (
+                <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                    {t('goods_receipt_form.temp') || "Temperatura Transporte / Fab."}
+                  </span>
+                  <p style={{ margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                    {goodsReceiptDetailModalData.manufacturingTemp}
+                  </p>
+                </div>
+              )}
+
+              {goodsReceiptDetailModalData.endDate && (
+                <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                    {t('goods_receipt_form.end_date') || "Fecha de finalización"}
+                  </span>
+                  <p style={{ margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                    {formatLoteDate(goodsReceiptDetailModalData.endDate)}
+                  </p>
+                </div>
+              )}
+
+              {goodsReceiptDetailModalData.typeAndOrigin && (
+                <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                    {t('goods_receipt_form.type_and_origin') || "Tipo y procedencia"}
+                  </span>
+                  <p style={{ margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                    {goodsReceiptDetailModalData.typeAndOrigin}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {goodsReceiptDetailModalData.merchantTypes && goodsReceiptDetailModalData.merchantTypes.length > 0 && (
+              <div style={{ marginBottom: '1.25rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                  {t('dashboard.merchant_types') || "Tipos de mercancía"}:
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.35rem' }}>
+                  {goodsReceiptDetailModalData.merchantTypes.map((mt, mtIdx) => (
+                    <span 
+                      key={mtIdx}
+                      style={{ 
+                        background: '#e0f2fe', 
+                        color: '#0369a1', 
+                        padding: '0.2rem 0.6rem', 
+                        borderRadius: '0.375rem', 
+                        fontSize: '0.78rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {mt}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {goodsReceiptDetailModalData.deliveryNoteImage && (
+              <div style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.6rem', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <FileText size={16} color="var(--corp-green)" />
+                    <span>{t('dashboard.view_note') || "Albarán adjunto"}</span>
+                  </span>
+                  <a
+                    href={goodsReceiptDetailModalData.deliveryNoteImage}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary"
+                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                  >
+                    <ExternalLink size={13} />
+                    <span>{t('dashboard.view_note') || "Ver albarán"}</span>
+                  </a>
+                </div>
+                {goodsReceiptDetailModalData.deliveryNoteImage.startsWith("data:image/") || goodsReceiptDetailModalData.deliveryNoteImage.match(/\.(jpeg|jpg|png|webp|gif)($|\?)/i) ? (
+                  <div style={{ textAlign: 'center', maxHeight: '240px', overflow: 'hidden', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+                    <img 
+                      src={goodsReceiptDetailModalData.deliveryNoteImage} 
+                      alt="Albarán" 
+                      style={{ maxWidth: '100%', maxHeight: '240px', objectFit: 'contain' }}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            <footer style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+              <button 
+                type="button" 
+                onClick={() => setGoodsReceiptDetailModalData(null)}
+                className="btn-secondary"
+                style={{ padding: '0.6rem 1.4rem' }}
+              >
+                {t('common.close') || "Cerrar"}
               </button>
             </footer>
           </div>

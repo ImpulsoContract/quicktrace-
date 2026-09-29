@@ -731,7 +731,15 @@
     "total_cost_title": "Costo totale dell'elaborazione",
     "breakdown_prefix": "Materie prime",
     "labor_prefix": "Personale",
-    "total_cost_partial_notice": "(Solo materie prime. Aggiungi i dati sul personale per il totale completo)"
+    "total_cost_partial_notice": "(Solo materie prime. Aggiungi i dati sul personale per il totale completo)",
+    "view_details": "Vedi dettagli",
+    "view_more_goods_lotes": "Vedi più entrate di merci",
+    "goods_receipt_details_title": "Dettagli dell'entrata di merce",
+    "more_goods_modal_title": "Entrate di merci per:",
+    "col_lot": "Numero di lotto",
+    "col_date": "Data",
+    "copy_and_use_lot": "Copia e usa",
+    "lot_copied": "Lotto assegnato e copiato!"
   },
   "goods_receipt_form": {
     "product": "Prodotto",

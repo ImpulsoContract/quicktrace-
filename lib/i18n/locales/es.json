@@ -736,7 +736,15 @@
     "total_cost_title": "Coste total de la elaboración",
     "breakdown_prefix": "Materias primas",
     "labor_prefix": "Personal",
-    "total_cost_partial_notice": "(Solo materias primas. Falta añadir personal para el total completo)"
+    "total_cost_partial_notice": "(Solo materias primas. Falta añadir personal para el total completo)",
+    "view_details": "Ver detalles",
+    "view_more_goods_lotes": "Ver más entradas de mercancías",
+    "goods_receipt_details_title": "Detalles de la entrada de mercancía",
+    "more_goods_modal_title": "Entradas de mercancías para:",
+    "col_lot": "Número de lote",
+    "col_date": "Fecha",
+    "copy_and_use_lot": "Copiar y usar",
+    "lot_copied": "¡Lote asignado y copiado!"
   },
   "goods_receipt_form": {
     "product": "Producto",

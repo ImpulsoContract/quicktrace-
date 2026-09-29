@@ -42,18 +42,26 @@ export async function GET(req) {
         ]
       },
       select: {
+        id: true,
         productName: true,
+        providerName: true,
         lote: true,
-        relatedIngredients: true,
-        date: true
+        invoiceNumber: true,
+        quantity: true,
+        date: true,
+        manufacturingTemp: true,
+        endDate: true,
+        typeAndOrigin: true,
+        merchantTypes: true,
+        relatedIngredients: true
       },
       orderBy: {
         date: "desc"
       },
-      take: 1500
+      take: 2000
     });
 
-    // 2. Fetch elaboration ingredients for this client with lotes
+    // 2. Fetch elaboration ingredients for this client with lotes, including recipe name and date
     const elabIngredients = await prisma.elaborationIngredient.findMany({
       where: {
         elaboration: {
@@ -69,12 +77,22 @@ export async function GET(req) {
       select: {
         name: true,
         lote: true,
-        createdAt: true
+        createdAt: true,
+        elaboration: {
+          select: {
+            date: true,
+            recipe: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }
       },
       orderBy: {
         createdAt: "desc"
       },
-      take: 1500
+      take: 2000
     });
 
     const result = {};
@@ -101,8 +119,21 @@ export async function GET(req) {
         if (!result[name]) {
           result[name] = { goods: [], elaborations: [] };
         }
-        if (result[name].goods.length < 3 && !result[name].goods.includes(lot)) {
-          result[name].goods.push(lot);
+        const alreadyExists = result[name].goods.some(g => g.id === gr.id || (g.lote === lot && String(g.date) === String(gr.date)));
+        if (!alreadyExists && result[name].goods.length < 50) {
+          result[name].goods.push({
+            id: gr.id,
+            lote: lot,
+            date: gr.date,
+            productName: gr.productName,
+            providerName: gr.providerName || "",
+            invoiceNumber: gr.invoiceNumber || "",
+            quantity: gr.quantity || "",
+            manufacturingTemp: gr.manufacturingTemp || "",
+            endDate: gr.endDate || "",
+            typeAndOrigin: gr.typeAndOrigin || "",
+            merchantTypes: gr.merchantTypes || []
+          });
         }
       });
     });
@@ -123,8 +154,13 @@ export async function GET(req) {
         result[name] = { goods: [], elaborations: [] };
       }
 
-      if (result[name].elaborations.length < 3 && !result[name].elaborations.includes(lot)) {
-        result[name].elaborations.push(lot);
+      const alreadyIn = result[name].elaborations.some(e => e.lote === lot);
+      if (result[name].elaborations.length < 3 && !alreadyIn) {
+        result[name].elaborations.push({
+          lote: lot,
+          recipeName: ei.elaboration?.recipe?.name || "",
+          date: ei.elaboration?.date || ei.createdAt
+        });
       }
     });
 
