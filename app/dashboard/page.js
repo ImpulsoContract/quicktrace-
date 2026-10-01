@@ -2118,6 +2118,15 @@ export default function ClientDashboard() {
       currentY += 7;
 
       doc.setFont("helvetica", "bold");
+      doc.text((t('traceability_form.quantity_produced') || "Cantidad elaborada") + ":", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      const elabQtyProducedStr = (elab.quantityProduced !== null && elab.quantityProduced !== undefined && String(elab.quantityProduced).trim() !== "")
+        ? `${String(elab.quantityProduced).trim()} ${elab.quantityUnit || ''}`.trim()
+        : "N/A";
+      doc.text(elabQtyProducedStr, 90, currentY);
+      currentY += 7;
+
+      doc.setFont("helvetica", "bold");
       doc.text((t('traceability_form.label_made_by') || "Realizado por:") + ":", 20, currentY);
       doc.setFont("helvetica", "normal");
       doc.text(elab.personName || "N/A", 90, currentY);
@@ -3260,6 +3269,15 @@ export default function ClientDashboard() {
         doc.text(t('dashboard.lote') + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
         doc.text(el.name || "N/A", 90, currentY);
+        currentY += 7;
+
+        doc.setFont("helvetica", "bold");
+        doc.text((t('traceability_form.quantity_produced') || "Cantidad elaborada") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        const qtyProducedStr = (el.quantityProduced !== null && el.quantityProduced !== undefined && String(el.quantityProduced).trim() !== "")
+          ? `${String(el.quantityProduced).trim()} ${el.quantityUnit || ''}`.trim()
+          : "N/A";
+        doc.text(qtyProducedStr, 90, currentY);
         currentY += 7;
 
         doc.setFont("helvetica", "bold");
