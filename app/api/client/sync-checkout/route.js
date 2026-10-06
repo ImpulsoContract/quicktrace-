@@ -57,16 +57,40 @@ export async function POST(req) {
 
     const nextRenewalStr = stripeDate ? new Date(stripeDate * 1000).toISOString() : null;
 
+    const taxId = checkoutSession.customer_details?.tax_ids?.[0]?.value;
+    const billingAddress = checkoutSession.customer_details?.address;
+
+    const currentProfile = await prisma.clientProfile.findUnique({
+      where: { userId: userId }
+    });
+
+    const updateData = {
+      stripeCurrentPeriodEnd: nextRenewalStr,
+      stripePriceId: stripePriceId,
+      planId: plan?.id || undefined,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscription.id,
+      stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false
+    };
+
+    if (taxId) {
+      updateData.nif = taxId;
+    }
+
+    if (billingAddress && currentProfile) {
+      const addressParts = [billingAddress.line1, billingAddress.line2].filter(Boolean).join(", ");
+      if (!currentProfile.address && addressParts) updateData.address = addressParts;
+      if (!currentProfile.postalCode && billingAddress.postal_code) updateData.postalCode = billingAddress.postal_code;
+      if (!currentProfile.city && billingAddress.city) updateData.city = billingAddress.city;
+      if (!currentProfile.province && billingAddress.state) updateData.province = billingAddress.state;
+      if (!currentProfile.country && billingAddress.country) {
+        updateData.country = billingAddress.country === "ES" ? "España" : billingAddress.country;
+      }
+    }
+
     const updatedProfile = await prisma.clientProfile.update({
       where: { userId: userId },
-      data: {
-        stripeCurrentPeriodEnd: nextRenewalStr,
-        stripePriceId: stripePriceId,
-        planId: plan?.id || undefined,
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscription.id,
-        stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false
-      }
+      data: updateData
     });
 
     return NextResponse.json({ 

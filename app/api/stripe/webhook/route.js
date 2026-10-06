@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2024-04-10",
+    apiVersion: "2024-09-30.acacia",
   });
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const body = await req.text();
@@ -42,24 +42,83 @@ export async function POST(req) {
         }
         const nextRenewalStr = stripeDate ? new Date(stripeDate * 1000).toISOString() : null;
         
-        // Identification fallback: if no userId in metadata, we might try to find by email if available
+        // Extraer NIF/CIF y dirección de facturación introducidos en Checkout
+        const collectedTaxId = session.customer_details?.tax_ids?.[0]?.value;
+        const billingAddress = session.customer_details?.address;
+
         let profile;
         if (userId) {
+          const currentProfile = await prisma.clientProfile.findUnique({
+            where: { userId },
+          });
+
+          const updateData = {
+            stripeCustomerId: session.customer,
+            stripeSubscriptionId: session.subscription,
+            stripePriceId: priceId,
+            stripeCurrentPeriodEnd: nextRenewalStr,
+            planId: planId,
+            stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+          };
+
+          if (collectedTaxId) {
+            updateData.nif = collectedTaxId;
+          }
+
+          if (billingAddress && currentProfile) {
+            const addressParts = [billingAddress.line1, billingAddress.line2].filter(Boolean).join(", ");
+            if (!currentProfile.address && addressParts) updateData.address = addressParts;
+            if (!currentProfile.postalCode && billingAddress.postal_code) updateData.postalCode = billingAddress.postal_code;
+            if (!currentProfile.city && billingAddress.city) updateData.city = billingAddress.city;
+            if (!currentProfile.province && billingAddress.state) updateData.province = billingAddress.state;
+            if (!currentProfile.country && billingAddress.country) {
+              updateData.country = billingAddress.country === "ES" ? "España" : billingAddress.country;
+            }
+          }
+
           profile = await prisma.clientProfile.update({
             where: { userId },
             include: { user: true },
-            data: {
-              stripeCustomerId: session.customer,
-              stripeSubscriptionId: session.subscription,
-              stripePriceId: priceId,
-              stripeCurrentPeriodEnd: nextRenewalStr,
-              planId: planId,
-              stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-            },
+            data: updateData,
           });
-          console.log(`[Webhook] Updated profile for userId ${userId} via checkout metadata`);
+          console.log(`[Webhook] Updated profile for userId ${userId} via checkout metadata (NIF: ${profile.nif})`);
         } else {
           console.warn(`[Webhook] No userId in checkout metadata for session ${session.id}`);
+          const fallbackEmail = session.customer_details?.email || session.customer_email;
+          if (fallbackEmail) {
+            const userByEmail = await prisma.user.findUnique({
+              where: { email: fallbackEmail },
+              include: { clientProfile: true },
+            });
+            if (userByEmail?.clientProfile) {
+              const currentProfile = userByEmail.clientProfile;
+              const updateData = {
+                stripeCustomerId: session.customer,
+                stripeSubscriptionId: session.subscription,
+                stripePriceId: priceId,
+                stripeCurrentPeriodEnd: nextRenewalStr,
+                planId: planId,
+                stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+              };
+              if (collectedTaxId) updateData.nif = collectedTaxId;
+              if (billingAddress && currentProfile) {
+                const addressParts = [billingAddress.line1, billingAddress.line2].filter(Boolean).join(", ");
+                if (!currentProfile.address && addressParts) updateData.address = addressParts;
+                if (!currentProfile.postalCode && billingAddress.postal_code) updateData.postalCode = billingAddress.postal_code;
+                if (!currentProfile.city && billingAddress.city) updateData.city = billingAddress.city;
+                if (!currentProfile.province && billingAddress.state) updateData.province = billingAddress.state;
+                if (!currentProfile.country && billingAddress.country) {
+                  updateData.country = billingAddress.country === "ES" ? "España" : billingAddress.country;
+                }
+              }
+              profile = await prisma.clientProfile.update({
+                where: { id: currentProfile.id },
+                include: { user: true },
+                data: updateData,
+              });
+              console.log(`[Webhook] Updated profile via email fallback for ${fallbackEmail}`);
+            }
+          }
         }
 
         if (profile) {
@@ -69,6 +128,7 @@ export async function POST(req) {
             subject: `Nueva Contratación: ${profile.razonSocial}`,
             html: `
               <p>El cliente <b>${profile.razonSocial}</b> (${profile.user.email}) ha realizado una nueva contratación.</p>
+              <p><b>NIF/CIF:</b> ${profile.nif || 'No especificado'}</p>
               <p>Suscripción: ${session.subscription}</p>
               <p>Próxima renovación: ${nextRenewalStr ? new Date(nextRenewalStr).toLocaleDateString() : 'N/A'}</p>
             `
@@ -113,17 +173,21 @@ export async function POST(req) {
         if (!plan) console.warn(`[Webhook] No matching plan found for Price ID: ${priceId}`);
 
         // Robust Identification: Try subscription ID first, then userId from metadata, then customer ID
+        const invoiceTaxId = invoice.customer_tax_ids?.[0]?.value;
         let profile;
         try {
+          const invoiceData = {
+            stripeCurrentPeriodEnd: nextRenewalStr,
+            stripePriceId: priceId,
+            planId: plan?.id || subPlanId || undefined,
+            stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+          };
+          if (invoiceTaxId) invoiceData.nif = invoiceTaxId;
+
           profile = await prisma.clientProfile.update({
             where: { stripeSubscriptionId: invoice.subscription },
             include: { user: true },
-            data: {
-              stripeCurrentPeriodEnd: nextRenewalStr,
-              stripePriceId: priceId,
-              planId: plan?.id || subPlanId || undefined,
-              stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-            },
+            data: invoiceData,
           });
           console.log(`[Webhook] Updated profile by stripeSubscriptionId`);
         } catch (e) {
@@ -138,17 +202,20 @@ export async function POST(req) {
           });
           
           if (profiles.length > 0) {
+            const invoiceData = {
+              stripeSubscriptionId: invoice.subscription,
+              stripeCustomerId: invoice.customer,
+              stripeCurrentPeriodEnd: nextRenewalStr,
+              stripePriceId: priceId,
+              planId: plan?.id || subPlanId || undefined,
+              stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+            };
+            if (invoiceTaxId) invoiceData.nif = invoiceTaxId;
+
             profile = await prisma.clientProfile.update({
               where: { id: profiles[0].id },
               include: { user: true },
-              data: {
-                stripeSubscriptionId: invoice.subscription,
-                stripeCustomerId: invoice.customer,
-                stripeCurrentPeriodEnd: nextRenewalStr,
-                stripePriceId: priceId,
-                planId: plan?.id || subPlanId || undefined,
-                stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-              }
+              data: invoiceData,
             });
             console.log(`[Webhook] Updated profile by stripeCustomerId/userId fallback`);
           } else {
@@ -162,17 +229,20 @@ export async function POST(req) {
                   include: { clientProfile: true }
                 });
                 if (userByEmail?.clientProfile) {
+                  const invoiceData = {
+                    stripeSubscriptionId: invoice.subscription,
+                    stripeCustomerId: invoice.customer,
+                    stripeCurrentPeriodEnd: nextRenewalStr,
+                    stripePriceId: priceId,
+                    planId: plan?.id || subPlanId || undefined,
+                    stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+                  };
+                  if (invoiceTaxId) invoiceData.nif = invoiceTaxId;
+
                   profile = await prisma.clientProfile.update({
                     where: { id: userByEmail.clientProfile.id },
                     include: { user: true },
-                    data: {
-                      stripeSubscriptionId: invoice.subscription,
-                      stripeCustomerId: invoice.customer,
-                      stripeCurrentPeriodEnd: nextRenewalStr,
-                      stripePriceId: priceId,
-                      planId: plan?.id || subPlanId || undefined,
-                      stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-                    }
+                    data: invoiceData,
                   });
                   console.log(`[Webhook] Updated profile by customer email fallback: ${customerEmail}`);
                 }
