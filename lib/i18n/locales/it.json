@@ -1155,7 +1155,10 @@
     "table_date": "Data",
     "table_person": "Responsabile",
     "table_kilos": "Chili (kg)",
-    "delete_confirm": "Sei sicuro di voler eliminare questo record?"
+    "delete_confirm": "Sei sicuro di voler eliminare questo record?",
+    "observations": "Osservazioni",
+    "observations_placeholder": "Osservazioni sul ritiro...",
+    "table_observations": "Osservazioni"
   },
   "cleaning": {
     "product_sheets_btn": "Schede tecniche dei prodotti per la pulizia",

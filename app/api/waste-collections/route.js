@@ -48,7 +48,7 @@ export async function POST(request) {
     }
 
     const data = await request.json();
-    const { date, personName, kilos } = data;
+    const { date, personName, kilos, observations } = data;
 
     if (!date || !personName || kilos === undefined) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
@@ -72,6 +72,7 @@ export async function POST(request) {
         date: new Date(date),
         personName,
         kilos: parseFloat(kilos),
+        observations: observations ? observations.toString() : null,
         clientProfileId: profile.id
       }
     });
@@ -142,7 +143,7 @@ export async function PATCH(request) {
     }
 
     const data = await request.json();
-    const { id, date, personName, kilos } = data;
+    const { id, date, personName, kilos, observations } = data;
 
     if (!id || !date || !personName || kilos === undefined) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
@@ -167,6 +168,7 @@ export async function PATCH(request) {
         date: new Date(date),
         personName,
         kilos: parseFloat(kilos),
+        observations: observations !== undefined ? (observations ? observations.toString() : null) : undefined,
       }
     });
 

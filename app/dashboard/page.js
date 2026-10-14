@@ -347,7 +347,7 @@ export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState("trazabilidad");
   const [wasteCollections, setWasteCollections] = useState([]);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
-  const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "" });
+  const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "", observations: "" });
   const [editingWasteRecord, setEditingWasteRecord] = useState(null);
 
 
@@ -4578,7 +4578,7 @@ export default function ClientDashboard() {
     }
     const lastPerson = wasteCollections.length > 0 ? wasteCollections[0].personName : (profile?.personName || session?.user?.name || "");
     setEditingWasteRecord(null);
-    setWasteForm({ date: new Date().toISOString().slice(0, 10), personName: lastPerson, kilos: "" });
+    setWasteForm({ date: new Date().toISOString().slice(0, 10), personName: lastPerson, kilos: "", observations: "" });
     setIsWasteModalOpen(true);
   };
 
@@ -4587,7 +4587,8 @@ export default function ClientDashboard() {
     setWasteForm({
       date: new Date(record.date).toISOString().slice(0, 10),
       personName: record.personName,
-      kilos: record.kilos
+      kilos: record.kilos,
+      observations: record.observations || ""
     });
     setIsWasteModalOpen(true);
   };
@@ -7112,6 +7113,7 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_date') || "Fecha"}</th>
                           <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_person') || "Responsable"}</th>
                           <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_kilos') || "Kilos (kg)"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_observations') || "Observaciones"}</th>
                           <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
@@ -7123,6 +7125,9 @@ export default function ClientDashboard() {
                             </td>
                             <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{record.personName}</td>
                             <td style={{ padding: '1rem 1.5rem', fontWeight: '600' }}>{record.kilos} kg</td>
+                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.observations || ""}>
+                              {record.observations || "-"}
+                            </td>
                             <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                 <button onClick={() => handleEditWaste(record)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
@@ -10147,6 +10152,20 @@ export default function ClientDashboard() {
                   />
                   <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: '600' }}>kg</span>
                 </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('waste.observations') || "Observaciones"}
+                </label>
+                <textarea 
+                  className="input-field" 
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                  value={wasteForm.observations || ""} 
+                  onChange={(e) => setWasteForm({...wasteForm, observations: e.target.value})} 
+                  placeholder={t('waste.observations_placeholder') || "Observaciones sobre la retirada..."}
+                />
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>

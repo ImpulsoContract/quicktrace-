@@ -531,6 +531,7 @@ model WasteCollection {
   date            DateTime      @default(now())
   personName      String
   kilos           Float
+  observations    String?       @db.Text
   
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)

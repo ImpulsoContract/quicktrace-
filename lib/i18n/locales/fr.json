@@ -1155,7 +1155,10 @@
     "table_date": "Date",
     "table_person": "Responsable",
     "table_kilos": "Kilos (kg)",
-    "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement ?"
+    "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement ?",
+    "observations": "Observations",
+    "observations_placeholder": "Observations sur l'enlèvement...",
+    "table_observations": "Observations"
   },
   "cleaning": {
     "product_sheets_btn": "Fiches techniques des produits de nettoyage",
