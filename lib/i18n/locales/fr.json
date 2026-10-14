@@ -120,7 +120,8 @@
     "waste": "Déchets",
     "inventory": "Inventaire",
     "customers": "Clients",
-    "cutting_traceability": "Traçabilité de découpe"
+    "cutting_traceability": "Traçabilité de découpe",
+    "oil_collection": "Collecte des huiles de friture"
   },
   "inventory": {
     "title": "Gestion des Stocks",
@@ -233,7 +234,10 @@
     "block_out_of_stock_lots_section": "Autoriser l'utilisation de lots en rupture de stock dans les élaborations",
     "block_out_of_stock_lots_desc": "Configurez si l'utilisation de lots d'ingrédients épuisés est autorisée lors de l'enregistrement des élaborations.",
     "block_out_of_stock_lots_enable": "Ne pas autoriser l'utilisation de lots d'ingrédients en rupture de stock (épuisés)",
-    "block_out_of_stock_lots_help": "Par défaut cette case est décochée, permettant de sélectionner n'importe quel lot. Si vous la cochez, le système empêchera de sélectionner ou d'utiliser des lots d'ingrédients dont le stock restant est à 0 dans les élaborations."
+    "block_out_of_stock_lots_help": "Par défaut cette case est décochée, permettant de sélectionner n'importe quel lot. Si vous la cochez, le système empêchera de sélectionner ou d'utiliser des lots d'ingrédients dont le stock restant est à 0 dans les élaborations.",
+    "additional_sections_title": "Activer des sections supplémentaires",
+    "additional_sections_desc": "Configurez les sections optionnelles que vous souhaitez afficher dans votre menu principal.",
+    "oil_collection_enable": "Activer la collecte des huiles de friture"
   },
   "dashboard": {
     "welcome": "Bonjour",
@@ -1409,5 +1413,27 @@
     "salt": "Sel",
     "no_nutritional_data": "Informations nutritionnelles non spécifiées.",
     "instructions_section": "5. Procédé d'Élaboration / Mode d'Emploi"
+  },
+  "oil_collection": {
+    "title": "Collecte des huiles de friture",
+    "description": "Gérez et enregistrez le changement et la collecte des huiles de friture.",
+    "new_collection": "Nouvelle collecte d'huile",
+    "edit_collection": "Modifier l'enregistrement d'huile",
+    "load_date": "Date de chargement de l'huile neuve",
+    "frying_cycles": "Nombre de fritures",
+    "frying_cycles_placeholder": "Ex : 10, 15...",
+    "change_date": "Date de changement de l'huile usagée",
+    "person": "Personne responsable",
+    "person_placeholder": "Nom du responsable...",
+    "incidents": "Incidents",
+    "incidents_placeholder": "Observations ou incidents détectés...",
+    "no_records": "Aucun enregistrement de collecte d'huile de friture.",
+    "save": "Enregistrer",
+    "table_load_date": "Date chargement neuf",
+    "table_frying_cycles": "Nbre fritures",
+    "table_change_date": "Date changement usagé",
+    "table_person": "Responsable",
+    "table_incidents": "Incidents",
+    "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement de collecte d'huile ?"
   }
 }

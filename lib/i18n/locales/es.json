@@ -120,7 +120,8 @@
     "waste": "Residuos",
     "inventory": "Inventario",
     "customers": "Clientes",
-    "cutting_traceability": "Trazabilidad de despiece"
+    "cutting_traceability": "Trazabilidad de despiece",
+    "oil_collection": "Retirada de aceites de fritura"
   },
   "inventory": {
     "title": "Gestión de Inventario",
@@ -233,7 +234,10 @@
     "block_out_of_stock_lots_section": "Permitir usar lotes sin stock en las elaboraciones",
     "block_out_of_stock_lots_desc": "Configura si se permite utilizar lotes de ingredientes que ya no disponen de existencias al registrar elaboraciones.",
     "block_out_of_stock_lots_enable": "No permitir utilizar lotes de ingredientes sin stock (agotados)",
-    "block_out_of_stock_lots_help": "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones."
+    "block_out_of_stock_lots_help": "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones.",
+    "additional_sections_title": "Activa secciones adicionales",
+    "additional_sections_desc": "Configura qué secciones opcionales deseas mostrar en tu menú principal.",
+    "oil_collection_enable": "Activar retirada de aceites de fritura"
   },
   "dashboard": {
     "welcome": "Hola",
@@ -1414,5 +1418,27 @@
     "salt": "Sal",
     "no_nutritional_data": "Información nutricional no especificada.",
     "instructions_section": "5. Proceso de Elaboración / Modo de Empleo"
+  },
+  "oil_collection": {
+    "title": "Retirada de aceites de fritura",
+    "description": "Gestiona y registra el cambio y retirada de aceites de fritura.",
+    "new_collection": "Nueva retirada de aceite",
+    "edit_collection": "Modificar registro de aceite",
+    "load_date": "Fecha de carga de aceite nuevo",
+    "frying_cycles": "Número de frituras",
+    "frying_cycles_placeholder": "Ej: 10, 15...",
+    "change_date": "Fecha de cambio de aceite usado",
+    "person": "Persona responsable",
+    "person_placeholder": "Nombre del responsable...",
+    "incidents": "Incidencias",
+    "incidents_placeholder": "Observaciones o incidencias detectadas...",
+    "no_records": "No hay registros de retiradas de aceites de fritura.",
+    "save": "Guardar registro",
+    "table_load_date": "F. Carga nuevo",
+    "table_frying_cycles": "Nº frituras",
+    "table_change_date": "F. Cambio usado",
+    "table_person": "Responsable",
+    "table_incidents": "Incidencias",
+    "delete_confirm": "¿Seguro que quieres eliminar este registro de retirada de aceite?"
   }
 }

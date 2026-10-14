@@ -120,7 +120,8 @@
     "waste": "Rifiuti",
     "inventory": "Inventario",
     "customers": "Clienti",
-    "cutting_traceability": "Tracciabilità di sezionamento"
+    "cutting_traceability": "Tracciabilità di sezionamento",
+    "oil_collection": "Ritiro oli di frittura"
   },
   "inventory": {
     "title": "Gestione dell'Inventario",
@@ -233,7 +234,10 @@
     "block_out_of_stock_lots_section": "Consentire l'uso di lotti esauriti nelle elaborazioni",
     "block_out_of_stock_lots_desc": "Configura se consentire l'utilizzo di lotti di ingredienti esauriti durante la registrazione delle elaborazioni.",
     "block_out_of_stock_lots_enable": "Non consentire l'utilizzo di lotti di ingredienti esauriti",
-    "block_out_of_stock_lots_help": "Per impostazione predefinita questa casella non è selezionata, consentendo di selezionare qualsiasi lotto. Se selezionata, il sistema impedirà di selezionare o utilizzare lotti di ingredienti con giacenza 0 nelle elaborazioni."
+    "block_out_of_stock_lots_help": "Per impostazione predefinita questa casella non è selezionata, consentendo di selezionare qualsiasi lotto. Se selezionata, il sistema impedirà di selezionare o utilizzare lotti di ingredienti con giacenza 0 nelle elaborazioni.",
+    "additional_sections_title": "Attiva sezioni aggiuntive",
+    "additional_sections_desc": "Configura quali sezioni opzionali desideri visualizzare nel tuo menu principale.",
+    "oil_collection_enable": "Attiva ritiro oli di frittura"
   },
   "dashboard": {
     "welcome": "Ciao",
@@ -1409,5 +1413,27 @@
     "salt": "Sale",
     "no_nutritional_data": "Informazioni nutrizionali non specificate.",
     "instructions_section": "5. Processo di Elaborazione / Modalità d'Uso"
+  },
+  "oil_collection": {
+    "title": "Ritiro oli di frittura",
+    "description": "Gestisci e registra il cambio e il ritiro degli oli di frittura.",
+    "new_collection": "Nuovo ritiro olio",
+    "edit_collection": "Modifica registrazione olio",
+    "load_date": "Data di carico olio nuovo",
+    "frying_cycles": "Numero di fritture",
+    "frying_cycles_placeholder": "Es: 10, 15...",
+    "change_date": "Data di cambio olio esausto",
+    "person": "Persona responsabile",
+    "person_placeholder": "Nome del responsabile...",
+    "incidents": "Incidenti",
+    "incidents_placeholder": "Osservazioni o incidenti rilevati...",
+    "no_records": "Nessuna registrazione di ritiro olio di frittura.",
+    "save": "Salva registrazione",
+    "table_load_date": "Data carico nuovo",
+    "table_frying_cycles": "N. fritture",
+    "table_change_date": "Data cambio usato",
+    "table_person": "Responsabile",
+    "table_incidents": "Incidenti",
+    "delete_confirm": "Sei sicuro di voler eliminare questa registrazione di ritiro olio?"
   }
 }

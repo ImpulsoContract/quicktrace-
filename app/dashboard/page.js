@@ -350,6 +350,17 @@ export default function ClientDashboard() {
   const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "", observations: "" });
   const [editingWasteRecord, setEditingWasteRecord] = useState(null);
 
+  const [oilCollections, setOilCollections] = useState([]);
+  const [isOilModalOpen, setIsOilModalOpen] = useState(false);
+  const [editingOilRecord, setEditingOilRecord] = useState(null);
+  const [oilForm, setOilForm] = useState({
+    loadDate: new Date().toISOString().slice(0, 10),
+    fryingCycles: "",
+    changeDate: new Date().toISOString().slice(0, 10),
+    personName: "",
+    incidents: ""
+  });
+
 
   const [recipes, setRecipes] = useState([]);
   const [elaborations, setElaborations] = useState([]);
@@ -736,6 +747,12 @@ export default function ClientDashboard() {
       fetchTempRecords();
       setTempPage(1);
     }
+    if (activeTab === "residuos") {
+      fetchWasteCollections();
+    }
+    if (activeTab === "aceites") {
+      fetchOilCollections();
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -1041,6 +1058,18 @@ export default function ClientDashboard() {
       }
     } catch (error) {
       console.error("Error fetching waste collections:", error);
+    }
+  };
+
+  const fetchOilCollections = async () => {
+    try {
+      const res = await fetch("/api/oil-collections");
+      const data = await res.json();
+      if (data.success) {
+        setOilCollections(data.collections);
+      }
+    } catch (error) {
+      console.error("Error fetching oil collections:", error);
     }
   };
 
@@ -2340,7 +2369,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.blockOutOfStockLots !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.blockOutOfStockLots !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -4609,6 +4638,85 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleOpenOilModal = () => {
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
+    const lastPerson = oilCollections.length > 0 ? oilCollections[0].personName : (profile?.personName || session?.user?.name || "");
+    const today = new Date().toISOString().slice(0, 10);
+    setEditingOilRecord(null);
+    setOilForm({
+      loadDate: today,
+      fryingCycles: "",
+      changeDate: today,
+      personName: lastPerson,
+      incidents: ""
+    });
+    setIsOilModalOpen(true);
+  };
+
+  const handleEditOil = (record) => {
+    setEditingOilRecord(record);
+    setOilForm({
+      loadDate: record.loadDate ? new Date(record.loadDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      fryingCycles: record.fryingCycles !== undefined && record.fryingCycles !== null ? record.fryingCycles.toString() : "",
+      changeDate: record.changeDate ? new Date(record.changeDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      personName: record.personName || "",
+      incidents: record.incidents || ""
+    });
+    setIsOilModalOpen(true);
+  };
+
+  const handleDeleteOil = async (id) => {
+    if (!confirm(t('oil_collection.delete_confirm') || "¿Seguro que quieres eliminar este registro de retirada de aceite?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/oil-collections?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        fetchOilCollections();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitOil = async (e) => {
+    e.preventDefault();
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
+    setLoading(true);
+    try {
+      const url = "/api/oil-collections";
+      const method = editingOilRecord ? "PATCH" : "POST";
+      const body = editingOilRecord ? { ...oilForm, id: editingOilRecord.id } : oilForm;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsOilModalOpen(false);
+        setEditingOilRecord(null);
+        fetchOilCollections();
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(t("alerts.connection_error") || "Error de conexión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmitCleaning = async (e) => {
     e.preventDefault();
     if (isRecipeLimitExceeded()) {
@@ -4986,6 +5094,15 @@ export default function ClientDashboard() {
                   active={activeTab === "residuos"} 
                   onClick={() => { setActiveTab("residuos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
+
+                {profile?.hasOilCollection && (
+                  <SidebarBtn 
+                    icon={<Droplets size={20} />} 
+                    label={t('sidebar.oil_collection') || "Retirada de aceites de fritura"} 
+                    active={activeTab === "aceites"} 
+                    onClick={() => { setActiveTab("aceites"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                  />
+                )}
 
                 <SidebarBtn 
                   icon={<Settings size={20} />} 
@@ -7134,6 +7251,75 @@ export default function ClientDashboard() {
                                   <Edit size={18} />
                                 </button>
                                 <button onClick={() => handleDeleteWaste(record.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'aceites' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('oil_collection.title') || "Retirada de aceites de fritura"}</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('oil_collection.description') || "Gestiona y registra el cambio y retirada de aceites de fritura."}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={handleOpenOilModal}
+                    className="btn-primary"
+                    style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <PlusCircle size={18} /> {t('oil_collection.new_collection') || "Nueva retirada de aceite"}
+                  </button>
+                </div>
+              </header>
+
+              {oilCollections.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <Droplets size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('oil_collection.no_records') || "No hay registros de retiradas de aceites de fritura."}</h3>
+                </div>
+              ) : (
+                <div style={{ background: 'white', borderRadius: '1.25rem', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('oil_collection.table_load_date') || "F. Carga nuevo"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('oil_collection.table_frying_cycles') || "Nº frituras"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('oil_collection.table_change_date') || "F. Cambio usado"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('oil_collection.table_person') || "Responsable"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('oil_collection.table_incidents') || "Incidencias"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {oilCollections.map(record => (
+                          <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '500' }}>
+                              {record.loadDate ? new Date(record.loadDate).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) : "-"}
+                            </td>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '600' }}>{record.fryingCycles ?? 0}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '500' }}>
+                              {record.changeDate ? new Date(record.changeDate).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) : "-"}
+                            </td>
+                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{record.personName}</td>
+                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.incidents || ""}>
+                              {record.incidents || "-"}
+                            </td>
+                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                <button onClick={() => handleEditOil(record)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
+                                  <Edit size={18} />
+                                </button>
+                                <button onClick={() => handleDeleteOil(record.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
                                   <Trash2 size={18} />
                                 </button>
                               </div>
@@ -10180,6 +10366,100 @@ export default function ClientDashboard() {
           </div>
         </div>
       )}
+      {isOilModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '1.5rem', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s ease', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Droplets size={24} color="var(--corp-green)" /> {editingOilRecord ? (t('oil_collection.edit_collection') || "Modificar registro de aceite") : (t('oil_collection.new_collection') || "Nueva retirada de aceite")}
+              </h3>
+              <button onClick={() => setIsOilModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmitOil} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('oil_collection.load_date') || "Fecha de carga de aceite nuevo"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="date" 
+                  className="input-field" 
+                  value={oilForm.loadDate} 
+                  onChange={(e) => setOilForm({...oilForm, loadDate: e.target.value})} 
+                  required 
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('oil_collection.frying_cycles') || "Número de frituras"}
+                </label>
+                <input 
+                  type="number" 
+                  min="0"
+                  step="1"
+                  className="input-field" 
+                  value={oilForm.fryingCycles} 
+                  onChange={(e) => setOilForm({...oilForm, fryingCycles: e.target.value})} 
+                  placeholder={t('oil_collection.frying_cycles_placeholder') || "Ej: 10, 15..."}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('oil_collection.change_date') || "Fecha de cambio de aceite usado"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="date" 
+                  className="input-field" 
+                  value={oilForm.changeDate} 
+                  onChange={(e) => setOilForm({...oilForm, changeDate: e.target.value})} 
+                  required 
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('oil_collection.person') || "Persona responsable"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={oilForm.personName} 
+                  onChange={(e) => setOilForm({...oilForm, personName: e.target.value})} 
+                  placeholder={t('oil_collection.person_placeholder') || "Nombre del responsable..."}
+                  required 
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('oil_collection.incidents') || "Incidencias"}
+                </label>
+                <textarea 
+                  className="input-field" 
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                  value={oilForm.incidents || ""} 
+                  onChange={(e) => setOilForm({...oilForm, incidents: e.target.value})} 
+                  placeholder={t('oil_collection.incidents_placeholder') || "Observaciones o incidencias detectadas..."}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setIsOilModalOpen(false)} className="btn-secondary" style={{ flex: 1, padding: '0.75rem' }}>
+                  {t('common.cancel')}
+                </button>
+                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '0.75rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('oil_collection.save') || "Guardar registro"}</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {isRecipeOverlimitModalOpen && (
         <div className="modal-overlay" style={{ zIndex: 1100 }}>
           <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
@@ -11776,6 +12056,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [newMerchantType, setNewMerchantType] = useState("");
   const [lotFormat, setLotFormat] = useState(profile?.lotFormat || DEFAULT_LOT_FORMAT);
   const [hasCuttingTraceability, setHasCuttingTraceability] = useState(profile?.hasCuttingTraceability || false);
+  const [hasOilCollection, setHasOilCollection] = useState(profile?.hasOilCollection || false);
   const [blockOutOfStockLots, setBlockOutOfStockLots] = useState(profile?.blockOutOfStockLots || false);
 
   const popular = ["EUR", "USD", "GBP"];
@@ -11790,6 +12071,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setMerchantTypes(profile.merchantTypes || []);
       setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
       setHasCuttingTraceability(profile.hasCuttingTraceability || false);
+      setHasOilCollection(profile.hasOilCollection || false);
       setBlockOutOfStockLots(profile.blockOutOfStockLots || false);
     }
   }, [profile]);
@@ -11802,6 +12084,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       isPreparationTimeMandatory,
       lotFormat: lotFormat || DEFAULT_LOT_FORMAT,
       hasCuttingTraceability,
+      hasOilCollection,
       blockOutOfStockLots
     });
   };
@@ -11873,6 +12156,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     isPreparationTimeMandatory !== (profile?.isPreparationTimeMandatory || false) ||
                     (lotFormat || DEFAULT_LOT_FORMAT) !== (profile?.lotFormat || DEFAULT_LOT_FORMAT) ||
                     hasCuttingTraceability !== (profile?.hasCuttingTraceability || false) ||
+                    hasOilCollection !== (profile?.hasOilCollection || false) ||
                     blockOutOfStockLots !== (profile?.blockOutOfStockLots || false);
 
   return (
@@ -12344,29 +12628,50 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
           </div>
         </section>
 
-        {/* Cutting Traceability Section */}
+        {/* Additional Sections Block */}
         <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <Scissors size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.cutting_traceability_section')}</h3>
+            <Layers size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.additional_sections_title') || "Activa secciones adicionales"}</h3>
           </div>
 
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-            {t('business_config.cutting_traceability_desc')}
+            {t('business_config.additional_sections_desc') || "Configura qué secciones opcionales deseas mostrar en tu menú principal."}
           </p>
 
-          <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-            <div style={{ position: 'relative', width: '48px', height: '24px', background: hasCuttingTraceability ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
-              <div style={{ position: 'absolute', left: hasCuttingTraceability ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
-            </div>
-            <input 
-              type="checkbox" 
-              style={{ display: 'none' }}
-              checked={hasCuttingTraceability} 
-              onChange={(e) => setHasCuttingTraceability(e.target.checked)} 
-            />
-            <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.cutting_traceability_enable')}</span>
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ position: 'relative', width: '48px', height: '24px', background: hasCuttingTraceability ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+                <div style={{ position: 'absolute', left: hasCuttingTraceability ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+              </div>
+              <input 
+                type="checkbox" 
+                style={{ display: 'none' }}
+                checked={hasCuttingTraceability} 
+                onChange={(e) => setHasCuttingTraceability(e.target.checked)} 
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Scissors size={18} color="var(--corp-green)" />
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.cutting_traceability_enable')}</span>
+              </div>
+            </label>
+
+            <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ position: 'relative', width: '48px', height: '24px', background: hasOilCollection ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+                <div style={{ position: 'absolute', left: hasOilCollection ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+              </div>
+              <input 
+                type="checkbox" 
+                style={{ display: 'none' }}
+                checked={hasOilCollection} 
+                onChange={(e) => setHasOilCollection(e.target.checked)} 
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Droplets size={18} color="var(--corp-green)" />
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.oil_collection_enable') || "Activar retirada de aceites de fritura"}</span>
+              </div>
+            </label>
+          </div>
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>

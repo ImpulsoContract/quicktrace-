@@ -120,7 +120,8 @@
     "waste": "Resíduos",
     "inventory": "Estoque",
     "customers": "Clientes",
-    "cutting_traceability": "Rastreabilidade de desmanche"
+    "cutting_traceability": "Rastreabilidade de desmanche",
+    "oil_collection": "Recolha de óleos de fritura"
   },
   "inventory": {
     "title": "Controle de Estoque",
@@ -233,7 +234,10 @@
     "block_out_of_stock_lots_section": "Permitir usar lotes sem estoque nas elaborações",
     "block_out_of_stock_lots_desc": "Configure se é permitido utilizar lotes de ingredientes esgotados ao registrar elaborações.",
     "block_out_of_stock_lots_enable": "Não permitir o uso de lotes de ingredientes sem estoque (esgotados)",
-    "block_out_of_stock_lots_help": "Por padrão esta caixa está desmarcada, permitindo selecionar qualquer lote. Se marcada, o sistema impedirá de selecionar ou usar lotes de ingredientes cujo estoque restante seja 0 nas elaborações."
+    "block_out_of_stock_lots_help": "Por padrão esta caixa está desmarcada, permitindo selecionar qualquer lote. Se marcada, o sistema impedirá de selecionar ou usar lotes de ingredientes cujo estoque restante seja 0 nas elaborações.",
+    "additional_sections_title": "Ativar secções adicionais",
+    "additional_sections_desc": "Configure quais secções opcionais deseja exibir no seu menu principal.",
+    "oil_collection_enable": "Ativar recolha de óleos de fritura"
   },
   "dashboard": {
     "welcome": "Olá",
@@ -1407,5 +1411,27 @@
     "salt": "Sal",
     "no_nutritional_data": "Informação nutricional não especificada.",
     "instructions_section": "5. Processo de Elaboração / Modo de Uso"
+  },
+  "oil_collection": {
+    "title": "Recolha de óleos de fritura",
+    "description": "Faça a gestão e registe a troca e recolha de óleos de fritura.",
+    "new_collection": "Nova recolha de óleo",
+    "edit_collection": "Editar registo de óleo",
+    "load_date": "Data de carregamento de óleo novo",
+    "frying_cycles": "Número de frituras",
+    "frying_cycles_placeholder": "Ex: 10, 15...",
+    "change_date": "Data de troca de óleo usado",
+    "person": "Pessoa responsável",
+    "person_placeholder": "Nome do responsável...",
+    "incidents": "Incidentes",
+    "incidents_placeholder": "Observações ou incidentes detetados...",
+    "no_records": "Não existem registos de recolhas de óleos de fritura.",
+    "save": "Guardar registo",
+    "table_load_date": "Data carregamento novo",
+    "table_frying_cycles": "N.º frituras",
+    "table_change_date": "Data troca usado",
+    "table_person": "Responsável",
+    "table_incidents": "Incidentes",
+    "delete_confirm": "Tem a certeza de que deseja eliminar este registo de recolha de óleo?"
   }
 }

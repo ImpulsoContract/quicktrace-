@@ -116,8 +116,10 @@ model ClientProfile {
   customers                  Customer[]
   elaborationSales           ElaborationSale[]
   hasCuttingTraceability     Boolean           @default(false)
+  hasOilCollection           Boolean           @default(false)
   blockOutOfStockLots        Boolean           @default(false)
   cuttingRecords             CuttingRecord[]
+  oilCollections             OilCollection[]
 }
 
 model Customer {
@@ -607,5 +609,22 @@ model CuttingRecord {
 
   @@index([clientProfileId])
   @@index([lote])
+}
+
+model OilCollection {
+  id           Int      @id @default(autoincrement())
+  loadDate     DateTime @default(now())
+  fryingCycles Int      @default(0)
+  changeDate   DateTime @default(now())
+  personName   String
+  incidents    String?  @db.Text
+
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientProfileId])
 }
 
