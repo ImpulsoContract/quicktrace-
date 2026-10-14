@@ -12,7 +12,7 @@ import {
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
-  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban
+  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -2611,6 +2611,344 @@ export default function ClientDashboard() {
     } catch (error) {
       console.error("Error generating providers report:", error);
       alert(t('alerts.request_error'));
+    }
+  };
+
+  const handleDownloadRecipeTechnicalSheet = async (recipe) => {
+    try {
+      if (!recipe) return;
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 14;
+      const contentWidth = pageWidth - margin * 2;
+
+      // 1. Header Banner / Box
+      doc.setFillColor(245, 248, 240);
+      doc.roundedRect(margin, 12, contentWidth, 24, 2, 2, 'F');
+      doc.setDrawColor(210, 225, 195);
+      doc.roundedRect(margin, 12, contentWidth, 24, 2, 2, 'S');
+
+      // Title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(66, 98, 22);
+      doc.text((t('recipes.technical_sheet_title') || "FICHA TÉCNICA DE PRODUCTO").toUpperCase(), margin + 5, 21);
+
+      doc.setFontSize(11);
+      doc.setTextColor(30, 41, 59);
+      doc.text(recipe.name || "-", margin + 5, 29);
+
+      // Business Info (Top Right of Banner)
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      const companyName = profile?.razonSocial || profile?.personName || "QuickTrace";
+      const companyNif = profile?.nif ? `NIF: ${profile.nif}` : "";
+      const dateEmission = `${t('recipes.emission_date') || "Fecha"}: ${formatDateDDMMYYYY(new Date())}`;
+
+      doc.text(companyName, pageWidth - margin - 5, 20, { align: 'right' });
+      const subInfo = [companyNif, dateEmission].filter(Boolean).join("  |  ");
+      doc.text(subInfo, pageWidth - margin - 5, 26, { align: 'right' });
+      if (profile?.city || profile?.province) {
+        doc.text(`${profile.city || ''}${profile.city && profile.province ? ', ' : ''}${profile.province || ''}`, pageWidth - margin - 5, 31, { align: 'right' });
+      }
+
+      let currentY = 42;
+
+      // Helper for section headings
+      const drawSectionHeader = (title) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(66, 98, 22);
+        doc.text(title.toUpperCase(), margin, currentY);
+        doc.setDrawColor(66, 98, 22);
+        doc.setLineWidth(0.5);
+        doc.line(margin, currentY + 1.5, pageWidth - margin, currentY + 1.5);
+        currentY += 6;
+      };
+
+      // 2. Section: General Product Details
+      drawSectionHeader(t('recipes.general_info_section') || "1. DATOS GENERALES DEL PRODUCTO");
+
+      const expiryTypeText = recipe.expiryType === 'BEST_BEFORE' 
+        ? (t('recipes.best_before') || "Consumo preferente") 
+        : (t('recipes.expiration') || "Fecha de caducidad");
+      
+      const lifeSpanText = recipe.expiryDays && Number(recipe.expiryDays) > 0 
+        ? `${recipe.expiryDays} ${t('common.days') || "días"} (${expiryTypeText})` 
+        : (t('recipes.not_specified') || "No especificada");
+
+      const generalData = [
+        [
+          { content: t('recipes.product_name') || "Denominación:", styles: { fontStyle: 'bold', cellWidth: 42 } },
+          { content: recipe.name || "-", styles: { cellWidth: 55 } },
+          { content: t('recipes.shelf_life') || "Vida útil:", styles: { fontStyle: 'bold', cellWidth: 42 } },
+          { content: lifeSpanText, styles: { cellWidth: 'auto' } }
+        ],
+        [
+          { content: t('recipes.conservation') || "Conservación:", styles: { fontStyle: 'bold' } },
+          { content: recipe.conservationInstructions || (t('recipes.standard_conservation') || "Conservar en lugar fresco y seco"), styles: { cellWidth: 55 } },
+          { content: t('recipes.drying_room') || "Secadero / Curado:", styles: { fontStyle: 'bold' } },
+          { content: recipe.hasDryingRoom ? (t('common.yes') || "Sí") : (t('common.no') || "No"), styles: { cellWidth: 'auto' } }
+        ],
+        [
+          { content: t('recipes.barcode_label') || "Código de barras:", styles: { fontStyle: 'bold' } },
+          { content: recipe.hasBarcode && recipe.barcode ? recipe.barcode : (t('common.not_applicable') || "N/A"), styles: { cellWidth: 55 } },
+          { content: t('recipes.updated_at') || "Última revisión:", styles: { fontStyle: 'bold' } },
+          { content: recipe.updatedAt ? formatDateDDMMYYYY(recipe.updatedAt) : formatDateDDMMYYYY(new Date()), styles: { cellWidth: 'auto' } }
+        ]
+      ];
+
+      autoTable(doc, {
+        body: generalData,
+        startY: currentY,
+        theme: 'plain',
+        styles: { fontSize: 8.5, cellPadding: 2, textColor: [30, 41, 59] },
+        margin: { left: margin, right: margin }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 6;
+
+      // 3. Section: Ingredients & Composition
+      drawSectionHeader(t('recipes.ingredients_section') || "2. INGREDIENTES Y COMPOSICIÓN");
+
+      const sortedIngredients = [...(recipe.ingredients || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
+      
+      const ingredientsRows = sortedIngredients.map((ing, idx) => {
+        let details = ing.name || "-";
+        if (ing.expandItem && ing.expandedText) {
+          details += `\n(${ing.expandedText})`;
+        }
+        return [
+          String(idx + 1),
+          details,
+          ing.amount ? `${ing.amount} ${ing.unit || ''}`.trim() : "-"
+        ];
+      });
+
+      autoTable(doc, {
+        head: [[
+          "#",
+          t('recipes.col_ingredient') || "Ingrediente / Materia Prima",
+          t('recipes.col_amount') || "Cantidad / Fórmula"
+        ]],
+        body: ingredientsRows.length > 0 ? ingredientsRows : [[ "-", t('recipes.no_ingredients_defined') || "No hay ingredientes definidos", "-" ]],
+        startY: currentY,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [66, 98, 22],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 8.5
+        },
+        styles: {
+          fontSize: 8.5,
+          cellPadding: 2.5,
+          textColor: [30, 41, 59],
+          valign: 'middle'
+        },
+        columnStyles: {
+          0: { cellWidth: 12, halign: 'center' },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 50, halign: 'right' }
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 246]
+        },
+        margin: { left: margin, right: margin }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 6;
+
+      if (currentY > pageHeight - 65) {
+        doc.addPage();
+        currentY = 16;
+      }
+
+      // 4. Section: Allergens Declaration (Regulation EU 1169/2011)
+      drawSectionHeader(t('recipes.allergens_section') || "3. DECLARACIÓN DE ALÉRGENOS (Reglamento UE 1169/2011)");
+
+      const allergensList = (recipe.allergens || [])
+        .map(a => t(`allergens.list.${a}`) || a);
+
+      let allergensContent = "";
+      if (allergensList.length > 0) {
+        allergensContent = `${t('recipes.allergens_contains') || "CONTIENE:"} ${allergensList.join(', ')}.`;
+      } else {
+        allergensContent = t('recipes.allergens_none') || "No contiene alérgenos declarados de presencia obligatoria según fórmula.";
+      }
+
+      autoTable(doc, {
+        body: [[
+          {
+            content: allergensContent,
+            styles: {
+              fillColor: allergensList.length > 0 ? [254, 242, 242] : [240, 253, 244],
+              textColor: allergensList.length > 0 ? [153, 27, 27] : [22, 101, 52],
+              fontStyle: 'bold',
+              cellPadding: 3.5,
+              fontSize: 8.5
+            }
+          }
+        ]],
+        startY: currentY,
+        theme: 'plain',
+        margin: { left: margin, right: margin }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 6;
+
+      if (currentY > pageHeight - 65) {
+        doc.addPage();
+        currentY = 16;
+      }
+
+      // 5. Section: Nutritional Information (per 100g)
+      drawSectionHeader(t('recipes.nutritional_info_section') || "4. INFORMACIÓN NUTRICIONAL MEDIA (por 100g)");
+
+      const hasNutritionalData = [
+        recipe.energyValue, recipe.fats, recipe.saturatedFats,
+        recipe.carbohydrates, recipe.sugars, recipe.proteins, recipe.salt
+      ].some(v => v !== null && v !== undefined && String(v).trim() !== "");
+
+      if (hasNutritionalData) {
+        const nutritionRows = [
+          [t('recipes.energy_value') || "Valor energético", recipe.energyValue ? `${recipe.energyValue} kJ / kcal` : "-"],
+          [t('recipes.fats') || "Grasas", recipe.fats ? `${recipe.fats} g` : "-"],
+          [`  ${t('recipes.saturated_fats') || "de las cuales saturadas"}`, recipe.saturatedFats ? `${recipe.saturatedFats} g` : "-"],
+          [t('recipes.carbohydrates') || "Hidratos de carbono", recipe.carbohydrates ? `${recipe.carbohydrates} g` : "-"],
+          [`  ${t('recipes.sugars') || "de los cuales azúcares"}`, recipe.sugars ? `${recipe.sugars} g` : "-"],
+          [t('recipes.proteins') || "Proteínas", recipe.proteins ? `${recipe.proteins} g` : "-"],
+          [t('recipes.salt') || "Sal", recipe.salt ? `${recipe.salt} g` : "-"]
+        ];
+
+        autoTable(doc, {
+          head: [[
+            t('recipes.nutritional_parameter') || "Parámetro Nutricional",
+            t('recipes.per_100g') || "Cantidad por 100g"
+          ]],
+          body: nutritionRows,
+          startY: currentY,
+          theme: 'striped',
+          headStyles: {
+            fillColor: [66, 98, 22],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 8.5
+          },
+          styles: {
+            fontSize: 8.5,
+            cellPadding: 2,
+            textColor: [30, 41, 59]
+          },
+          columnStyles: {
+            0: { cellWidth: 100 },
+            1: { cellWidth: 50, halign: 'right' }
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 246]
+          },
+          margin: { left: margin, right: margin }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 6;
+      } else {
+        autoTable(doc, {
+          body: [[
+            {
+              content: t('recipes.no_nutritional_data') || "Información nutricional no especificada.",
+              styles: { textColor: [100, 116, 139], fontSize: 8.5, fontStyle: 'italic', cellPadding: 2.5 }
+            }
+          ]],
+          startY: currentY,
+          theme: 'plain',
+          margin: { left: margin, right: margin }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 6;
+      }
+
+      // 6. Section: Elaboration Instructions (if any)
+      if (recipe.elaborationInstructions && recipe.elaborationInstructions.trim()) {
+        if (currentY > pageHeight - 50) {
+          doc.addPage();
+          currentY = 16;
+        }
+
+        drawSectionHeader(t('recipes.instructions_section') || "5. PROCESO DE ELABORACIÓN / MODO DE EMPLEO");
+
+        autoTable(doc, {
+          body: [[
+            {
+              content: recipe.elaborationInstructions.trim(),
+              styles: { textColor: [30, 41, 59], fontSize: 8.5, cellPadding: 3, lineHeight: 1.3 }
+            }
+          ]],
+          startY: currentY,
+          theme: 'plain',
+          margin: { left: margin, right: margin }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 6;
+      }
+
+      // Barcode image if present
+      if (recipe.hasBarcode && recipe.barcode) {
+        if (currentY > pageHeight - 35) {
+          doc.addPage();
+          currentY = 16;
+        }
+        try {
+          const canvas = document.createElement('canvas');
+          JsBarcode(canvas, recipe.barcode, {
+            format: "CODE128",
+            displayValue: true,
+            fontSize: 14,
+            margin: 0,
+            height: 35
+          });
+          const barcodeDataUrl = canvas.toDataURL("image/jpeg");
+          doc.addImage(barcodeDataUrl, 'JPEG', margin, currentY, 45, 18);
+          currentY += 22;
+        } catch (bErr) {
+          console.warn("Could not render barcode for recipe technical sheet:", bErr);
+        }
+      }
+
+      // 7. Page numbering & Footer for all pages
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(140);
+        doc.setDrawColor(220, 225, 215);
+        doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+
+        doc.text(
+          `QuickTrace · Ficha Técnica: ${recipe.name}`,
+          margin,
+          pageHeight - 8
+        );
+        doc.text(
+          `${t('common.page') || "Página"} ${i} / ${totalPages}`,
+          pageWidth - margin,
+          pageHeight - 8,
+          { align: 'right' }
+        );
+      }
+
+      const safeName = (recipe.name || "receta").replace(/[^a-zA-Z0-9_-]/g, '_');
+      doc.save(`Ficha_Tecnica_${safeName}.pdf`);
+    } catch (err) {
+      console.error("Error generating recipe technical sheet PDF:", err);
+      alert(t('alerts.request_error') || "Error al generar la ficha técnica en PDF");
     }
   };
 
@@ -8281,6 +8619,14 @@ export default function ClientDashboard() {
                           </div>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button 
+                              type="button"
+                              onClick={() => handleDownloadRecipeTechnicalSheet(recipe)}
+                              title={t('recipes.download_technical_sheet') || "Descargar ficha técnica en PDF"}
+                              style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                              <FileText size={16} />
+                            </button>
+                            <button 
                               onClick={() => handleEditRecipe(recipe)}
                               style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
                             >
@@ -8295,20 +8641,48 @@ export default function ClientDashboard() {
                           </div>
                         </div>
                         
-                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                          <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button 
+                              onClick={() => handleDuplicateRecipe(recipe)}
+                              className="btn-secondary"
+                              style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            >
+                              <Plus size={14} /> {t('common.duplicate') || "Duplicar"}
+                            </button>
+                            <button 
+                              onClick={() => handleOpenRecipe(recipe)}
+                              className="btn-primary"
+                              style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            >
+                              <PlayCircle size={14} /> {t('dashboard.elaborar') || "Elaborar"}
+                            </button>
+                          </div>
+
                           <button 
-                            onClick={() => handleDuplicateRecipe(recipe)}
+                            type="button"
+                            onClick={() => handleDownloadRecipeTechnicalSheet(recipe)}
                             className="btn-secondary"
-                            style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            style={{ 
+                              width: '100%', 
+                              padding: '0.65rem 1rem', 
+                              fontSize: '0.82rem', 
+                              fontWeight: '600',
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              gap: '0.5rem',
+                              background: '#f8fafc',
+                              color: '#1e293b',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '0.5rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            title={t('recipes.download_technical_sheet') || "Descargar ficha técnica en PDF"}
                           >
-                            <Plus size={14} /> {t('common.duplicate') || "Duplicar"}
-                          </button>
-                          <button 
-                            onClick={() => handleOpenRecipe(recipe)}
-                            className="btn-primary"
-                            style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                          >
-                            <PlayCircle size={14} /> {t('dashboard.elaborar') || "Elaborar"}
+                            <Download size={14} style={{ color: 'var(--corp-green)' }} />
+                            <span>{t('recipes.download_technical_sheet') || "Descargar ficha técnica en PDF"}</span>
                           </button>
                         </div>
                       </div>
