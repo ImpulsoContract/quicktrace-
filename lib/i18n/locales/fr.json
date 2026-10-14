@@ -159,7 +159,8 @@
     "col_invoice": "Bon de livraison/Facture",
     "col_quantity": "Quantité",
     "col_elaboration": "Élaboration",
-    "col_recipe": "Recette"
+    "col_recipe": "Recette",
+    "status_out_of_stock_blocked": "Épuisé (Bloqué)"
   },
   "business_config": {
     "title": "Configuration de l'Entreprise",
@@ -225,7 +226,11 @@
     "api_docs_no_chambers_warning": "Vous n'avez pas encore configuré de chambres. Créez vos chambres dans la section Chambres pour enregistrer leurs températures.",
     "cutting_traceability_section": "Traçabilité de découpe",
     "cutting_traceability_desc": "Activez ou désactivez la traçabilité de découpe. Une fois activée, une section dédiée sera disponible dans le menu principal pour enregistrer et consulter les pièces, numéros de lot, dates de vente et photos d'étiquettes.",
-    "cutting_traceability_enable": "Activer la traçabilité de découpe"
+    "cutting_traceability_enable": "Activer la traçabilité de découpe",
+    "block_out_of_stock_lots_section": "Autoriser l'utilisation de lots en rupture de stock dans les élaborations",
+    "block_out_of_stock_lots_desc": "Configurez si l'utilisation de lots d'ingrédients épuisés est autorisée lors de l'enregistrement des élaborations.",
+    "block_out_of_stock_lots_enable": "Ne pas autoriser l'utilisation de lots d'ingrédients en rupture de stock (épuisés)",
+    "block_out_of_stock_lots_help": "Par défaut cette case est décochée, permettant de sélectionner n'importe quel lot. Si vous la cochez, le système empêchera de sélectionner ou d'utiliser des lots d'ingrédients dont le stock restant est à 0 dans les élaborations."
   },
   "dashboard": {
     "welcome": "Bonjour",
@@ -768,7 +773,9 @@
     "col_lot": "Numéro de lot",
     "col_date": "Date",
     "copy_and_use_lot": "Copier et utiliser",
-    "lot_copied": "Lot assigné et copié !"
+    "lot_copied": "Lot assigné et copié !",
+    "lot_out_of_stock_blocked": "Ce lot est en rupture de stock et la configuration de votre entreprise n'autorise pas l'utilisation de lots épuisés.",
+    "cannot_save_out_of_stock_lot": "Le lot '{lot}' de l'ingrédient '{ingredient}' est épuisé et votre configuration n'autorise pas l'utilisation de lots en rupture de stock."
   },
   "goods_receipt_form": {
     "product": "Produit",

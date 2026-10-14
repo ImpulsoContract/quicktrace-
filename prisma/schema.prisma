@@ -116,6 +116,7 @@ model ClientProfile {
   customers                  Customer[]
   elaborationSales           ElaborationSale[]
   hasCuttingTraceability     Boolean           @default(false)
+  blockOutOfStockLots        Boolean           @default(false)
   cuttingRecords             CuttingRecord[]
 }
 

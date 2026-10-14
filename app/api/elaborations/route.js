@@ -251,6 +251,69 @@ export async function POST(req) {
       totalCost += amount * price;
     });
 
+    if (profile.blockOutOfStockLots && Array.isArray(ingredients)) {
+      for (const ing of ingredients) {
+        const lot = ing.lote ? ing.lote.trim() : "";
+        const ingName = ing.name ? ing.name.trim().toLowerCase() : "";
+        if (!lot || !ingName) continue;
+
+        const matchingReceipts = await prisma.goodsReceipt.findMany({
+          where: {
+            clientProfileId: profile.id,
+            lote: { equals: lot, mode: 'insensitive' }
+          },
+          select: {
+            relatedIngredients: true,
+            relatedQuantities: true,
+            quantity: true
+          }
+        });
+
+        if (matchingReceipts.length > 0) {
+          let received = 0;
+          matchingReceipts.forEach(gr => {
+            const relQs = (gr.relatedQuantities && typeof gr.relatedQuantities === 'object') ? gr.relatedQuantities : {};
+            let foundInRel = false;
+            for (const [k, val] of Object.entries(relQs)) {
+              const lastColon = k.lastIndexOf(":");
+              const kName = lastColon !== -1 ? k.slice(0, lastColon).trim().toLowerCase() : k.trim().toLowerCase();
+              if (kName === ingName) {
+                received += parseFloat(val?.toString().replace(',', '.')) || 0;
+                foundInRel = true;
+              }
+            }
+            if (!foundInRel && gr.relatedIngredients && Array.isArray(gr.relatedIngredients)) {
+              if (gr.relatedIngredients.some(ri => ri.trim().toLowerCase() === ingName)) {
+                received += parseFloat(gr.quantity?.toString().replace(',', '.')) || 0;
+              }
+            }
+          });
+
+          const matchingConsumptions = await prisma.elaborationIngredient.findMany({
+            where: {
+              lote: { equals: lot, mode: 'insensitive' },
+              name: { equals: ing.name.trim(), mode: 'insensitive' },
+              elaboration: {
+                recipe: { clientProfileId: profile.id }
+              }
+            },
+            select: { realAmount: true }
+          });
+
+          let consumed = 0;
+          matchingConsumptions.forEach(ci => {
+            consumed += parseFloat(ci.realAmount?.toString().replace(',', '.')) || 0;
+          });
+
+          if (received > 0 && (received - consumed) <= 0) {
+            return NextResponse.json({
+              error: `El lote "${lot}" del ingrediente "${ing.name}" está agotado y tu configuración no permite utilizar lotes sin stock.`
+            }, { status: 400 });
+          }
+        }
+      }
+    }
+
     const elaboration = await prisma.elaboration.create({
       data: {
         name,

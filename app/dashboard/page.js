@@ -12,7 +12,7 @@ import {
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
-  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers
+  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -2292,7 +2292,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.blockOutOfStockLots !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -3878,6 +3878,31 @@ export default function ClientDashboard() {
         return;
       }
 
+      if (profile?.blockOutOfStockLots) {
+        for (const ing of (selectedRecipe?.ingredients || [])) {
+          const lotEntered = elaboracionForm.ingredientes[ing.id]?.lote?.trim();
+          if (lotEntered) {
+            if (editingElaboration) {
+              const origIng = editingElaboration.ingredients?.find(ei => (ei.name || '').trim().toLowerCase() === (ing.name || '').trim().toLowerCase());
+              if (origIng && (origIng.lote || '').trim().toLowerCase() === lotEntered.toLowerCase()) {
+                continue;
+              }
+            }
+            const normName = ing.name ? ing.name.trim().toLowerCase() : "";
+            const goods = suggestedLotes[normName]?.goods || [];
+            const matchGood = goods.find(g => getLotString(g).trim().toLowerCase() === lotEntered.toLowerCase());
+            if (matchGood && matchGood.remainingStock !== undefined && matchGood.remainingStock !== null && matchGood.remainingStock <= 0) {
+              alert(
+                (t('traceability_form.cannot_save_out_of_stock_lot') || "El lote '{lot}' del ingrediente '{ingredient}' está agotado y tu configuración no permite usar lotes sin stock.")
+                  .replace('{lot}', lotEntered)
+                  .replace('{ingredient}', ing.name)
+              );
+              return;
+            }
+          }
+        }
+      }
+
       if (!elaboracionForm.titulo) {
         alert(t('alerts.missing_title'));
         return;
@@ -4940,6 +4965,9 @@ export default function ClientDashboard() {
                                         const lot = getLotString(item);
                                         const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
                                         const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
+                                        const isOutOfStock = typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
+                                        const isBlocked = profile?.blockOutOfStockLots && isOutOfStock;
+
                                         return (
                                           <span
                                             key={`gl-${lIdx}`}
@@ -4947,25 +4975,34 @@ export default function ClientDashboard() {
                                               display: 'inline-flex',
                                               alignItems: 'center',
                                               gap: '0.3rem',
-                                              background: isSelected ? 'rgba(2, 132, 199, 0.12)' : '#ffffff',
-                                              border: isSelected ? '1.5px solid #0284c7' : '1px solid #bae6fd',
+                                              background: isSelected ? 'rgba(2, 132, 199, 0.12)' : (isBlocked ? '#f8fafc' : '#ffffff'),
+                                              border: isSelected ? '1.5px solid #0284c7' : (isBlocked ? '1px dashed #cbd5e1' : '1px solid #bae6fd'),
                                               borderRadius: '0.375rem',
                                               padding: '0.15rem 0.45rem',
                                               fontSize: '0.72rem',
-                                              lineHeight: '1.2'
+                                              lineHeight: '1.2',
+                                              opacity: isBlocked ? 0.7 : 1
                                             }}
                                           >
                                             <button
                                               type="button"
-                                              onClick={() => handleIngredientChange(ing.id, 'lote', lot)}
-                                              title={t('traceability_form.click_to_use_lot') || "Hacer clic para usar este lote"}
+                                              disabled={isBlocked}
+                                              onClick={() => {
+                                                if (isBlocked) {
+                                                  alert(t('traceability_form.lot_out_of_stock_blocked') || "Este lote no tiene stock y la configuración de tu negocio no permite utilizar lotes agotados.");
+                                                  return;
+                                                }
+                                                handleIngredientChange(ing.id, 'lote', lot);
+                                              }}
+                                              title={isBlocked ? (t('traceability_form.lot_out_of_stock_blocked') || "Lote sin stock (bloqueado)") : (t('traceability_form.click_to_use_lot') || "Hacer clic para usar este lote")}
                                               style={{
                                                 background: 'none',
                                                 border: 'none',
                                                 padding: 0,
-                                                color: isSelected ? '#0369a1' : '#0284c7',
+                                                color: isBlocked ? '#94a3b8' : (isSelected ? '#0369a1' : '#0284c7'),
                                                 fontWeight: isSelected ? '700' : '600',
-                                                cursor: 'pointer',
+                                                cursor: isBlocked ? 'not-allowed' : 'pointer',
+                                                textDecoration: isBlocked ? 'line-through' : 'none',
                                                 fontSize: '0.72rem'
                                               }}
                                             >
@@ -4985,7 +5022,7 @@ export default function ClientDashboard() {
                                                 padding: '0.05rem 0.35rem',
                                                 borderRadius: '3px'
                                               }}>
-                                                {item.remainingStock > 0 ? `${t('dashboard.stock_label') || "Stock"}: ${item.remainingStock} ${ing.unit || ""}`.trim() : (t('inventory.status_out_of_stock') || "Sin stock")}
+                                                {item.remainingStock > 0 ? `${t('dashboard.stock_label') || "Stock"}: ${item.remainingStock} ${ing.unit || ""}`.trim() : (isBlocked ? (t('inventory.status_out_of_stock_blocked') || "Agotado (Bloqueado)") : (t('inventory.status_out_of_stock') || "Sin stock"))}
                                               </span>
                                             )}
                                             <button
@@ -10820,6 +10857,8 @@ export default function ClientDashboard() {
                       const dateVal = typeof item === 'object' && item !== null ? item.date : null;
                       const isCopied = copiedLotFeedback === lotVal;
                       const isCurrentLot = elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.lote === lotVal;
+                      const isOutOfStock = typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
+                      const isBlocked = profile?.blockOutOfStockLots && isOutOfStock;
 
                       return (
                         <tr 
@@ -10832,12 +10871,19 @@ export default function ClientDashboard() {
                         >
                           <td style={{ padding: '0.75rem 1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                              <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '0.9rem', color: isCurrentLot ? '#0369a1' : 'var(--text-main)' }}>
+                              <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '0.9rem', color: isBlocked ? '#94a3b8' : (isCurrentLot ? '#0369a1' : 'var(--text-main)'), textDecoration: isBlocked ? 'line-through' : 'none' }}>
                                 {lotVal}
                               </span>
                               <button
                                 type="button"
-                                onClick={() => handleUseLot(moreGoodsModalData.ingredientId, lotVal)}
+                                disabled={isBlocked}
+                                onClick={() => {
+                                  if (isBlocked) {
+                                    alert(t('traceability_form.lot_out_of_stock_blocked') || "Este lote no tiene stock y la configuración de tu negocio no permite utilizar lotes agotados.");
+                                    return;
+                                  }
+                                  handleUseLot(moreGoodsModalData.ingredientId, lotVal);
+                                }}
                                 className="btn-secondary"
                                 style={{
                                   fontSize: '0.72rem',
@@ -10846,15 +10892,17 @@ export default function ClientDashboard() {
                                   alignItems: 'center',
                                   gap: '0.3rem',
                                   borderRadius: '0.375rem',
-                                  background: isCopied ? '#dcfce7' : (isCurrentLot ? '#e0f2fe' : '#f1f5f9'),
-                                  color: isCopied ? '#166534' : (isCurrentLot ? '#0369a1' : 'var(--text-main)'),
-                                  border: isCopied ? '1px solid #86efac' : (isCurrentLot ? '1px solid #7dd3fc' : '1px solid #cbd5e1'),
+                                  background: isBlocked ? '#f1f5f9' : (isCopied ? '#dcfce7' : (isCurrentLot ? '#e0f2fe' : '#f1f5f9')),
+                                  color: isBlocked ? '#94a3b8' : (isCopied ? '#166534' : (isCurrentLot ? '#0369a1' : 'var(--text-main)')),
+                                  border: isBlocked ? '1px dashed #cbd5e1' : (isCopied ? '1px solid #86efac' : (isCurrentLot ? '1px solid #7dd3fc' : '1px solid #cbd5e1')),
+                                  cursor: isBlocked ? 'not-allowed' : 'pointer',
+                                  opacity: isBlocked ? 0.6 : 1,
                                   fontWeight: '600'
                                 }}
-                                title={t('traceability_form.copy_and_use_lot') || "Copiar y usar lote"}
+                                title={isBlocked ? (t('traceability_form.lot_out_of_stock_blocked') || "Lote sin stock (bloqueado)") : (t('traceability_form.copy_and_use_lot') || "Copiar y usar lote")}
                               >
-                                {isCopied ? <Check size={12} color="#166534" /> : <Copy size={12} />}
-                                <span>{isCopied ? (t('traceability_form.lot_copied') || "¡Copiado!") : (t('traceability_form.copy_and_use_lot') || "Copiar y usar")}</span>
+                                {isBlocked ? <Ban size={12} color="#94a3b8" /> : (isCopied ? <Check size={12} color="#166534" /> : <Copy size={12} />)}
+                                <span>{isBlocked ? (t('inventory.status_out_of_stock_blocked') || "Agotado") : (isCopied ? (t('traceability_form.lot_copied') || "¡Copiado!") : (t('traceability_form.copy_and_use_lot') || "Copiar y usar"))}</span>
                               </button>
                             </div>
                           </td>
@@ -11224,6 +11272,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [newMerchantType, setNewMerchantType] = useState("");
   const [lotFormat, setLotFormat] = useState(profile?.lotFormat || DEFAULT_LOT_FORMAT);
   const [hasCuttingTraceability, setHasCuttingTraceability] = useState(profile?.hasCuttingTraceability || false);
+  const [blockOutOfStockLots, setBlockOutOfStockLots] = useState(profile?.blockOutOfStockLots || false);
 
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
@@ -11237,6 +11286,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setMerchantTypes(profile.merchantTypes || []);
       setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
       setHasCuttingTraceability(profile.hasCuttingTraceability || false);
+      setBlockOutOfStockLots(profile.blockOutOfStockLots || false);
     }
   }, [profile]);
 
@@ -11247,7 +11297,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       laborCostHourlyRate,
       isPreparationTimeMandatory,
       lotFormat: lotFormat || DEFAULT_LOT_FORMAT,
-      hasCuttingTraceability
+      hasCuttingTraceability,
+      blockOutOfStockLots
     });
   };
 
@@ -11317,7 +11368,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     laborCostHourlyRate !== (profile?.laborCostHourlyRate || 0) ||
                     isPreparationTimeMandatory !== (profile?.isPreparationTimeMandatory || false) ||
                     (lotFormat || DEFAULT_LOT_FORMAT) !== (profile?.lotFormat || DEFAULT_LOT_FORMAT) ||
-                    hasCuttingTraceability !== (profile?.hasCuttingTraceability || false);
+                    hasCuttingTraceability !== (profile?.hasCuttingTraceability || false) ||
+                    blockOutOfStockLots !== (profile?.blockOutOfStockLots || false);
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '800px', paddingBottom: '4rem' }}>
@@ -11810,6 +11862,57 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               onChange={(e) => setHasCuttingTraceability(e.target.checked)} 
             />
             <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.cutting_traceability_enable')}</span>
+          </label>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+              <AlertCircle size={16} /> {t('business_config.save_reminder')}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+            <button 
+              onClick={handleSave}
+              className="btn-primary" 
+              disabled={loading || !hasChanges}
+              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save')}</>}
+            </button>
+          </div>
+        </section>
+
+        {/* Out of Stock Lots Section */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <Layers size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
+              {t('business_config.block_out_of_stock_lots_section') || "Permitir usar lotes sin stock en las elaboraciones"}
+            </h3>
+          </div>
+
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+            {t('business_config.block_out_of_stock_lots_desc') || "Configura si se permite utilizar lotes de ingredientes que ya no disponen de existencias al registrar elaboraciones."}
+          </p>
+
+          <label className="switch-container" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', cursor: 'pointer', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+            <div style={{ position: 'relative', width: '48px', height: '24px', minWidth: '48px', background: blockOutOfStockLots ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s', marginTop: '2px' }}>
+              <div style={{ position: 'absolute', left: blockOutOfStockLots ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+            </div>
+            <input 
+              type="checkbox" 
+              style={{ display: 'none' }}
+              checked={blockOutOfStockLots} 
+              onChange={(e) => setBlockOutOfStockLots(e.target.checked)} 
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <span style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                {t('business_config.block_out_of_stock_lots_enable') || "No permitir utilizar lotes de ingredientes sin stock (agotados)"}
+              </span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                {t('business_config.block_out_of_stock_lots_help') || "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones."}
+              </span>
+            </div>
           </label>
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>

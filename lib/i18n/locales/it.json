@@ -159,7 +159,8 @@
     "col_invoice": "DDT/Fattura",
     "col_quantity": "Quantità",
     "col_elaboration": "Elaborazione",
-    "col_recipe": "Ricetta"
+    "col_recipe": "Ricetta",
+    "status_out_of_stock_blocked": "Esaurito (Bloccato)"
   },
   "business_config": {
     "title": "Configurazione dell'Attività",
@@ -225,7 +226,11 @@
     "api_docs_no_chambers_warning": "Non hai ancora configurato nessuna camera. Crea le tue camere nella sezione Camere per registrare le loro temperature.",
     "cutting_traceability_section": "Tracciabilità di sezionamento",
     "cutting_traceability_desc": "Attiva o disattiva la tracciabilità di sezionamento. Quando abilitata, sarà disponibile una sezione dedicata nel menu principale per registrare e consultare tagli, numeri di lotto, date di vendita e foto delle etichette.",
-    "cutting_traceability_enable": "Abilita tracciabilità di sezionamento"
+    "cutting_traceability_enable": "Abilita tracciabilità di sezionamento",
+    "block_out_of_stock_lots_section": "Consentire l'uso di lotti esauriti nelle elaborazioni",
+    "block_out_of_stock_lots_desc": "Configura se consentire l'utilizzo di lotti di ingredienti esauriti durante la registrazione delle elaborazioni.",
+    "block_out_of_stock_lots_enable": "Non consentire l'utilizzo di lotti di ingredienti esauriti",
+    "block_out_of_stock_lots_help": "Per impostazione predefinita questa casella non è selezionata, consentendo di selezionare qualsiasi lotto. Se selezionata, il sistema impedirà di selezionare o utilizzare lotti di ingredienti con giacenza 0 nelle elaborazioni."
   },
   "dashboard": {
     "welcome": "Ciao",
@@ -768,7 +773,9 @@
     "col_lot": "Numero di lotto",
     "col_date": "Data",
     "copy_and_use_lot": "Copia e usa",
-    "lot_copied": "Lotto assegnato e copiato!"
+    "lot_copied": "Lotto assegnato e copiato!",
+    "lot_out_of_stock_blocked": "Questo lotto è esaurito e la configurazione aziendale non consente l'uso di lotti esauriti.",
+    "cannot_save_out_of_stock_lot": "Il lotto '{lot}' dell'ingrediente '{ingredient}' è esaurito e la tua configurazione non consente l'uso di lotti esauriti."
   },
   "goods_receipt_form": {
     "product": "Prodotto",

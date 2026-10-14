@@ -159,7 +159,8 @@
     "col_invoice": "Guia/Fatura",
     "col_quantity": "Quantidade",
     "col_elaboration": "Elaboração",
-    "col_recipe": "Receita"
+    "col_recipe": "Receita",
+    "status_out_of_stock_blocked": "Esgotado (Bloqueado)"
   },
   "business_config": {
     "title": "Configuração do Negócio",
@@ -225,7 +226,11 @@
     "api_docs_no_chambers_warning": "Você ainda não tem câmaras configuradas. Crie suas câmaras na seção Câmaras para poder registrar suas temperaturas.",
     "cutting_traceability_section": "Rastreabilidade de desmanche",
     "cutting_traceability_desc": "Ative ou desative a rastreabilidade de desmanche. Ao ativá-la, você terá uma seção dedicada no menu principal para registrar e consultar peças, números de lote, datas de venda e fotos de etiquetas.",
-    "cutting_traceability_enable": "Ativar rastreabilidade de desmanche"
+    "cutting_traceability_enable": "Ativar rastreabilidade de desmanche",
+    "block_out_of_stock_lots_section": "Permitir usar lotes sem estoque nas elaborações",
+    "block_out_of_stock_lots_desc": "Configure se é permitido utilizar lotes de ingredientes esgotados ao registrar elaborações.",
+    "block_out_of_stock_lots_enable": "Não permitir o uso de lotes de ingredientes sem estoque (esgotados)",
+    "block_out_of_stock_lots_help": "Por padrão esta caixa está desmarcada, permitindo selecionar qualquer lote. Se marcada, o sistema impedirá de selecionar ou usar lotes de ingredientes cujo estoque restante seja 0 nas elaborações."
   },
   "dashboard": {
     "welcome": "Olá",
@@ -765,7 +770,9 @@
     "col_lot": "Número do lote",
     "col_date": "Data",
     "copy_and_use_lot": "Copiar e usar",
-    "lot_copied": "Lote atribuído e copiado!"
+    "lot_copied": "Lote atribuído e copiado!",
+    "lot_out_of_stock_blocked": "Este lote não tem estoque e as configurações da empresa não permitem o uso de lotes esgotados.",
+    "cannot_save_out_of_stock_lot": "O lote '{lot}' do ingrediente '{ingredient}' está esgotado e a sua configuração não permite usar lotes sem estoque."
   },
   "goods_receipt_form": {
     "product": "Produto",

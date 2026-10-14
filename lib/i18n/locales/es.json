@@ -159,7 +159,8 @@
     "col_invoice": "Albarán/Factura",
     "col_quantity": "Cantidad",
     "col_elaboration": "Elaboración",
-    "col_recipe": "Receta"
+    "col_recipe": "Receta",
+    "status_out_of_stock_blocked": "Agotado (Bloqueado)"
   },
   "business_config": {
     "title": "Configuración del Negocio",
@@ -225,7 +226,11 @@
     "api_docs_no_chambers_warning": "No tienes cámaras configuradas todavía. Crea tus cámaras en el apartado de Cámaras para poder registrar sus temperaturas.",
     "cutting_traceability_section": "Trazabilidad del despiece",
     "cutting_traceability_desc": "Activa o desactiva la trazabilidad del despiece. Al activarla, tendrás disponible un apartado específico en el menú principal para registrar y consultar piezas, lotes, fechas de venta y fotos de etiquetas.",
-    "cutting_traceability_enable": "Activar trazabilidad del despiece"
+    "cutting_traceability_enable": "Activar trazabilidad del despiece",
+    "block_out_of_stock_lots_section": "Permitir usar lotes sin stock en las elaboraciones",
+    "block_out_of_stock_lots_desc": "Configura si se permite utilizar lotes de ingredientes que ya no disponen de existencias al registrar elaboraciones.",
+    "block_out_of_stock_lots_enable": "No permitir utilizar lotes de ingredientes sin stock (agotados)",
+    "block_out_of_stock_lots_help": "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones."
   },
   "dashboard": {
     "welcome": "Hola",
@@ -773,7 +778,9 @@
     "col_lot": "Número de lote",
     "col_date": "Fecha",
     "copy_and_use_lot": "Copiar y usar",
-    "lot_copied": "¡Lote asignado y copiado!"
+    "lot_copied": "¡Lote asignado y copiado!",
+    "lot_out_of_stock_blocked": "Este lote no tiene stock y la configuración de tu negocio no permite utilizar lotes agotados.",
+    "cannot_save_out_of_stock_lot": "El lote '{lot}' del ingrediente '{ingredient}' está agotado y tu configuración no permite usar lotes sin stock."
   },
   "goods_receipt_form": {
     "product": "Producto",

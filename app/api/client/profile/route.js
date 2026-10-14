@@ -94,7 +94,8 @@ export async function PATCH(request) {
       laborCostHourlyRate,
       isPreparationTimeMandatory,
       lotFormat,
-      hasCuttingTraceability
+      hasCuttingTraceability,
+      blockOutOfStockLots
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -115,7 +116,8 @@ export async function PATCH(request) {
         laborCostHourlyRate: laborCostHourlyRate !== undefined ? laborCostHourlyRate : undefined,
         isPreparationTimeMandatory: isPreparationTimeMandatory !== undefined ? isPreparationTimeMandatory : undefined,
         lotFormat: lotFormat !== undefined ? lotFormat : undefined,
-        hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined
+        hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined,
+        blockOutOfStockLots: blockOutOfStockLots !== undefined ? blockOutOfStockLots : undefined
       },
       include: { plan: true }
     });

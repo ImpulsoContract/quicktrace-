@@ -159,7 +159,8 @@
     "col_invoice": "Delivery note/Invoice",
     "col_quantity": "Quantity",
     "col_elaboration": "Elaboration",
-    "col_recipe": "Recipe"
+    "col_recipe": "Recipe",
+    "status_out_of_stock_blocked": "Out of stock (Blocked)"
   },
   "business_config": {
     "title": "Business Configuration",
@@ -225,7 +226,11 @@
     "api_docs_no_chambers_warning": "You don't have any chambers configured yet. Create your chambers in the Chambers section to log their temperatures.",
     "cutting_traceability_section": "Cutting traceability",
     "cutting_traceability_desc": "Enable or disable cutting traceability. When enabled, a dedicated section will be available in the main menu to log and view pieces, lot numbers, sale dates, and label photos.",
-    "cutting_traceability_enable": "Enable cutting traceability"
+    "cutting_traceability_enable": "Enable cutting traceability",
+    "block_out_of_stock_lots_section": "Allow using out-of-stock lots in elaborations",
+    "block_out_of_stock_lots_desc": "Configure whether out-of-stock ingredient lots can be used when registering elaborations.",
+    "block_out_of_stock_lots_enable": "Do not allow using out-of-stock ingredient lots (depleted)",
+    "block_out_of_stock_lots_help": "By default this checkbox is unchecked, allowing any lot to be selected. If checked, the system will prevent selecting or using ingredient lots with 0 remaining stock in elaborations."
   },
   "dashboard": {
     "welcome": "Hello",
@@ -773,7 +778,9 @@
     "col_lot": "Lot number",
     "col_date": "Date",
     "copy_and_use_lot": "Copy and use",
-    "lot_copied": "Lot assigned and copied!"
+    "lot_copied": "Lot assigned and copied!",
+    "lot_out_of_stock_blocked": "This lot is out of stock and your business settings do not allow using depleted lots.",
+    "cannot_save_out_of_stock_lot": "Lot '{lot}' of ingredient '{ingredient}' is out of stock and your settings do not allow using depleted lots."
   },
   "goods_receipt_form": {
     "product": "Product",

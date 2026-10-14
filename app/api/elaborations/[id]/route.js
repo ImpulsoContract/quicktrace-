@@ -74,6 +74,80 @@ export async function PATCH(req, { params }) {
         const amount = parseFloat((ing.realAmount || 0).toString().replace(',', '.')) || 0;
         totalCost += amount * price;
       });
+
+      const profile = await prisma.clientProfile.findUnique({
+        where: { id: profileId },
+        select: { blockOutOfStockLots: true }
+      });
+
+      if (profile?.blockOutOfStockLots) {
+        for (const ing of ingredients) {
+          const lot = ing.lote ? ing.lote.trim() : "";
+          const ingName = ing.name ? ing.name.trim().toLowerCase() : "";
+          if (!lot || !ingName) continue;
+
+          // If the lot was already assigned to this ingredient in the existing elaboration, allow it
+          const wasAlreadyAssigned = existingElab.ingredients?.some(
+            ei => (ei.name || '').trim().toLowerCase() === ingName && (ei.lote || '').trim().toLowerCase() === lot.toLowerCase()
+          );
+          if (wasAlreadyAssigned) continue;
+
+          const matchingReceipts = await prisma.goodsReceipt.findMany({
+            where: {
+              clientProfileId: profileId,
+              lote: { equals: lot, mode: 'insensitive' }
+            },
+            select: {
+              relatedIngredients: true,
+              relatedQuantities: true,
+              quantity: true
+            }
+          });
+
+          if (matchingReceipts.length > 0) {
+            let received = 0;
+            matchingReceipts.forEach(gr => {
+              const relQs = (gr.relatedQuantities && typeof gr.relatedQuantities === 'object') ? gr.relatedQuantities : {};
+              let foundInRel = false;
+              for (const [k, val] of Object.entries(relQs)) {
+                const lastColon = k.lastIndexOf(":");
+                const kName = lastColon !== -1 ? k.slice(0, lastColon).trim().toLowerCase() : k.trim().toLowerCase();
+                if (kName === ingName) {
+                  received += parseFloat(val?.toString().replace(',', '.')) || 0;
+                  foundInRel = true;
+                }
+              }
+              if (!foundInRel && gr.relatedIngredients && Array.isArray(gr.relatedIngredients)) {
+                if (gr.relatedIngredients.some(ri => ri.trim().toLowerCase() === ingName)) {
+                  received += parseFloat(gr.quantity?.toString().replace(',', '.')) || 0;
+                }
+              }
+            });
+
+            const matchingConsumptions = await prisma.elaborationIngredient.findMany({
+              where: {
+                lote: { equals: lot, mode: 'insensitive' },
+                name: { equals: ing.name.trim(), mode: 'insensitive' },
+                elaboration: {
+                  recipe: { clientProfileId: profileId }
+                }
+              },
+              select: { realAmount: true }
+            });
+
+            let consumed = 0;
+            matchingConsumptions.forEach(ci => {
+              consumed += parseFloat(ci.realAmount?.toString().replace(',', '.')) || 0;
+            });
+
+            if (received > 0 && (received - consumed) <= 0) {
+              return NextResponse.json({
+                error: `El lote "${lot}" del ingrediente "${ing.name}" está agotado y tu configuración no permite utilizar lotes sin stock.`
+              }, { status: 400 });
+            }
+          }
+        }
+      }
     }
 
     // Update elaboration and recreate ingredients (simpler than syncing for this case)
