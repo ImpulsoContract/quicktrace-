@@ -54,7 +54,8 @@ export async function GET(req) {
         endDate: true,
         typeAndOrigin: true,
         merchantTypes: true,
-        relatedIngredients: true
+        relatedIngredients: true,
+        relatedQuantities: true
       },
       orderBy: {
         date: "desc"
@@ -78,6 +79,8 @@ export async function GET(req) {
       select: {
         name: true,
         lote: true,
+        realAmount: true,
+        unit: true,
         createdAt: true,
         elaboration: {
           select: {
@@ -94,6 +97,32 @@ export async function GET(req) {
         createdAt: "desc"
       },
       take: 2000
+    });
+
+    // Precompute received and consumed by ingredient and lot
+    const consumedByLotAndIng = new Map();
+    elabIngredients.forEach(ei => {
+      const lot = ei.lote ? ei.lote.trim() : "";
+      const name = ei.name ? ei.name.trim().toLowerCase() : "";
+      if (!lot || !name) return;
+      const key = `${name}_${lot}`;
+      const amount = parseFloat(ei.realAmount?.toString().replace(',', '.')) || 0;
+      consumedByLotAndIng.set(key, (consumedByLotAndIng.get(key) || 0) + amount);
+    });
+
+    const receivedByLotAndIng = new Map();
+    goodsReceipts.forEach(gr => {
+      const lot = gr.lote ? gr.lote.trim() : "";
+      if (!lot) return;
+      const relatedQs = (gr.relatedQuantities && typeof gr.relatedQuantities === "object") ? gr.relatedQuantities : {};
+      for (const [key, val] of Object.entries(relatedQs)) {
+        const lastColon = key.lastIndexOf(":");
+        if (lastColon === -1) continue;
+        const kName = key.slice(0, lastColon).trim().toLowerCase();
+        const mapKey = `${kName}_${lot}`;
+        const added = parseFloat(val?.toString().replace(',', '.')) || 0;
+        receivedByLotAndIng.set(mapKey, (receivedByLotAndIng.get(mapKey) || 0) + added);
+      }
     });
 
     const result = {};
@@ -123,6 +152,11 @@ export async function GET(req) {
         if (isV2) {
           const alreadyExists = result[name].goods.some(g => g.id === gr.id || (g.lote === lot && String(g.date) === String(gr.date)));
           if (!alreadyExists && result[name].goods.length < 50) {
+            const mapKey = `${name}_${lot}`;
+            const rec = receivedByLotAndIng.get(mapKey);
+            const con = consumedByLotAndIng.get(mapKey) || 0;
+            const remaining = rec !== undefined ? Math.max(0, Math.round((rec - con) * 10000) / 10000) : null;
+
             result[name].goods.push({
               id: gr.id,
               lote: lot,
@@ -131,6 +165,7 @@ export async function GET(req) {
               providerName: gr.providerName || "",
               invoiceNumber: gr.invoiceNumber || "",
               quantity: gr.quantity || "",
+              remainingStock: remaining,
               manufacturingTemp: gr.manufacturingTemp || "",
               endDate: gr.endDate || "",
               typeAndOrigin: gr.typeAndOrigin || "",

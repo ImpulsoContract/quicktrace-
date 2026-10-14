@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { 
   ChefHat, History, LogOut, Calculator, RotateCcw,
@@ -12,7 +12,7 @@ import {
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
-  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload
+  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -4974,6 +4974,18 @@ export default function ClientDashboard() {
                                             {dateStr && (
                                               <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>
                                                 ({dateStr})
+                                              </span>
+                                            )}
+                                            {typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && (
+                                              <span style={{ 
+                                                color: item.remainingStock > 0 ? '#166534' : '#991b1b', 
+                                                fontWeight: '700', 
+                                                fontSize: '0.65rem',
+                                                background: item.remainingStock > 0 ? '#dcfce7' : '#fee2e2',
+                                                padding: '0.05rem 0.35rem',
+                                                borderRadius: '3px'
+                                              }}>
+                                                {item.remainingStock > 0 ? `${t('dashboard.stock_label') || "Stock"}: ${item.remainingStock} ${ing.unit || ""}`.trim() : (t('inventory.status_out_of_stock') || "Sin stock")}
                                               </span>
                                             )}
                                             <button
@@ -10794,6 +10806,9 @@ export default function ClientDashboard() {
                       {t('traceability_form.col_date') || "Fecha"}
                     </th>
                     <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)', textAlign: 'right' }}>
+                      {t('inventory.col_remaining') || "Stock Restante"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)', textAlign: 'right' }}>
                       {t('dashboard.actions') || "Acciones"}
                     </th>
                   </tr>
@@ -10845,6 +10860,22 @@ export default function ClientDashboard() {
                           </td>
                           <td style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)' }}>
                             {formatLoteDate(dateVal) || "-"}
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
+                            {typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null ? (
+                              <span style={{
+                                fontWeight: '700',
+                                fontSize: '0.82rem',
+                                color: item.remainingStock > 0 ? '#166534' : '#94a3b8',
+                                background: item.remainingStock > 0 ? '#dcfce7' : '#f1f5f9',
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: '4px'
+                              }}>
+                                {item.remainingStock}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
+                            )}
                           </td>
                           <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                             <button
@@ -17870,6 +17901,7 @@ function InventoryModal({ isOpen, onClose }) {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedLotIngredient, setSelectedLotIngredient] = useState(null);
 
   const fetchInventory = async () => {
     try {
@@ -18018,6 +18050,9 @@ function InventoryModal({ isOpen, onClose }) {
                     <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                       {t('inventory.col_recipes') || "Recetas Relacionadas"}
                     </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '180px' }}>
+                      {t('inventory.col_lot') || "Stock por lote"}
+                    </th>
                     <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '180px' }}>
                       {t('inventory.col_stock') || "Stock Actual"}
                     </th>
@@ -18046,6 +18081,27 @@ function InventoryModal({ isOpen, onClose }) {
                         ) : (
                           <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
                         )}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLotIngredient(item)}
+                          className="btn-secondary"
+                          style={{
+                            padding: '0.35rem 0.65rem',
+                            fontSize: '0.78rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            borderRadius: '6px',
+                            whiteSpace: 'nowrap',
+                            fontWeight: 600
+                          }}
+                          title={t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}
+                        >
+                          <Layers size={14} style={{ color: 'var(--corp-green)' }} />
+                          <span>{t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}</span>
+                        </button>
                       </td>
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
@@ -18097,6 +18153,375 @@ function InventoryModal({ isOpen, onClose }) {
               {saving ? (t('common.saving') || "Guardando...") : (t('inventory.btn_save') || "Guardar Cambios")}
             </button>
           </div>
+        </div>
+
+        {selectedLotIngredient && (
+          <IngredientLotStockModal 
+            ingredient={selectedLotIngredient} 
+            onClose={() => setSelectedLotIngredient(null)} 
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function IngredientLotStockModal({ ingredient, onClose }) {
+  const { t } = useI18n();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [lotData, setLotData] = useState(null);
+  const [search, setSearch] = useState("");
+  const [expandedLot, setExpandedLot] = useState(null);
+
+  const fetchLots = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const params = new URLSearchParams({
+        name: ingredient.name,
+        unit: ingredient.unit || ""
+      });
+      const res = await fetch(`/api/client/inventory/lots?${params.toString()}`);
+      if (!res.ok) throw new Error("Error loading lot stock");
+      const data = await res.json();
+      setLotData(data);
+    } catch (err) {
+      console.error("Error fetching lot stock:", err);
+      setError(t('alerts.connection_error') || "Error al cargar los lotes");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (ingredient) {
+      fetchLots();
+    }
+  }, [ingredient]);
+
+  const filteredLots = useMemo(() => {
+    if (!lotData?.lots) return [];
+    if (!search.trim()) return lotData.lots;
+    const term = search.toLowerCase().trim();
+    return lotData.lots.filter(l => 
+      (l.lote && l.lote.toLowerCase().includes(term)) ||
+      (l.providerName && l.providerName.toLowerCase().includes(term))
+    );
+  }, [lotData, search]);
+
+  if (!ingredient) return null;
+
+  const title = (t('inventory.lot_stock_modal_title') || "Stock por lote: {name} ({unit})")
+    .replace('{name}', ingredient.name)
+    .replace('{unit}', ingredient.unit || "");
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 10050 }}>
+      <div className="modal-content" style={{ maxWidth: '950px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '2rem', position: 'relative' }}>
+        <button 
+          onClick={onClose} 
+          style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+          title={t('common.cancel') || "Cerrar"}
+        >
+          <X size={24} />
+        </button>
+
+        <div className="modal-header" style={{ marginBottom: '1.25rem', paddingRight: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+              <Layers size={22} />
+            </div>
+            <h2 className="modal-title" style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>
+              {title}
+            </h2>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5', margin: 0 }}>
+            {t('inventory.lot_stock_modal_desc') || "Consulta el stock disponible, recibido y consumido de cada lote de este ingrediente."}
+          </p>
+        </div>
+
+        {/* Summary Cards */}
+        {lotData && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#ecfdf5', color: 'var(--corp-green)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Boxes size={20} />
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', textTransform: 'uppercase' }}>
+                  {t('inventory.total_warehouse_stock') || "Stock total almacén"}
+                </span>
+                <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                  {lotData.ingredient.totalStock} {ingredient.unit}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(2, 132, 199, 0.1)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Layers size={20} />
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', textTransform: 'uppercase' }}>
+                  {t('inventory.total_lots_stock') || "Stock disponible en lotes"}
+                </span>
+                <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0284c7' }}>
+                  {lotData.summary.totalStockInLots} {ingredient.unit}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#fef3c7', color: '#b45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Package size={20} />
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', textTransform: 'uppercase' }}>
+                  {t('inventory.active_lots') || "Lotes activos"}
+                </span>
+                <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                  {lotData.summary.activeLotsCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>/ {lotData.summary.totalLotsCount}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search bar */}
+        <div style={{ marginBottom: '1rem', position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            className="input-field" 
+            placeholder={t('inventory.search_lot_placeholder') || "Buscar lote o proveedor..."}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ paddingLeft: '2.75rem', width: '100%' }}
+          />
+        </div>
+
+        {/* Modal Body */}
+        <div className="modal-body" style={{ flex: 1, overflowY: 'auto', minHeight: '240px', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '0.5rem' }}>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '1rem' }}>
+              <Loader2 className="animate-spin" size={36} style={{ color: 'var(--corp-green)' }} />
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('common.loading') || "Cargando lotes..."}</p>
+            </div>
+          ) : error ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#ef4444', gap: '0.5rem' }}>
+              <AlertCircle size={32} />
+              <p>{error}</p>
+              <button onClick={fetchLots} className="btn-secondary" style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                Reintentar
+              </button>
+            </div>
+          ) : lotData?.lots.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+              <Layers size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+              <p style={{ fontSize: '1rem', fontWeight: 600 }}>{t('inventory.no_lots') || "No hay registros de lotes para este ingrediente."}</p>
+            </div>
+          ) : filteredLots.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: '0.95rem' }}>{t('inventory.no_lots_filtered') || "No se encontraron lotes que coincidan con la búsqueda."}</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                  <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      {t('inventory.col_lot') || "Lote"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      {t('inventory.col_last_entry') || "Última Entrada"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      {t('inventory.col_provider') || "Proveedor"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>
+                      {t('inventory.col_received') || "Recibido"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>
+                      {t('inventory.col_consumed') || "Consumido"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>
+                      {t('inventory.col_remaining') || "Stock Restante"}
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '140px' }}>
+                      {t('inventory.col_movements') || "Movimientos"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredLots.map((lot, idx) => {
+                    const isExpanded = expandedLot === lot.lote;
+                    const isInStock = lot.remainingStock > 0;
+                    const dateStr = lot.lastReceiptDate ? new Date(lot.lastReceiptDate).toLocaleDateString() : "-";
+
+                    return (
+                      <React.Fragment key={`${lot.lote}_${idx}`}>
+                        <tr style={{ borderBottom: isExpanded ? 'none' : '1px solid var(--border)', background: isExpanded ? '#f8fafc' : 'transparent', transition: 'background 0.2s' }}>
+                          <td style={{ padding: '0.85rem 1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                                {lot.lote}
+                              </span>
+                              <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '4px',
+                                background: isInStock ? '#ecfdf5' : '#f1f5f9',
+                                color: isInStock ? 'var(--corp-green)' : '#64748b'
+                              }}>
+                                {isInStock ? (t('inventory.status_in_stock') || "Con stock") : (t('inventory.status_out_of_stock') || "Agotado")}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            {dateStr}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            {lot.providerName || "-"}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                            {lot.initialStock} {ingredient.unit}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right', fontSize: '0.9rem', color: '#b45309', fontWeight: 600 }}>
+                            {lot.consumedStock > 0 ? `-${lot.consumedStock}` : "0"} {ingredient.unit}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                            <span style={{
+                              fontSize: '1rem',
+                              fontWeight: 800,
+                              color: isInStock ? 'var(--corp-green)' : '#94a3b8'
+                            }}>
+                              {lot.remainingStock} {ingredient.unit}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => setExpandedLot(isExpanded ? null : lot.lote)}
+                              className="btn-secondary"
+                              style={{
+                                padding: '0.3rem 0.6rem',
+                                fontSize: '0.75rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                borderRadius: '6px'
+                              }}
+                            >
+                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              <span>{isExpanded ? (t('inventory.btn_hide_movements') || "Ocultar") : (t('inventory.btn_view_movements') || "Movimientos")}</span>
+                            </button>
+                          </td>
+                        </tr>
+
+                        {/* Expanded Movement Details */}
+                        {isExpanded && (
+                          <tr style={{ borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+                            <td colSpan={7} style={{ padding: '1rem 1.5rem 1.5rem 1.5rem' }}>
+                              <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+                                  {/* Goods receipts table */}
+                                  <div>
+                                    <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', fontWeight: 700, color: '#0369a1', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                      <Truck size={14} />
+                                      <span>{t('inventory.goods_receipts_history') || "Entradas de mercancía"} ({lot.receipts.length})</span>
+                                    </h5>
+                                    {lot.receipts.length === 0 ? (
+                                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
+                                        {t('inventory.no_receipts_for_lot') || "No hay entradas registradas para este lote."}
+                                      </p>
+                                    ) : (
+                                      <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                          <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                                            <th style={{ padding: '0.35rem 0', textAlign: 'left' }}>{t('inventory.col_date') || "Fecha"}</th>
+                                            <th style={{ padding: '0.35rem', textAlign: 'left' }}>{t('inventory.col_provider') || "Proveedor"}</th>
+                                            <th style={{ padding: '0.35rem', textAlign: 'left' }}>{t('inventory.col_invoice') || "Albarán"}</th>
+                                            <th style={{ padding: '0.35rem 0', textAlign: 'right' }}>{t('inventory.col_quantity') || "Cantidad"}</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {lot.receipts.map((rc, rIdx) => (
+                                            <tr key={rIdx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                              <td style={{ padding: '0.35rem 0' }}>{rc.date ? new Date(rc.date).toLocaleDateString() : "-"}</td>
+                                              <td style={{ padding: '0.35rem' }}>{rc.providerName || "-"}</td>
+                                              <td style={{ padding: '0.35rem' }}>{rc.invoiceNumber || "-"}</td>
+                                              <td style={{ padding: '0.35rem 0', textAlign: 'right', fontWeight: 600, color: 'var(--corp-green)' }}>
+                                                +{rc.quantityAdded} {ingredient.unit}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    )}
+                                  </div>
+
+                                  {/* Elaborations table */}
+                                  <div>
+                                    <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', fontWeight: 700, color: '#b45309', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                      <ChefHat size={14} />
+                                      <span>{t('inventory.elaborations_history') || "Consumos en elaboraciones"} ({lot.elaborations.length})</span>
+                                    </h5>
+                                    {lot.elaborations.length === 0 ? (
+                                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
+                                        {t('inventory.no_elaborations_for_lot') || "No se ha consumido aún en elaboraciones."}
+                                      </p>
+                                    ) : (
+                                      <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                          <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                                            <th style={{ padding: '0.35rem 0', textAlign: 'left' }}>{t('inventory.col_date') || "Fecha"}</th>
+                                            <th style={{ padding: '0.35rem', textAlign: 'left' }}>{t('inventory.col_recipe') || "Receta / Elaboración"}</th>
+                                            <th style={{ padding: '0.35rem 0', textAlign: 'right' }}>{t('inventory.col_quantity') || "Cantidad"}</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {lot.elaborations.map((el, eIdx) => (
+                                            <tr key={eIdx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                              <td style={{ padding: '0.35rem 0' }}>{el.date ? new Date(el.date).toLocaleDateString() : "-"}</td>
+                                              <td style={{ padding: '0.35rem' }}>{el.recipeName || el.elaborationName || "-"}</td>
+                                              <td style={{ padding: '0.35rem 0', textAlign: 'right', fontWeight: 600, color: '#ef4444' }}>
+                                                -{el.quantityConsumed} {ingredient.unit}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', marginTop: '1.25rem', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            {!loading && `${filteredLots.length} ${filteredLots.length === 1 ? 'lote' : 'lotes'}`}
+          </span>
+          <button 
+            type="button" 
+            className="btn-secondary" 
+            onClick={onClose}
+            style={{ padding: '0.65rem 1.5rem' }}
+          >
+            {t('common.close') || t('common.cancel') || "Cerrar"}
+          </button>
         </div>
       </div>
     </div>
