@@ -565,6 +565,8 @@ export default function ClientDashboard() {
     personName: "",
     date: "",
     expirationDate: "",
+    finalElaborationTemp: "",
+    coolingTimeUnder10: "",
     dryingRoomIn: "",
     dryingRoomOut: "",
     workshopTemp: "",
@@ -1971,12 +1973,18 @@ export default function ClientDashboard() {
     const nextElabNumber = (profile?.totalElaborations ?? totalElabs) + 1;
     const lotTitle = generateLotNumber(profile?.lotFormat, recipe, nextElabNumber, now);
 
+    const lastElabForRecipe = elaborations.find(el => (el.recipeId === recipe.id || el.recipe?.id === recipe.id));
+    const initialFinalTemp = lastElabForRecipe?.finalElaborationTemp || "";
+    const initialCoolingTime = lastElabForRecipe?.coolingTimeUnder10 || "";
+
     setElaboracionForm({
       recipeId: recipe.id,
       titulo: lotTitle,
       personName: lastPerson,
       date: currentDateTime,
       expirationDate: expirationDate,
+      finalElaborationTemp: initialFinalTemp,
+      coolingTimeUnder10: initialCoolingTime,
       quantityProduced: "",
       quantityUnit: "",
       netWeight: "",
@@ -1988,6 +1996,28 @@ export default function ClientDashboard() {
       extraInfo: "",
       ingredientes: initialIngredientes
     });
+
+    // Fetch last elaboration for this recipe to populate finalElaborationTemp and coolingTimeUnder10 if not present in memory
+    try {
+      fetch(`/api/elaborations?recipeId=${recipe.id}&limit=1`)
+        .then(res => res.json())
+        .then(json => {
+          const lastElab = json.data?.[0];
+          if (lastElab) {
+            setElaboracionForm(prev => {
+              if (prev.recipeId !== recipe.id) return prev;
+              return {
+                ...prev,
+                finalElaborationTemp: prev.finalElaborationTemp || lastElab.finalElaborationTemp || "",
+                coolingTimeUnder10: prev.coolingTimeUnder10 || lastElab.coolingTimeUnder10 || ""
+              };
+            });
+          }
+        })
+        .catch(e => console.error("Error fetching last elaboration values:", e));
+    } catch (e) {
+      console.error("Error initiating fetch for last elaboration:", e);
+    }
 
     // Fetch all last lotes from goods receipts asynchronously to catch older records from DB
     try {
@@ -2070,6 +2100,8 @@ export default function ClientDashboard() {
       personName: elab.personName || "",
       date: elab.date ? new Date(elab.date).toISOString().slice(0, 16) : "",
       expirationDate: elab.expirationDate ? new Date(elab.expirationDate).toISOString().slice(0, 10) : "",
+      finalElaborationTemp: elab.finalElaborationTemp || "",
+      coolingTimeUnder10: elab.coolingTimeUnder10 || "",
       dryingRoomIn: elab.dryingRoomIn || "",
       dryingRoomOut: elab.dryingRoomOut || "",
       workshopTemp: elab.workshopTemp || "",
@@ -2163,6 +2195,22 @@ export default function ClientDashboard() {
         doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
         doc.setFont("helvetica", "normal");
         doc.text(elab.workshopTemp, 90, currentY);
+        currentY += 7;
+      }
+
+      if (elab.finalElaborationTemp) {
+        doc.setFont("helvetica", "bold");
+        doc.text((t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(elab.finalElaborationTemp, 90, currentY);
+        currentY += 7;
+      }
+
+      if (elab.coolingTimeUnder10) {
+        doc.setFont("helvetica", "bold");
+        doc.text((t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(elab.coolingTimeUnder10, 90, currentY);
         currentY += 7;
       }
 
@@ -3664,6 +3712,22 @@ export default function ClientDashboard() {
           currentY += 7;
         }
 
+        if (el.finalElaborationTemp) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.finalElaborationTemp, 90, currentY);
+          currentY += 7;
+        }
+
+        if (el.coolingTimeUnder10) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.coolingTimeUnder10, 90, currentY);
+          currentY += 7;
+        }
+
         if (el.dryingRoomIn) {
           doc.setFont("helvetica", "bold");
           doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
@@ -3978,6 +4042,22 @@ export default function ClientDashboard() {
           currentY += 6.5;
         }
 
+        if (el.finalElaborationTemp) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.finalElaborationTemp, 90, currentY);
+          currentY += 6.5;
+        }
+
+        if (el.coolingTimeUnder10) {
+          doc.setFont("helvetica", "bold");
+          doc.text((t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":", 20, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(el.coolingTimeUnder10, 90, currentY);
+          currentY += 6.5;
+        }
+
         if (el.dryingRoomIn) {
           doc.setFont("helvetica", "bold");
           doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
@@ -4261,6 +4341,8 @@ export default function ClientDashboard() {
           personName: elaboracionForm.personName,
           date: elaboracionForm.date,
           expirationDate: elaboracionForm.expirationDate,
+          finalElaborationTemp: elaboracionForm.finalElaborationTemp,
+          coolingTimeUnder10: elaboracionForm.coolingTimeUnder10,
           dryingRoomIn: elaboracionForm.dryingRoomIn,
           dryingRoomOut: elaboracionForm.dryingRoomOut,
           workshopTemp: elaboracionForm.workshopTemp,
@@ -5111,6 +5193,29 @@ export default function ClientDashboard() {
                         onChange={(e) => setElaboracionForm({...elaboracionForm, expirationDate: e.target.value})} 
                         disabled={isReadOnlyElab}
                       />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración"}</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.finalElaborationTemp || ""} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, finalElaborationTemp: e.target.value})} 
+                        disabled={isReadOnlyElab}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados"}</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={elaboracionForm.coolingTimeUnder10 || ""} 
+                        onChange={(e) => setElaboracionForm({...elaboracionForm, coolingTimeUnder10: e.target.value})} 
+                        disabled={isReadOnlyElab}
+                      />
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                        {t('traceability_form.cooling_time_under_10_help') || "Debería ser inferior a 2 horas"}
+                      </p>
                     </div>
                     {selectedRecipe?.hasDryingRoom && (
                       <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', background: 'var(--bg-main)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>

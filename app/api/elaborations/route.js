@@ -178,7 +178,7 @@ export async function POST(req) {
     }
 
     const data = await req.json();
-    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime, unitPrice, quantityProduced, quantityUnit, netWeight, workshopTemp, extraInfo } = data;
+    const { name, recipeId, ingredients, personName, date, expirationDate, dryingRoomIn, dryingRoomOut, preparationTime, unitPrice, quantityProduced, quantityUnit, netWeight, workshopTemp, finalElaborationTemp, coolingTimeUnder10, extraInfo } = data;
 
     const profileId = session.user.profileId;
     if (await isRecipeLimitExceeded(profileId)) {
@@ -324,6 +324,8 @@ export async function POST(req) {
         dryingRoomIn: data.dryingRoomIn,
         dryingRoomOut: data.dryingRoomOut,
         workshopTemp: data.workshopTemp,
+        finalElaborationTemp: data.finalElaborationTemp || null,
+        coolingTimeUnder10: data.coolingTimeUnder10 || null,
         quantityProduced: data.quantityProduced,
         quantityUnit: data.quantityUnit || null,
         netWeight: data.netWeight,

@@ -775,7 +775,10 @@
     "copy_and_use_lot": "Copiar e usar",
     "lot_copied": "Lote atribuído e copiado!",
     "lot_out_of_stock_blocked": "Este lote não tem estoque e as configurações da empresa não permitem o uso de lotes esgotados.",
-    "cannot_save_out_of_stock_lot": "O lote '{lot}' do ingrediente '{ingredient}' está esgotado e a sua configuração não permite usar lotes sem estoque."
+    "cannot_save_out_of_stock_lot": "O lote '{lot}' do ingrediente '{ingredient}' está esgotado e a sua configuração não permite usar lotes sem estoque.",
+    "final_elaboration_temp": "Temperatura de finalização da elaboração",
+    "cooling_time_under_10": "Tempo que demorou a descer abaixo de 10 graus",
+    "cooling_time_under_10_help": "Deverá ser inferior a 2 horas"
   },
   "goods_receipt_form": {
     "product": "Produto",

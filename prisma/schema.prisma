@@ -290,6 +290,8 @@ model Elaboration {
 
   personName     String?
   expirationDate DateTime?
+  finalElaborationTemp String?
+  coolingTimeUnder10   String?
   dryingRoomIn   String?
   dryingRoomOut  String?
   workshopTemp   String?

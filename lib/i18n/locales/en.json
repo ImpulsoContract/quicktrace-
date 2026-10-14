@@ -783,7 +783,10 @@
     "copy_and_use_lot": "Copy and use",
     "lot_copied": "Lot assigned and copied!",
     "lot_out_of_stock_blocked": "This lot is out of stock and your business settings do not allow using depleted lots.",
-    "cannot_save_out_of_stock_lot": "Lot '{lot}' of ingredient '{ingredient}' is out of stock and your settings do not allow using depleted lots."
+    "cannot_save_out_of_stock_lot": "Lot '{lot}' of ingredient '{ingredient}' is out of stock and your settings do not allow using depleted lots.",
+    "final_elaboration_temp": "Final elaboration temperature",
+    "cooling_time_under_10": "Time taken to cool below 10 degrees",
+    "cooling_time_under_10_help": "Should be less than 2 hours"
   },
   "goods_receipt_form": {
     "product": "Product",
