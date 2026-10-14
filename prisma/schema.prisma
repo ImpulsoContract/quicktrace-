@@ -117,9 +117,11 @@ model ClientProfile {
   elaborationSales           ElaborationSale[]
   hasCuttingTraceability     Boolean           @default(false)
   hasOilCollection           Boolean           @default(false)
+  hasVegetableDisinfection   Boolean           @default(false)
   blockOutOfStockLots        Boolean           @default(false)
   cuttingRecords             CuttingRecord[]
   oilCollections             OilCollection[]
+  vegetableDisinfections     VegetableDisinfection[]
 }
 
 model Customer {
@@ -628,3 +630,20 @@ model OilCollection {
   @@index([clientProfileId])
 }
 
+model VegetableDisinfection {
+  id                Int      @id @default(autoincrement())
+  date              DateTime @default(now())
+  vegetable         String
+  disinfectionTime  Int
+  personName        String?
+  observations      String?  @db.Text
+  correctiveActions String?  @db.Text
+
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientProfileId])
+}

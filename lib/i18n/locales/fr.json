@@ -121,7 +121,8 @@
     "inventory": "Inventaire",
     "customers": "Clients",
     "cutting_traceability": "Traçabilité de découpe",
-    "oil_collection": "Collecte des huiles de friture"
+    "oil_collection": "Collecte des huiles de friture",
+    "vegetable_disinfection": "Désinfection des végétaux"
   },
   "inventory": {
     "title": "Gestion des Stocks",
@@ -237,7 +238,8 @@
     "block_out_of_stock_lots_help": "Par défaut cette case est décochée, permettant de sélectionner n'importe quel lot. Si vous la cochez, le système empêchera de sélectionner ou d'utiliser des lots d'ingrédients dont le stock restant est à 0 dans les élaborations.",
     "additional_sections_title": "Activer des sections supplémentaires",
     "additional_sections_desc": "Configurez les sections optionnelles que vous souhaitez afficher dans votre menu principal.",
-    "oil_collection_enable": "Activer la collecte des huiles de friture"
+    "oil_collection_enable": "Activer la collecte des huiles de friture",
+    "vegetable_disinfection_enable": "Activer la désinfection des végétaux"
   },
   "dashboard": {
     "welcome": "Bonjour",
@@ -1435,5 +1437,31 @@
     "table_person": "Responsable",
     "table_incidents": "Incidents",
     "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement de collecte d'huile ?"
+  },
+  "vegetable_disinfection": {
+    "title": "Désinfection des végétaux",
+    "description": "Gérez et enregistrez les processus de désinfection des végétaux.",
+    "new_record": "Nouvelle désinfection de végétaux",
+    "edit_record": "Modifier l'enregistrement de désinfection",
+    "no_records": "Aucun enregistrement de désinfection des végétaux.",
+    "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement de désinfection ?",
+    "table_date": "Date",
+    "table_vegetable": "Végétal",
+    "table_time": "Temps (min)",
+    "table_person": "Responsable",
+    "table_observations": "Observations",
+    "table_corrective_actions": "Actions correctives",
+    "date": "Date",
+    "vegetable": "Végétal",
+    "vegetable_placeholder": "Ex : Laitue, Tomate, Épinards...",
+    "disinfection_time": "Temps de désinfection (minutes)",
+    "disinfection_time_placeholder": "Ex : 5, 10, 15...",
+    "person": "Personne responsable",
+    "person_placeholder": "Nom du responsable...",
+    "observations": "Observations",
+    "observations_placeholder": "Observations supplémentaires (facultatif)...",
+    "corrective_actions": "Actions correctives",
+    "corrective_actions_placeholder": "Mesures ou actions correctives appliquées (facultatif)...",
+    "save": "Enregistrer"
   }
 }

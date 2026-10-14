@@ -121,7 +121,8 @@
     "inventory": "Inventory",
     "customers": "Customers",
     "cutting_traceability": "Cutting traceability",
-    "oil_collection": "Frying oil collection"
+    "oil_collection": "Frying oil collection",
+    "vegetable_disinfection": "Vegetable disinfection"
   },
   "inventory": {
     "title": "Inventory Management",
@@ -237,7 +238,8 @@
     "block_out_of_stock_lots_help": "By default this checkbox is unchecked, allowing any lot to be selected. If checked, the system will prevent selecting or using ingredient lots with 0 remaining stock in elaborations.",
     "additional_sections_title": "Activate additional sections",
     "additional_sections_desc": "Configure which optional sections you want to display in your main menu.",
-    "oil_collection_enable": "Enable frying oil collection"
+    "oil_collection_enable": "Enable frying oil collection",
+    "vegetable_disinfection_enable": "Enable vegetable disinfection"
   },
   "dashboard": {
     "welcome": "Hello",
@@ -1440,5 +1442,31 @@
     "table_person": "Responsible",
     "table_incidents": "Incidents",
     "delete_confirm": "Are you sure you want to delete this oil collection record?"
+  },
+  "vegetable_disinfection": {
+    "title": "Vegetable disinfection",
+    "description": "Manage and record vegetable disinfection processes.",
+    "new_record": "New vegetable disinfection",
+    "edit_record": "Edit disinfection record",
+    "no_records": "No vegetable disinfection records found.",
+    "delete_confirm": "Are you sure you want to delete this disinfection record?",
+    "table_date": "Date",
+    "table_vegetable": "Vegetable",
+    "table_time": "Time (min)",
+    "table_person": "Responsible person",
+    "table_observations": "Observations",
+    "table_corrective_actions": "Corrective actions",
+    "date": "Date",
+    "vegetable": "Vegetable",
+    "vegetable_placeholder": "e.g., Lettuce, Tomato, Spinach...",
+    "disinfection_time": "Disinfection time (minutes)",
+    "disinfection_time_placeholder": "e.g., 5, 10, 15...",
+    "person": "Responsible person",
+    "person_placeholder": "Responsible person name...",
+    "observations": "Observations",
+    "observations_placeholder": "Additional observations (optional)...",
+    "corrective_actions": "Corrective actions",
+    "corrective_actions_placeholder": "Corrective measures applied (optional)...",
+    "save": "Save record"
   }
 }

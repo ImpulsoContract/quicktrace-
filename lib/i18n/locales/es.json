@@ -121,7 +121,8 @@
     "inventory": "Inventario",
     "customers": "Clientes",
     "cutting_traceability": "Trazabilidad de despiece",
-    "oil_collection": "Retirada de aceites de fritura"
+    "oil_collection": "Retirada de aceites de fritura",
+    "vegetable_disinfection": "Desinfección de vegetales"
   },
   "inventory": {
     "title": "Gestión de Inventario",
@@ -237,7 +238,8 @@
     "block_out_of_stock_lots_help": "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones.",
     "additional_sections_title": "Activa secciones adicionales",
     "additional_sections_desc": "Configura qué secciones opcionales deseas mostrar en tu menú principal.",
-    "oil_collection_enable": "Activar retirada de aceites de fritura"
+    "oil_collection_enable": "Activar retirada de aceites de fritura",
+    "vegetable_disinfection_enable": "Activar desinfección de vegetales"
   },
   "dashboard": {
     "welcome": "Hola",
@@ -1440,5 +1442,31 @@
     "table_person": "Responsable",
     "table_incidents": "Incidencias",
     "delete_confirm": "¿Seguro que quieres eliminar este registro de retirada de aceite?"
+  },
+  "vegetable_disinfection": {
+    "title": "Desinfección de vegetales",
+    "description": "Gestiona y registra los procesos de desinfección de vegetales.",
+    "new_record": "Nueva desinfección de vegetales",
+    "edit_record": "Modificar registro de desinfección",
+    "no_records": "No hay registros de desinfección de vegetales.",
+    "delete_confirm": "¿Seguro que quieres eliminar este registro de desinfección?",
+    "table_date": "Fecha",
+    "table_vegetable": "Vegetal",
+    "table_time": "Tiempo (min)",
+    "table_person": "Responsable",
+    "table_observations": "Observaciones",
+    "table_corrective_actions": "Acciones correctoras",
+    "date": "Fecha",
+    "vegetable": "Vegetal",
+    "vegetable_placeholder": "Ej: Lechuga, Tomate, Espinacas...",
+    "disinfection_time": "Tiempo de desinfección (minutos)",
+    "disinfection_time_placeholder": "Ej: 5, 10, 15...",
+    "person": "Persona responsable",
+    "person_placeholder": "Nombre del responsable...",
+    "observations": "Observaciones",
+    "observations_placeholder": "Observaciones adicionales (opcional)...",
+    "corrective_actions": "Acciones correctoras",
+    "corrective_actions_placeholder": "Medidas o acciones correctoras aplicadas (opcional)...",
+    "save": "Guardar registro"
   }
 }

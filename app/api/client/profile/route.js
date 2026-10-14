@@ -96,6 +96,7 @@ export async function PATCH(request) {
       lotFormat,
       hasCuttingTraceability,
       hasOilCollection,
+      hasVegetableDisinfection,
       blockOutOfStockLots
     } = body;
 
@@ -119,6 +120,7 @@ export async function PATCH(request) {
         lotFormat: lotFormat !== undefined ? lotFormat : undefined,
         hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined,
         hasOilCollection: hasOilCollection !== undefined ? hasOilCollection : undefined,
+        hasVegetableDisinfection: hasVegetableDisinfection !== undefined ? hasVegetableDisinfection : undefined,
         blockOutOfStockLots: blockOutOfStockLots !== undefined ? blockOutOfStockLots : undefined
       },
       include: { plan: true }

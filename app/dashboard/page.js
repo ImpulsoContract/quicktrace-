@@ -12,7 +12,8 @@ import {
   CreditCard, ArrowUpCircle, PlayCircle, Printer, FileText, AlertTriangle,
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
-  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download
+  Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download,
+  Salad
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -359,6 +360,18 @@ export default function ClientDashboard() {
     changeDate: new Date().toISOString().slice(0, 10),
     personName: "",
     incidents: ""
+  });
+
+  const [vegetableDisinfections, setVegetableDisinfections] = useState([]);
+  const [isVegetableModalOpen, setIsVegetableModalOpen] = useState(false);
+  const [editingVegetableRecord, setEditingVegetableRecord] = useState(null);
+  const [vegetableForm, setVegetableForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    vegetable: "",
+    disinfectionTime: "",
+    personName: "",
+    observations: "",
+    correctiveActions: ""
   });
 
 
@@ -753,6 +766,9 @@ export default function ClientDashboard() {
     if (activeTab === "aceites") {
       fetchOilCollections();
     }
+    if (activeTab === "vegetales") {
+      fetchVegetableDisinfections();
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -1070,6 +1086,18 @@ export default function ClientDashboard() {
       }
     } catch (error) {
       console.error("Error fetching oil collections:", error);
+    }
+  };
+
+  const fetchVegetableDisinfections = async () => {
+    try {
+      const res = await fetch("/api/vegetable-disinfections");
+      const data = await res.json();
+      if (data.success) {
+        setVegetableDisinfections(data.disinfections);
+      }
+    } catch (error) {
+      console.error("Error fetching vegetable disinfections:", error);
     }
   };
 
@@ -2369,7 +2397,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.blockOutOfStockLots !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -4717,6 +4745,87 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleOpenVegetableModal = () => {
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
+    const lastPerson = vegetableDisinfections.length > 0 ? (vegetableDisinfections[0].personName || "") : (profile?.personName || session?.user?.name || "");
+    const today = new Date().toISOString().slice(0, 10);
+    setEditingVegetableRecord(null);
+    setVegetableForm({
+      date: today,
+      vegetable: "",
+      disinfectionTime: "",
+      personName: lastPerson,
+      observations: "",
+      correctiveActions: ""
+    });
+    setIsVegetableModalOpen(true);
+  };
+
+  const handleEditVegetable = (record) => {
+    setEditingVegetableRecord(record);
+    setVegetableForm({
+      date: record.date ? new Date(record.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      vegetable: record.vegetable || "",
+      disinfectionTime: record.disinfectionTime !== undefined && record.disinfectionTime !== null ? record.disinfectionTime.toString() : "",
+      personName: record.personName || "",
+      observations: record.observations || "",
+      correctiveActions: record.correctiveActions || ""
+    });
+    setIsVegetableModalOpen(true);
+  };
+
+  const handleDeleteVegetable = async (id) => {
+    if (!confirm(t('vegetable_disinfection.delete_confirm') || "¿Seguro que quieres eliminar este registro de desinfección?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/vegetable-disinfections?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        fetchVegetableDisinfections();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitVegetable = async (e) => {
+    e.preventDefault();
+    if (isRecipeLimitExceeded()) {
+      setIsRecipeOverlimitModalOpen(true);
+      return;
+    }
+    setLoading(true);
+    try {
+      const url = "/api/vegetable-disinfections";
+      const method = editingVegetableRecord ? "PATCH" : "POST";
+      const body = editingVegetableRecord ? { ...vegetableForm, id: editingVegetableRecord.id } : vegetableForm;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsVegetableModalOpen(false);
+        setEditingVegetableRecord(null);
+        fetchVegetableDisinfections();
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(t("alerts.connection_error") || "Error de conexión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmitCleaning = async (e) => {
     e.preventDefault();
     if (isRecipeLimitExceeded()) {
@@ -5101,6 +5210,15 @@ export default function ClientDashboard() {
                     label={t('sidebar.oil_collection') || "Retirada de aceites de fritura"} 
                     active={activeTab === "aceites"} 
                     onClick={() => { setActiveTab("aceites"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                  />
+                )}
+
+                {profile?.hasVegetableDisinfection && (
+                  <SidebarBtn 
+                    icon={<Salad size={20} />} 
+                    label={t('sidebar.vegetable_disinfection') || "Desinfección de vegetales"} 
+                    active={activeTab === "vegetales"} 
+                    onClick={() => { setActiveTab("vegetales"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                   />
                 )}
 
@@ -7320,6 +7438,77 @@ export default function ClientDashboard() {
                                   <Edit size={18} />
                                 </button>
                                 <button onClick={() => handleDeleteOil(record.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'vegetales' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('vegetable_disinfection.title') || "Desinfección de vegetales"}</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('vegetable_disinfection.description') || "Gestiona y registra los procesos de desinfección de vegetales."}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={handleOpenVegetableModal}
+                    className="btn-primary"
+                    style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <PlusCircle size={18} /> {t('vegetable_disinfection.new_record') || "Nueva desinfección de vegetales"}
+                  </button>
+                </div>
+              </header>
+
+              {vegetableDisinfections.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                  <Salad size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('vegetable_disinfection.no_records') || "No hay registros de desinfección de vegetales."}</h3>
+                </div>
+              ) : (
+                <div style={{ background: 'white', borderRadius: '1.25rem', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('vegetable_disinfection.table_date') || "Fecha"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('vegetable_disinfection.table_vegetable') || "Vegetal"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('vegetable_disinfection.table_time') || "Tiempo (min)"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('vegetable_disinfection.table_person') || "Responsable"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('vegetable_disinfection.table_observations') || "Observaciones"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('vegetable_disinfection.table_corrective_actions') || "Acciones correctoras"}</th>
+                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vegetableDisinfections.map(record => (
+                          <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '500' }}>
+                              {record.date ? new Date(record.date).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) : "-"}
+                            </td>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '600' }}>{record.vegetable}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontWeight: '500' }}>{record.disinfectionTime} min</td>
+                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{record.personName || "-"}</td>
+                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.observations || ""}>
+                              {record.observations || "-"}
+                            </td>
+                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.correctiveActions || ""}>
+                              {record.correctiveActions || "-"}
+                            </td>
+                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                <button onClick={() => handleEditVegetable(record)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
+                                  <Edit size={18} />
+                                </button>
+                                <button onClick={() => handleDeleteVegetable(record.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
                                   <Trash2 size={18} />
                                 </button>
                               </div>
@@ -10460,6 +10649,115 @@ export default function ClientDashboard() {
           </div>
         </div>
       )}
+      {isVegetableModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '1.5rem', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s ease', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Salad size={24} color="var(--corp-green)" /> {editingVegetableRecord ? (t('vegetable_disinfection.edit_record') || "Modificar registro de desinfección") : (t('vegetable_disinfection.new_record') || "Nueva desinfección de vegetales")}
+              </h3>
+              <button onClick={() => setIsVegetableModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmitVegetable} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('vegetable_disinfection.date') || "Fecha"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="date" 
+                  className="input-field" 
+                  value={vegetableForm.date} 
+                  onChange={(e) => setVegetableForm({...vegetableForm, date: e.target.value})} 
+                  required 
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('vegetable_disinfection.vegetable') || "Vegetal"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={vegetableForm.vegetable} 
+                  onChange={(e) => setVegetableForm({...vegetableForm, vegetable: e.target.value})} 
+                  placeholder={t('vegetable_disinfection.vegetable_placeholder') || "Ej: Lechuga, Tomate, Espinacas..."}
+                  required 
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('vegetable_disinfection.disinfection_time') || "Tiempo de desinfección (minutos)"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input 
+                  type="number" 
+                  min="1"
+                  step="1"
+                  className="input-field" 
+                  value={vegetableForm.disinfectionTime} 
+                  onChange={(e) => setVegetableForm({...vegetableForm, disinfectionTime: e.target.value})} 
+                  placeholder={t('vegetable_disinfection.disinfection_time_placeholder') || "Ej: 5, 10, 15..."}
+                  required 
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('vegetable_disinfection.person') || "Persona responsable"}
+                </label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={vegetableForm.personName} 
+                  onChange={(e) => setVegetableForm({...vegetableForm, personName: e.target.value})} 
+                  placeholder={t('vegetable_disinfection.person_placeholder') || "Nombre del responsable..."}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('vegetable_disinfection.observations') || "Observaciones"}
+                </label>
+                <textarea 
+                  className="input-field" 
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                  value={vegetableForm.observations || ""} 
+                  onChange={(e) => setVegetableForm({...vegetableForm, observations: e.target.value})} 
+                  placeholder={t('vegetable_disinfection.observations_placeholder') || "Observaciones adicionales (opcional)..."}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('vegetable_disinfection.corrective_actions') || "Acciones correctoras"}
+                </label>
+                <textarea 
+                  className="input-field" 
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                  value={vegetableForm.correctiveActions || ""} 
+                  onChange={(e) => setVegetableForm({...vegetableForm, correctiveActions: e.target.value})} 
+                  placeholder={t('vegetable_disinfection.corrective_actions_placeholder') || "Medidas o acciones correctoras aplicadas (opcional)..."}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setIsVegetableModalOpen(false)} className="btn-secondary" style={{ flex: 1, padding: '0.75rem' }}>
+                  {t('common.cancel')}
+                </button>
+                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '0.75rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('vegetable_disinfection.save') || "Guardar registro"}</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {isRecipeOverlimitModalOpen && (
         <div className="modal-overlay" style={{ zIndex: 1100 }}>
           <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
@@ -12057,6 +12355,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [lotFormat, setLotFormat] = useState(profile?.lotFormat || DEFAULT_LOT_FORMAT);
   const [hasCuttingTraceability, setHasCuttingTraceability] = useState(profile?.hasCuttingTraceability || false);
   const [hasOilCollection, setHasOilCollection] = useState(profile?.hasOilCollection || false);
+  const [hasVegetableDisinfection, setHasVegetableDisinfection] = useState(profile?.hasVegetableDisinfection || false);
   const [blockOutOfStockLots, setBlockOutOfStockLots] = useState(profile?.blockOutOfStockLots || false);
 
   const popular = ["EUR", "USD", "GBP"];
@@ -12072,6 +12371,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
       setHasCuttingTraceability(profile.hasCuttingTraceability || false);
       setHasOilCollection(profile.hasOilCollection || false);
+      setHasVegetableDisinfection(profile.hasVegetableDisinfection || false);
       setBlockOutOfStockLots(profile.blockOutOfStockLots || false);
     }
   }, [profile]);
@@ -12085,6 +12385,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       lotFormat: lotFormat || DEFAULT_LOT_FORMAT,
       hasCuttingTraceability,
       hasOilCollection,
+      hasVegetableDisinfection,
       blockOutOfStockLots
     });
   };
@@ -12157,6 +12458,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     (lotFormat || DEFAULT_LOT_FORMAT) !== (profile?.lotFormat || DEFAULT_LOT_FORMAT) ||
                     hasCuttingTraceability !== (profile?.hasCuttingTraceability || false) ||
                     hasOilCollection !== (profile?.hasOilCollection || false) ||
+                    hasVegetableDisinfection !== (profile?.hasVegetableDisinfection || false) ||
                     blockOutOfStockLots !== (profile?.blockOutOfStockLots || false);
 
   return (
@@ -12669,6 +12971,22 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Droplets size={18} color="var(--corp-green)" />
                 <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.oil_collection_enable') || "Activar retirada de aceites de fritura"}</span>
+              </div>
+            </label>
+
+            <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ position: 'relative', width: '48px', height: '24px', background: hasVegetableDisinfection ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+                <div style={{ position: 'absolute', left: hasVegetableDisinfection ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+              </div>
+              <input 
+                type="checkbox" 
+                style={{ display: 'none' }}
+                checked={hasVegetableDisinfection} 
+                onChange={(e) => setHasVegetableDisinfection(e.target.checked)} 
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Salad size={18} color="var(--corp-green)" />
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.vegetable_disinfection_enable') || "Activar desinfección de vegetales"}</span>
               </div>
             </label>
           </div>

@@ -121,7 +121,8 @@
     "inventory": "Inventario",
     "customers": "Clienti",
     "cutting_traceability": "Tracciabilità di sezionamento",
-    "oil_collection": "Ritiro oli di frittura"
+    "oil_collection": "Ritiro oli di frittura",
+    "vegetable_disinfection": "Disinfezione dei vegetali"
   },
   "inventory": {
     "title": "Gestione dell'Inventario",
@@ -237,7 +238,8 @@
     "block_out_of_stock_lots_help": "Per impostazione predefinita questa casella non è selezionata, consentendo di selezionare qualsiasi lotto. Se selezionata, il sistema impedirà di selezionare o utilizzare lotti di ingredienti con giacenza 0 nelle elaborazioni.",
     "additional_sections_title": "Attiva sezioni aggiuntive",
     "additional_sections_desc": "Configura quali sezioni opzionali desideri visualizzare nel tuo menu principale.",
-    "oil_collection_enable": "Attiva ritiro oli di frittura"
+    "oil_collection_enable": "Attiva ritiro oli di frittura",
+    "vegetable_disinfection_enable": "Attiva disinfezione dei vegetali"
   },
   "dashboard": {
     "welcome": "Ciao",
@@ -1435,5 +1437,31 @@
     "table_person": "Responsabile",
     "table_incidents": "Incidenti",
     "delete_confirm": "Sei sicuro di voler eliminare questa registrazione di ritiro olio?"
+  },
+  "vegetable_disinfection": {
+    "title": "Disinfezione dei vegetali",
+    "description": "Gestisci e registra i processi di disinfezione dei vegetali.",
+    "new_record": "Nuova disinfezione dei vegetali",
+    "edit_record": "Modifica registrazione di disinfezione",
+    "no_records": "Nessun record di disinfezione dei vegetali.",
+    "delete_confirm": "Sei sicuro di voler eliminare questa registrazione di disinfezione?",
+    "table_date": "Data",
+    "table_vegetable": "Vegetale",
+    "table_time": "Tempo (min)",
+    "table_person": "Responsabile",
+    "table_observations": "Osservazioni",
+    "table_corrective_actions": "Azioni correttive",
+    "date": "Data",
+    "vegetable": "Vegetale",
+    "vegetable_placeholder": "Es: Lattuga, Pomodoro, Spinaci...",
+    "disinfection_time": "Tempo di disinfezione (minuti)",
+    "disinfection_time_placeholder": "Es: 5, 10, 15...",
+    "person": "Persona responsabile",
+    "person_placeholder": "Nome del responsabile...",
+    "observations": "Osservazioni",
+    "observations_placeholder": "Osservazioni aggiuntive (opzionale)...",
+    "corrective_actions": "Azioni correttive",
+    "corrective_actions_placeholder": "Misure o azioni correttive applicate (opzionale)...",
+    "save": "Salva registrazione"
   }
 }
