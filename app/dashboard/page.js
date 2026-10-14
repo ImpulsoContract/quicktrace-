@@ -2673,34 +2673,40 @@ export default function ClientDashboard() {
         currentY += 6;
       };
 
+      const getI18nText = (key, fallback) => {
+        const val = t(key);
+        return (val && val !== key) ? val : fallback;
+      };
+
       // 2. Section: General Product Details
-      drawSectionHeader(t('recipes.general_info_section') || "1. DATOS GENERALES DEL PRODUCTO");
+      drawSectionHeader(getI18nText('recipes.general_info_section', "1. DATOS GENERALES DEL PRODUCTO"));
 
       const expiryTypeText = recipe.expiryType === 'BEST_BEFORE' 
-        ? (t('recipes.best_before') || "Consumo preferente") 
-        : (t('recipes.expiration') || "Fecha de caducidad");
+        ? getI18nText('recipes.best_before', "Consumo preferente") 
+        : getI18nText('recipes.expiration', "Fecha de caducidad");
       
+      const daysStr = getI18nText('common.days', "días");
       const lifeSpanText = recipe.expiryDays && Number(recipe.expiryDays) > 0 
-        ? `${recipe.expiryDays} ${t('common.days') || "días"} (${expiryTypeText})` 
-        : (t('recipes.not_specified') || "No especificada");
+        ? `${recipe.expiryDays} ${daysStr} (${expiryTypeText})` 
+        : getI18nText('recipes.not_specified', "No especificada");
 
       const generalData = [
         [
-          { content: t('recipes.product_name') || "Denominación:", styles: { fontStyle: 'bold', cellWidth: 42 } },
+          { content: getI18nText('recipes.product_name', "Denominación:"), styles: { fontStyle: 'bold', cellWidth: 42 } },
           { content: recipe.name || "-", styles: { cellWidth: 55 } },
-          { content: t('recipes.shelf_life') || "Vida útil:", styles: { fontStyle: 'bold', cellWidth: 42 } },
+          { content: getI18nText('recipes.shelf_life', "Vida útil:"), styles: { fontStyle: 'bold', cellWidth: 42 } },
           { content: lifeSpanText, styles: { cellWidth: 'auto' } }
         ],
         [
-          { content: t('recipes.conservation') || "Conservación:", styles: { fontStyle: 'bold' } },
-          { content: recipe.conservationInstructions || (t('recipes.standard_conservation') || "Conservar en lugar fresco y seco"), styles: { cellWidth: 55 } },
-          { content: t('recipes.drying_room') || "Secadero / Curado:", styles: { fontStyle: 'bold' } },
-          { content: recipe.hasDryingRoom ? (t('common.yes') || "Sí") : (t('common.no') || "No"), styles: { cellWidth: 'auto' } }
+          { content: getI18nText('recipes.conservation', "Conservación:"), styles: { fontStyle: 'bold' } },
+          { content: recipe.conservationInstructions || getI18nText('recipes.standard_conservation', "Conservar en lugar fresco y seco"), styles: { cellWidth: 55 } },
+          { content: getI18nText('recipes.drying_room', "Secadero / Curado:"), styles: { fontStyle: 'bold' } },
+          { content: recipe.hasDryingRoom ? getI18nText('common.yes', "Sí") : getI18nText('common.no', "No"), styles: { cellWidth: 'auto' } }
         ],
         [
-          { content: t('recipes.barcode_label') || "Código de barras:", styles: { fontStyle: 'bold' } },
-          { content: recipe.hasBarcode && recipe.barcode ? recipe.barcode : (t('common.not_applicable') || "N/A"), styles: { cellWidth: 55 } },
-          { content: t('recipes.updated_at') || "Última revisión:", styles: { fontStyle: 'bold' } },
+          { content: getI18nText('recipes.barcode_label', "Código de barras:"), styles: { fontStyle: 'bold' } },
+          { content: recipe.hasBarcode && recipe.barcode ? recipe.barcode : getI18nText('common.not_applicable', "N/A"), styles: { cellWidth: 55 } },
+          { content: getI18nText('recipes.updated_at', "Última revisión:"), styles: { fontStyle: 'bold' } },
           { content: recipe.updatedAt ? formatDateDDMMYYYY(recipe.updatedAt) : formatDateDDMMYYYY(new Date()), styles: { cellWidth: 'auto' } }
         ]
       ];
@@ -2937,7 +2943,7 @@ export default function ClientDashboard() {
           pageHeight - 8
         );
         doc.text(
-          `${t('common.page') || "Página"} ${i} / ${totalPages}`,
+          `${getI18nText('common.page', "Página")} ${i} / ${totalPages}`,
           pageWidth - margin,
           pageHeight - 8,
           { align: 'right' }

@@ -52,7 +52,10 @@
     "no_results": "No results found",
     "duplicate_suffix": " (Copy)",
     "upload_image_pdf": "Upload Image / PDF",
-    "notes_corrective": "Notes or corrective actions"
+    "notes_corrective": "Notes or corrective actions",
+    "days": "days",
+    "page": "Page",
+    "not_applicable": "N/A"
   },
   "profile": {
     "title": "Profile",
