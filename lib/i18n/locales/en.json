@@ -524,9 +524,10 @@
       "barcode": "Barcode",
       "healthRegistry": "Health registry",
       "otherInfo": "Other information",
-      "elaborationExtraInfo": "Extra production info",
+      "elaborationExtraInfo": "Elaboration notes",
       "dryingRoomDates": "Drying room dates",
-      "unitPrice": "Unit Price (RRP)"
+      "unitPrice": "Unit Price (RRP)",
+      "elaborationNotes": "Elaboration notes"
     },
     "drag_elements": "Drag elements here",
     "none": "None",
@@ -792,7 +793,9 @@
     "cannot_save_out_of_stock_lot": "Lot '{lot}' of ingredient '{ingredient}' is out of stock and your settings do not allow using depleted lots.",
     "final_elaboration_temp": "Final elaboration temperature",
     "cooling_time_under_10": "Time taken to cool below 10 degrees",
-    "cooling_time_under_10_help": "Should be less than 2 hours"
+    "cooling_time_under_10_help": "Should be less than 2 hours",
+    "elaboration_notes_placeholder": "Contains 14 units",
+    "elaboration_notes_help": "You can place this content on the label."
   },
   "goods_receipt_form": {
     "product": "Product",

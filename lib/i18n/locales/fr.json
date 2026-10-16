@@ -520,9 +520,10 @@
       "barcode": "Code-barres",
       "healthRegistry": "Registre sanitaire",
       "otherInfo": "Autres informations",
-      "elaborationExtraInfo": "Info supp. d'élaboration",
+      "elaborationExtraInfo": "Notes de fabrication",
       "dryingRoomDates": "Dates de séchoir",
-      "unitPrice": "Prix Unitaire (PVC)"
+      "unitPrice": "Prix Unitaire (PVC)",
+      "elaborationNotes": "Notes de fabrication"
     },
     "drag_elements": "Faites glisser des éléments ici",
     "none": "Aucun",
@@ -787,7 +788,9 @@
     "cannot_save_out_of_stock_lot": "Le lot '{lot}' de l'ingrédient '{ingredient}' est épuisé et votre configuration n'autorise pas l'utilisation de lots en rupture de stock.",
     "final_elaboration_temp": "Température de fin d'élaboration",
     "cooling_time_under_10": "Temps nécessaire pour descendre en dessous de 10 degrés",
-    "cooling_time_under_10_help": "Devrait être inférieur à 2 heures"
+    "cooling_time_under_10_help": "Devrait être inférieur à 2 heures",
+    "elaboration_notes_placeholder": "Contient 14 unités",
+    "elaboration_notes_help": "Vous pourrez inclure ce contenu sur l'étiquette."
   },
   "goods_receipt_form": {
     "product": "Produit",

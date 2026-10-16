@@ -520,9 +520,10 @@
       "barcode": "Codice a barre",
       "healthRegistry": "Registro sanitario",
       "otherInfo": "Altre informazioni",
-      "elaborationExtraInfo": "Info extra lavorazione",
+      "elaborationExtraInfo": "Note di elaborazione",
       "dryingRoomDates": "Date essiccatoio",
-      "unitPrice": "Prezzo unitario (PVP)"
+      "unitPrice": "Prezzo unitario (PVP)",
+      "elaborationNotes": "Note di elaborazione"
     },
     "drag_elements": "Trascina elementi qui",
     "none": "Nessuno",
@@ -787,7 +788,9 @@
     "cannot_save_out_of_stock_lot": "Il lotto '{lot}' dell'ingrediente '{ingredient}' è esaurito e la tua configurazione non consente l'uso di lotti esauriti.",
     "final_elaboration_temp": "Temperatura di fine lavorazione",
     "cooling_time_under_10": "Tempo impiegato per scendere sotto i 10 gradi",
-    "cooling_time_under_10_help": "Dovrebbe essere inferiore a 2 ore"
+    "cooling_time_under_10_help": "Dovrebbe essere inferiore a 2 ore",
+    "elaboration_notes_placeholder": "Contiene 14 unità",
+    "elaboration_notes_help": "Potrai inserire questo contenuto sull'etichetta."
   },
   "goods_receipt_form": {
     "product": "Prodotto",

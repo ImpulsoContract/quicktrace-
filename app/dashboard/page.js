@@ -3373,6 +3373,15 @@ export default function ClientDashboard() {
             }
           }
           break;
+        case 'elaborationNotes':
+        case 'elaborationExtraInfo':
+          if (elaboration.extraInfo && elaboration.extraInfo.trim()) {
+            doc.setFont("helvetica", "normal");
+            const splitNotes = doc.splitTextToSize(elaboration.extraInfo.trim(), columnWidth);
+            doc.text(splitNotes, startX, currentY);
+            currentY += (splitNotes.length * lineHeightMM);
+          }
+          break;
       }
       
       if (currentY > initialY) {
@@ -6108,11 +6117,14 @@ export default function ClientDashboard() {
                       className="input-field" 
                       value={elaboracionForm.extraInfo || ""} 
                       onChange={(e) => setElaboracionForm({...elaboracionForm, extraInfo: e.target.value})} 
-                      placeholder={t('traceability_form.elaboration_notes')}
+                      placeholder={t('traceability_form.elaboration_notes_placeholder') || "Contiene 14 unidades"}
                       rows={4}
                       style={{ resize: 'vertical', minHeight: '100px' }}
                       disabled={isReadOnlyElab}
                     />
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.4rem', display: 'block' }}>
+                      {t('traceability_form.elaboration_notes_help') || "Podrás poner este contenido en la etiqueta."}
+                    </span>
                   </div>
 
                   <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2.5rem', display: 'flex', justifyContent: 'flex-end' }}>
@@ -15254,7 +15266,8 @@ function LabelConfigModal({ config, onClose, onSave }) {
     'recipeName', 'lote', 'elaborationDate', 'expirationDate', 'netWeight',
     'elaborationInstructions', 'conservationInstructions', 
     'allergens', 'nutritionalTable', 'ingredientsList', 
-    'madeBy', 'barcode', 'healthRegistry', 'unitPrice', 'dryingRoomDates'
+    'madeBy', 'barcode', 'healthRegistry', 'unitPrice', 'dryingRoomDates',
+    'elaborationNotes'
   ];
 
   const getAvailableElements = () => {

@@ -521,8 +521,9 @@
       "barcode": "Código de barras",
       "healthRegistry": "Registo sanitário",
       "otherInfo": "Outras informações",
-      "elaborationExtraInfo": "Info extra de elaboração",
-      "dryingRoomDates": "Datas do secador"
+      "elaborationExtraInfo": "Notas de preparação",
+      "dryingRoomDates": "Datas do secador",
+      "elaborationNotes": "Notas de preparação"
     },
     "drag_elements": "Arraste os elementos para aqui",
     "none": "Nenhum",
@@ -784,7 +785,9 @@
     "cannot_save_out_of_stock_lot": "O lote '{lot}' do ingrediente '{ingredient}' está esgotado e a sua configuração não permite usar lotes sem estoque.",
     "final_elaboration_temp": "Temperatura de finalização da elaboração",
     "cooling_time_under_10": "Tempo que demorou a descer abaixo de 10 graus",
-    "cooling_time_under_10_help": "Deverá ser inferior a 2 horas"
+    "cooling_time_under_10_help": "Deverá ser inferior a 2 horas",
+    "elaboration_notes_placeholder": "Contém 14 unidades",
+    "elaboration_notes_help": "Poderá colocar este conteúdo na etiqueta."
   },
   "goods_receipt_form": {
     "product": "Produto",
