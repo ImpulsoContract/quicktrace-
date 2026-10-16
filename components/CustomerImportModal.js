@@ -4,7 +4,7 @@ import React, { useState, useMemo, useRef } from "react";
 import * as XLSX from "xlsx";
 import { 
   X, UploadCloud, FileSpreadsheet, ArrowLeft, ArrowRight, 
-  Check, AlertCircle, Loader2, Table, Eye, CheckCircle2 
+  Check, AlertCircle, Loader2, Table, Eye, CheckCircle2, Download 
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -252,9 +252,35 @@ export default function CustomerImportModal({ onClose, onSuccess }) {
               </p>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
-            <X size={24} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <a
+              href="https://quicktrace.es/plantilla_importacion_clientes.xlsx"
+              download="plantilla_importacion_clientes.xlsx"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.55rem 1rem',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                color: 'var(--corp-green)',
+                background: 'rgba(66, 98, 22, 0.06)',
+                borderColor: 'rgba(66, 98, 22, 0.25)',
+                textDecoration: 'none',
+                borderRadius: '0.75rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Download size={16} />
+              {t('customers.import_download_template') || "Descargar plantilla de ejemplo"}
+            </a>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
+              <X size={24} />
+            </button>
+          </div>
         </header>
 
         {/* Indicador de pasos */}
@@ -302,8 +328,9 @@ export default function CustomerImportModal({ onClose, onSuccess }) {
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
             {sheetData.length === 0 ? (
-              <div 
-                onDragOver={handleDragOver}
+              <>
+                <div 
+                  onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
@@ -340,6 +367,28 @@ export default function CustomerImportModal({ onClose, onSuccess }) {
                   </p>
                 </div>
               </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.85rem 1.25rem', background: '#f8fafc', borderRadius: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                <span>¿Aún no tienes la plantilla oficial preparada?</span>
+                <a
+                  href="https://quicktrace.es/plantilla_importacion_clientes.xlsx"
+                  download="plantilla_importacion_clientes.xlsx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: 'var(--corp-green)',
+                    fontWeight: '800',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <Download size={16} />
+                  {t('customers.import_download_template') || "Descargar plantilla de ejemplo"}
+                </a>
+              </div>
+            </>
             ) : (
               <>
                 {/* Archivo cargado info */}

@@ -1272,7 +1272,8 @@
     "import_importing": "Importando clientes...",
     "import_success": "Se han importado con éxito {count} clientes.",
     "import_success_with_skipped": "Se han importado {count} clientes correctamente ({skipped} filas sin nombre comercial fueron ignoradas).",
-    "import_error": "Ocurrió un error al importar los clientes."
+    "import_error": "Ocurrió un error al importar los clientes.",
+    "import_download_template": "Descargar plantilla de ejemplo"
   },
   "elaboration_sales": {
     "actions_header": "Acciones",

@@ -1267,7 +1267,8 @@
     "import_importing": "Importation des clients en cours...",
     "import_success": "{count} clients ont été importés avec succès.",
     "import_success_with_skipped": "{count} clients importés avec succès ({skipped} lignes sans nom commercial ignorées).",
-    "import_error": "Une erreur est survenue lors de l'importation des clients."
+    "import_error": "Une erreur est survenue lors de l'importation des clients.",
+    "import_download_template": "Télécharger le modèle d'exemple"
   },
   "elaboration_sales": {
     "actions_header": "Actions",

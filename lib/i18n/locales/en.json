@@ -1272,7 +1272,8 @@
     "import_importing": "Importing customers...",
     "import_success": "Successfully imported {count} customers.",
     "import_success_with_skipped": "Successfully imported {count} customers ({skipped} rows without commercial name were skipped).",
-    "import_error": "An error occurred while importing customers."
+    "import_error": "An error occurred while importing customers.",
+    "import_download_template": "Download sample template"
   },
   "elaboration_sales": {
     "actions_header": "Actions",
