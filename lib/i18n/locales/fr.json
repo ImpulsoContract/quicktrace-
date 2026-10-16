@@ -239,7 +239,21 @@
     "additional_sections_title": "Activer des sections supplémentaires",
     "additional_sections_desc": "Configurez les sections optionnelles que vous souhaitez afficher dans votre menu principal.",
     "oil_collection_enable": "Activer la collecte des huiles de friture",
-    "vegetable_disinfection_enable": "Activer la désinfection des végétaux"
+    "vegetable_disinfection_enable": "Activer la désinfection des végétaux",
+    "holded_section_title": "Intégration Holded",
+    "holded_section_desc": "Connectez votre compte Holded pour générer des factures officielles de vos ventes en un seul clic.",
+    "holded_api_key_label": "Clé API Holded",
+    "holded_api_key_placeholder": "Collez ici votre clé API Holded",
+    "holded_verify_btn": "Vérifier la connexion",
+    "holded_verifying": "Vérification...",
+    "holded_verified_badge": "Connecté à Holded",
+    "holded_invalid_key": "La clé API saisie n'est pas valide ou ne dispose pas des autorisations nécessaires.",
+    "holded_tax_label": "Taux de TVA par défaut pour les factures",
+    "holded_tax_help": "Sélectionnez le pourcentage de TVA à appliquer aux factures générées.",
+    "holded_series_label": "Série de facturation",
+    "holded_series_default": "Par défaut de Holded",
+    "holded_series_help": "Choisissez la série avec laquelle les factures seront émises depuis QuickTrace.",
+    "holded_disconnect_btn": "Déconnecter Holded"
   },
   "dashboard": {
     "welcome": "Bonjour",
@@ -1326,7 +1340,15 @@
     "save_initial_stock_btn": "Enregistrer le stock initial",
     "saving_initial_stock": "Enregistrement...",
     "initial_stock_saved_success": "Stock initial enregistré avec succès.",
-    "initial_stock_invalid": "Veuillez saisir une quantité initiale valide supérieure à 0."
+    "initial_stock_invalid": "Veuillez saisir une quantité initiale valide supérieure à 0.",
+    "generate_invoice_btn": "Générer la facture",
+    "invoicing_btn": "Facturation...",
+    "invoice_badge": "Facture : {num}",
+    "download_invoice_tooltip": "Télécharger la facture en PDF",
+    "contact_not_found_title": "Client introuvable dans Holded",
+    "contact_not_found_prompt": "Le client n'existe pas dans Holded. Souhaitez-vous le créer automatiquement ?",
+    "create_and_invoice_btn": "Oui, créer et facturer",
+    "invoice_success": "Facture générée avec succès : {num}"
   },
   "sales_report": {
     "btn_label": "Rapport des ventes",

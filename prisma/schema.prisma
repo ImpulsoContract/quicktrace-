@@ -122,6 +122,11 @@ model ClientProfile {
   cuttingRecords             CuttingRecord[]
   oilCollections             OilCollection[]
   vegetableDisinfections     VegetableDisinfection[]
+
+  holdedApiKey               String?
+  holdedTax                  Float?            @default(10)
+  holdedSeriesId             String?
+  holdedSeriesName           String?
 }
 
 model Customer {
@@ -326,6 +331,10 @@ model ElaborationSale {
   percentage      Float         // Porcentaje de la elaboración vendido (ej: 25.0)
   price           Float         // Precio de venta
   date            DateTime      @default(now())
+
+  holdedInvoiceId  String?
+  holdedInvoiceNum String?
+  invoicedAt       DateTime?
 
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)

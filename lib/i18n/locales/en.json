@@ -239,7 +239,21 @@
     "additional_sections_title": "Activate additional sections",
     "additional_sections_desc": "Configure which optional sections you want to display in your main menu.",
     "oil_collection_enable": "Enable frying oil collection",
-    "vegetable_disinfection_enable": "Enable vegetable disinfection"
+    "vegetable_disinfection_enable": "Enable vegetable disinfection",
+    "holded_section_title": "Holded Integration",
+    "holded_section_desc": "Connect your Holded account to generate official invoices for your sales with a single click.",
+    "holded_api_key_label": "Holded API Key",
+    "holded_api_key_placeholder": "Paste your Holded API key here",
+    "holded_verify_btn": "Verify connection",
+    "holded_verifying": "Verifying...",
+    "holded_verified_badge": "Connected to Holded",
+    "holded_invalid_key": "The entered API Key is invalid or has insufficient permissions.",
+    "holded_tax_label": "Default VAT rate for invoices",
+    "holded_tax_help": "Select the VAT percentage to apply to generated invoices.",
+    "holded_series_label": "Invoicing series",
+    "holded_series_default": "Holded default",
+    "holded_series_help": "Choose the series to issue invoices from QuickTrace.",
+    "holded_disconnect_btn": "Disconnect Holded"
   },
   "dashboard": {
     "welcome": "Hello",
@@ -1331,7 +1345,15 @@
     "save_initial_stock_btn": "Save initial stock",
     "saving_initial_stock": "Saving...",
     "initial_stock_saved_success": "Initial stock saved successfully.",
-    "initial_stock_invalid": "Please enter a valid initial quantity greater than 0."
+    "initial_stock_invalid": "Please enter a valid initial quantity greater than 0.",
+    "generate_invoice_btn": "Generate invoice",
+    "invoicing_btn": "Invoicing...",
+    "invoice_badge": "Invoice: {num}",
+    "download_invoice_tooltip": "Download invoice PDF",
+    "contact_not_found_title": "Customer not found in Holded",
+    "contact_not_found_prompt": "The customer does not exist in Holded. Do you want to register them automatically?",
+    "create_and_invoice_btn": "Yes, register and invoice",
+    "invoice_success": "Invoice generated successfully: {num}"
   },
   "sales_report": {
     "btn_label": "Sales Report",

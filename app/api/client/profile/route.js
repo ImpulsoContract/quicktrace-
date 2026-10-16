@@ -97,7 +97,11 @@ export async function PATCH(request) {
       hasCuttingTraceability,
       hasOilCollection,
       hasVegetableDisinfection,
-      blockOutOfStockLots
+      blockOutOfStockLots,
+      holdedApiKey,
+      holdedTax,
+      holdedSeriesId,
+      holdedSeriesName
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -121,7 +125,11 @@ export async function PATCH(request) {
         hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined,
         hasOilCollection: hasOilCollection !== undefined ? hasOilCollection : undefined,
         hasVegetableDisinfection: hasVegetableDisinfection !== undefined ? hasVegetableDisinfection : undefined,
-        blockOutOfStockLots: blockOutOfStockLots !== undefined ? blockOutOfStockLots : undefined
+        blockOutOfStockLots: blockOutOfStockLots !== undefined ? blockOutOfStockLots : undefined,
+        holdedApiKey: holdedApiKey !== undefined ? holdedApiKey : undefined,
+        holdedTax: holdedTax !== undefined ? (holdedTax === null ? null : parseFloat(holdedTax)) : undefined,
+        holdedSeriesId: holdedSeriesId !== undefined ? holdedSeriesId : undefined,
+        holdedSeriesName: holdedSeriesName !== undefined ? holdedSeriesName : undefined
       },
       include: { plan: true }
     });

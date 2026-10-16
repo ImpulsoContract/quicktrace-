@@ -239,7 +239,21 @@
     "additional_sections_title": "Ativar secções adicionais",
     "additional_sections_desc": "Configure quais secções opcionais deseja exibir no seu menu principal.",
     "oil_collection_enable": "Ativar recolha de óleos de fritura",
-    "vegetable_disinfection_enable": "Ativar desinfeção de vegetais"
+    "vegetable_disinfection_enable": "Ativar desinfeção de vegetais",
+    "holded_section_title": "Integração com o Holded",
+    "holded_section_desc": "Conecte a sua conta Holded para gerar faturas oficiais das suas vendas com um só clique.",
+    "holded_api_key_label": "Chave API Holded",
+    "holded_api_key_placeholder": "Cole aqui a sua chave API Holded",
+    "holded_verify_btn": "Verificar conexão",
+    "holded_verifying": "A verificar...",
+    "holded_verified_badge": "Conectado ao Holded",
+    "holded_invalid_key": "A chave API inserida é inválida ou não possui permissões suficientes.",
+    "holded_tax_label": "Taxa de IVA padrão para faturas",
+    "holded_tax_help": "Selecione a percentagem de IVA a aplicar às faturas geradas.",
+    "holded_series_label": "Série de faturação",
+    "holded_series_default": "Padrão do Holded",
+    "holded_series_help": "Escolha a série com a qual serão emitidas as faturas a partir do QuickTrace.",
+    "holded_disconnect_btn": "Desconectar Holded"
   },
   "dashboard": {
     "welcome": "Olá",
@@ -1324,7 +1338,15 @@
     "save_initial_stock_btn": "Guardar stock inicial",
     "saving_initial_stock": "A guardar...",
     "initial_stock_saved_success": "Stock inicial guardado com sucesso.",
-    "initial_stock_invalid": "Por favor, introduza uma quantidade inicial válida superior a 0."
+    "initial_stock_invalid": "Por favor, introduza uma quantidade inicial válida superior a 0.",
+    "generate_invoice_btn": "Gerar fatura",
+    "invoicing_btn": "A faturar...",
+    "invoice_badge": "Fatura: {num}",
+    "download_invoice_tooltip": "Descarregar fatura em PDF",
+    "contact_not_found_title": "Cliente não encontrado no Holded",
+    "contact_not_found_prompt": "O cliente não existe no Holded. Deseja registá-lo automaticamente?",
+    "create_and_invoice_btn": "Sim, registar e faturar",
+    "invoice_success": "Fatura gerada com sucesso: {num}"
   },
   "sales_report": {
     "btn_label": "Relatório de vendas",
