@@ -26,7 +26,8 @@
     "nodemailer": "^7.0.13",
     "react": "^18",
     "react-dom": "^18",
-    "stripe": "^20.4.1"
+    "stripe": "^20.4.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "eslint": "^8",

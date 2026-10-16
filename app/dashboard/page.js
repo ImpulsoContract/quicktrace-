@@ -13,7 +13,7 @@ import {
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
   Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download,
-  Salad
+  Salad, FileSpreadsheet
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -24,6 +24,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import CustomerImportModal from "@/components/CustomerImportModal";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -409,6 +410,7 @@ export default function ClientDashboard() {
 
   const [customers, setCustomers] = useState([]);
   const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false);
+  const [isCustomerImportModalOpen, setIsCustomerImportModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
   const [customersForm, setCustomersForm] = useState({
@@ -7701,7 +7703,14 @@ export default function ClientDashboard() {
                   <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('customers.title') || "Clientes"}</h2>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('customers.subtitle') || "Gestiona la información de tus clientes y sus datos fiscales y de contacto"}</p>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={() => setIsCustomerImportModalOpen(true)}
+                    className="btn-secondary" 
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', fontWeight: '700' }}
+                  >
+                    <FileSpreadsheet size={18} color="var(--corp-green)" /> {t('customers.import_btn') || "Importar Excel / CSV"}
+                  </button>
                   <button 
                     onClick={() => {
                       setEditingCustomer(null);
@@ -7754,21 +7763,30 @@ export default function ClientDashboard() {
                   </div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>{t('customers.no_customers') || "No tienes clientes registrados"}</h3>
                   <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{t('customers.no_customers_desc') || "Añade tu primer cliente para tener organizados todos sus datos fiscales y de contacto."}</p>
-                  <button 
-                    onClick={() => {
-                      setEditingCustomer(null);
-                      setCustomersForm({
-                        commercialName: "", fiscalName: "", nif: "", address: "",
-                        postalCode: "", city: "", province: "", email: "", email2: "",
-                        phone: "", phone2: ""
-                      });
-                      setIsCustomersModalOpen(true);
-                    }}
-                    className="btn-primary" 
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
-                  >
-                    <Plus size={18} /> {t('customers.add_customer') || "Añadir cliente"}
-                  </button>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button 
+                      onClick={() => {
+                        setEditingCustomer(null);
+                        setCustomersForm({
+                          commercialName: "", fiscalName: "", nif: "", address: "",
+                          postalCode: "", city: "", province: "", email: "", email2: "",
+                          phone: "", phone2: ""
+                        });
+                        setIsCustomersModalOpen(true);
+                      }}
+                      className="btn-primary" 
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                    >
+                      <Plus size={18} /> {t('customers.add_customer') || "Añadir cliente"}
+                    </button>
+                    <button 
+                      onClick={() => setIsCustomerImportModalOpen(true)}
+                      className="btn-secondary" 
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', fontWeight: '700' }}
+                    >
+                      <FileSpreadsheet size={18} color="var(--corp-green)" /> {t('customers.import_btn') || "Importar Excel / CSV"}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
@@ -10048,6 +10066,15 @@ export default function ClientDashboard() {
           setFormData={setCustomersForm}
           loading={loading}
           isEditing={!!editingCustomer}
+        />
+      )}
+
+      {isCustomerImportModalOpen && (
+        <CustomerImportModal 
+          onClose={() => setIsCustomerImportModalOpen(false)}
+          onSuccess={() => {
+            fetchCustomers();
+          }}
         />
       )}
 
