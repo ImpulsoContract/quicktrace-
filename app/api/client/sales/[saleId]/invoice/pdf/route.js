@@ -39,14 +39,25 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Clave API de Holded no configurada." }, { status: 400 });
     }
 
-    // Call Holded to fetch invoice PDF
-    const holdedRes = await fetch(`https://api.holded.com/api/invoicing/v1/documents/invoice/${sale.holdedInvoiceId}/pdf`, {
+    // Try Holded API v1 first
+    let holdedRes = await fetch(`https://api.holded.com/api/invoicing/v1/documents/invoice/${sale.holdedInvoiceId}/pdf`, {
       method: "GET",
       headers: {
         "key": apiKey,
         "Accept": "application/json, application/pdf"
       }
     });
+
+    // If v1 failed (401/403/404), try Holded API v2
+    if (!holdedRes.ok) {
+      holdedRes = await fetch(`https://api.holded.com/api/v2/invoices/${sale.holdedInvoiceId}/pdf`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json, application/pdf"
+        }
+      });
+    }
 
     if (!holdedRes.ok) {
       return NextResponse.json({ 

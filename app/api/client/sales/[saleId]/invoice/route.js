@@ -25,7 +25,8 @@ export async function POST(request, { params }) {
       where: { id: profileId }
     });
 
-    if (!profile?.holdedApiKey?.trim()) {
+    const apiKey = profile?.holdedApiKey?.trim();
+    if (!apiKey) {
       return NextResponse.json({ 
         error: "Debes configurar tu API Key de Holded en la sección de 'Configuración del negocio' para poder emitir facturas." 
       }, { status: 400 });
@@ -84,29 +85,52 @@ export async function POST(request, { params }) {
       body = {};
     }
     const autoCreateContact = !!body.autoCreateContact;
+    const cleanNif = customerNif.toUpperCase().replace(/\s+/g, '');
 
-    // Search contact in Holded by NIF
-    const contactsRes = await fetch("https://api.holded.com/api/invoicing/v1/contacts", {
-      method: "GET",
-      headers: {
-        "key": profile.holdedApiKey.trim(),
-        "Accept": "application/json"
+    // 1. Fetch contacts: Try v1, fallback to v2
+    let matchedContact = null;
+    let isV2 = apiKey.startsWith("pat_") || apiKey.includes(".");
+    let usedVersion = isV2 ? "v2" : "v1";
+
+    if (!isV2) {
+      try {
+        const v1ContactsRes = await fetch("https://api.holded.com/api/invoicing/v1/contacts", {
+          method: "GET",
+          headers: { "key": apiKey, "Accept": "application/json" }
+        });
+        if (v1ContactsRes.ok) {
+          const contacts = await v1ContactsRes.json();
+          if (Array.isArray(contacts)) {
+            matchedContact = contacts.find(c => c.code && c.code.trim().toUpperCase().replace(/\s+/g, '') === cleanNif);
+          }
+          usedVersion = "v1";
+        } else if (v1ContactsRes.status === 401 || v1ContactsRes.status === 403) {
+          isV2 = true;
+        }
+      } catch (e) {
+        console.error("Holded v1 contacts error:", e);
+        isV2 = true;
       }
-    });
-
-    if (!contactsRes.ok) {
-      return NextResponse.json({
-        error: "Error al consultar los contactos en Holded. Verifica que tu API Key sea válida."
-      }, { status: 400 });
     }
 
-    const contacts = await contactsRes.json();
-    const cleanNif = customerNif.toUpperCase().replace(/\s+/g, '');
-    let matchedContact = Array.isArray(contacts) 
-      ? contacts.find(c => c.code && c.code.trim().toUpperCase().replace(/\s+/g, '') === cleanNif) 
-      : null;
+    if (isV2 && !matchedContact) {
+      try {
+        const v2ContactsRes = await fetch("https://api.holded.com/api/v2/contacts", {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${apiKey}`, "Accept": "application/json" }
+        });
+        if (v2ContactsRes.ok) {
+          const data = await v2ContactsRes.json();
+          const contacts = Array.isArray(data) ? data : (data.items || []);
+          matchedContact = contacts.find(c => (c.code || c.vat_number) && (c.code || c.vat_number).trim().toUpperCase().replace(/\s+/g, '') === cleanNif);
+          usedVersion = "v2";
+        }
+      } catch (e) {
+        console.error("Holded v2 contacts error:", e);
+      }
+    }
 
-    // If contact not found in Holded
+    // 2. If contact not found in Holded
     if (!matchedContact) {
       if (!autoCreateContact) {
         return NextResponse.json({
@@ -118,62 +142,70 @@ export async function POST(request, { params }) {
         }, { status: 200 });
       }
 
-      // Automatically create contact in Holded
-      const createContactPayload = {
-        name: (sale.customer.fiscalName || sale.customer.commercialName || "Cliente").trim(),
-        tradeName: (sale.customer.commercialName || "").trim() || undefined,
-        code: customerNif,
-        email: sale.customer.email?.trim() || undefined,
-        phone: (sale.customer.phone || sale.customer.phone2)?.trim() || undefined,
-        billAddress: {
-          address: sale.customer.address?.trim() || "",
-          postalCode: sale.customer.postalCode?.trim() || "",
-          city: sale.customer.city?.trim() || "",
-          province: sale.customer.province?.trim() || "",
-          country: "España"
-        },
-        isCustomer: true
-      };
+      // Create contact in Holded
+      const contactName = (sale.customer.fiscalName || sale.customer.commercialName || "Cliente").trim();
+      
+      if (usedVersion === "v1") {
+        const createPayloadV1 = {
+          name: contactName,
+          tradeName: (sale.customer.commercialName || "").trim() || undefined,
+          code: customerNif,
+          email: sale.customer.email?.trim() || undefined,
+          phone: (sale.customer.phone || sale.customer.phone2)?.trim() || undefined,
+          billAddress: {
+            address: sale.customer.address?.trim() || "",
+            postalCode: sale.customer.postalCode?.trim() || "",
+            city: sale.customer.city?.trim() || "",
+            province: sale.customer.province?.trim() || "",
+            country: "España"
+          },
+          isCustomer: true
+        };
 
-      const createRes = await fetch("https://api.holded.com/api/invoicing/v1/contacts", {
-        method: "POST",
-        headers: {
-          "key": profile.holdedApiKey.trim(),
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(createContactPayload)
-      });
+        const createRes = await fetch("https://api.holded.com/api/invoicing/v1/contacts", {
+          method: "POST",
+          headers: { "key": apiKey, "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(createPayloadV1)
+        });
 
-      if (!createRes.ok) {
-        const errData = await createRes.json().catch(() => ({}));
-        return NextResponse.json({
-          error: `Error al crear el cliente en Holded: ${errData.info || errData.message || createRes.statusText}`
-        }, { status: 400 });
+        const createData = await createRes.json().catch(() => ({}));
+        if (!createRes.ok || createData.status === 0 || !createData.id) {
+          return NextResponse.json({
+            error: `Error al crear el cliente en Holded: ${createData.info || createData.message || createRes.statusText}`
+          }, { status: 400 });
+        }
+        matchedContact = { id: createData.id };
+      } else {
+        const createPayloadV2 = {
+          name: contactName,
+          code: customerNif,
+          email: sale.customer.email?.trim() || undefined,
+          phone: (sale.customer.phone || sale.customer.phone2)?.trim() || undefined,
+          type: "client"
+        };
+
+        const createRes = await fetch("https://api.holded.com/api/v2/contacts", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(createPayloadV2)
+        });
+
+        const createData = await createRes.json().catch(() => ({}));
+        if (!createRes.ok || !createData.id) {
+          return NextResponse.json({
+            error: `Error al crear el cliente en Holded: ${createData.detail || createData.message || createRes.statusText}`
+          }, { status: 400 });
+        }
+        matchedContact = { id: createData.id };
       }
-
-      const createData = await createRes.json();
-      if (createData.status === 0 || !createData.id) {
-        return NextResponse.json({
-          error: `Error al crear el cliente en Holded: ${createData.info || "Respuesta inválida"}`
-        }, { status: 400 });
-      }
-
-      matchedContact = { id: createData.id };
     }
 
-    // Build invoice items
+    // 3. Build invoice items
     const itemName = sale.elaboration?.recipe?.name || sale.elaboration?.name || "Elaboración";
     const descParts = [];
-    if (sale.elaboration?.name) {
-      descParts.push(`Lote: ${sale.elaboration.name}`);
-    }
-    if (sale.elaboration?.date) {
-      descParts.push(`Elab: ${new Date(sale.elaboration.date).toLocaleDateString('es-ES')}`);
-    }
-    if (sale.elaboration?.expiryDate) {
-      descParts.push(`Caducidad: ${new Date(sale.elaboration.expiryDate).toLocaleDateString('es-ES')}`);
-    }
+    if (sale.elaboration?.name) descParts.push(`Lote: ${sale.elaboration.name}`);
+    if (sale.elaboration?.date) descParts.push(`Elab: ${new Date(sale.elaboration.date).toLocaleDateString('es-ES')}`);
+    if (sale.elaboration?.expiryDate) descParts.push(`Caducidad: ${new Date(sale.elaboration.expiryDate).toLocaleDateString('es-ES')}`);
     const itemDesc = descParts.length > 0 ? descParts.join(" | ") : "";
 
     const units = sale.quantity && sale.quantity > 0 ? sale.quantity : 1;
@@ -185,53 +217,89 @@ export async function POST(request, { params }) {
       ? profile.holdedTax 
       : 10;
 
-    const invoicePayload = {
-      contactId: matchedContact.id,
-      date: Math.floor(new Date(sale.date || Date.now()).getTime() / 1000),
-      notes: `Venta registrada desde QuickTrace. Venta ID: ${sale.id}`,
-      items: [
-        {
-          name: itemName,
-          desc: itemDesc,
-          units: units,
-          subtotal: subtotal,
-          tax: taxRate
-        }
-      ]
-    };
+    let invoiceId = null;
+    let invoiceNum = null;
 
-    if (profile.holdedSeriesId?.trim()) {
-      invoicePayload.seriesId = profile.holdedSeriesId.trim();
+    if (usedVersion === "v1") {
+      const invoicePayload = {
+        contactId: matchedContact.id,
+        date: Math.floor(new Date(sale.date || Date.now()).getTime() / 1000),
+        notes: `Venta registrada desde QuickTrace. Venta ID: ${sale.id}`,
+        items: [
+          {
+            name: itemName,
+            desc: itemDesc,
+            units: units,
+            subtotal: subtotal,
+            tax: taxRate
+          }
+        ]
+      };
+
+      if (profile.holdedSeriesId?.trim()) {
+        invoicePayload.seriesId = profile.holdedSeriesId.trim();
+      }
+
+      const invoiceRes = await fetch("https://api.holded.com/api/invoicing/v1/documents/invoice", {
+        method: "POST",
+        headers: { "key": apiKey, "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(invoicePayload)
+      });
+
+      const invoiceData = await invoiceRes.json().catch(() => ({}));
+
+      if (!invoiceRes.ok || invoiceData.status === 0 || (!invoiceData.id && !invoiceData.documentNum)) {
+        return NextResponse.json({
+          error: `Error al generar factura en Holded: ${invoiceData.info || invoiceData.message || invoiceRes.statusText}`
+        }, { status: 400 });
+      }
+
+      invoiceId = String(invoiceData.id || invoiceData.invoiceId || "");
+      invoiceNum = String(invoiceData.documentNum || invoiceData.docNumber || invoiceId);
+    } else {
+      const invoicePayloadV2 = {
+        contact_id: matchedContact.id,
+        date: new Date(sale.date || Date.now()).toISOString().slice(0, 10),
+        notes: `Venta registrada desde QuickTrace. Venta ID: ${sale.id}`,
+        items: [
+          {
+            name: itemName,
+            description: itemDesc,
+            units: units,
+            price: subtotal,
+            tax: taxRate
+          }
+        ]
+      };
+
+      if (profile.holdedSeriesId?.trim()) {
+        invoicePayloadV2.numbering_series_id = profile.holdedSeriesId.trim();
+      }
+
+      const invoiceRes = await fetch("https://api.holded.com/api/v2/invoices", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(invoicePayloadV2)
+      });
+
+      const invoiceData = await invoiceRes.json().catch(() => ({}));
+
+      if (!invoiceRes.ok || (!invoiceData.id && !invoiceData.doc_number)) {
+        return NextResponse.json({
+          error: `Error al generar factura en Holded: ${invoiceData.detail || invoiceData.message || invoiceRes.statusText}`
+        }, { status: 400 });
+      }
+
+      invoiceId = String(invoiceData.id || "");
+      invoiceNum = String(invoiceData.doc_number || invoiceData.number || invoiceId);
     }
 
-    // Create invoice in Holded
-    const invoiceRes = await fetch("https://api.holded.com/api/invoicing/v1/documents/invoice", {
-      method: "POST",
-      headers: {
-        "key": profile.holdedApiKey.trim(),
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(invoicePayload)
-    });
-
-    const invoiceData = await invoiceRes.json().catch(() => ({}));
-
-    if (!invoiceRes.ok || invoiceData.status === 0 || (!invoiceData.id && !invoiceData.documentNum)) {
-      return NextResponse.json({
-        error: `Error al generar factura en Holded: ${invoiceData.info || invoiceData.message || invoiceRes.statusText}`
-      }, { status: 400 });
-    }
-
-    const holdedInvoiceId = String(invoiceData.id || invoiceData.invoiceId || "");
-    const holdedInvoiceNum = String(invoiceData.documentNum || invoiceData.docNumber || holdedInvoiceId);
-
-    // Save invoice info on sale
+    // Save invoice info on sale in database
     const updatedSale = await prisma.elaborationSale.update({
       where: { id: sale.id },
       data: {
-        holdedInvoiceId,
-        holdedInvoiceNum,
+        holdedInvoiceId: invoiceId,
+        holdedInvoiceNum: invoiceNum,
         invoicedAt: new Date()
       }
     });

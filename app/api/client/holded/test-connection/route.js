@@ -28,28 +28,79 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    // Call Holded to fetch invoice numbering series
-    const holdedRes = await fetch("https://api.holded.com/api/invoicing/v1/numberingseries/invoice", {
-      method: "GET",
-      headers: {
-        "key": apiKey,
-        "Accept": "application/json"
-      }
-    });
+    let seriesList = [];
+    let success = false;
+    let lastError = "";
 
-    if (!holdedRes.ok) {
-      return NextResponse.json({
-        success: false,
-        error: "No se pudo conectar con Holded. Verifica que la API Key sea correcta y tenga permisos de facturación."
-      }, { status: 400 });
+    // 1. Try Holded API v1 (Legacy header 'key: ...')
+    try {
+      const v1Res = await fetch("https://api.holded.com/api/invoicing/v1/numberingseries/invoice", {
+        method: "GET",
+        headers: {
+          "key": apiKey,
+          "Accept": "application/json"
+        }
+      });
+
+      if (v1Res.ok) {
+        const data = await v1Res.json();
+        seriesList = Array.isArray(data) ? data.map(s => ({
+          id: s.id,
+          name: s.name || s.id,
+          prefix: s.prefix || s.format || ""
+        })) : [];
+        success = true;
+      } else {
+        const errText = await v1Res.text().catch(() => "");
+        try {
+          const jsonErr = JSON.parse(errText);
+          lastError = jsonErr.info || jsonErr.message || jsonErr.detail || "";
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.error("Holded v1 check failed:", e);
     }
 
-    const data = await holdedRes.json();
-    const seriesList = Array.isArray(data) ? data.map(s => ({
-      id: s.id,
-      name: s.name || s.id,
-      prefix: s.prefix || s.format || ""
-    })) : [];
+    // 2. If v1 didn't succeed, try Holded API v2 ('Authorization: Bearer ...')
+    if (!success) {
+      try {
+        const v2Res = await fetch("https://api.holded.com/api/v2/numbering-series/invoice", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Accept": "application/json"
+          }
+        });
+
+        if (v2Res.ok) {
+          const data = await v2Res.json();
+          const items = Array.isArray(data) ? data : (data.items || []);
+          seriesList = items.map(s => ({
+            id: s.id,
+            name: s.name || s.id,
+            prefix: s.prefix || s.format || ""
+          }));
+          success = true;
+        } else {
+          const errText = await v2Res.text().catch(() => "");
+          try {
+            const jsonErr = JSON.parse(errText);
+            lastError = jsonErr.detail || jsonErr.message || jsonErr.info || lastError;
+          } catch (e) {}
+        }
+      } catch (e) {
+        console.error("Holded v2 check failed:", e);
+      }
+    }
+
+    if (!success) {
+      return NextResponse.json({
+        success: false,
+        error: lastError 
+          ? `Holded respondió: "${lastError}". Verifica que la clave sea correcta y tenga permisos de Facturación/Ventas.` 
+          : "No se pudo conectar con Holded. Verifica que la API Key sea correcta y que en Holded tenga activados los permisos de Ventas (Facturas) y Contactos."
+      }, { status: 400 });
+    }
 
     return NextResponse.json({
       success: true,
