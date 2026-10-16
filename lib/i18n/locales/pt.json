@@ -786,7 +786,7 @@
     "final_elaboration_temp": "Temperatura de finalização da elaboração",
     "cooling_time_under_10": "Tempo que demorou a descer abaixo de 10 graus",
     "cooling_time_under_10_help": "Deverá ser inferior a 2 horas",
-    "elaboration_notes_placeholder": "Contém 14 unidades",
+    "elaboration_notes_placeholder": "Por exemplo: Contém 14 unidades",
     "elaboration_notes_help": "Poderá colocar este conteúdo na etiqueta."
   },
   "goods_receipt_form": {

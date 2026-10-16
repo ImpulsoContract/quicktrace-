@@ -6117,7 +6117,7 @@ export default function ClientDashboard() {
                       className="input-field" 
                       value={elaboracionForm.extraInfo || ""} 
                       onChange={(e) => setElaboracionForm({...elaboracionForm, extraInfo: e.target.value})} 
-                      placeholder={t('traceability_form.elaboration_notes_placeholder') || "Contiene 14 unidades"}
+                      placeholder={t('traceability_form.elaboration_notes_placeholder') || "Por ejemplo: Contiene 14 unidades"}
                       rows={4}
                       style={{ resize: 'vertical', minHeight: '100px' }}
                       disabled={isReadOnlyElab}
