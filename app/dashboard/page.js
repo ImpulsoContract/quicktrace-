@@ -13,7 +13,7 @@ import {
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
   Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download,
-  Salad, FileSpreadsheet
+  Salad, FileSpreadsheet, MessageCircle
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -2399,7 +2399,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.holdedApiKey !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -10094,6 +10094,7 @@ export default function ClientDashboard() {
         <CustomerSalesModal
           customer={customerForSalesModal}
           profile={profile}
+          onProfileUpdated={(updatedProfile) => setProfile(updatedProfile)}
           onClose={() => {
             setCustomerForSalesModal(null);
             setReturnToCustomerSales(null);
@@ -10111,6 +10112,7 @@ export default function ClientDashboard() {
           elaboration={saleModalElaboration}
           customers={customers}
           profile={profile}
+          onProfileUpdated={(updatedProfile) => setProfile(updatedProfile)}
           onClose={() => {
             setIsSaleModalOpen(false);
             setSaleModalElaboration(null);
@@ -16339,16 +16341,514 @@ function CustomerModal({ onClose, onSubmit, formData, setFormData, loading, isEd
   );
 }
 
-function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
+function HoldedPromoModal({ isOpen, onClose, onOpenHoldedConfig }) {
+  const { t } = useI18n();
+  if (!isOpen) return null;
+
+  const handleOpenWhatsApp = () => {
+    const phone = "34679728752";
+    const msg = encodeURIComponent(t('elaboration_sales.whatsapp_integration_msg') || "Quiero que integres mi programa de facturación en Quicktrace...");
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 400 }} onClick={onClose}>
+      <div 
+        className="modal-content" 
+        style={{ maxWidth: '620px', width: '92%', animation: 'scaleUp 0.2s ease', padding: '2rem' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              background: 'rgba(66, 98, 22, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <FileText size={22} color="var(--corp-green)" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                {t('elaboration_sales.invoice_promo_title') || "Emite facturas de tus ventas"}
+              </h3>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.75rem' }}>
+          {t('elaboration_sales.invoice_promo_desc') || "Puedes conectar tu programa de facturación para generar facturas oficiales automáticamente desde tus ventas registradas."}
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Card 1: Holded */}
+          <div style={{
+            background: 'rgba(66, 98, 22, 0.03)',
+            borderRadius: '1rem',
+            border: '1.5px solid rgba(66, 98, 22, 0.2)',
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                  {t('elaboration_sales.invoice_promo_holded_title') || "¿Utilizas Holded?"}
+                </span>
+              </div>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                background: 'rgba(34, 197, 94, 0.12)',
+                color: '#16a34a',
+                padding: '0.25rem 0.65rem',
+                borderRadius: '1rem',
+                fontSize: '0.75rem',
+                fontWeight: '700'
+              }}>
+                <Sparkles size={12} />
+                {t('elaboration_sales.invoice_promo_holded_badge') || "Integración disponible"}
+              </span>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
+              {t('elaboration_sales.invoice_promo_holded_desc') || "Conecta tu cuenta de Holded en pocos segundos introduciendo tu API Key y podrás emitir y descargar tus facturas con un solo clic."}
+            </p>
+
+            <div style={{ marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenHoldedConfig();
+                }}
+                className="btn-primary"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 1.25rem',
+                  fontSize: '0.88rem',
+                  fontWeight: '700',
+                  borderRadius: '0.65rem'
+                }}
+              >
+                <FileText size={16} />
+                {t('elaboration_sales.invoice_promo_holded_btn') || "Integrar Holded"}
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Other Invoicing Software via WhatsApp */}
+          <div style={{
+            background: '#f8fafc',
+            borderRadius: '1rem',
+            border: '1px solid var(--border)',
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem'
+          }}>
+            <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-main)' }}>
+              {t('elaboration_sales.invoice_promo_other_title') || "¿Utilizas otro programa de facturación?"}
+            </span>
+
+            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
+              {t('elaboration_sales.invoice_promo_other_desc') || "Si utilizas Factusol, Sage, Anfix, Alegra u otro sistema de facturación y deseas que lo integremos en QuickTrace, dínoslo por WhatsApp y lo desarrollaremos para ti."}
+            </p>
+
+            <div style={{ marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={handleOpenWhatsApp}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 1.25rem',
+                  fontSize: '0.88rem',
+                  fontWeight: '700',
+                  borderRadius: '0.65rem',
+                  background: '#25D366',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                  boxShadow: '0 2px 4px rgba(37, 211, 102, 0.2)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#20bd5a'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#25D366'}
+              >
+                <MessageCircle size={16} />
+                {t('elaboration_sales.invoice_promo_whatsapp_btn') || "Indicar mi programa por WhatsApp"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: '1.75rem', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-secondary"
+            style={{ padding: '0.6rem 1.5rem', fontSize: '0.88rem' }}
+          >
+            {t('common.close') || "Cerrar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
+  const { t } = useI18n();
+  const [apiKey, setApiKey] = useState(profile?.holdedApiKey || "");
+  const [tax, setTax] = useState(profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10);
+  const [seriesId, setSeriesId] = useState(profile?.holdedSeriesId || "");
+  const [seriesName, setSeriesName] = useState(profile?.holdedSeriesName || "");
+  const [verified, setVerified] = useState(!!profile?.holdedApiKey);
+  const [seriesList, setSeriesList] = useState([]);
+  const [testing, setTesting] = useState(false);
+  const [testError, setTestError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setApiKey(profile?.holdedApiKey || "");
+      setTax(profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10);
+      setSeriesId(profile?.holdedSeriesId || "");
+      setSeriesName(profile?.holdedSeriesName || "");
+      setVerified(!!profile?.holdedApiKey);
+      setTestError("");
+      
+      if (profile?.holdedApiKey) {
+        fetch("/api/client/holded/test-connection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey: profile.holdedApiKey })
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.series)) {
+            setSeriesList(data.series);
+            setVerified(true);
+          }
+        })
+        .catch(e => console.error("Error loading Holded series:", e));
+      }
+    }
+  }, [isOpen, profile]);
+
+  if (!isOpen) return null;
+
+  const handleVerify = async () => {
+    const key = apiKey.trim();
+    if (!key) {
+      setTestError(t('business_config.holded_invalid_key') || "Debes introducir una clave API.");
+      return;
+    }
+    setTesting(true);
+    setTestError("");
+    try {
+      const res = await fetch("/api/client/holded/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerified(true);
+        setSeriesList(data.series || []);
+      } else {
+        setVerified(false);
+        setTestError(data.error || t('business_config.holded_invalid_key') || "API Key inválida o sin permisos.");
+      }
+    } catch (err) {
+      console.error("Error verifying Holded:", err);
+      setVerified(false);
+      setTestError("Error de conexión al verificar con Holded.");
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleDisconnect = () => {
+    if (confirm("¿Estás seguro de que deseas desconectar la integración con Holded?")) {
+      setApiKey("");
+      setSeriesId("");
+      setSeriesName("");
+      setVerified(false);
+      setSeriesList([]);
+      setTestError("");
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updates = {
+        holdedApiKey: apiKey.trim() || null,
+        holdedTax: parseFloat(tax) || 0,
+        holdedSeriesId: seriesId || null,
+        holdedSeriesName: seriesName || null
+      };
+      const res = await fetch("/api/client/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+      const data = await res.json();
+      if (!data.error) {
+        if (onProfileUpdated) onProfileUpdated(data);
+        alert(t('elaboration_sales.holded_modal_save_success') || "Configuración de Holded guardada correctamente");
+        onClose();
+      } else {
+        alert(data.error || "Error al guardar la configuración");
+      }
+    } catch (err) {
+      console.error("Error saving Holded settings:", err);
+      alert("Error de conexión al guardar la configuración.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 410 }} onClick={onClose}>
+      <div 
+        className="modal-content" 
+        style={{ maxWidth: '600px', width: '92%', animation: 'scaleUp 0.2s ease', padding: '2rem' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)' }}>
+            <FileText size={22} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+              {t('business_config.holded_section_title') || "Integración con Holded"}
+            </h3>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {verified && (
+              <span style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '0.4rem', 
+                background: 'rgba(34, 197, 94, 0.1)', 
+                color: '#16a34a', 
+                padding: '0.3rem 0.75rem', 
+                borderRadius: '2rem', 
+                fontSize: '0.8rem', 
+                fontWeight: '700' 
+              }}>
+                <Check size={14} />
+                {t('business_config.holded_verified_badge') || "Conectado"}
+              </span>
+            )}
+            <button 
+              type="button" 
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: '1.5' }}>
+          {t('business_config.holded_section_desc') || "Conecta tu cuenta de Holded para generar facturas oficiales de tus ventas con un solo clic."}
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
+              {t('business_config.holded_api_key_label') || "API Key de Holded"}
+            </label>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <input 
+                type="password"
+                className="input-field"
+                style={{ flex: 1, minWidth: '240px' }}
+                placeholder={t('business_config.holded_api_key_placeholder') || "Pega aquí tu clave API de Holded"}
+                value={apiKey}
+                onChange={(e) => {
+                  setApiKey(e.target.value);
+                  if (verified && e.target.value !== profile?.holdedApiKey) {
+                    setVerified(false);
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleVerify}
+                disabled={testing || !apiKey.trim()}
+                className="btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
+              >
+                {testing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                {testing 
+                  ? (t('business_config.holded_verifying') || "Verificando...") 
+                  : (t('business_config.holded_verify_btn') || "Verificar conexión")}
+              </button>
+            </div>
+
+            {testError && (
+              <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <AlertCircle size={15} />
+                <span>{testError}</span>
+              </div>
+            )}
+          </div>
+
+          {verified && (
+            <div style={{ 
+              animation: 'fadeIn 0.3s ease', 
+              background: '#f8fafc', 
+              padding: '1.5rem', 
+              borderRadius: '0.85rem', 
+              border: '1px solid var(--border)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '1.25rem'
+            }}>
+              {/* Default VAT */}
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                  {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                </label>
+                <select
+                  className="input-field"
+                  value={tax}
+                  onChange={(e) => setTax(parseFloat(e.target.value))}
+                  style={{ background: 'white' }}
+                >
+                  <option value={0}>0% (Exento / Sin IVA)</option>
+                  <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                  <option value={10}>10% (Reducido - alimentos en general)</option>
+                  <option value={21}>21% (General)</option>
+                </select>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                  {t('business_config.holded_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
+                </span>
+              </div>
+
+              {/* Series */}
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                  {t('business_config.holded_series_label') || "Serie de facturación"}
+                </label>
+                <select
+                  className="input-field"
+                  value={seriesId}
+                  onChange={(e) => {
+                    const selId = e.target.value;
+                    setSeriesId(selId);
+                    const found = seriesList.find(s => s.id === selId);
+                    setSeriesName(found ? found.name : "");
+                  }}
+                  style={{ background: 'white' }}
+                >
+                  <option value="">{t('business_config.holded_series_default') || "Predeterminada de Holded"}</option>
+                  {seriesList.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                  {t('business_config.holded_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {verified && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+              <button
+                type="button"
+                onClick={handleDisconnect}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ef4444',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: 0
+                }}
+              >
+                <Trash2 size={14} />
+                {t('business_config.holded_disconnect_btn') || "Desconectar Holded"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-secondary"
+            disabled={saving}
+          >
+            {t('common.cancel') || "Cancelar"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="btn-primary"
+            disabled={saving || (apiKey.trim() && !verified)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            {t('common.save') || "Guardar configuración"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onProfileUpdated }) {
   const { t, locale } = useI18n();
+  const [currentProfile, setCurrentProfile] = useState(profile);
+  useEffect(() => {
+    setCurrentProfile(profile);
+  }, [profile]);
+
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Holded Invoicing state
   const [invoicingSaleId, setInvoicingSaleId] = useState(null);
   const [holdedConfirmCustomer, setHoldedConfirmCustomer] = useState({ isOpen: false, sale: null, customerName: "", customerNif: "" });
+  const [showHoldedPromoModal, setShowHoldedPromoModal] = useState(false);
+  const [showHoldedConfigModal, setShowHoldedConfigModal] = useState(false);
 
   const handleGenerateInvoice = async (sale, autoCreate = false) => {
+    if (!currentProfile?.holdedApiKey) {
+      setShowHoldedPromoModal(true);
+      return;
+    }
     setInvoicingSaleId(sale.id);
     try {
       const res = await fetch(`/api/client/sales/${sale.id}/invoice`, {
@@ -16720,53 +17220,51 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {profile?.holdedApiKey && (
-                          sale.holdedInvoiceNum ? (
-                            <button
-                              type="button"
-                              onClick={() => handleDownloadInvoice(sale)}
-                              title={t('elaboration_sales.download_invoice_tooltip') || "Descargar factura en PDF"}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.35rem',
-                                background: 'rgba(66, 98, 22, 0.1)',
-                                color: 'var(--corp-green)',
-                                border: '1px solid rgba(66, 98, 22, 0.3)',
-                                borderRadius: '0.45rem',
-                                padding: '0.35rem 0.65rem',
-                                fontSize: '0.75rem',
-                                fontWeight: '700',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              <FileText size={13} />
-                              {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', sale.holdedInvoiceNum)}
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleGenerateInvoice(sale)}
-                              disabled={invoicingSaleId === sale.id}
-                              title={t('elaboration_sales.generate_invoice_btn') || "Generar factura"}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.35rem',
-                                background: '#f8fafc',
-                                color: 'var(--text-main)',
-                                border: '1px solid var(--border)',
-                                borderRadius: '0.45rem',
-                                padding: '0.35rem 0.65rem',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                cursor: invoicingSaleId === sale.id ? 'wait' : 'pointer'
-                              }}
-                            >
-                              {invoicingSaleId === sale.id ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} color="var(--corp-green)" />}
-                              {invoicingSaleId === sale.id ? (t('elaboration_sales.invoicing_btn') || "Facturando...") : (t('elaboration_sales.generate_invoice_btn') || "Facturar")}
-                            </button>
-                          )
+                        {sale.holdedInvoiceNum ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadInvoice(sale)}
+                            title={t('elaboration_sales.download_invoice_tooltip') || "Descargar factura en PDF"}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              background: 'rgba(66, 98, 22, 0.1)',
+                              color: 'var(--corp-green)',
+                              border: '1px solid rgba(66, 98, 22, 0.3)',
+                              borderRadius: '0.45rem',
+                              padding: '0.35rem 0.65rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <FileText size={13} />
+                            {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', sale.holdedInvoiceNum)}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateInvoice(sale)}
+                            disabled={invoicingSaleId === sale.id}
+                            title={t('elaboration_sales.generate_invoice_btn') || "Generar factura"}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              background: '#f8fafc',
+                              color: 'var(--text-main)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '0.45rem',
+                              padding: '0.35rem 0.65rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              cursor: invoicingSaleId === sale.id ? 'wait' : 'pointer'
+                            }}
+                          >
+                            {invoicingSaleId === sale.id ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} color="var(--corp-green)" />}
+                            {invoicingSaleId === sale.id ? (t('elaboration_sales.invoicing_btn') || "Facturando...") : (t('elaboration_sales.generate_invoice_btn') || "Facturar")}
+                          </button>
                         )}
 
                         <button
@@ -16845,6 +17343,23 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
           </div>
         )}
 
+        {/* Holded Promo & Config Modals */}
+        <HoldedPromoModal
+          isOpen={showHoldedPromoModal}
+          onClose={() => setShowHoldedPromoModal(false)}
+          onOpenHoldedConfig={() => setShowHoldedConfigModal(true)}
+        />
+
+        <HoldedConfigModal
+          isOpen={showHoldedConfigModal}
+          profile={currentProfile}
+          onClose={() => setShowHoldedConfigModal(false)}
+          onProfileUpdated={(updated) => {
+            setCurrentProfile(updated);
+            if (onProfileUpdated) onProfileUpdated(updated);
+          }}
+        />
+
         {/* Pie del modal */}
         <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
           <button
@@ -16861,8 +17376,13 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails }) {
   );
 }
 
-function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated, onNavigateToCustomers }) {
+function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated, onNavigateToCustomers, onProfileUpdated }) {
   const { t, locale } = useI18n();
+  const [currentProfile, setCurrentProfile] = useState(profile);
+  useEffect(() => {
+    setCurrentProfile(profile);
+  }, [profile]);
+
   const [currentElab, setCurrentElab] = useState(elaboration);
   const [sales, setSales] = useState(elaboration.sales || []);
   const [loadingSales, setLoadingSales] = useState(false);
@@ -16873,8 +17393,18 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   // Holded Invoicing state
   const [invoicingSaleId, setInvoicingSaleId] = useState(null);
   const [holdedConfirmCustomer, setHoldedConfirmCustomer] = useState({ isOpen: false, sale: null, customerName: "", customerNif: "" });
+  const [showHoldedPromoModal, setShowHoldedPromoModal] = useState(false);
+  const [showHoldedConfigModal, setShowHoldedConfigModal] = useState(false);
 
   const handleGenerateInvoice = async (sale, autoCreate = false) => {
+    if (!currentProfile?.holdedApiKey) {
+      setShowHoldedPromoModal(true);
+      return;
+    }
+    if (!sale.customerId && !sale.customer) {
+      alert("Debes asignar un cliente a la venta para generar la factura.");
+      return;
+    }
     setInvoicingSaleId(sale.id);
     try {
       const res = await fetch(`/api/client/sales/${sale.id}/invoice`, {
@@ -17505,53 +18035,51 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                       </td>
                       <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          {profile?.holdedApiKey && s.customer && (
-                            s.holdedInvoiceNum ? (
-                              <button
-                                type="button"
-                                onClick={() => handleDownloadInvoice(s)}
-                                title={t('elaboration_sales.download_invoice_tooltip') || "Descargar factura en PDF"}
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '0.35rem',
-                                  background: 'rgba(66, 98, 22, 0.1)',
-                                  color: 'var(--corp-green)',
-                                  border: '1px solid rgba(66, 98, 22, 0.3)',
-                                  borderRadius: '0.4rem',
-                                  padding: '0.3rem 0.6rem',
-                                  fontSize: '0.75rem',
-                                  fontWeight: '700',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                <FileText size={13} />
-                                {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', s.holdedInvoiceNum)}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleGenerateInvoice(s)}
-                                disabled={invoicingSaleId === s.id}
-                                title={t('elaboration_sales.generate_invoice_btn') || "Generar factura"}
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '0.35rem',
-                                  background: '#f8fafc',
-                                  color: 'var(--text-main)',
-                                  border: '1px solid var(--border)',
-                                  borderRadius: '0.4rem',
-                                  padding: '0.3rem 0.6rem',
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  cursor: invoicingSaleId === s.id ? 'wait' : 'pointer'
-                                }}
-                              >
-                                {invoicingSaleId === s.id ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} color="var(--corp-green)" />}
-                                {invoicingSaleId === s.id ? (t('elaboration_sales.invoicing_btn') || "Facturando...") : (t('elaboration_sales.generate_invoice_btn') || "Facturar")}
-                              </button>
-                            )
+                          {s.holdedInvoiceNum ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadInvoice(s)}
+                              title={t('elaboration_sales.download_invoice_tooltip') || "Descargar factura en PDF"}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                background: 'rgba(66, 98, 22, 0.1)',
+                                color: 'var(--corp-green)',
+                                border: '1px solid rgba(66, 98, 22, 0.3)',
+                                borderRadius: '0.4rem',
+                                padding: '0.3rem 0.6rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <FileText size={13} />
+                              {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', s.holdedInvoiceNum)}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleGenerateInvoice(s)}
+                              disabled={invoicingSaleId === s.id}
+                              title={t('elaboration_sales.generate_invoice_btn') || "Generar factura"}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                background: '#f8fafc',
+                                color: 'var(--text-main)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '0.4rem',
+                                padding: '0.3rem 0.6rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                cursor: invoicingSaleId === s.id ? 'wait' : 'pointer'
+                              }}
+                            >
+                              {invoicingSaleId === s.id ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} color="var(--corp-green)" />}
+                              {invoicingSaleId === s.id ? (t('elaboration_sales.invoicing_btn') || "Facturando...") : (t('elaboration_sales.generate_invoice_btn') || "Facturar")}
+                            </button>
                           )}
 
                           <button
@@ -17620,6 +18148,23 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
             </div>
           </div>
         )}
+
+        {/* Holded Promo & Config Modals */}
+        <HoldedPromoModal
+          isOpen={showHoldedPromoModal}
+          onClose={() => setShowHoldedPromoModal(false)}
+          onOpenHoldedConfig={() => setShowHoldedConfigModal(true)}
+        />
+
+        <HoldedConfigModal
+          isOpen={showHoldedConfigModal}
+          profile={currentProfile}
+          onClose={() => setShowHoldedConfigModal(false)}
+          onProfileUpdated={(updated) => {
+            setCurrentProfile(updated);
+            if (onProfileUpdated) onProfileUpdated(updated);
+          }}
+        />
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
           <button 

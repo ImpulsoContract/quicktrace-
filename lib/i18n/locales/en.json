@@ -1353,7 +1353,18 @@
     "contact_not_found_title": "Customer not found in Holded",
     "contact_not_found_prompt": "The customer does not exist in Holded. Do you want to register them automatically?",
     "create_and_invoice_btn": "Yes, register and invoice",
-    "invoice_success": "Invoice generated successfully: {num}"
+    "invoice_success": "Invoice generated successfully: {num}",
+    "invoice_promo_title": "Invoice your sales",
+    "invoice_promo_desc": "You can connect your invoicing software to automatically generate official invoices from your recorded sales.",
+    "invoice_promo_holded_title": "Do you use Holded?",
+    "invoice_promo_holded_badge": "Integration available",
+    "invoice_promo_holded_desc": "Connect your Holded account in seconds by entering your API Key and you can issue and download invoices with a single click.",
+    "invoice_promo_holded_btn": "Integrate Holded",
+    "invoice_promo_other_title": "Do you use another invoicing software?",
+    "invoice_promo_other_desc": "If you use Factusol, Sage, Anfix, Alegra or another invoicing system and want us to integrate it into QuickTrace, let us know via WhatsApp and we will build it for you.",
+    "invoice_promo_whatsapp_btn": "Tell us via WhatsApp",
+    "whatsapp_integration_msg": "I want you to integrate my invoicing software into Quicktrace...",
+    "holded_modal_save_success": "Holded configuration saved successfully"
   },
   "sales_report": {
     "btn_label": "Sales Report",

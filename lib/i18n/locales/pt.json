@@ -1346,7 +1346,18 @@
     "contact_not_found_title": "Cliente não encontrado no Holded",
     "contact_not_found_prompt": "O cliente não existe no Holded. Deseja registá-lo automaticamente?",
     "create_and_invoice_btn": "Sim, registar e faturar",
-    "invoice_success": "Fatura gerada com sucesso: {num}"
+    "invoice_success": "Fatura gerada com sucesso: {num}",
+    "invoice_promo_title": "Fature as suas vendas",
+    "invoice_promo_desc": "Pode conectar o seu programa de faturação para gerar faturas oficiais automaticamente a partir das suas vendas registadas.",
+    "invoice_promo_holded_title": "Utiliza o Holded?",
+    "invoice_promo_holded_badge": "Integração disponível",
+    "invoice_promo_holded_desc": "Conecte a sua conta Holded em poucos segundos inserindo a sua chave API e emita as suas faturas com um só clique.",
+    "invoice_promo_holded_btn": "Integrar Holded",
+    "invoice_promo_other_title": "Utiliza outro programa de faturação?",
+    "invoice_promo_other_desc": "Se utiliza Factusol, Sage, Anfix, Alegra ou outro sistema e deseja que o integremos no QuickTrace, diga-nos pelo WhatsApp.",
+    "invoice_promo_whatsapp_btn": "Indicar o meu programa por WhatsApp",
+    "whatsapp_integration_msg": "Quero que integrem o meu programa de faturação no Quicktrace...",
+    "holded_modal_save_success": "Configuração do Holded guardada com sucesso"
   },
   "sales_report": {
     "btn_label": "Relatório de vendas",
