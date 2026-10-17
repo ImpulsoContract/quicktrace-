@@ -254,6 +254,7 @@ const generateLotNumber = (format, recipe, nextElabNum, date = new Date()) => {
   const lotFormat = format || DEFAULT_LOT_FORMAT;
   const d = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
   const year = d.getFullYear().toString();
+  const year2 = year.slice(-2);
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   const week = getWeekNumber(d);
@@ -269,9 +270,10 @@ const generateLotNumber = (format, recipe, nextElabNum, date = new Date()) => {
   const recipeName = recipe?.name || "";
   const elabNum = (nextElabNum != null && nextElabNum > 0 ? nextElabNum : 1).toString();
 
-  return lotFormat.replace(/(YYYY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g, (match) => {
+  return lotFormat.replace(/(YYYY|YY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g, (match) => {
     switch (match) {
       case "YYYY": return year;
+      case "YY": return year2;
       case "MM": return month;
       case "DD": return day;
       case "WW":
@@ -12669,6 +12671,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     { id: "day", label: t('business_config.btn_day'), token: "DD" },
     { id: "month", label: t('business_config.btn_month'), token: "MM" },
     { id: "year", label: t('business_config.btn_year'), token: "YYYY" },
+    { id: "year_2digits", label: t('business_config.btn_year_2digits') || "Año de elaboración (2 dígitos)", token: "YY" },
     { id: "week", label: t('business_config.btn_week'), token: "WW" },
     { id: "hour", label: t('business_config.btn_hour'), token: "HH" },
     { id: "minute", label: t('business_config.btn_minute'), token: "mm" },
@@ -12683,7 +12686,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   };
 
   const handleDeleteLastToken = () => {
-    const tokens = (lotFormat || "").match(/(YYYY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g) || [];
+    const tokens = (lotFormat || "").match(/(YYYY|YY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g) || [];
     if (tokens.length > 0) {
       tokens.pop();
       setLotFormat(tokens.join(""));
