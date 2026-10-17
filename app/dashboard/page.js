@@ -343,10 +343,75 @@ const mergeLabelConfig = (rawConfig) => {
   };
 };
 
+const DASHBOARD_TABS = [
+  "trazabilidad",
+  "gestionar-recetas",
+  "trabajadores",
+  "despiece",
+  "historial",
+  "limpieza",
+  "temperaturas",
+  "agua",
+  "entradas",
+  "proveedores",
+  "clientes",
+  "residuos",
+  "aceites",
+  "vegetales",
+  "configuracion",
+  "afiliados"
+];
+
 export default function ClientDashboard() {
   const { t, locale } = useI18n();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("trazabilidad");
+
+  // 1. Sincronizar activeTab desde la URL al montar el componente
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam && DASHBOARD_TABS.includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, []);
+
+  // 2. Escuchar navegación del historial del navegador (atrás / adelante)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePopState = (event) => {
+      const params = new URLSearchParams(window.location.search);
+      const tabFromUrl = params.get("tab") || (event.state && event.state.tab) || "trazabilidad";
+      if (DASHBOARD_TABS.includes(tabFromUrl)) {
+        setActiveTab(tabFromUrl);
+        setSelectedRecipe(null);
+        setSelectedRecords([]);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // 3. Actualizar la URL cada vez que cambia activeTab
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const currentTabInUrl = url.searchParams.get("tab");
+
+    if (currentTabInUrl !== activeTab) {
+      url.searchParams.set("tab", activeTab);
+      if (!currentTabInUrl && activeTab === "trazabilidad") {
+        window.history.replaceState({ tab: activeTab }, "", url.pathname + url.search);
+      } else {
+        window.history.pushState({ tab: activeTab }, "", url.pathname + url.search);
+      }
+    }
+  }, [activeTab]);
   const [wasteCollections, setWasteCollections] = useState([]);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
   const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "", observations: "" });
