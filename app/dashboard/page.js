@@ -402,6 +402,7 @@ export default function ClientDashboard() {
   const [cleaningZones, setCleaningZones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [recipeForTechnicalSheet, setRecipeForTechnicalSheet] = useState(null);
   const [editingElaboration, setEditingElaboration] = useState(null);
   const [isReadOnlyElab, setIsReadOnlyElab] = useState(false);
   const [proportionMasterId, setProportionMasterId] = useState(null);
@@ -2818,7 +2819,7 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleDownloadRecipeTechnicalSheet = async (recipe) => {
+  const handleDownloadRecipeTechnicalSheet = async (recipe, includeQuantities = true) => {
     try {
       if (!recipe) return;
       const doc = new jsPDF({
@@ -2935,20 +2936,49 @@ export default function ClientDashboard() {
         if (ing.expandItem && ing.expandedText) {
           details += `\n(${ing.expandedText})`;
         }
-        return [
-          String(idx + 1),
-          details,
-          ing.amount ? `${ing.amount} ${ing.unit || ''}`.trim() : "-"
-        ];
+        if (includeQuantities) {
+          return [
+            String(idx + 1),
+            details,
+            ing.amount ? `${ing.amount} ${ing.unit || ''}`.trim() : "-"
+          ];
+        } else {
+          return [
+            String(idx + 1),
+            details
+          ];
+        }
       });
 
+      const tableHead = includeQuantities
+        ? [[
+            "#",
+            t('recipes.col_ingredient') || "Ingrediente / Materia Prima",
+            t('recipes.col_amount') || "Cantidad / Fórmula"
+          ]]
+        : [[
+            "#",
+            t('recipes.col_ingredient') || "Ingrediente / Materia Prima"
+          ]];
+
+      const emptyBody = includeQuantities
+        ? [[ "-", t('recipes.no_ingredients_defined') || "No hay ingredientes definidos", "-" ]]
+        : [[ "-", t('recipes.no_ingredients_defined') || "No hay ingredientes definidos" ]];
+
+      const colStyles = includeQuantities
+        ? {
+            0: { cellWidth: 12, halign: 'center' },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 50, halign: 'right' }
+          }
+        : {
+            0: { cellWidth: 12, halign: 'center' },
+            1: { cellWidth: 'auto' }
+          };
+
       autoTable(doc, {
-        head: [[
-          "#",
-          t('recipes.col_ingredient') || "Ingrediente / Materia Prima",
-          t('recipes.col_amount') || "Cantidad / Fórmula"
-        ]],
-        body: ingredientsRows.length > 0 ? ingredientsRows : [[ "-", t('recipes.no_ingredients_defined') || "No hay ingredientes definidos", "-" ]],
+        head: tableHead,
+        body: ingredientsRows.length > 0 ? ingredientsRows : emptyBody,
         startY: currentY,
         theme: 'striped',
         headStyles: {
@@ -2963,11 +2993,7 @@ export default function ClientDashboard() {
           textColor: [30, 41, 59],
           valign: 'middle'
         },
-        columnStyles: {
-          0: { cellWidth: 12, halign: 'center' },
-          1: { cellWidth: 'auto' },
-          2: { cellWidth: 50, halign: 'right' }
-        },
+        columnStyles: colStyles,
         alternateRowStyles: {
           fillColor: [248, 250, 246]
         },
@@ -9241,7 +9267,7 @@ export default function ClientDashboard() {
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button 
                               type="button"
-                              onClick={() => handleDownloadRecipeTechnicalSheet(recipe)}
+                              onClick={() => setRecipeForTechnicalSheet(recipe)}
                               title={t('recipes.download_technical_sheet') || "Descargar ficha técnica en PDF"}
                               style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
                             >
@@ -9282,7 +9308,7 @@ export default function ClientDashboard() {
 
                           <button 
                             type="button"
-                            onClick={() => handleDownloadRecipeTechnicalSheet(recipe)}
+                            onClick={() => setRecipeForTechnicalSheet(recipe)}
                             className="btn-secondary"
                             style={{ 
                               width: '100%', 
@@ -10266,6 +10292,17 @@ export default function ClientDashboard() {
           onAddIngredient={addIngredient}
           onRemoveIngredient={removeIngredient}
           onIngredientChange={handleRecipeIngredientChange}
+        />
+      )}
+
+      {recipeForTechnicalSheet && (
+        <RecipeTechnicalSheetModal 
+          recipe={recipeForTechnicalSheet}
+          onClose={() => setRecipeForTechnicalSheet(null)}
+          onDownload={(rec, includeQuantities) => {
+            setRecipeForTechnicalSheet(null);
+            handleDownloadRecipeTechnicalSheet(rec, includeQuantities);
+          }}
         />
       )}
 
@@ -14766,6 +14803,175 @@ function RecipeIaScanModal({ isOpen, onClose, onExtracted }) {
               )}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecipeTechnicalSheetModal({ recipe, onClose, onDownload }) {
+  const { t } = useI18n();
+  if (!recipe) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
+      <div 
+        className="modal-content glass-card" 
+        style={{ maxWidth: '520px', width: '92%', padding: '2rem', animation: 'scaleUp 0.2s ease' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ 
+              width: '42px', 
+              height: '42px', 
+              borderRadius: '12px', 
+              background: 'rgba(66, 98, 22, 0.1)', 
+              color: 'var(--corp-green)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <FileText size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                {t('recipes.technical_sheet_modal_title') || "Descargar Ficha Técnica"}
+              </h3>
+              <div style={{ fontSize: '0.85rem', color: 'var(--corp-green)', fontWeight: '700', marginTop: '0.2rem' }}>
+                {recipe.name}
+              </div>
+            </div>
+          </div>
+          <button 
+            type="button"
+            onClick={onClose} 
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
+          >
+            <X size={20} />
+          </button>
+        </header>
+
+        <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
+          {t('recipes.technical_sheet_modal_subtitle') || "¿Deseas incluir las cantidades de los ingredientes en la ficha técnica?"}
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.5rem' }}>
+          {/* Opción 1: Con cantidades */}
+          <button
+            type="button"
+            onClick={() => onDownload(recipe, true)}
+            className="glass-card"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              padding: '1.1rem',
+              borderRadius: '0.85rem',
+              border: '2px solid rgba(66, 98, 22, 0.25)',
+              background: 'linear-gradient(135deg, rgba(66, 98, 22, 0.05) 0%, rgba(255, 255, 255, 0.9) 100%)',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--corp-green)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(66, 98, 22, 0.12)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(66, 98, 22, 0.25)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.03)';
+            }}
+          >
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              background: 'var(--corp-green)',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Check size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.98rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
+                {t('recipes.technical_sheet_with_quantities') || "Con cantidades"}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.35 }}>
+                {t('recipes.technical_sheet_with_quantities_desc') || "Muestra la cantidad y unidad de cada ingrediente en la ficha técnica."}
+              </div>
+            </div>
+          </button>
+
+          {/* Opción 2: Sin cantidades */}
+          <button
+            type="button"
+            onClick={() => onDownload(recipe, false)}
+            className="glass-card"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              padding: '1.1rem',
+              borderRadius: '0.85rem',
+              border: '2px solid rgba(203, 213, 225, 0.8)',
+              background: 'white',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#64748b';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.08)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(203, 213, 225, 0.8)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.03)';
+            }}
+          >
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              background: '#f1f5f9',
+              color: '#475569',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <EyeOff size={18} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.98rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
+                {t('recipes.technical_sheet_without_quantities') || "Sin cantidades"}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.35 }}>
+                {t('recipes.technical_sheet_without_quantities_desc') || "Muestra únicamente los ingredientes sin desvelar sus cantidades."}
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="btn-secondary"
+            style={{ padding: '0.6rem 1.25rem', fontSize: '0.88rem' }}
+          >
+            {t('common.cancel') || "Cancelar"}
+          </button>
         </div>
       </div>
     </div>

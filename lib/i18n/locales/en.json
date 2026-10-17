@@ -1459,6 +1459,12 @@
   },
   "recipes": {
     "download_technical_sheet": "Download technical sheet (PDF)",
+    "technical_sheet_modal_title": "Download Technical Sheet",
+    "technical_sheet_modal_subtitle": "Do you want to include ingredient quantities in the technical sheet?",
+    "technical_sheet_with_quantities": "With quantities",
+    "technical_sheet_with_quantities_desc": "Includes the quantity and unit of each ingredient in the technical sheet.",
+    "technical_sheet_without_quantities": "Without quantities",
+    "technical_sheet_without_quantities_desc": "Shows only the ingredients list without revealing their amounts.",
     "technical_sheet_title": "Product Technical Data Sheet",
     "emission_date": "Issue date",
     "general_info_section": "1. General Product Information",

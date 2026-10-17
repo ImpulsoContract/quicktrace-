@@ -1454,6 +1454,12 @@
   },
   "recipes": {
     "download_technical_sheet": "Télécharger la fiche technique en PDF",
+    "technical_sheet_modal_title": "Télécharger la fiche technique",
+    "technical_sheet_modal_subtitle": "Souhaitez-vous inclure les quantités d'ingrédients dans la fiche technique ?",
+    "technical_sheet_with_quantities": "Avec quantités",
+    "technical_sheet_with_quantities_desc": "Inclut la quantité et l'unité de chaque ingrédient dans la fiche technique.",
+    "technical_sheet_without_quantities": "Sans quantités",
+    "technical_sheet_without_quantities_desc": "Affiche uniquement la liste des ingrédients sans révéler leurs quantités.",
     "technical_sheet_title": "Fiche Technique de Produit",
     "emission_date": "Date d'émission",
     "general_info_section": "1. Informations Générales sur le Produit",
