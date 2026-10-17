@@ -1356,10 +1356,15 @@
     "invoice_promo_holded_desc": "Collega il tuo account Holded in pochi secondi inserendo la tua chiave API ed emetti le tue fatture con un solo clic.",
     "invoice_promo_holded_btn": "Integra Holded",
     "invoice_promo_other_title": "Usi un altro software di fatturazione?",
-    "invoice_promo_other_desc": "Se usi Factusol, Sage, Anfix, Alegra o un altro sistema e desideri che lo integriamo in QuickTrace, faccelo sapere tramite WhatsApp.",
+    "invoice_promo_other_desc": "Indicaci quale software utilizzi, il suo sito web o qualsiasi altra informazione e lo svilupperemo per te:",
     "invoice_promo_whatsapp_btn": "Indica il tuo software via WhatsApp",
     "whatsapp_integration_msg": "Voglio che integriate il mio software di fatturazione in Quicktrace...",
-    "holded_modal_save_success": "Configurazione di Holded salvata con successo"
+    "holded_modal_save_success": "Configurazione di Holded salvata con successo",
+    "invoice_promo_other_placeholder": "Scrivi il nome del software, il link al suo sito web e qualsiasi dettaglio o funzionalità di cui hai bisogno...",
+    "invoice_promo_submit_btn": "Invia richiesta",
+    "invoice_promo_sending_btn": "Invio in corso...",
+    "invoice_promo_submit_success": "Grazie mille! Abbiamo ricevuto il tuo messaggio e ti contatteremo non appena sarà disponibile.",
+    "invoice_promo_submit_error": "Inserisci i dettagli del software prima di inviare."
   },
   "sales_report": {
     "btn_label": "Report vendite",

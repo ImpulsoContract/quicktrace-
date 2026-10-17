@@ -13,7 +13,7 @@ import {
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
   Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download,
-  Salad, FileSpreadsheet, MessageCircle
+  Salad, FileSpreadsheet, MessageCircle, Send
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -16343,12 +16343,47 @@ function CustomerModal({ onClose, onSubmit, formData, setFormData, loading, isEd
 
 function HoldedPromoModal({ isOpen, onClose, onOpenHoldedConfig }) {
   const { t } = useI18n();
+  const [softwareInfo, setSoftwareInfo] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSoftwareInfo("");
+      setSendingRequest(false);
+      setRequestSent(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const handleOpenWhatsApp = () => {
-    const phone = "34679728752";
-    const msg = encodeURIComponent(t('elaboration_sales.whatsapp_integration_msg') || "Quiero que integres mi programa de facturación en Quicktrace...");
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+  const handleSendRequest = async (e) => {
+    e.preventDefault();
+    const info = softwareInfo.trim();
+    if (!info) {
+      alert(t('elaboration_sales.invoice_promo_submit_error') || "Por favor, escribe la información del programa antes de enviar.");
+      return;
+    }
+    setSendingRequest(true);
+    try {
+      const res = await fetch("/api/client/invoicing-integration-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: info })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRequestSent(true);
+        setSoftwareInfo("");
+      } else {
+        alert(data.error || "Error al enviar la solicitud.");
+      }
+    } catch (err) {
+      console.error("Error sending integration request:", err);
+      alert("Error de conexión al enviar la solicitud.");
+    } finally {
+      setSendingRequest(false);
+    }
   };
 
   return (
@@ -16455,7 +16490,7 @@ function HoldedPromoModal({ isOpen, onClose, onOpenHoldedConfig }) {
             </div>
           </div>
 
-          {/* Card 2: Other Invoicing Software via WhatsApp */}
+          {/* Card 2: Other Invoicing Software request form */}
           <div style={{
             background: '#f8fafc',
             borderRadius: '1rem',
@@ -16463,42 +16498,78 @@ function HoldedPromoModal({ isOpen, onClose, onOpenHoldedConfig }) {
             padding: '1.5rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.75rem'
+            gap: '0.85rem'
           }}>
             <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-main)' }}>
               {t('elaboration_sales.invoice_promo_other_title') || "¿Utilizas otro programa de facturación?"}
             </span>
 
             <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
-              {t('elaboration_sales.invoice_promo_other_desc') || "Si utilizas Factusol, Sage, Anfix, Alegra u otro sistema de facturación y deseas que lo integremos en QuickTrace, dínoslo por WhatsApp y lo desarrollaremos para ti."}
+              {t('elaboration_sales.invoice_promo_other_desc') || "Indícanos qué programa utilizas, su web o cualquier otra información y lo desarrollaremos para ti:"}
             </p>
 
-            <div style={{ marginTop: '0.5rem' }}>
-              <button
-                type="button"
-                onClick={handleOpenWhatsApp}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.65rem 1.25rem',
-                  fontSize: '0.88rem',
-                  fontWeight: '700',
-                  borderRadius: '0.65rem',
-                  background: '#25D366',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s ease',
-                  boxShadow: '0 2px 4px rgba(37, 211, 102, 0.2)'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#20bd5a'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#25D366'}
-              >
-                <MessageCircle size={16} />
-                {t('elaboration_sales.invoice_promo_whatsapp_btn') || "Indicar mi programa por WhatsApp"}
-              </button>
-            </div>
+            {requestSent ? (
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.1)',
+                border: '1px solid rgba(34, 197, 94, 0.3)',
+                borderRadius: '0.75rem',
+                padding: '1rem 1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                color: '#16a34a'
+              }}>
+                <Check size={20} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: '0.88rem', fontWeight: '600', lineHeight: '1.4' }}>
+                  {t('elaboration_sales.invoice_promo_submit_success') || "¡Muchas gracias! Hemos recibido tu mensaje y contactaremos contigo tan pronto esté disponible."}
+                </span>
+              </div>
+            ) : (
+              <form onSubmit={handleSendRequest} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <textarea
+                  className="input-field"
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    background: 'white',
+                    resize: 'vertical',
+                    minHeight: '80px',
+                    fontSize: '0.88rem',
+                    padding: '0.75rem',
+                    lineHeight: '1.45',
+                    borderRadius: '0.65rem'
+                  }}
+                  placeholder={t('elaboration_sales.invoice_promo_other_placeholder') || "Escribe el nombre del programa, enlace a su página web y cualquier detalle o función que necesites..."}
+                  value={softwareInfo}
+                  onChange={(e) => setSoftwareInfo(e.target.value)}
+                  disabled={sendingRequest}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="submit"
+                    disabled={sendingRequest || !softwareInfo.trim()}
+                    className="btn-primary"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.65rem 1.25rem',
+                      fontSize: '0.88rem',
+                      fontWeight: '700',
+                      borderRadius: '0.65rem',
+                      cursor: (sendingRequest || !softwareInfo.trim()) ? 'not-allowed' : 'pointer',
+                      opacity: (sendingRequest || !softwareInfo.trim()) ? 0.7 : 1
+                    }}
+                  >
+                    {sendingRequest ? <Loader2 size={16} className="animate-spin" /> : <Send size={15} />}
+                    {sendingRequest 
+                      ? (t('elaboration_sales.invoice_promo_sending_btn') || "Enviando...") 
+                      : (t('elaboration_sales.invoice_promo_submit_btn') || "Enviar solicitud")}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
 
