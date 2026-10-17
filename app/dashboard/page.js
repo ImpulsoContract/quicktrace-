@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { 
   ChefHat, History, LogOut, Calculator, RotateCcw,
@@ -412,6 +412,38 @@ export default function ClientDashboard() {
       }
     }
   }, [activeTab]);
+
+  const mainContentRef = useRef(null);
+
+  const scrollToTop = () => {
+    if (typeof window !== "undefined") {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+      if (mainContentRef.current) {
+        mainContentRef.current.scrollTop = 0;
+      }
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.scrollTop = 0;
+      }
+    }
+  };
+
+  // 4. Resetear scroll al cambiar de sección o al abrir/cerrar formulario de elaboración
+  useEffect(() => {
+    scrollToTop();
+    const t1 = setTimeout(scrollToTop, 50);
+    const t2 = setTimeout(scrollToTop, 150);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [activeTab, selectedRecipe]);
   const [wasteCollections, setWasteCollections] = useState([]);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
   const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "", observations: "" });
@@ -4495,6 +4527,9 @@ export default function ClientDashboard() {
         setSelectedRecipe(null);
         setEditingElaboration(null);
         setActiveTab("historial");
+        scrollToTop();
+        setTimeout(scrollToTop, 50);
+        setTimeout(scrollToTop, 150);
       } else {
         const errorData = await res.json().catch(() => ({}));
         alert(errorData.error || t('alerts.request_error'));
@@ -5360,7 +5395,7 @@ export default function ClientDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', minWidth: 0, transition: 'padding 0.3s ease' }}>
+        <main ref={mainContentRef} style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', minWidth: 0, transition: 'padding 0.3s ease' }}>
           
           {/* Desktop Toggle Button */}
           <div className="desktop-only" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -10198,7 +10233,7 @@ export default function ClientDashboard() {
             setSelectedRecipe(null);
             setSelectedRecords([]);
             if (window.innerWidth <= 1024) setIsSidebarOpen(false);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            scrollToTop();
           }}
         />
       )}
