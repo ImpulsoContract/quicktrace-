@@ -14981,12 +14981,238 @@ function RecipeTechnicalSheetModal({ recipe, onClose, onDownload }) {
   );
 }
 
+function NutritionAiDisclaimerModal({ isOpen, onClose, onAccept }) {
+  const { t } = useI18n();
+  const [accepted, setAccepted] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setAccepted(false);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1100 }}>
+      <div className="modal-content" style={{ maxWidth: '640px', padding: '1.75rem', maxHeight: '92vh', overflowY: 'auto' }}>
+        <header style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: '#fef3c7',
+              color: '#d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <AlertTriangle size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.01em' }}>
+                {t('recipes.disclaimer_title') || "Aviso Legal y Confirmación: Estimación con IA"}
+              </h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '0.2rem 0 0 0' }}>
+                {t('recipes.disclaimer_subtitle') || "Lectura y aceptación obligatoria antes de continuar"}
+              </p>
+            </div>
+          </div>
+          <button 
+            type="button"
+            onClick={onClose} 
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.4rem', borderRadius: '0.5rem' }}
+          >
+            <X size={20} />
+          </button>
+        </header>
+
+        <p style={{ fontSize: '0.88rem', color: 'var(--text-main)', lineHeight: 1.5, marginBottom: '1rem' }}>
+          {t('recipes.disclaimer_intro') || "Se van a rellenar los valores nutricionales de forma automática mediante Inteligencia Artificial. Por favor, lee atentamente los siguientes términos:"}
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.85rem 1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.2rem' }}>
+              1. {t('recipes.disclaimer_point1_title') || "Resultados aproximados y orientativos:"}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.45 }}>
+              {t('recipes.disclaimer_point1_desc') || "Los resultados generados no son exactos ni fiables al 100%, sino cálculos matemáticos y teóricos aproximados basados en los ingredientes y el método de cocinado introducidos."}
+            </div>
+          </div>
+
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.85rem 1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.2rem' }}>
+              2. {t('recipes.disclaimer_point2_title') || "No sustituye a un análisis de laboratorio:"}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.45 }}>
+              {t('recipes.disclaimer_point2_desc') || "Este análisis generado por IA nunca puede sustituir a una analítica bromatológica o nutricional realizada en un laboratorio acreditado de seguridad alimentaria."}
+            </div>
+          </div>
+
+          <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '0.75rem', padding: '0.85rem 1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#92400e', marginBottom: '0.2rem' }}>
+              3. {t('recipes.disclaimer_point3_title') || "Exención de responsabilidad de Quicktrace:"}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#78350f', lineHeight: 1.45 }}>
+              {t('recipes.disclaimer_point3_desc') || "Quicktrace no asume ningún tipo de responsabilidad ante errores, omisiones o discrepancias en los valores nutricionales estimados, ni ante sanciones, inspecciones sanitarias o incidencias derivadas de su uso en el etiquetado."}
+            </div>
+          </div>
+
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.85rem 1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.2rem' }}>
+              4. {t('recipes.disclaimer_point4_title') || "Revisión bajo tu responsabilidad:"}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.45 }}>
+              {t('recipes.disclaimer_point4_desc') || "Como operador alimentario, es tu responsabilidad exclusiva cotejar y validar los valores antes de guardarlos y utilizarlos en la comercialización de tus productos."}
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: accepted ? '#f0fdf4' : '#fff7ed',
+          border: `1.5px solid ${accepted ? '#86efac' : '#fed7aa'}`,
+          borderRadius: '0.85rem',
+          padding: '1rem',
+          marginBottom: '1.25rem',
+          transition: 'all 0.2s ease'
+        }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', margin: 0 }}>
+            <input 
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              style={{
+                width: '18px',
+                height: '18px',
+                marginTop: '2px',
+                accentColor: 'var(--corp-green)',
+                cursor: 'pointer'
+              }}
+            />
+            <span style={{ fontSize: '0.83rem', fontWeight: '600', color: accepted ? '#166534' : '#9a3412', lineHeight: 1.45 }}>
+              {t('recipes.disclaimer_accept_checkbox') || "He leído, comprendo y acepto expresamente que los datos son aproximados, no sustituyen a un análisis de laboratorio y que Quicktrace queda totalmente eximida de cualquier responsabilidad."}
+            </span>
+          </label>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="btn-secondary"
+            style={{ padding: '0.65rem 1.25rem', fontSize: '0.88rem' }}
+          >
+            {t('common.cancel') || "Cancelar"}
+          </button>
+          <button 
+            type="button" 
+            onClick={onAccept}
+            disabled={!accepted}
+            className="btn-primary"
+            style={{
+              padding: '0.65rem 1.35rem',
+              fontSize: '0.88rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              opacity: accepted ? 1 : 0.5,
+              cursor: accepted ? 'pointer' : 'not-allowed'
+            }}
+          >
+            <Sparkles size={16} />
+            {t('recipes.disclaimer_accept_btn') || "Aceptar y calcular con IA"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange }) {
   const { t } = useI18n();
   const [isAiScanOpen, setIsAiScanOpen] = useState(false);
   const [aiSuccessMsg, setAiSuccessMsg] = useState(null);
   const [draggedIngredientIndex, setDraggedIngredientIndex] = useState(null);
   const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState(null);
+  const [aiCookingDescription, setAiCookingDescription] = useState(formData.elaborationInstructions || "");
+  const [aiFinishedWeight, setAiFinishedWeight] = useState("");
+  const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
+  const [isCalculatingNutrition, setIsCalculatingNutrition] = useState(false);
+  const [nutritionFeedback, setNutritionFeedback] = useState(null);
+
+  useEffect(() => {
+    if (formData.elaborationInstructions && !aiCookingDescription) {
+      setAiCookingDescription(formData.elaborationInstructions);
+    }
+  }, [formData.elaborationInstructions]);
+
+  const isNutritionFormReady = useMemo(() => {
+    if (!aiCookingDescription || !aiCookingDescription.trim()) return false;
+    if (!aiFinishedWeight || !aiFinishedWeight.trim()) return false;
+    if (!Array.isArray(formData.ingredients) || formData.ingredients.length === 0) return false;
+    return formData.ingredients.every(ing =>
+      ing.name && String(ing.name).trim() &&
+      ing.amount && String(ing.amount).trim() &&
+      ing.unit && String(ing.unit).trim()
+    );
+  }, [formData.ingredients, aiCookingDescription, aiFinishedWeight]);
+
+  const handleExecuteCalculateNutrition = async () => {
+    setIsDisclaimerOpen(false);
+    setIsCalculatingNutrition(true);
+    setNutritionFeedback(null);
+
+    try {
+      const payload = {
+        recipeName: formData.name || "",
+        cookingDescription: aiCookingDescription.trim(),
+        finishedWeight: aiFinishedWeight.trim(),
+        ingredients: (formData.ingredients || []).map(ing => ({
+          name: ing.name ? String(ing.name).trim() : "",
+          amount: ing.amount ? String(ing.amount).trim() : "",
+          unit: ing.unit ? String(ing.unit).trim() : "",
+          expandedText: ing.expandedText ? String(ing.expandedText).trim() : ""
+        }))
+      };
+
+      const res = await fetch("/api/client/recipes/calculate-nutrition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || t('recipes.ai_nutrition_error') || "Error al calcular los valores nutricionales");
+      }
+
+      const n = result.data || {};
+      setFormData(prev => ({
+        ...prev,
+        energyValue: n.energyValue !== undefined ? n.energyValue : prev.energyValue,
+        fats: n.fats !== undefined ? n.fats : prev.fats,
+        saturatedFats: n.saturatedFats !== undefined ? n.saturatedFats : prev.saturatedFats,
+        carbohydrates: n.carbohydrates !== undefined ? n.carbohydrates : prev.carbohydrates,
+        sugars: n.sugars !== undefined ? n.sugars : prev.sugars,
+        proteins: n.proteins !== undefined ? n.proteins : prev.proteins,
+        salt: n.salt !== undefined ? n.salt : prev.salt
+      }));
+
+      setNutritionFeedback({
+        type: "success",
+        message: t('recipes.ai_nutrition_success') || "¡Valores nutricionales calculados y actualizados en la tabla superior con éxito!"
+      });
+    } catch (err) {
+      console.error("Error calculating nutrition with AI:", err);
+      setNutritionFeedback({
+        type: "error",
+        message: err.message || t('recipes.ai_nutrition_error') || "No se pudieron calcular los valores nutricionales."
+      });
+    } finally {
+      setIsCalculatingNutrition(false);
+    }
+  };
 
   const handleMoveIngredient = (fromIdx, toIdx) => {
     if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || toIdx >= formData.ingredients.length) return;
@@ -15099,6 +15325,12 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
             onExtracted={handleAiExtracted}
           />
         )}
+
+        <NutritionAiDisclaimerModal
+          isOpen={isDisclaimerOpen}
+          onClose={() => setIsDisclaimerOpen(false)}
+          onAccept={handleExecuteCalculateNutrition}
+        />
 
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div>
@@ -15417,6 +15649,195 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                   <label className="label" style={{ fontSize: '0.85rem' }}>{t('modals.salt') || "Sal"}</label>
                   <input type="text" className="input-field" value={formData.salt || ""} onChange={e => setFormData({...formData, salt: e.target.value})} />
                 </div>
+              </div>
+            </div>
+
+            {/* Bloque de cálculo de valores nutricionales con IA */}
+            <div style={{
+              marginTop: '1.5rem',
+              background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              padding: '1.5rem',
+              borderRadius: '1rem',
+              border: '1.5px solid #cbd5e1',
+              position: 'relative'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 10px rgba(124, 58, 237, 0.25)'
+                }}>
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                    {t('recipes.ai_nutrition_block_title') || "Calcular valores nutricionales con IA"}
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.2rem 0 0 0' }}>
+                    {t('recipes.ai_nutrition_block_subtitle') || "La IA estimará automáticamente los valores nutricionales por 100g a partir de los ingredientes, el cocinado y el peso terminado."}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginTop: '1.25rem' }}>
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.35rem', display: 'block' }}>
+                    {t('recipes.ai_cooking_description_label') || "Descripción de la elaboración y forma de cocinado"} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <textarea
+                    className="input-field"
+                    rows={3}
+                    value={aiCookingDescription}
+                    onChange={(e) => setAiCookingDescription(e.target.value)}
+                    placeholder={t('recipes.ai_cooking_description_placeholder') || "Describe detalladamente cómo se elabora y cocina (ej: horneado a 190°C durante 40 min, hervido, frito en aceite, reducción...)"}
+                    style={{ width: '100%', resize: 'vertical', fontSize: '0.88rem', lineHeight: 1.45, padding: '0.75rem' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="label" style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.35rem', display: 'block' }}>
+                    {t('recipes.ai_finished_weight_label') || "Peso de la elaboración completa terminada"} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={aiFinishedWeight}
+                    onChange={(e) => setAiFinishedWeight(e.target.value)}
+                    placeholder={t('recipes.ai_finished_weight_placeholder') || "Ej: 850 g, 1.2 kg, 450 g..."}
+                    style={{ width: '100%', fontSize: '0.88rem', padding: '0.75rem' }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', display: 'block' }}>
+                    {t('recipes.ai_finished_weight_help') || "Indica el peso real una vez cocinado o terminado para calcular con precisión la merma y los valores por 100g."}
+                  </span>
+                </div>
+              </div>
+
+              {/* Feedback message (Success / Error) */}
+              {nutritionFeedback && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '0.85rem 1rem',
+                  borderRadius: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  background: nutritionFeedback.type === 'success' ? '#f0fdf4' : '#fef2f2',
+                  border: `1px solid ${nutritionFeedback.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+                  color: nutritionFeedback.type === 'success' ? '#166534' : '#991b1b',
+                  fontSize: '0.85rem'
+                }}>
+                  {nutritionFeedback.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
+                  <span style={{ flex: 1, fontWeight: '500' }}>{nutritionFeedback.message}</span>
+                  <button 
+                    type="button" 
+                    onClick={() => setNutritionFeedback(null)} 
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '0.2rem' }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+              {/* In-progress Banner */}
+              {isCalculatingNutrition && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '1rem 1.25rem',
+                  borderRadius: '0.75rem',
+                  background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+                  border: '1.5px solid #c4b5fd',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem'
+                }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    background: '#7c3aed',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <Loader2 className="animate-spin" size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#5b21b6' }}>
+                      {t('recipes.ai_calculating_nutrition_title') || "Realizando consulta a la IA..."}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#6d28d9', marginTop: '0.15rem' }}>
+                      {t('recipes.ai_calculating_nutrition_desc') || "Calculando aportes de ingredientes, merma por cocinado y valores medios por 100g. Por favor, espera unos segundos."}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Requirements hint if not ready */}
+              {!isNutritionFormReady && (
+                <div style={{
+                  marginTop: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.5rem',
+                  fontSize: '0.78rem',
+                  color: '#64748b',
+                  background: '#ffffff',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '0.6rem',
+                  border: '1px dashed #cbd5e1'
+                }}>
+                  <Info size={15} style={{ flexShrink: 0, marginTop: '2px', color: '#94a3b8' }} />
+                  <span>{t('recipes.ai_nutrition_requirements_hint') || "Para activar el cálculo con IA debes rellenar la descripción del cocinado, el peso terminado y asegurar que todos los ingredientes tienen cantidad y unidad de medida asignadas."}</span>
+                </div>
+              )}
+
+              {/* Action button */}
+              <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsDisclaimerOpen(true)}
+                  disabled={!isNutritionFormReady || isCalculatingNutrition}
+                  style={{
+                    padding: '0.85rem 1.5rem',
+                    borderRadius: '0.75rem',
+                    border: 'none',
+                    background: (!isNutritionFormReady || isCalculatingNutrition)
+                      ? '#94a3b8'
+                      : 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)',
+                    color: '#ffffff',
+                    fontWeight: '700',
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    cursor: (!isNutritionFormReady || isCalculatingNutrition) ? 'not-allowed' : 'pointer',
+                    boxShadow: (!isNutritionFormReady || isCalculatingNutrition)
+                      ? 'none'
+                      : '0 4px 12px rgba(124, 58, 237, 0.3)',
+                    transition: 'all 0.2s ease',
+                    opacity: (!isNutritionFormReady || isCalculatingNutrition) ? 0.65 : 1
+                  }}
+                >
+                  {isCalculatingNutrition ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      {t('recipes.ai_calculating_btn') || "Calculando valores con IA..."}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      {t('recipes.ai_calculate_btn') || "Rellenar los valores nutricionales con la IA"}
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
