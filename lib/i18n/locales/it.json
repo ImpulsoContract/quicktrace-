@@ -805,7 +805,10 @@
     "cooling_time_under_10": "Tempo impiegato per scendere sotto i 10 gradi",
     "cooling_time_under_10_help": "Dovrebbe essere inferiore a 2 ore",
     "elaboration_notes_placeholder": "Ad esempio: Contiene 14 unità",
-    "elaboration_notes_help": "Potrai inserire questo contenuto sull'etichetta."
+    "elaboration_notes_help": "Potrai inserire questo contenuto sull'etichetta.",
+    "add_another_lot": "+ Aggiungi un altro lotto per questo ingrediente",
+    "remove_lot": "Rimuovi questo lotto",
+    "lot_extra_placeholder": "Numero di lotto aggiuntivo..."
   },
   "goods_receipt_form": {
     "product": "Prodotto",

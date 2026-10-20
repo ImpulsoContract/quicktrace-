@@ -2126,7 +2126,7 @@ export default function ClientDashboard() {
         receipt.relatedIngredients.some(ri => ri.trim().toLowerCase() === ing.name.trim().toLowerCase())
       );
       const defaultLote = matchingReceipt ? matchingReceipt.lote : "";
-      initialIngredientes[ing.id] = { lote: defaultLote, cantidad: ing.amount };
+      initialIngredientes[ing.id] = { lote: defaultLote, cantidad: ing.amount, extraLots: [] };
     });
 
     const nextElabNumber = (profile?.totalElaborations ?? totalElabs) + 1;
@@ -2244,13 +2244,28 @@ export default function ClientDashboard() {
     }
     
     const initialIngredientes = {};
-    // Map existing ingredients by name to match recipe ingredients
+    // Map existing ingredients by name to match recipe ingredients (including multiple lots)
     sortedRecipeIngredients.forEach(recipeIng => {
-      const matchingElabIng = elab.ingredients.find(ei => ei.name === recipeIng.name);
-      initialIngredientes[recipeIng.id] = { 
-        lote: matchingElabIng?.lote || "", 
-        cantidad: matchingElabIng?.realAmount || "" 
-      };
+      const matchingElabIngs = (elab.ingredients || []).filter(ei => 
+        (ei.name || '').trim().toLowerCase() === (recipeIng.name || '').trim().toLowerCase()
+      );
+      if (matchingElabIngs.length > 0) {
+        initialIngredientes[recipeIng.id] = { 
+          lote: matchingElabIngs[0]?.lote || "", 
+          cantidad: matchingElabIngs[0]?.realAmount || "",
+          extraLots: matchingElabIngs.slice(1).map((m, idx) => ({
+            id: Date.now() + idx + Math.random(),
+            lote: m.lote || "",
+            cantidad: m.realAmount || ""
+          }))
+        };
+      } else {
+        initialIngredientes[recipeIng.id] = { 
+          lote: "", 
+          cantidad: "",
+          extraLots: []
+        };
+      }
     });
 
     setElaboracionForm({
@@ -3404,6 +3419,7 @@ export default function ClientDashboard() {
             const isParagraph = config.ingredientOptions?.format === 'paragraph';
 
             let paragraphParts = [];
+            const seenLabelIngNames = new Set();
 
             elaboration.ingredients.forEach(ing => {
               let displayName = ing.name;
@@ -3414,6 +3430,13 @@ export default function ClientDashboard() {
                 if (recipeIng && recipeIng.expandItem && recipeIng.expandedText) {
                   displayName = recipeIng.expandedText;
                 }
+              }
+
+              // Deduplicate if neither lote nor amount is displayed on label
+              if (!config.ingredientOptions?.showLote && !config.ingredientOptions?.showAmount) {
+                const cleanKey = displayName.trim().toLowerCase();
+                if (seenLabelIngNames.has(cleanKey)) return;
+                seenLabelIngNames.add(cleanKey);
               }
               
               let ingText = isParagraph ? displayName : `- ${displayName}`;
@@ -4428,10 +4451,76 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleUseLot = (ingId, lot) => {
+  const handleAddExtraLot = (ingId) => {
+    setElaboracionForm(prev => {
+      const current = prev.ingredientes[ingId] || { lote: "", cantidad: "" };
+      const currentExtra = Array.isArray(current.extraLots) ? current.extraLots : [];
+      return {
+        ...prev,
+        ingredientes: {
+          ...prev.ingredientes,
+          [ingId]: {
+            ...current,
+            extraLots: [
+              ...currentExtra,
+              { id: Date.now() + Math.random(), lote: "", cantidad: "" }
+            ]
+          }
+        }
+      };
+    });
+  };
+
+  const handleRemoveExtraLot = (ingId, extraIndex) => {
+    setElaboracionForm(prev => {
+      const current = prev.ingredientes[ingId];
+      if (!current || !Array.isArray(current.extraLots)) return prev;
+      const newExtra = current.extraLots.filter((_, idx) => idx !== extraIndex);
+      return {
+        ...prev,
+        ingredientes: {
+          ...prev.ingredientes,
+          [ingId]: {
+            ...current,
+            extraLots: newExtra
+          }
+        }
+      };
+    });
+  };
+
+  const handleExtraLotChange = (ingId, extraIndex, field, value) => {
+    const safeValue = field === 'lote' ? getLotString(value) : value;
+    setElaboracionForm(prev => {
+      const current = prev.ingredientes[ingId];
+      if (!current || !Array.isArray(current.extraLots)) return prev;
+      const newExtra = current.extraLots.map((item, idx) => {
+        if (idx === extraIndex) {
+          return { ...item, [field]: safeValue };
+        }
+        return item;
+      });
+      return {
+        ...prev,
+        ingredientes: {
+          ...prev.ingredientes,
+          [ingId]: {
+            ...current,
+            extraLots: newExtra
+          }
+        }
+      };
+    });
+  };
+
+  const handleUseLot = (ingId, lot, extraIdx = null) => {
     const lotStr = getLotString(lot);
     if (!lotStr) return;
-    handleIngredientChange(ingId, 'lote', lotStr);
+    if (extraIdx !== null && extraIdx !== undefined) {
+      handleExtraLotChange(ingId, extraIdx, 'lote', lotStr);
+    } else {
+      handleIngredientChange(ingId, 'lote', lotStr);
+    }
     if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(lotStr).catch(e => console.error("Clipboard error:", e));
     }
@@ -4453,17 +4542,32 @@ export default function ClientDashboard() {
       if (isAgua) return;
 
       const currentData = elaboracionForm.ingredientes[ing.id];
+      if (!currentData) return;
       
-      // Las validaciones ahora se rigen estrictamente por lo configurado en cada ingrediente
+      // Las validaciones se rigen estrictamente por lo configurado en cada ingrediente
       const isLoteRequired = !!ing.loteMandatory;
       const isQtyRequired = !!ing.quantityMandatory;
 
+      // Validación del primer lote
       if (isLoteRequired && (!currentData.lote || currentData.lote.trim() === '')) {
         missingLotes.push(ing.name);
       }
       
       if (isQtyRequired && (!currentData.cantidad || currentData.cantidad.trim() === '' || currentData.cantidad === '0')) {
         missingCantidades.push(ing.name);
+      }
+
+      // Validación de lotes adicionales si han sido agregados
+      if (Array.isArray(currentData.extraLots)) {
+        currentData.extraLots.forEach((extra, exIdx) => {
+          const lotNum = exIdx + 2;
+          if (isLoteRequired && (!extra.lote || extra.lote.trim() === '')) {
+            missingLotes.push(`${ing.name} (Lote ${lotNum})`);
+          }
+          if (isQtyRequired && (!extra.cantidad || extra.cantidad.trim() === '' || extra.cantidad === '0')) {
+            missingCantidades.push(`${ing.name} (Lote ${lotNum})`);
+          }
+        });
       }
     });
 
@@ -4477,12 +4581,33 @@ export default function ClientDashboard() {
 
     setLoading(true);
     try {
-      const ingredientsData = selectedRecipe.ingredients.map(ing => ({
-        name: ing.name,
-        lote: elaboracionForm.ingredientes[ing.id].lote,
-        realAmount: elaboracionForm.ingredientes[ing.id].cantidad,
-        unit: ing.unit
-      }));
+      const ingredientsData = [];
+      selectedRecipe.ingredients.forEach(ing => {
+        const currentData = elaboracionForm.ingredientes[ing.id];
+        if (!currentData) return;
+
+        // Primer lote
+        ingredientsData.push({
+          name: ing.name,
+          lote: currentData.lote || "",
+          realAmount: currentData.cantidad !== undefined && currentData.cantidad !== null ? currentData.cantidad.toString() : "",
+          unit: ing.unit
+        });
+
+        // Lotes adicionales
+        if (Array.isArray(currentData.extraLots)) {
+          currentData.extraLots.forEach(extra => {
+            if ((extra.lote && extra.lote.trim()) || (extra.cantidad && extra.cantidad.trim())) {
+              ingredientsData.push({
+                name: ing.name,
+                lote: extra.lote || "",
+                realAmount: extra.cantidad !== undefined && extra.cantidad !== null ? extra.cantidad.toString() : "",
+                unit: ing.unit
+              });
+            }
+          });
+        }
+      });
 
       const url = editingElaboration 
         ? `/api/elaborations/${editingElaboration.id}`
@@ -4497,13 +4622,28 @@ export default function ClientDashboard() {
 
       if (profile?.blockOutOfStockLots) {
         for (const ing of (selectedRecipe?.ingredients || [])) {
-          const lotEntered = elaboracionForm.ingredientes[ing.id]?.lote?.trim();
-          if (lotEntered) {
-            if (editingElaboration) {
-              const origIng = editingElaboration.ingredients?.find(ei => (ei.name || '').trim().toLowerCase() === (ing.name || '').trim().toLowerCase());
-              if (origIng && (origIng.lote || '').trim().toLowerCase() === lotEntered.toLowerCase()) {
-                continue;
+          const currentData = elaboracionForm.ingredientes[ing.id];
+          if (!currentData) continue;
+
+          const lotsToCheck = [];
+          if (currentData.lote && currentData.lote.trim()) {
+            lotsToCheck.push(currentData.lote.trim());
+          }
+          if (Array.isArray(currentData.extraLots)) {
+            currentData.extraLots.forEach(ex => {
+              if (ex.lote && ex.lote.trim()) {
+                lotsToCheck.push(ex.lote.trim());
               }
+            });
+          }
+
+          for (const lotEntered of lotsToCheck) {
+            if (editingElaboration) {
+              const wasAlreadyAssigned = editingElaboration.ingredients?.some(
+                ei => (ei.name || '').trim().toLowerCase() === (ing.name || '').trim().toLowerCase() && 
+                      (ei.lote || '').trim().toLowerCase() === lotEntered.toLowerCase()
+              );
+              if (wasAlreadyAssigned) continue;
             }
             const normName = ing.name ? ing.name.trim().toLowerCase() : "";
             const goods = suggestedLotes[normName]?.goods || [];
@@ -4614,9 +4754,12 @@ export default function ClientDashboard() {
   const handleClearLotes = () => {
     const updatedIngredientes = { ...elaboracionForm.ingredientes };
     selectedRecipe.ingredients.forEach(ing => {
+      const current = updatedIngredientes[ing.id];
+      const clearedExtra = (current?.extraLots || []).map(ex => ({ ...ex, lote: "" }));
       updatedIngredientes[ing.id] = {
-        ...updatedIngredientes[ing.id],
-        lote: ""
+        ...current,
+        lote: "",
+        extraLots: clearedExtra
       };
     });
     setElaboracionForm(prev => ({
@@ -4637,19 +4780,37 @@ export default function ClientDashboard() {
     setElaboracionForm(prev => {
       const updatedIngredientes = { ...prev.ingredientes };
       (selectedRecipe?.ingredients || []).forEach(ing => {
-        const currentQtyStr = updatedIngredientes[ing.id]?.cantidad;
+        const item = updatedIngredientes[ing.id];
+        if (!item) return;
+
+        let newCantidad = item.cantidad;
+        const currentQtyStr = item.cantidad;
         const baseNum = currentQtyStr !== undefined && currentQtyStr !== ""
           ? parseFloat(String(currentQtyStr).replace(',', '.'))
           : parseFloat(String(ing.amount).replace(',', '.'));
 
         if (!isNaN(baseNum)) {
           const multiplied = baseNum * factorNum;
-          const rounded = Math.round((multiplied + Number.EPSILON) * 10000) / 10000;
-          updatedIngredientes[ing.id] = {
-            ...updatedIngredientes[ing.id],
-            cantidad: String(rounded)
-          };
+          newCantidad = String(Math.round((multiplied + Number.EPSILON) * 10000) / 10000);
         }
+
+        const newExtraLots = (item.extraLots || []).map(extra => {
+          const extraNum = parseFloat(String(extra.cantidad).replace(',', '.'));
+          if (!isNaN(extraNum)) {
+            const multiplied = extraNum * factorNum;
+            return {
+              ...extra,
+              cantidad: String(Math.round((multiplied + Number.EPSILON) * 10000) / 10000)
+            };
+          }
+          return extra;
+        });
+
+        updatedIngredientes[ing.id] = {
+          ...item,
+          cantidad: newCantidad,
+          extraLots: newExtraLots
+        };
       });
       return {
         ...prev,
@@ -4665,7 +4826,8 @@ export default function ClientDashboard() {
       (selectedRecipe?.ingredients || []).forEach(ing => {
         updatedIngredientes[ing.id] = {
           ...updatedIngredientes[ing.id],
-          cantidad: ing.amount !== undefined && ing.amount !== null ? String(ing.amount) : ""
+          cantidad: ing.amount !== undefined && ing.amount !== null ? String(ing.amount) : "",
+          extraLots: []
         };
       });
       return {
@@ -5770,6 +5932,30 @@ export default function ClientDashboard() {
                               required={!isReadOnlyElab && !!ing.loteMandatory} 
                               disabled={isReadOnlyElab}
                             />
+                            {!isReadOnlyElab && (
+                              <div style={{ marginTop: '0.35rem', marginBottom: '0.2rem' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddExtraLot(ing.id)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: '0.15rem 0',
+                                    color: '#0284c7',
+                                    fontSize: '0.78rem',
+                                    fontWeight: '600',
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem'
+                                  }}
+                                >
+                                  <Plus size={13} />
+                                  <span>{t('traceability_form.add_another_lot') || "+ Añadir otro lote para este ingrediente"}</span>
+                                </button>
+                              </div>
+                            )}
                             {(() => {
                               const normName = ing.name ? ing.name.trim().toLowerCase() : "";
                               const suggestions = suggestedLotes[normName] || { goods: [], elaborations: [] };
@@ -5981,11 +6167,17 @@ export default function ClientDashboard() {
                               ) || (ingredientPrices || []).find(p => (p.name || '').trim().toLowerCase() === normIngName);
                               
                               const unitCost = priceObj && priceObj.price !== undefined ? parseFloat(priceObj.price) || 0 : 0;
-                              const currentQtyVal = elaboracionForm.ingredientes[ing.id]?.cantidad !== undefined && elaboracionForm.ingredientes[ing.id]?.cantidad !== "" 
-                                ? elaboracionForm.ingredientes[ing.id]?.cantidad 
+                              const currentData = elaboracionForm.ingredientes[ing.id];
+                              const primaryQtyVal = currentData?.cantidad !== undefined && currentData?.cantidad !== "" 
+                                ? currentData?.cantidad 
                                 : (ing.amount || "0");
-                              const qtyNum = parseFloat(String(currentQtyVal).replace(',', '.')) || 0;
-                              const totalCost = unitCost * qtyNum;
+                              let totalIngQty = parseFloat(String(primaryQtyVal).replace(',', '.')) || 0;
+                              if (Array.isArray(currentData?.extraLots)) {
+                                currentData.extraLots.forEach(ex => {
+                                  totalIngQty += parseFloat(String(ex.cantidad || 0).replace(',', '.')) || 0;
+                                });
+                              }
+                              const totalCost = unitCost * totalIngQty;
                               const currencySymbol = ALL_CURRENCIES.find(c => c.code === (profile?.currency || "EUR"))?.symbol || "€";
 
                               return (
@@ -6004,7 +6196,7 @@ export default function ClientDashboard() {
                                     <span style={{ color: 'var(--text-muted)' }}>{t('traceability_form.cost_price') || "Precio de coste"}:</span>
                                     <span style={{ fontWeight: '700' }}>{unitCost.toFixed(2)} {currencySymbol}{ing.unit ? ` / ${ing.unit}` : ''}</span>
                                     <span>{t('traceability_form.by_quantity') || "por"}</span>
-                                    <span style={{ fontWeight: '700' }}>{currentQtyVal}</span>
+                                    <span style={{ fontWeight: '700' }}>{totalIngQty}</span>
                                   </div>
                                   <div style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                                     <span style={{ color: 'var(--text-muted)' }}>{t('traceability_form.ingredient_cost') || "Coste"}:</span>
@@ -6038,6 +6230,212 @@ export default function ClientDashboard() {
                               );
                             })()}
                           </div>
+
+                          {/* Lotes adicionales para este ingrediente */}
+                          {Array.isArray(elaboracionForm.ingredientes[ing.id]?.extraLots) && elaboracionForm.ingredientes[ing.id].extraLots.length > 0 && (
+                            <div style={{ gridColumn: '1 / -1', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                              {elaboracionForm.ingredientes[ing.id].extraLots.map((extra, extraIdx) => (
+                                <div 
+                                  key={extra.id || extraIdx}
+                                  style={{
+                                    padding: '1.25rem',
+                                    background: '#ffffff',
+                                    borderRadius: '0.75rem',
+                                    border: '1.5px dashed #cbd5e1',
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                    gap: '1.5rem',
+                                    alignItems: 'flex-start'
+                                  }}
+                                >
+                                  {/* Columna 1: Identificador */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.25rem' }}>
+                                    <span style={{
+                                      fontSize: '0.8rem',
+                                      fontWeight: '700',
+                                      color: '#0284c7',
+                                      background: '#e0f2fe',
+                                      padding: '0.25rem 0.6rem',
+                                      borderRadius: '0.375rem',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.35rem'
+                                    }}>
+                                      <span>{t('traceability_form.lot') || "Lote"} {extraIdx + 2}</span>
+                                    </span>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                      ({ing.name})
+                                    </span>
+                                  </div>
+
+                                  {/* Columna 2: Input para el segundo lote y sugerencias */}
+                                  <div>
+                                    <label className="label" style={{ fontSize: '0.75rem' }}>
+                                      {t('traceability_form.lot')} {extraIdx + 2} {ing.loteMandatory && <span style={{ color: '#ef4444' }}>*</span>}
+                                    </label>
+                                    <input 
+                                      type="text" 
+                                      className="input-field" 
+                                      style={{ padding: '0.75rem' }}
+                                      placeholder={t('traceability_form.lot_extra_placeholder') || "Número de lote adicional..."}
+                                      value={extra.lote || ""}
+                                      onChange={(e) => handleExtraLotChange(ing.id, extraIdx, 'lote', e.target.value)}
+                                      required={!isReadOnlyElab && !!ing.loteMandatory}
+                                      disabled={isReadOnlyElab}
+                                    />
+                                    {(() => {
+                                      const normName = ing.name ? ing.name.trim().toLowerCase() : "";
+                                      const suggestions = suggestedLotes[normName] || { goods: [], elaborations: [] };
+                                      const goodsLotes = suggestions.goods || [];
+                                      const elabLotes = suggestions.elaborations || [];
+                                      if ((goodsLotes.length === 0 && elabLotes.length === 0) || isReadOnlyElab) return null;
+
+                                      return (
+                                        <div style={{ marginTop: '0.45rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                          {goodsLotes.length > 0 && (
+                                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem', fontSize: '0.72rem' }}>
+                                              <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <Truck size={12} style={{ color: '#0284c7' }} />
+                                                <span>{t('traceability_form.recent_goods_lotes') || "Entradas"}:</span>
+                                              </span>
+                                              {goodsLotes.slice(0, 3).map((item, lIdx) => {
+                                                const lot = getLotString(item);
+                                                const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
+                                                const isSelected = extra.lote === lot;
+                                                const isOutOfStock = typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
+                                                const isBlocked = profile?.blockOutOfStockLots && isOutOfStock;
+
+                                                return (
+                                                  <span
+                                                    key={`extra-gl-${lIdx}`}
+                                                    style={{
+                                                      display: 'inline-flex',
+                                                      alignItems: 'center',
+                                                      gap: '0.3rem',
+                                                      background: isSelected ? 'rgba(2, 132, 199, 0.12)' : (isBlocked ? '#f8fafc' : '#ffffff'),
+                                                      border: isSelected ? '1.5px solid #0284c7' : (isBlocked ? '1px dashed #cbd5e1' : '1px solid #bae6fd'),
+                                                      borderRadius: '0.375rem',
+                                                      padding: '0.15rem 0.45rem',
+                                                      fontSize: '0.72rem',
+                                                      lineHeight: '1.2',
+                                                      opacity: isBlocked ? 0.7 : 1
+                                                    }}
+                                                  >
+                                                    <button
+                                                      type="button"
+                                                      disabled={isBlocked}
+                                                      onClick={() => {
+                                                        if (isBlocked) {
+                                                          alert(t('traceability_form.lot_out_of_stock_blocked') || "Este lote no tiene stock y la configuración de tu negocio no permite utilizar lotes agotados.");
+                                                          return;
+                                                        }
+                                                        handleExtraLotChange(ing.id, extraIdx, 'lote', lot);
+                                                      }}
+                                                      title={isBlocked ? (t('traceability_form.lot_out_of_stock_blocked') || "Lote sin stock (bloqueado)") : (t('traceability_form.click_to_use_lot') || "Hacer clic para usar este lote")}
+                                                      style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        padding: 0,
+                                                        color: isBlocked ? '#94a3b8' : (isSelected ? '#0369a1' : '#0284c7'),
+                                                        fontWeight: isSelected ? '700' : '600',
+                                                        cursor: isBlocked ? 'not-allowed' : 'pointer',
+                                                        textDecoration: isBlocked ? 'line-through' : 'none',
+                                                        fontSize: '0.72rem'
+                                                      }}
+                                                    >
+                                                      {lot}
+                                                    </button>
+                                                    {dateStr && (
+                                                      <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>
+                                                        ({dateStr})
+                                                      </span>
+                                                    )}
+                                                  </span>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+                                          {elabLotes.length > 0 && (
+                                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem', fontSize: '0.72rem' }}>
+                                              <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <ChefHat size={12} style={{ color: 'var(--corp-green)' }} />
+                                                <span>{t('traceability_form.recent_elab_lotes') || "Elaboraciones"}:</span>
+                                              </span>
+                                              {elabLotes.slice(0, 3).map((item, lIdx) => {
+                                                const lot = getLotString(item);
+                                                const isSelected = extra.lote === lot;
+                                                return (
+                                                  <button
+                                                    key={`extra-el-${lIdx}`}
+                                                    type="button"
+                                                    onClick={() => handleExtraLotChange(ing.id, extraIdx, 'lote', lot)}
+                                                    style={{
+                                                      background: isSelected ? 'rgba(66, 98, 22, 0.15)' : '#ffffff',
+                                                      color: isSelected ? '#2d450c' : 'var(--corp-green)',
+                                                      border: isSelected ? '1.5px solid var(--corp-green)' : '1px solid #d9f99d',
+                                                      borderRadius: '0.375rem',
+                                                      padding: '0.15rem 0.45rem',
+                                                      fontSize: '0.72rem',
+                                                      fontWeight: isSelected ? '700' : '600',
+                                                      cursor: 'pointer'
+                                                    }}
+                                                  >
+                                                    {lot}
+                                                  </button>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* Columna 3: Input de cantidad y botón para quitar lote */}
+                                  <div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                                      <label className="label" style={{ fontSize: '0.75rem', margin: 0 }}>
+                                        {t('traceability_form.real_amount')} ({ing.unit}) {ing.quantityMandatory && <span style={{ color: '#ef4444' }}>*</span>}
+                                      </label>
+                                      {!isReadOnlyElab && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveExtraLot(ing.id, extraIdx)}
+                                          style={{
+                                            background: '#fee2e2',
+                                            border: '1px solid #fecaca',
+                                            color: '#dc2626',
+                                            cursor: 'pointer',
+                                            fontSize: '0.72rem',
+                                            fontWeight: '700',
+                                            borderRadius: '0.375rem',
+                                            padding: '0.2rem 0.5rem',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem'
+                                          }}
+                                          title={t('traceability_form.remove_lot') || "Quitar este lote"}
+                                        >
+                                          <Trash2 size={12} />
+                                          <span>{t('traceability_form.remove_lot') || "Quitar este lote"}</span>
+                                        </button>
+                                      )}
+                                    </div>
+                                    <input 
+                                      type="text" 
+                                      className="input-field" 
+                                      style={{ padding: '0.75rem' }}
+                                      placeholder={ing.quantityMandatory ? "0.00 *" : "0.00"}
+                                      value={extra.cantidad || ""}
+                                      onChange={(e) => handleExtraLotChange(ing.id, extraIdx, 'cantidad', e.target.value)}
+                                      required={!isReadOnlyElab && !!ing.quantityMandatory}
+                                      disabled={isReadOnlyElab}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -6054,11 +6452,17 @@ export default function ClientDashboard() {
                       ) || (ingredientPrices || []).find(p => (p.name || '').trim().toLowerCase() === normIngName);
                       
                       const unitCost = priceObj && priceObj.price !== undefined ? parseFloat(priceObj.price) || 0 : 0;
-                      const currentQtyVal = elaboracionForm.ingredientes[ing.id]?.cantidad !== undefined && elaboracionForm.ingredientes[ing.id]?.cantidad !== "" 
-                        ? elaboracionForm.ingredientes[ing.id]?.cantidad 
+                      const currentData = elaboracionForm.ingredientes[ing.id];
+                      const primaryQtyVal = currentData?.cantidad !== undefined && currentData?.cantidad !== "" 
+                        ? currentData?.cantidad 
                         : (ing.amount || "0");
-                      const qtyNum = parseFloat(String(currentQtyVal).replace(',', '.')) || 0;
-                      return sum + (unitCost * qtyNum);
+                      let totalIngQty = parseFloat(String(primaryQtyVal).replace(',', '.')) || 0;
+                      if (Array.isArray(currentData?.extraLots)) {
+                        currentData.extraLots.forEach(ex => {
+                          totalIngQty += parseFloat(String(ex.cantidad || 0).replace(',', '.')) || 0;
+                        });
+                      }
+                      return sum + (unitCost * totalIngQty);
                     }, 0);
 
                     const prepTimeNum = elaboracionForm.preparationTime 
@@ -12118,7 +12522,9 @@ export default function ClientDashboard() {
                       const lotVal = getLotString(item);
                       const dateVal = typeof item === 'object' && item !== null ? item.date : null;
                       const isCopied = copiedLotFeedback === lotVal;
-                      const isCurrentLot = elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.lote === lotVal;
+                      const isCurrentLot = (moreGoodsModalData.extraIdx !== null && moreGoodsModalData.extraIdx !== undefined)
+                        ? elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.extraLots?.[moreGoodsModalData.extraIdx]?.lote === lotVal
+                        : elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.lote === lotVal;
                       const isOutOfStock = typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
                       const isBlocked = profile?.blockOutOfStockLots && isOutOfStock;
 
@@ -12144,7 +12550,7 @@ export default function ClientDashboard() {
                                     alert(t('traceability_form.lot_out_of_stock_blocked') || "Este lote no tiene stock y la configuración de tu negocio no permite utilizar lotes agotados.");
                                     return;
                                   }
-                                  handleUseLot(moreGoodsModalData.ingredientId, lotVal);
+                                  handleUseLot(moreGoodsModalData.ingredientId, lotVal, moreGoodsModalData.extraIdx);
                                 }}
                                 className="btn-secondary"
                                 style={{

@@ -810,7 +810,10 @@
     "cooling_time_under_10": "Time taken to cool below 10 degrees",
     "cooling_time_under_10_help": "Should be less than 2 hours",
     "elaboration_notes_placeholder": "For example: Contains 14 units",
-    "elaboration_notes_help": "You can place this content on the label."
+    "elaboration_notes_help": "You can place this content on the label.",
+    "add_another_lot": "+ Add another lot for this ingredient",
+    "remove_lot": "Remove this lot",
+    "lot_extra_placeholder": "Additional lot number..."
   },
   "goods_receipt_form": {
     "product": "Product",
