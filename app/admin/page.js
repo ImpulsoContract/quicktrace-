@@ -9,7 +9,8 @@ import {
   MoreVertical, Edit, Plus, Trash2,
   X, AlertCircle, Loader2, LogOut,
   Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu, ExternalLink,
-  Key, Eye, EyeOff, Copy, Check
+  Key, Eye, EyeOff, Copy, Check,
+  Table, Download, BarChart3
 } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 
@@ -438,6 +439,10 @@ export default function AdminDashboard() {
               active={activeTab === 'list'} onClick={() => { setActiveTab('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
             <SidebarBtn 
+              icon={<Table size={20} />} label={t('admin.sidebar.client_report') || "Informe Detallado"} 
+              active={activeTab === 'client-report'} onClick={() => { setActiveTab('client-report'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
+            <SidebarBtn 
               icon={<FileText size={20} />} label={t('admin.sidebar.pricing_plans')} 
               active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
             />
@@ -807,9 +812,57 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
+
+                  {/* Botón inferior para acceder al informe detallado de clientes */}
+                  <div style={{
+                    marginTop: '2rem',
+                    padding: '1.25rem 1.5rem',
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                    borderRadius: '0.85rem',
+                    border: '1.5px solid #e2e8f0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1rem'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                        {t('admin.client_report.btn_open_report') || "Ver tabla detallada de clientes"}
+                      </div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                        {t('admin.client_report.btn_open_desc') || "Consulta la tabla completa con ID, país, planes, fechas de contratación y baja, tipo de cobro, estado y actividad de cada cliente."}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('client-report')}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '0.65rem',
+                        fontWeight: '700',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.6rem',
+                        boxShadow: '0 4px 12px rgba(22, 101, 52, 0.25)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Table size={18} />
+                      <span>{t('admin.client_report.btn_open_report') || "Ver tabla detallada de clientes"}</span>
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </>
               )}
             </section>
+          ) : activeTab === "client-report" ? (
+            <ClientReportTab onBack={() => setActiveTab('list')} />
           ) : activeTab === "terms" ? (
             <AdminTermsTab onUpdateSuccess={() => setMessage({ type: 'success', text: t('admin.terms.force_success') || 'Se ha forzado la aceptación de condiciones para todos los clientes.' })} />
           ) : activeTab === "affiliates" ? (
@@ -819,6 +872,8 @@ export default function AdminDashboard() {
               onViewDetails={(id) => { setSelectedAffiliate(id); fetchAffiliateDetails(id); }} 
               onSettle={(aff) => setSettleAffiliate(aff)}
             />
+          ) : activeTab === "coupons" ? (
+            <CouponsTab plans={plans} />
           ) : (
             <PlansTab plans={plans} loading={plansLoading} onRefresh={fetchPlans} />
           )}
@@ -3162,5 +3217,710 @@ function AddCouponModal({ plans, onClose, onRefresh }) {
         </div>
       </form>
     </Modal>
+  );
+}
+
+
+function ClientReportTab({ onBack }) {
+  const { t, locale } = useI18n();
+  const [reportData, setReportData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [planFilter, setPlanFilter] = useState("TODOS");
+  const [statusFilter, setStatusFilter] = useState("TODOS");
+  const [billingFilter, setBillingFilter] = useState("TODOS");
+  const [sortConfig, setSortConfig] = useState({ key: "registrationDate", direction: "desc" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  const fetchReport = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/clients/report");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setReportData(json.data);
+      } else {
+        alert(json.error || "Error al cargar el informe de clientes");
+      }
+    } catch (err) {
+      console.error("Error fetching client report:", err);
+      alert("Error de conexión al cargar el informe de clientes");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, []);
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const filteredData = useMemo(() => {
+    return reportData.filter(c => {
+      // Plan filter
+      if (planFilter !== "TODOS") {
+        if (planFilter === "Gratuito" && c.planName !== "Gratuito" && c.planName !== "Demo") return false;
+        if (planFilter !== "Gratuito" && c.planName !== planFilter) return false;
+      }
+      // Status filter
+      if (statusFilter !== "TODOS" && c.status !== statusFilter) return false;
+      // Billing filter
+      if (billingFilter !== "TODOS" && c.billingType !== billingFilter) return false;
+
+      // Search term
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const matchesName = (c.companyName || "").toLowerCase().includes(q);
+        const matchesEmail = (c.email || "").toLowerCase().includes(q);
+        const matchesNif = (c.nif || "").toLowerCase().includes(q);
+        const matchesId = String(c.companyId || "").includes(q);
+        const matchesCountry = (c.country || "").toLowerCase().includes(q);
+        const matchesOrigin = (c.origin || "").toLowerCase().includes(q);
+        const matchesPlan = (c.planName || "").toLowerCase().includes(q);
+        if (!matchesName && !matchesEmail && !matchesNif && !matchesId && !matchesCountry && !matchesOrigin && !matchesPlan) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [reportData, planFilter, statusFilter, billingFilter, searchTerm]);
+
+  const sortedData = useMemo(() => {
+    const list = [...filteredData];
+    list.sort((a, b) => {
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
+
+      // Handle null/empty
+      if (aVal === null || aVal === undefined || aVal === "") return 1;
+      if (bVal === null || bVal === undefined || bVal === "") return -1;
+
+      // Numeric comparison
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
+      // Date comparison
+      if (sortConfig.key.toLowerCase().includes('date') || sortConfig.key === 'lastLogin') {
+        const timeA = new Date(aVal).getTime() || 0;
+        const timeB = new Date(bVal).getTime() || 0;
+        return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
+      }
+
+      // String comparison
+      const strA = String(aVal).toLowerCase();
+      const strB = String(bVal).toLowerCase();
+      return sortConfig.direction === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
+    });
+    return list;
+  }, [filteredData, sortConfig]);
+
+  const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(sortedData.length / itemsPerPage);
+  const currentRecords = useMemo(() => {
+    if (itemsPerPage === -1) return sortedData;
+    const start = (currentPage - 1) * itemsPerPage;
+    return sortedData.slice(start, start + itemsPerPage);
+  }, [sortedData, currentPage, itemsPerPage]);
+
+  const handleExportCSV = () => {
+    if (!sortedData || sortedData.length === 0) {
+      alert("No hay datos para exportar");
+      return;
+    }
+
+    const headers = [
+      "ID Empresa",
+      "Razón Social",
+      "NIF/CIF",
+      "Email",
+      "Fecha Registro",
+      "País",
+      "Plan Actual",
+      "1ª Contratación / Cambios",
+      "Tipo Contratación",
+      "Estado",
+      "Fecha de Baja",
+      "Origen Registro",
+      "Nº Recetas",
+      "Nº Elaboraciones",
+      "Nº Entradas Mercancía",
+      "Fecha Último Uso"
+    ];
+
+    const rows = sortedData.map(c => [
+      c.companyId || "",
+      `"${(c.companyName || "").replace(/"/g, '""')}"`,
+      `"${(c.nif || "").replace(/"/g, '""')}"`,
+      c.email || "",
+      c.registrationDate ? new Date(c.registrationDate).toLocaleDateString() : "",
+      `"${(c.country || "").replace(/"/g, '""')}"`,
+      c.planName || "",
+      c.contractDate ? (new Date(c.contractDate).toLocaleDateString() + (c.planChanges ? ` (${c.planChanges})` : "")) : (c.planChanges || ""),
+      c.billingType || "",
+      c.status || "",
+      c.cancellationDate ? new Date(c.cancellationDate).toLocaleDateString() : "",
+      `"${(c.origin || "").replace(/"/g, '""')}"`,
+      c.recipesCount || 0,
+      c.elaborationsCount || 0,
+      c.goodsReceiptsCount || 0,
+      c.lastLogin ? new Date(c.lastLogin).toLocaleString() : ""
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `informe_clientes_quicktrace_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatDate = (dateStr, includeTime = false) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "";
+      const loc = locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES';
+      if (includeTime) {
+        return d.toLocaleString(loc, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+      return d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch {
+      return "";
+    }
+  };
+
+  // KPIs
+  const totalClients = reportData.length;
+  const payingClients = reportData.filter(c => c.planName && c.planName !== "Gratuito" && c.planName !== "Demo").length;
+  const activeClients = reportData.filter(c => c.status === "Activo").length;
+  const cancelledClients = reportData.filter(c => c.status === "Cancelado").length;
+
+  return (
+    <section className="glass-card" style={{ padding: '2rem', background: 'white', borderRadius: '1rem' }}>
+      {/* Top action bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={onBack}
+              style={{
+                background: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                padding: '0.4rem 0.8rem',
+                borderRadius: '0.5rem',
+                color: 'var(--text-main)',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
+              onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
+            >
+              <ArrowLeft size={16} />
+              <span>{t('admin.client_report.btn_back_to_list') || "Volver a la lista de clientes"}</span>
+            </button>
+          </div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+            {t('admin.client_report.title') || "Informe Detallado de Clientes"}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
+            {t('admin.client_report.subtitle') || "Información comercial, suscripciones, origen, actividad y uso de la aplicación"}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={fetchReport}
+            disabled={loading}
+            style={{
+              padding: '0.55rem 1rem',
+              background: 'white',
+              border: '1px solid #cbd5e1',
+              borderRadius: '0.5rem',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              color: 'var(--text-main)',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+            }}
+          >
+            <RefreshCw size={15} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            <span>{t('admin.client_report.refresh') || "Actualizar"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            disabled={loading || sortedData.length === 0}
+            style={{
+              padding: '0.55rem 1.15rem',
+              background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '0.5rem',
+              cursor: (loading || sortedData.length === 0) ? 'not-allowed' : 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              boxShadow: '0 2px 6px rgba(22, 101, 52, 0.25)'
+            }}
+          >
+            <Download size={15} />
+            <span>{t('admin.client_report.export_csv') || "Exportar a CSV / Excel"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {t('admin.client_report.kpi_total_clients') || "Total Clientes"}
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#0f172a', marginTop: '0.35rem' }}>
+            {totalClients}
+          </div>
+        </div>
+
+        <div style={{ padding: '1.25rem', background: '#f0fdf4', borderRadius: '0.75rem', border: '1px solid #bbf7d0' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {t('admin.client_report.kpi_paying_clients') || "Planes de Pago"}
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#15803d', marginTop: '0.35rem' }}>
+            {payingClients}
+          </div>
+        </div>
+
+        <div style={{ padding: '1.25rem', background: '#eff6ff', borderRadius: '0.75rem', border: '1px solid #bfdbfe' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {t('admin.client_report.kpi_active_clients') || "Activos"}
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#1e40af', marginTop: '0.35rem' }}>
+            {activeClients}
+          </div>
+        </div>
+
+        <div style={{ padding: '1.25rem', background: '#fef2f2', borderRadius: '0.75rem', border: '1px solid #fecaca' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#991b1b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {t('admin.client_report.kpi_cancelled_clients') || "Cancelados"}
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#991b1b', marginTop: '0.35rem' }}>
+            {cancelledClients}
+          </div>
+        </div>
+      </div>
+
+      {/* Filter and search bar */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1rem',
+        padding: '1rem 1.25rem',
+        background: '#f8fafc',
+        borderRadius: '0.75rem',
+        border: '1px solid #e2e8f0',
+        marginBottom: '1.5rem'
+      }}>
+        <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 280px' }}>
+          <Search size={16} style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          <input
+            type="text"
+            className="input-field"
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            placeholder={t('admin.client_report.search_placeholder') || "Buscar por empresa, NIF, email, país, origen..."}
+            style={{ paddingLeft: '2.4rem', fontSize: '0.85rem' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <select
+            className="input-field"
+            value={planFilter}
+            onChange={(e) => { setPlanFilter(e.target.value); setCurrentPage(1); }}
+            style={{ fontSize: '0.85rem', padding: '0.5rem 0.75rem', minWidth: '140px' }}
+          >
+            <option value="TODOS">{t('admin.client_report.filter_plan_all') || "Todos los planes"}</option>
+            <option value="Gratuito">Gratuito</option>
+            <option value="Básico">Básico</option>
+            <option value="Premium">Premium</option>
+            <option value="Gold">Gold</option>
+          </select>
+
+          <select
+            className="input-field"
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            style={{ fontSize: '0.85rem', padding: '0.5rem 0.75rem', minWidth: '140px' }}
+          >
+            <option value="TODOS">{t('admin.client_report.filter_status_all') || "Todos los estados"}</option>
+            <option value="Activo">Activo</option>
+            <option value="Cancelado">Cancelado</option>
+            <option value="Impagado">Impagado</option>
+          </select>
+
+          <select
+            className="input-field"
+            value={billingFilter}
+            onChange={(e) => { setBillingFilter(e.target.value); setCurrentPage(1); }}
+            style={{ fontSize: '0.85rem', padding: '0.5rem 0.75rem', minWidth: '150px' }}
+          >
+            <option value="TODOS">{t('admin.client_report.filter_billing_all') || "Cualquier contratación"}</option>
+            <option value="Mensual">Mensual</option>
+            <option value="Anual">Anual</option>
+          </select>
+
+          <select
+            className="input-field"
+            value={itemsPerPage}
+            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+            style={{ fontSize: '0.85rem', padding: '0.5rem 0.75rem', width: '120px' }}
+          >
+            <option value={20}>20 / pág</option>
+            <option value={50}>50 / pág</option>
+            <option value={100}>100 / pág</option>
+            <option value={-1}>Todos</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Main Table */}
+      {loading ? (
+        <div style={{ padding: '6rem', textAlign: 'center' }}>
+          <Loader2 className="animate-spin" size={36} color="var(--corp-green)" style={{ margin: '0 auto' }} />
+          <div style={{ marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>
+            Generando informe detallado de clientes...
+          </div>
+        </div>
+      ) : sortedData.length === 0 ? (
+        <div style={{ padding: '4rem', textAlign: 'center', background: '#f8fafc', borderRadius: '0.75rem', border: '1px dashed #cbd5e1' }}>
+          <AlertCircle size={32} color="#94a3b8" style={{ margin: '0 auto' }} />
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.75rem' }}>
+            {t('admin.client_report.no_data') || "No se encontraron clientes con los filtros seleccionados."}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px', fontSize: '0.85rem' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                  <th onClick={() => handleSort('companyId')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_company') || "ID Empresa"} {sortConfig.key === 'companyId' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('registrationDate')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_reg_date') || "Fecha Registro"} {sortConfig.key === 'registrationDate' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('country')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_country') || "País"} {sortConfig.key === 'country' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('planName')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_plan') || "Plan Actual"} {sortConfig.key === 'planName' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('contractDate')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_contract_date') || "1ª Contratación / Cambios"} {sortConfig.key === 'contractDate' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('billingType')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_billing_type') || "Tipo"} {sortConfig.key === 'billingType' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('status')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_status') || "Estado"} {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('cancellationDate')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_cancellation_date') || "Fecha Baja"} {sortConfig.key === 'cancellationDate' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('origin')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_origin') || "Origen"} {sortConfig.key === 'origin' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_activity') || "Actividad (Rec / Elab / Ent)"}
+                  </th>
+                  <th onClick={() => handleSort('lastLogin')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {t('admin.client_report.col_last_login') || "Último Uso"} {sortConfig.key === 'lastLogin' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentRecords.map((c, idx) => {
+                  const isGold = (c.planName || "").toLowerCase().includes("gold");
+                  const isPremium = (c.planName || "").toLowerCase().includes("premium");
+                  const isBasico = (c.planName || "").toLowerCase().includes("básico") || (c.planName || "").toLowerCase().includes("basico");
+
+                  return (
+                    <tr 
+                      key={c.companyId || c.userId || idx} 
+                      style={{ 
+                        borderBottom: '1px solid #f1f5f9', 
+                        background: idx % 2 === 0 ? '#ffffff' : '#fafafa',
+                        transition: 'background 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? '#ffffff' : '#fafafa'}
+                    >
+                      {/* ID Empresa y Nombre */}
+                      <td style={{ padding: '0.9rem 1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+                          <span style={{ 
+                            fontSize: '0.72rem', 
+                            fontWeight: '800', 
+                            padding: '0.15rem 0.45rem', 
+                            borderRadius: '0.35rem', 
+                            background: '#e2e8f0', 
+                            color: '#334155',
+                            fontFamily: 'monospace'
+                          }}>
+                            #{c.companyId || c.userId}
+                          </span>
+                          <span style={{ fontWeight: '700', color: '#0f172a' }}>
+                            {c.companyName || "-"}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                          {c.nif ? `${c.nif} · ` : ""}{c.email}
+                        </div>
+                      </td>
+
+                      {/* Fecha de Registro */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap', color: '#334155' }}>
+                        {formatDate(c.registrationDate)}
+                      </td>
+
+                      {/* País */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap', color: '#334155' }}>
+                        {c.country || "-"}
+                      </td>
+
+                      {/* Plan Actual */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap' }}>
+                        <span style={{
+                          padding: '0.25rem 0.65rem',
+                          borderRadius: '2rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '800',
+                          display: 'inline-block',
+                          textTransform: 'uppercase',
+                          background: isGold ? '#fef3c7' : isPremium ? '#ede9fe' : isBasico ? '#dcfce7' : '#f1f5f9',
+                          color: isGold ? '#b45309' : isPremium ? '#6d28d9' : isBasico ? '#15803d' : '#64748b',
+                          border: isGold ? '1px solid #fde68a' : isPremium ? '1px solid #ddd6fe' : isBasico ? '1px solid #bbf7d0' : '1px solid #e2e8f0'
+                        }}>
+                          {c.planName || "Gratuito"}
+                        </span>
+                      </td>
+
+                      {/* 1ª Contratación / Cambios */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap' }}>
+                        {c.contractDate ? (
+                          <div>
+                            <div style={{ fontWeight: '600', color: '#0f172a' }}>
+                              {formatDate(c.contractDate)}
+                            </div>
+                            {c.planChanges && (
+                              <div style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: '600' }}>
+                                {c.planChanges}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#94a3b8' }}>-</span>
+                        )}
+                      </td>
+
+                      {/* Tipo de Contratación */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap' }}>
+                        {c.billingType ? (
+                          <span style={{
+                            padding: '0.2rem 0.55rem',
+                            borderRadius: '0.35rem',
+                            fontSize: '0.72rem',
+                            fontWeight: '700',
+                            background: c.billingType === 'Anual' ? '#ecfdf5' : '#eff6ff',
+                            color: c.billingType === 'Anual' ? '#047857' : '#1d4ed8',
+                            border: c.billingType === 'Anual' ? '1px solid #a7f3d0' : '1px solid #bfdbfe'
+                          }}>
+                            {c.billingType}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#94a3b8' }}>-</span>
+                        )}
+                      </td>
+
+                      {/* Estado */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap' }}>
+                        <span style={{
+                          padding: '0.25rem 0.65rem',
+                          borderRadius: '2rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '800',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          background: c.status === 'Activo' ? '#dcfce7' : c.status === 'Cancelado' ? '#fee2e2' : '#fef3c7',
+                          color: c.status === 'Activo' ? '#15803d' : c.status === 'Cancelado' ? '#b91c1c' : '#b45309'
+                        }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
+                          {c.status || "Activo"}
+                        </span>
+                      </td>
+
+                      {/* Fecha de Baja */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap' }}>
+                        {c.cancellationDate ? (
+                          <span style={{ color: '#b91c1c', fontWeight: '700' }}>
+                            {formatDate(c.cancellationDate)}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#94a3b8' }}>-</span>
+                        )}
+                      </td>
+
+                      {/* Origen */}
+                      <td style={{ padding: '0.9rem 1rem', fontSize: '0.78rem' }}>
+                        {c.origin ? (
+                          <span style={{
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '0.35rem',
+                            fontSize: '0.72rem',
+                            fontWeight: '800',
+                            background: '#f1f5f9',
+                            color: '#334155',
+                            display: 'inline-block'
+                          }}>
+                            {c.origin}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#94a3b8' }}>-</span>
+                        )}
+                      </td>
+
+                      {/* Actividad: Recetas / Elaboraciones / Entradas */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span 
+                            title="Recetas registradas"
+                            style={{ 
+                              padding: '0.15rem 0.45rem', 
+                              borderRadius: '0.3rem', 
+                              fontSize: '0.72rem', 
+                              fontWeight: '700', 
+                              background: '#eff6ff', 
+                              color: '#1d4ed8' 
+                            }}
+                          >
+                            R: {c.recipesCount}
+                          </span>
+                          <span 
+                            title="Elaboraciones registradas"
+                            style={{ 
+                              padding: '0.15rem 0.45rem', 
+                              borderRadius: '0.3rem', 
+                              fontSize: '0.72rem', 
+                              fontWeight: '700', 
+                              background: '#f0fdf4', 
+                              color: '#15803d' 
+                            }}
+                          >
+                            E: {c.elaborationsCount}
+                          </span>
+                          <span 
+                            title="Entradas de mercancías registradas"
+                            style={{ 
+                              padding: '0.15rem 0.45rem', 
+                              borderRadius: '0.3rem', 
+                              fontSize: '0.72rem', 
+                              fontWeight: '700', 
+                              background: '#fffbeb', 
+                              color: '#b45309' 
+                            }}
+                          >
+                            M: {c.goodsReceiptsCount}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Último Uso */}
+                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap', fontSize: '0.78rem', color: '#475569' }}>
+                        {c.lastLogin ? formatDate(c.lastLogin, true) : <span style={{ color: '#94a3b8' }}>-</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Paginator */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {t('admin.client_report.showing_info', {
+                  start: itemsPerPage === -1 ? 1 : (currentPage - 1) * itemsPerPage + 1,
+                  end: itemsPerPage === -1 ? sortedData.length : Math.min(currentPage * itemsPerPage, sortedData.length),
+                  total: sortedData.length
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '0.45rem 0.9rem',
+                    border: '1px solid #cbd5e1',
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    fontSize: '0.85rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  {t('common.previous') || "Anterior"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '0.45rem 0.9rem',
+                    border: '1px solid #cbd5e1',
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    fontSize: '0.85rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  {t('common.next') || "Siguiente"}
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </section>
   );
 }
