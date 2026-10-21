@@ -130,7 +130,8 @@ export async function POST(req) {
       return NextResponse.json({ error: "El módulo de recepción de mercancías no está incluido en tu plan." }, { status: 403 });
     }
 
-    if (profile.plan.goodsLimit !== null && profile._count.goodsReceipts >= profile.plan.goodsLimit) {
+    const isFreePlan = !profile.plan || profile.plan.name?.toLowerCase().includes('demo') || profile.plan.name?.toLowerCase().includes('gratuit');
+    if (isFreePlan && profile.plan?.goodsLimit !== null && profile._count.goodsReceipts >= profile.plan.goodsLimit) {
       return NextResponse.json({ error: "Has alcanzado el límite de registros de mercancías de tu plan." }, { status: 403 });
     }
 

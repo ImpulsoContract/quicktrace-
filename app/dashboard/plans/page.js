@@ -223,7 +223,7 @@ export default function PlansPage() {
                   <FeatureItem icon={<ChefHat size={18}/>} label={t('plans.recipes')} val={plan.recipesLimit} t={t} />
                   <FeatureItem icon={<History size={18}/>} label={t('plans.elaborations')} val={null} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Brush size={18}/>} label={t('plans.cleaning')} active={plan.hasCleaning} limit={null} t={t} showAsterisk={true} />
-                  <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={plan.goodsLimit} t={t} showAsterisk={true} />
+                  <FeatureToggle icon={<Package size={18}/>} label={t('plans.goods')} active={plan.hasGoods} limit={isDemo ? (plan.goodsLimit || 10) : null} t={t} showAsterisk={isDemo} />
                   <FeatureToggle icon={<Thermometer size={18}/>} label={t('plans.temperatures')} active={plan.hasTemperatures} limit={null} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Droplets size={18}/>} label={t('plans.water')} active={plan.hasWater} limit={null} t={t} showAsterisk={true} />
                   <FeatureToggle icon={<Package size={18}/>} label={t('plans.providers')} active={plan.hasProviders} t={t} />

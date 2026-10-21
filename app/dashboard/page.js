@@ -14803,8 +14803,9 @@ function ProfileModal({ onClose, profile, onUpdate, onCancelSubscription }) {
 
 function PlanUsageIndicator({ label, current, limit, hideLimit = false }) {
   const { t } = useI18n();
-  const isCapped = !hideLimit && limit !== null && current >= limit;
-  const percentage = limit ? Math.min((current / limit) * 100, 100) : 0;
+  const isUnlimited = limit === null;
+  const isCapped = !hideLimit && !isUnlimited && current >= limit;
+  const percentage = (!isUnlimited && limit) ? Math.min((current / limit) * 100, 100) : 0;
 
   return (
     <div style={{ 
@@ -14818,9 +14819,9 @@ function PlanUsageIndicator({ label, current, limit, hideLimit = false }) {
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: '1.1rem', fontWeight: '900', color: isCapped ? '#ef4444' : 'var(--corp-green)' }}>
-            {current} {!hideLimit && <> / {limit === null ? '∞' : limit}</>}
+            {current} {!hideLimit && !isUnlimited && <> / {limit}</>}
           </span>
-          {!hideLimit && limit && (
+          {!hideLimit && !isUnlimited && limit && (
             <div style={{ width: '60px', height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ width: `${percentage}%`, height: '100%', background: isCapped ? '#ef4444' : 'var(--corp-green)', transition: 'width 0.5s ease' }} />
             </div>
@@ -14828,7 +14829,7 @@ function PlanUsageIndicator({ label, current, limit, hideLimit = false }) {
         </div>
       </div>
       
-      {!hideLimit && (
+      {!hideLimit && !isUnlimited && (
         <Link href="/dashboard/plans" style={{ 
           display: 'flex', alignItems: 'center', gap: '0.5rem', 
           padding: '0.5rem 1rem', background: 'rgba(66, 98, 22, 0.1)', 
