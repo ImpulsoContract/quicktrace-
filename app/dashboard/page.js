@@ -2650,7 +2650,7 @@ export default function ClientDashboard() {
       });
       const sortedChamberIds = Array.from(chamberMap.keys()).sort((a, b) => a - b);
 
-      const doc = new jsPDF();
+      const doc = new jsPDF(sortedChamberIds.length > 3 ? 'landscape' : 'portrait');
       
       // Header
       doc.setFontSize(20);
@@ -2663,7 +2663,11 @@ export default function ClientDashboard() {
       doc.text(`${profile?.razonSocial || ''} - ${profile?.nif || ''}`, 14, 35);
       
       // Table Columns
-      const tableColumn = [t('dashboard.datetime'), ...sortedChamberIds.map(id => chamberMap.get(id))];
+      const tableColumn = [
+        t('dashboard.datetime'),
+        ...sortedChamberIds.map(id => chamberMap.get(id)),
+        t('common.notes_corrective') || "Notas / Medidas correctivas"
+      ];
       
       // Table Rows
       const tableRows = records.map(record => {
@@ -2672,6 +2676,7 @@ export default function ClientDashboard() {
           const val = record.values.find(v => v.chamberId === chamberId);
           row.push(val ? `${val.value} ºC` : '-');
         });
+        row.push(record.notes || "-");
         return row;
       });
 
@@ -2681,7 +2686,7 @@ export default function ClientDashboard() {
         startY: 45,
         theme: 'striped',
         headStyles: { fillColor: [66, 98, 22], textColor: [255, 255, 255] },
-        styles: { fontSize: 8, cellPadding: 2 },
+        styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
         alternateRowStyles: { fillColor: [245, 247, 240] },
         didDrawPage: (data) => {
           doc.setFontSize(8);
