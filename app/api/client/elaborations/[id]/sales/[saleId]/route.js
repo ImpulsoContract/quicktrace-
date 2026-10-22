@@ -43,6 +43,26 @@ export async function DELETE(req, { params }) {
       where: { id: saleId }
     });
 
+    if (sale.combinedSaleId) {
+      const remainingSales = await prisma.elaborationSale.count({
+        where: { combinedSaleId: sale.combinedSaleId }
+      });
+      if (remainingSales === 0) {
+        await prisma.combinedSale.delete({
+          where: { id: sale.combinedSaleId }
+        }).catch(() => {});
+      } else {
+        const remaining = await prisma.elaborationSale.findMany({
+          where: { combinedSaleId: sale.combinedSaleId }
+        });
+        const newTotal = remaining.reduce((acc, cur) => acc + (cur.price || 0), 0);
+        await prisma.combinedSale.update({
+          where: { id: sale.combinedSaleId },
+          data: { totalPrice: newTotal }
+        }).catch(() => {});
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting elaboration sale:", error);

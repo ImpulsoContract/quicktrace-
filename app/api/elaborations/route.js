@@ -94,7 +94,7 @@ export async function GET(req) {
           },
           ingredients: true,
           sales: {
-            include: { customer: true },
+            include: { customer: true, combinedSale: true },
             orderBy: { date: 'desc' }
           }
         },
@@ -141,7 +141,7 @@ export async function GET(req) {
           },
           ingredients: true,
           sales: {
-            include: { customer: true },
+            include: { customer: true, combinedSale: true },
             orderBy: { date: 'desc' }
           }
         },

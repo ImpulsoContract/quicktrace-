@@ -14,7 +14,8 @@ import {
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
   Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download,
   Salad, FileSpreadsheet, MessageCircle, Send,
-  GitMerge
+  GitMerge,
+  ShoppingCart
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -27,6 +28,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CustomerImportModal from "@/components/CustomerImportModal";
 import MergeIngredientsModal from "@/components/MergeIngredientsModal";
+import CombinedSalesModal from "@/components/CombinedSalesModal";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -445,6 +447,7 @@ export default function ClientDashboard() {
 
   const [saleModalElaboration, setSaleModalElaboration] = useState(null);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [isCombinedSalesModalOpen, setIsCombinedSalesModalOpen] = useState(false);
   const [customerForSalesModal, setCustomerForSalesModal] = useState(null);
   const [returnToCustomerSales, setReturnToCustomerSales] = useState(null);
   const handleOpenSaleModal = (elaboration) => {
@@ -7086,6 +7089,15 @@ export default function ClientDashboard() {
                     </button>
                     {session?.user?.role !== "WORKER" && (
                       <button 
+                        onClick={() => setIsCombinedSalesModalOpen(true)}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                      >
+                        <ShoppingCart size={18} /> {t('combined_sales.btn_label') || "Venta combinada"}
+                      </button>
+                    )}
+                    {session?.user?.role !== "WORKER" && (
+                      <button 
                         onClick={() => setIsSalesReportModalOpen(true)}
                         className="btn-secondary"
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
@@ -10718,6 +10730,26 @@ export default function ClientDashboard() {
             setSaleModalElaboration(null);
             setReturnToCustomerSales(null);
             setCustomerForSalesModal(null);
+            setActiveTab("clientes");
+            setSelectedRecipe(null);
+            setSelectedRecords([]);
+            if (window.innerWidth <= 1024) setIsSidebarOpen(false);
+            scrollToTop();
+          }}
+        />
+      )}
+
+      {isCombinedSalesModalOpen && session?.user?.role !== "WORKER" && (
+        <CombinedSalesModal
+          isOpen={isCombinedSalesModalOpen}
+          onClose={() => setIsCombinedSalesModalOpen(false)}
+          customers={customers}
+          profile={profile}
+          onSaleCreated={() => {
+            fetchElaborations();
+          }}
+          onNavigateToCustomers={() => {
+            setIsCombinedSalesModalOpen(false);
             setActiveTab("clientes");
             setSelectedRecipe(null);
             setSelectedRecords([]);
@@ -18480,6 +18512,7 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
         } : s));
         setHoldedConfirmCustomer({ isOpen: false, sale: null, customerName: "", customerNif: "" });
         alert(data.message || (t('elaboration_sales.invoice_success') || "Factura generada con éxito: {num}").replace('{num}', data.invoiceNum));
+        if (sale.combinedSaleId) fetchSales();
       } else if (data.contactNotFound) {
         setHoldedConfirmCustomer({
           isOpen: true,
@@ -19036,6 +19069,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
         } : s));
         setHoldedConfirmCustomer({ isOpen: false, sale: null, customerName: "", customerNif: "" });
         alert(data.message || (t('elaboration_sales.invoice_success') || "Factura generada con éxito: {num}").replace('{num}', data.invoiceNum));
+        if (sale.combinedSaleId) fetchSales();
         if (onSaleUpdated) onSaleUpdated();
       } else if (data.contactNotFound) {
         setHoldedConfirmCustomer({
@@ -19627,15 +19661,32 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                         {formatDateTimeDDMMYYYY(s.date)}
                       </td>
                       <td style={{ padding: '0.75rem 1rem', fontWeight: '600' }}>
-                        {s.customer ? (
-                          <span style={{ color: 'var(--corp-green)' }}>
-                            {s.customer.commercialName}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                            {t('elaboration_sales.no_customer_option') || "Venta directa / Sin cliente"}
-                          </span>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          {s.customer ? (
+                            <span style={{ color: 'var(--corp-green)' }}>
+                              {s.customer.commercialName}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                              {t('elaboration_sales.no_customer_option') || "Venta directa / Sin cliente"}
+                            </span>
+                          )}
+                          {s.combinedSaleId && (
+                            <span style={{ 
+                              padding: '0.15rem 0.45rem', 
+                              background: '#e0e7ff', 
+                              color: '#4338ca', 
+                              borderRadius: '0.35rem', 
+                              fontSize: '0.7rem', 
+                              fontWeight: '700',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.2rem'
+                            }}>
+                              {t('combined_sales.badge') || "Venta combinada"} #{s.combinedSaleId}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td style={{ padding: '0.75rem 1rem', fontWeight: '700' }}>
                         <span style={{ background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', padding: '0.2rem 0.5rem', borderRadius: '0.35rem' }}>

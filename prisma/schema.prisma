@@ -115,6 +115,7 @@ model ClientProfile {
   scannedDeliveryNotes       ScannedDeliveryNote[]
   customers                  Customer[]
   elaborationSales           ElaborationSale[]
+  combinedSales              CombinedSale[]
   hasCuttingTraceability     Boolean           @default(false)
   hasOilCollection           Boolean           @default(false)
   hasVegetableDisinfection   Boolean           @default(false)
@@ -147,6 +148,7 @@ model Customer {
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
   elaborationSales ElaborationSale[]
+  combinedSales    CombinedSale[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -336,6 +338,9 @@ model ElaborationSale {
   holdedInvoiceNum String?
   invoicedAt       DateTime?
 
+  combinedSaleId   Int?
+  combinedSale     CombinedSale?  @relation(fields: [combinedSaleId], references: [id], onDelete: Cascade)
+
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
@@ -344,7 +349,33 @@ model ElaborationSale {
 
   @@index([elaborationId])
   @@index([customerId])
+  @@index([combinedSaleId])
   @@index([clientProfileId])
+}
+
+model CombinedSale {
+  id              Int               @id @default(autoincrement())
+  date            DateTime          @default(now())
+  totalPrice      Float             @default(0)
+  notes           String?
+
+  customerId      Int?
+  customer        Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  sales           ElaborationSale[]
+
+  holdedInvoiceId  String?
+  holdedInvoiceNum String?
+  invoicedAt       DateTime?
+
+  clientProfileId Int
+  clientProfile   ClientProfile     @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([clientProfileId])
+  @@index([customerId])
 }
 
 model ElaborationIngredient {

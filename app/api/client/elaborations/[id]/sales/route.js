@@ -35,7 +35,22 @@ export async function GET(req, { params }) {
 
     const sales = await prisma.elaborationSale.findMany({
       where: { elaborationId },
-      include: { customer: true },
+      include: { 
+        customer: true,
+        combinedSale: {
+          include: {
+            sales: {
+              include: {
+                elaboration: {
+                  include: {
+                    recipe: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       orderBy: { date: 'desc' }
     });
 

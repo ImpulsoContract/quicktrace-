@@ -36,6 +36,20 @@ export async function POST(request, { params }) {
       where: { id: saleId },
       include: {
         customer: true,
+        combinedSale: {
+          include: {
+            customer: true,
+            sales: {
+              include: {
+                elaboration: {
+                  include: {
+                    recipe: true
+                  }
+                }
+              }
+            }
+          }
+        },
         elaboration: {
           include: {
             recipe: true
@@ -63,18 +77,21 @@ export async function POST(request, { params }) {
       }, { status: 400 });
     }
 
+    const isCombined = !!(sale.combinedSaleId && sale.combinedSale);
+    const activeCustomer = isCombined ? (sale.combinedSale.customer || sale.customer) : sale.customer;
+
     // Check customer presence
-    if (!sale.customer) {
+    if (!activeCustomer) {
       return NextResponse.json({
         error: "La venta debe estar asociada a un cliente registrado para poder generar una factura."
       }, { status: 400 });
     }
 
     // Check NIF presence
-    const customerNif = sale.customer.nif?.trim();
+    const customerNif = activeCustomer.nif?.trim();
     if (!customerNif) {
       return NextResponse.json({
-        error: `El cliente "${sale.customer.commercialName}" no tiene NIF/CIF informado. Por favor, edita los datos del cliente y añade su NIF/CIF.`
+        error: `El cliente "${activeCustomer.commercialName}" no tiene NIF/CIF informado. Por favor, edita los datos del cliente y añade su NIF/CIF.`
       }, { status: 400 });
     }
 
@@ -136,27 +153,27 @@ export async function POST(request, { params }) {
         return NextResponse.json({
           success: false,
           contactNotFound: true,
-          customerName: sale.customer.fiscalName || sale.customer.commercialName,
+          customerName: activeCustomer.fiscalName || activeCustomer.commercialName,
           customerNif: customerNif,
           message: "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?"
         }, { status: 200 });
       }
 
       // Create contact in Holded
-      const contactName = (sale.customer.fiscalName || sale.customer.commercialName || "Cliente").trim();
+      const contactName = (activeCustomer.fiscalName || activeCustomer.commercialName || "Cliente").trim();
       
       if (usedVersion === "v1") {
         const createPayloadV1 = {
           name: contactName,
-          tradeName: (sale.customer.commercialName || "").trim() || undefined,
+          tradeName: (activeCustomer.commercialName || "").trim() || undefined,
           code: customerNif,
-          email: sale.customer.email?.trim() || undefined,
-          phone: (sale.customer.phone || sale.customer.phone2)?.trim() || undefined,
+          email: activeCustomer.email?.trim() || undefined,
+          phone: (activeCustomer.phone || activeCustomer.phone2)?.trim() || undefined,
           billAddress: {
-            address: sale.customer.address?.trim() || "",
-            postalCode: sale.customer.postalCode?.trim() || "",
-            city: sale.customer.city?.trim() || "",
-            province: sale.customer.province?.trim() || "",
+            address: activeCustomer.address?.trim() || "",
+            postalCode: activeCustomer.postalCode?.trim() || "",
+            city: activeCustomer.city?.trim() || "",
+            province: activeCustomer.province?.trim() || "",
             country: "España"
           },
           isCustomer: true
@@ -179,8 +196,8 @@ export async function POST(request, { params }) {
         const createPayloadV2 = {
           name: contactName,
           code: customerNif,
-          email: sale.customer.email?.trim() || undefined,
-          phone: (sale.customer.phone || sale.customer.phone2)?.trim() || undefined,
+          email: activeCustomer.email?.trim() || undefined,
+          phone: (activeCustomer.phone || activeCustomer.phone2)?.trim() || undefined,
           type: "client"
         };
 
@@ -200,40 +217,69 @@ export async function POST(request, { params }) {
       }
     }
 
-    // 3. Build invoice items
-    const itemName = sale.elaboration?.recipe?.name || sale.elaboration?.name || "Elaboración";
-    const descParts = [];
-    if (sale.elaboration?.name) descParts.push(`Lote: ${sale.elaboration.name}`);
-    if (sale.elaboration?.date) descParts.push(`Elab: ${new Date(sale.elaboration.date).toLocaleDateString('es-ES')}`);
-    if (sale.elaboration?.expiryDate) descParts.push(`Caducidad: ${new Date(sale.elaboration.expiryDate).toLocaleDateString('es-ES')}`);
-    const itemDesc = descParts.length > 0 ? descParts.join(" | ") : "";
-
-    const units = sale.quantity && sale.quantity > 0 ? sale.quantity : 1;
-    const subtotal = sale.quantity && sale.quantity > 0 
-      ? parseFloat((sale.price / sale.quantity).toFixed(4)) 
-      : parseFloat((sale.price || 0).toFixed(4));
-
+    // 3. Build invoice items (single sale or full combined sale)
     const taxRate = profile.holdedTax !== undefined && profile.holdedTax !== null 
       ? profile.holdedTax 
       : 10;
 
+    const salesList = isCombined ? sale.combinedSale.sales : [sale];
+
+    const itemsV1 = salesList.map(s => {
+      const itemName = s.elaboration?.recipe?.name || s.elaboration?.name || "Elaboración";
+      const descParts = [];
+      if (s.elaboration?.name) descParts.push(`Lote: ${s.elaboration.name}`);
+      if (s.elaboration?.date) descParts.push(`Elab: ${new Date(s.elaboration.date).toLocaleDateString('es-ES')}`);
+      if (s.elaboration?.expirationDate) descParts.push(`Caducidad: ${new Date(s.elaboration.expirationDate).toLocaleDateString('es-ES')}`);
+      const itemDesc = descParts.length > 0 ? descParts.join(" | ") : "";
+
+      const units = s.quantity && s.quantity > 0 ? s.quantity : 1;
+      const subtotal = s.quantity && s.quantity > 0 
+        ? parseFloat((s.price / s.quantity).toFixed(4)) 
+        : parseFloat((s.price || 0).toFixed(4));
+
+      return {
+        name: itemName,
+        desc: itemDesc,
+        units,
+        subtotal,
+        tax: taxRate
+      };
+    });
+
+    const itemsV2 = salesList.map(s => {
+      const itemName = s.elaboration?.recipe?.name || s.elaboration?.name || "Elaboración";
+      const descParts = [];
+      if (s.elaboration?.name) descParts.push(`Lote: ${s.elaboration.name}`);
+      if (s.elaboration?.date) descParts.push(`Elab: ${new Date(s.elaboration.date).toLocaleDateString('es-ES')}`);
+      if (s.elaboration?.expirationDate) descParts.push(`Caducidad: ${new Date(s.elaboration.expirationDate).toLocaleDateString('es-ES')}`);
+      const itemDesc = descParts.length > 0 ? descParts.join(" | ") : "";
+
+      const units = s.quantity && s.quantity > 0 ? s.quantity : 1;
+      const price = s.quantity && s.quantity > 0 
+        ? parseFloat((s.price / s.quantity).toFixed(4)) 
+        : parseFloat((s.price || 0).toFixed(4));
+
+      return {
+        name: itemName,
+        description: itemDesc,
+        units,
+        price,
+        tax: taxRate
+      };
+    });
+
     let invoiceId = null;
     let invoiceNum = null;
+    const invoiceNotes = isCombined 
+      ? `Venta combinada registrada desde QuickTrace. ID: ${sale.combinedSaleId}` 
+      : `Venta registrada desde QuickTrace. Venta ID: ${sale.id}`;
 
     if (usedVersion === "v1") {
       const invoicePayload = {
         contactId: matchedContact.id,
         date: Math.floor(new Date(sale.date || Date.now()).getTime() / 1000),
-        notes: `Venta registrada desde QuickTrace. Venta ID: ${sale.id}`,
-        items: [
-          {
-            name: itemName,
-            desc: itemDesc,
-            units: units,
-            subtotal: subtotal,
-            tax: taxRate
-          }
-        ]
+        notes: invoiceNotes,
+        items: itemsV1
       };
 
       if (profile.holdedSeriesId?.trim()) {
@@ -260,16 +306,8 @@ export async function POST(request, { params }) {
       const invoicePayloadV2 = {
         contact_id: matchedContact.id,
         date: new Date(sale.date || Date.now()).toISOString().slice(0, 10),
-        notes: `Venta registrada desde QuickTrace. Venta ID: ${sale.id}`,
-        items: [
-          {
-            name: itemName,
-            description: itemDesc,
-            units: units,
-            price: subtotal,
-            tax: taxRate
-          }
-        ]
+        notes: invoiceNotes,
+        items: itemsV2
       };
 
       if (profile.holdedSeriesId?.trim()) {
@@ -294,22 +332,43 @@ export async function POST(request, { params }) {
       invoiceNum = String(invoiceData.doc_number || invoiceData.number || invoiceId);
     }
 
-    // Save invoice info on sale in database
-    const updatedSale = await prisma.elaborationSale.update({
-      where: { id: sale.id },
-      data: {
-        holdedInvoiceId: invoiceId,
-        holdedInvoiceNum: invoiceNum,
-        invoicedAt: new Date()
-      }
-    });
+    const now = new Date();
+
+    // Save invoice info in database
+    if (isCombined) {
+      await prisma.combinedSale.update({
+        where: { id: sale.combinedSaleId },
+        data: {
+          holdedInvoiceId: invoiceId,
+          holdedInvoiceNum: invoiceNum,
+          invoicedAt: now
+        }
+      });
+      await prisma.elaborationSale.updateMany({
+        where: { combinedSaleId: sale.combinedSaleId },
+        data: {
+          holdedInvoiceId: invoiceId,
+          holdedInvoiceNum: invoiceNum,
+          invoicedAt: now
+        }
+      });
+    } else {
+      await prisma.elaborationSale.update({
+        where: { id: sale.id },
+        data: {
+          holdedInvoiceId: invoiceId,
+          holdedInvoiceNum: invoiceNum,
+          invoicedAt: now
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,
-      invoiceId: updatedSale.holdedInvoiceId,
-      invoiceNum: updatedSale.holdedInvoiceNum,
-      invoicedAt: updatedSale.invoicedAt,
-      message: `Factura ${updatedSale.holdedInvoiceNum} generada con éxito en Holded.`
+      invoiceId,
+      invoiceNum,
+      invoicedAt: now,
+      message: `Factura ${invoiceNum} generada con éxito en Holded.`
     });
   } catch (error) {
     console.error("Error creating invoice in Holded:", error);
