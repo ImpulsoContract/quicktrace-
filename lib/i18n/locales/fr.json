@@ -1689,6 +1689,12 @@
     "already_added": "Cette fabrication est déjà incluse dans la liste.",
     "holded_api_required": "Vous devez configurer votre clé API Holded dans la section 'Configuration de l\\'entreprise' pour émettre des factures.",
     "customer_required": "Vous devez attribuer un client enregistré à la vente combinée pour générer une facture.",
-    "invoice_success": "Facture {num} générée avec succès."
+    "invoice_success": "Facture {num} générée avec succès.",
+    "tab_edit": "Modifier la vente combinée",
+    "edit_btn": "Modifier",
+    "save_changes": "Enregistrer les modifications",
+    "cancel_edit": "Annuler la modification",
+    "success_updated": "Vente combinée mise à jour avec succès.",
+    "edit_combined_sale_title": "Modifier la vente combinée #{id}"
   }
 }

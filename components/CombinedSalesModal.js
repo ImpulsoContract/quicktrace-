@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
   X, Plus, Trash2, ShoppingCart, Loader2, FileText, CheckCircle,
-  AlertCircle, DollarSign, Calendar, User, Layers, ChevronRight, Eye
+  AlertCircle, DollarSign, Calendar, User, Layers, ChevronRight, Eye, Edit
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -11,7 +11,8 @@ export default function CombinedSalesModal({
   customers = [],
   profile,
   onSaleCreated,
-  onNavigateToCustomers
+  onNavigateToCustomers,
+  initialSaleIdToEdit = null
 }) {
   const { t, locale } = useI18n();
 
@@ -23,7 +24,8 @@ export default function CombinedSalesModal({
   const [invoicingId, setInvoicingId] = useState(null);
   const [expandedSaleId, setExpandedSaleId] = useState(null);
 
-  // New sale state
+  // New & Edit sale state
+  const [editingSaleId, setEditingSaleId] = useState(null);
   const [availableElaborations, setAvailableElaborations] = useState([]);
   const [loadingAvailable, setLoadingAvailable] = useState(false);
   const [selectedElabId, setSelectedElabId] = useState("");
@@ -52,7 +54,7 @@ export default function CombinedSalesModal({
   const fetchCombinedSales = async () => {
     try {
       setLoadingList(true);
-      const res = await fetch("/api/client/combined-sales");
+      const res = await fetch(`/api/client/combined-sales?t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setCombinedSales(data.data);
@@ -72,11 +74,14 @@ export default function CombinedSalesModal({
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setAvailableElaborations(data.data);
+        return data.data;
       } else {
         console.warn("Failed fetching available elaborations:", data);
+        return [];
       }
     } catch (err) {
       console.error("Error fetching available elaborations:", err);
+      return [];
     } finally {
       setLoadingAvailable(false);
     }
@@ -90,10 +95,79 @@ export default function CombinedSalesModal({
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && activeTab === "new") {
+    if (isOpen && activeTab === "new" && !editingSaleId) {
       fetchAvailableElaborations();
     }
-  }, [activeTab, isOpen]);
+  }, [activeTab, isOpen, editingSaleId]);
+
+  // Start editing a combined sale
+  const handleStartEdit = async (cs) => {
+    setEditingSaleId(cs.id);
+    setFormCustomer(cs.customerId ? cs.customerId.toString() : "");
+    setFormDate(cs.date ? new Date(cs.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setFormNotes(cs.notes || "");
+
+    // Refresh available elaborations to calculate accurate effective stock
+    let currentAvailableList = availableElaborations;
+    try {
+      const res = await fetch(`/api/client/elaborations/available?t=${Date.now()}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        currentAvailableList = data.data;
+        setAvailableElaborations(data.data);
+      }
+    } catch (e) {
+      console.warn("Could not refresh available elaborations on edit:", e);
+    }
+
+    const items = (cs.sales || []).map(s => {
+      const elab = s.elaboration;
+      const foundInAvailable = currentAvailableList.find(ae => ae.id === s.elaborationId);
+      const currentAvailable = foundInAvailable ? foundInAvailable.availableStock : 0;
+      const totalProduced = parseFloat(elab?.quantityProduced?.toString().replace(',', '.')) || 0;
+      const saleQty = s.quantity != null 
+        ? s.quantity 
+        : (totalProduced > 0 && s.percentage != null ? (totalProduced * s.percentage / 100) : 0);
+      const effectiveStock = Math.max(0, Math.round((currentAvailable + saleQty) * 1000) / 1000);
+
+      return {
+        elaborationId: s.elaborationId,
+        name: elab?.name || "Lote",
+        recipeName: elab?.recipe?.name || "Receta",
+        availableStock: effectiveStock,
+        unit: elab?.quantityUnit || "unidades",
+        quantity: s.quantity != null ? s.quantity.toString() : "",
+        price: s.price != null ? s.price.toString() : ""
+      };
+    });
+
+    setSaleItems(items);
+    setActiveTab("new");
+  };
+
+  // Handle initial sale to edit from prop
+  useEffect(() => {
+    if (isOpen && initialSaleIdToEdit) {
+      fetch(`/api/client/combined-sales/${initialSaleIdToEdit}?t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            handleStartEdit(data.data);
+          }
+        })
+        .catch(err => console.error("Error loading combined sale to edit:", err));
+    }
+  }, [isOpen, initialSaleIdToEdit]);
+
+  // Cancel edit mode
+  const handleCancelEdit = () => {
+    setEditingSaleId(null);
+    setSaleItems([]);
+    setFormCustomer("");
+    setFormDate(new Date().toISOString().slice(0, 10));
+    setFormNotes("");
+    setActiveTab("list");
+  };
 
   // Handle adding an elaboration to the combined sale form
   const handleAddElaboration = () => {
@@ -168,7 +242,7 @@ export default function CombinedSalesModal({
     return true;
   }, [saleItems, formErrors]);
 
-  // Submit new combined sale
+  // Submit combined sale (create or edit)
   const handleSubmitCombinedSale = async (e) => {
     e.preventDefault();
     if (!isFormValid) return;
@@ -186,19 +260,24 @@ export default function CombinedSalesModal({
         }))
       };
 
-      const res = await fetch("/api/client/combined-sales", {
-        method: "POST",
+      const url = editingSaleId 
+        ? `/api/client/combined-sales/${editingSaleId}`
+        : `/api/client/combined-sales`;
+      const method = editingSaleId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
 
       if (res.ok && data.success) {
-        alert(t('combined_sales.success_created') || "Venta combinada registrada correctamente.");
-        setSaleItems([]);
-        setFormNotes("");
-        setFormCustomer("");
-        setFormDate(new Date().toISOString().slice(0, 10));
+        alert(editingSaleId 
+          ? (t('combined_sales.success_updated') || "Venta combinada actualizada correctamente.")
+          : (t('combined_sales.success_created') || "Venta combinada registrada correctamente.")
+        );
+        handleCancelEdit();
         
         // Refresh data
         await fetchCombinedSales();
@@ -207,10 +286,10 @@ export default function CombinedSalesModal({
 
         setActiveTab("list");
       } else {
-        alert(data.error || "Error al registrar la venta combinada");
+        alert(data.error || (editingSaleId ? "Error al actualizar la venta combinada" : "Error al registrar la venta combinada"));
       }
     } catch (err) {
-      console.error("Error creating combined sale:", err);
+      console.error("Error saving combined sale:", err);
       alert(t('alerts.connection_error') || "Error de conexión");
     } finally {
       setSubmitting(false);
@@ -291,21 +370,31 @@ export default function CombinedSalesModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '850px', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
-        
+    <div className="modal-overlay" style={{ zIndex: 1100 }}>
+      <div 
+        className="modal-content" 
+        style={{ 
+          maxWidth: '950px', 
+          width: '95%',
+          maxHeight: '92vh', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          padding: '1.75rem',
+          animation: 'scaleUp 0.2s ease'
+        }}
+      >
         {/* Header */}
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ padding: '0.5rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '0.6rem' }}>
+            <div style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.6rem' }}>
               <ShoppingCart size={24} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
                 {t('combined_sales.modal_title') || "Ventas combinadas"}
               </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                Registra y consulta ventas compuestas por múltiples elaboraciones y lotes
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Registra, edita y consulta ventas compuestas por múltiples elaboraciones y lotes
               </p>
             </div>
           </div>
@@ -321,7 +410,10 @@ export default function CombinedSalesModal({
         <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
           <button
             type="button"
-            onClick={() => setActiveTab("list")}
+            onClick={() => {
+              if (editingSaleId) handleCancelEdit();
+              setActiveTab("list");
+            }}
             style={{
               padding: '0.6rem 1.25rem',
               borderRadius: '0.5rem',
@@ -368,8 +460,10 @@ export default function CombinedSalesModal({
               transition: 'all 0.2s'
             }}
           >
-            <Plus size={16} />
-            {t('combined_sales.tab_new') || "Nueva venta combinada"}
+            {editingSaleId ? <Edit size={16} /> : <Plus size={16} />}
+            {editingSaleId 
+              ? `${t('combined_sales.tab_edit') || "Editar venta combinada"} #${editingSaleId}`
+              : (t('combined_sales.tab_new') || "Nueva venta combinada")}
           </button>
         </div>
 
@@ -388,7 +482,10 @@ export default function CombinedSalesModal({
                 </p>
                 <button
                   type="button"
-                  onClick={() => setActiveTab("new")}
+                  onClick={() => {
+                    handleCancelEdit();
+                    setActiveTab("new");
+                  }}
                   className="btn-primary"
                   style={{ marginTop: '1rem', padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
                 >
@@ -399,7 +496,6 @@ export default function CombinedSalesModal({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {combinedSales.map((cs) => {
                   const isExpanded = expandedSaleId === cs.id;
-                  const totalUnits = (cs.sales || []).reduce((sum, s) => sum + (s.quantity || 0), 0);
 
                   return (
                     <div 
@@ -439,8 +535,8 @@ export default function CombinedSalesModal({
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <span style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--corp-green)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--corp-green)', marginRight: '0.5rem' }}>
                             {cs.totalPrice.toFixed(2)} {currencySymbol}
                           </span>
 
@@ -491,6 +587,30 @@ export default function CombinedSalesModal({
                             </button>
                           )}
 
+                          {/* Edit button */}
+                          <button
+                            type="button"
+                            onClick={() => handleStartEdit(cs)}
+                            style={{
+                              padding: '0.4rem 0.75rem',
+                              background: '#eff6ff',
+                              border: '1px solid #bfdbfe',
+                              borderRadius: '0.4rem',
+                              fontSize: '0.78rem',
+                              fontWeight: '700',
+                              color: '#1d4ed8',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                            title={t('combined_sales.edit_btn') || "Editar"}
+                          >
+                            <Edit size={14} />
+                            {t('combined_sales.edit_btn') || "Editar"}
+                          </button>
+
+                          {/* View details toggle button */}
                           <button
                             type="button"
                             onClick={() => setExpandedSaleId(isExpanded ? null : cs.id)}
@@ -512,6 +632,7 @@ export default function CombinedSalesModal({
                             {isExpanded ? "Ocultar" : "Ver detalle"}
                           </button>
 
+                          {/* Delete button */}
                           <button
                             type="button"
                             onClick={() => handleDeleteCombinedSale(cs.id)}
@@ -533,9 +654,28 @@ export default function CombinedSalesModal({
                       {/* Expanded Details */}
                       {isExpanded && (
                         <div style={{ padding: '1rem 1.25rem', background: '#ffffff' }}>
-                          <h4 style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.65rem' }}>
-                            {t('combined_sales.details_title') || "Elaboraciones incluidas en esta venta:"}
-                          </h4>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+                            <h4 style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>
+                              {t('combined_sales.details_title') || "Elaboraciones incluidas en esta venta:"}
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(cs)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#1d4ed8',
+                                fontSize: '0.8rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.3rem'
+                              }}
+                            >
+                              <Edit size={14} /> {t('combined_sales.edit_btn') || "Editar venta combinada"}
+                            </button>
+                          </div>
                           <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '0.5rem' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
                               <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
@@ -576,10 +716,36 @@ export default function CombinedSalesModal({
           </div>
         )}
 
-        {/* Tab 2: Nueva venta combinada */}
+        {/* Tab 2: Nueva / Editar venta combinada */}
         {activeTab === "new" && (
           <form onSubmit={handleSubmitCombinedSale} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             
+            {/* Edit Banner if in edit mode */}
+            {editingSaleId && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e40af', fontWeight: '800', fontSize: '0.9rem' }}>
+                  <Edit size={18} />
+                  <span>{(t('combined_sales.edit_combined_sale_title') || "Editando Venta Combinada #{id}").replace('{id}', editingSaleId)}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  style={{
+                    background: 'white',
+                    border: '1px solid #93c5fd',
+                    color: '#1e40af',
+                    borderRadius: '0.4rem',
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {t('combined_sales.cancel_edit') || "Cancelar edición"}
+                </button>
+              </div>
+            )}
+
             {/* Top Config: Customer, Date, Notes */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1.25rem', background: '#f8fafc', borderRadius: '0.85rem', border: '1px solid var(--border)' }}>
               <div>
@@ -676,60 +842,61 @@ export default function CombinedSalesModal({
 
             {/* Selected Elaborations Table */}
             <div style={{ padding: '1.25rem', background: '#ffffff', borderRadius: '0.85rem', border: '1px solid var(--border)' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-main)', margin: '0 0 0.85rem 0' }}>
-                {t('combined_sales.selected_elaborations') || "Lotes incluidos en la venta"} ({saleItems.length})
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                  {t('combined_sales.selected_elaborations') || "Lotes incluidos en la venta"} ({saleItems.length})
+                </h3>
+              </div>
 
               {saleItems.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px dashed var(--border)', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+                <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '0.65rem', border: '1px dashed var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                   {t('combined_sales.no_elaborations_selected') || "No has añadido ninguna elaboración todavía. Selecciona una arriba para añadirla a la venta."}
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '0.5rem' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
-                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                      <tr>
-                        <th style={{ padding: '0.65rem 0.85rem', fontWeight: '800', color: '#64748b' }}>
-                          {t('combined_sales.col_elaboration') || "Elaboración / Lote"}
-                        </th>
-                        <th style={{ padding: '0.65rem 0.85rem', fontWeight: '800', color: '#64748b', textAlign: 'center' }}>
-                          {t('combined_sales.col_available_stock') || "Stock disponible"}
-                        </th>
-                        <th style={{ padding: '0.65rem 0.85rem', fontWeight: '800', color: '#64748b', width: '160px' }}>
-                          {t('combined_sales.col_quantity') || "Cantidad a vender"}
-                        </th>
-                        <th style={{ padding: '0.65rem 0.85rem', fontWeight: '800', color: '#64748b', width: '160px' }}>
-                          {t('combined_sales.col_price') || "Precio (€)"}
-                        </th>
-                        <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', width: '50px' }}></th>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800' }}>{t('combined_sales.col_elaboration') || "Elaboración / Lote"}</th>
+                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '140px' }}>{t('combined_sales.col_available_stock') || "Stock disponible"}</th>
+                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '180px' }}>{t('combined_sales.col_quantity') || "Cantidad a vender"}</th>
+                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '170px' }}>{t('combined_sales.col_price') || "Precio de venta"}</th>
+                        <th style={{ padding: '0.6rem 0.85rem', width: '50px', textAlign: 'center' }}></th>
                       </tr>
                     </thead>
                     <tbody>
                       {saleItems.map((item, idx) => {
                         const hasError = formErrors[idx];
                         return (
-                          <tr key={item.elaborationId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <tr key={`${item.elaborationId}-${idx}`} style={{ borderBottom: '1px solid var(--border)' }}>
                             <td style={{ padding: '0.75rem 0.85rem' }}>
                               <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{item.recipeName}</div>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Lote: {item.name}</div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Lote: <strong>{item.name}</strong></div>
                             </td>
-                            <td style={{ padding: '0.75rem 0.85rem', textAlign: 'center' }}>
-                              <span style={{ padding: '0.2rem 0.6rem', background: '#f0fdf4', color: 'var(--corp-green)', border: '1px solid #bbf7d0', borderRadius: '1rem', fontWeight: '700', fontSize: '0.78rem' }}>
+                            <td style={{ padding: '0.75rem 0.85rem' }}>
+                              <span style={{ 
+                                padding: '0.2rem 0.55rem', 
+                                background: 'rgba(66, 98, 22, 0.08)', 
+                                color: 'var(--corp-green)', 
+                                borderRadius: '0.35rem', 
+                                fontSize: '0.78rem', 
+                                fontWeight: '700' 
+                              }}>
                                 {item.availableStock} {item.unit}
                               </span>
                             </td>
                             <td style={{ padding: '0.75rem 0.85rem' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                              <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                                   <input
                                     type="number"
-                                    step="0.01"
-                                    min="0.01"
+                                    step="0.001"
+                                    min="0.001"
                                     max={item.availableStock}
                                     className="input-field"
                                     value={item.quantity}
                                     onChange={(e) => handleUpdateItem(idx, "quantity", e.target.value)}
-                                    placeholder={`Máx ${item.availableStock}`}
+                                    placeholder="0"
                                     required
                                     style={{
                                       margin: 0,
@@ -743,7 +910,7 @@ export default function CombinedSalesModal({
                                   </span>
                                 </div>
                                 {hasError && (
-                                  <span style={{ fontSize: '0.72rem', color: '#ef4444', fontWeight: '600' }}>
+                                  <span style={{ fontSize: '0.72rem', color: '#ef4444', fontWeight: '600', marginTop: '0.2rem', display: 'block' }}>
                                     {hasError}
                                   </span>
                                 )}
@@ -806,7 +973,9 @@ export default function CombinedSalesModal({
               background: '#f8fafc', 
               borderRadius: '0.85rem', 
               border: '1px solid var(--border)',
-              marginTop: 'auto'
+              marginTop: 'auto',
+              flexWrap: 'wrap',
+              gap: '1rem'
             }}>
               <div>
                 <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
@@ -821,7 +990,7 @@ export default function CombinedSalesModal({
                 <button
                   type="button"
                   className="btn-secondary"
-                  onClick={() => setActiveTab("list")}
+                  onClick={editingSaleId ? handleCancelEdit : () => setActiveTab("list")}
                   style={{ padding: '0.75rem 1.25rem' }}
                 >
                   {t('common.cancel') || "Cancelar"}
@@ -830,7 +999,14 @@ export default function CombinedSalesModal({
                   type="submit"
                   className="btn-primary"
                   disabled={!isFormValid || submitting}
-                  style={{ padding: '0.75rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  style={{ 
+                    padding: '0.75rem 1.75rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    opacity: (!isFormValid || submitting) ? 0.6 : 1,
+                    cursor: (!isFormValid || submitting) ? 'not-allowed' : 'pointer'
+                  }}
                 >
                   {submitting ? (
                     <>
@@ -840,7 +1016,9 @@ export default function CombinedSalesModal({
                   ) : (
                     <>
                       <CheckCircle size={18} />
-                      {t('combined_sales.submit_btn') || "Registrar venta combinada"}
+                      {editingSaleId 
+                        ? (t('combined_sales.save_changes') || "Guardar cambios")
+                        : (t('combined_sales.submit_btn') || "Registrar venta combinada")}
                     </>
                   )}
                 </button>
@@ -882,7 +1060,6 @@ export default function CombinedSalesModal({
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

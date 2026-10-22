@@ -1687,6 +1687,12 @@
     "already_added": "Esta elaboração já está incluída na lista.",
     "holded_api_required": "Deve configurar a sua API Key do Holded na secção 'Configuração do negócio' para poder emitir faturas.",
     "customer_required": "Deve associar um cliente registado à venda combinada para poder gerar uma fatura.",
-    "invoice_success": "Fatura {num} gerada com sucesso."
+    "invoice_success": "Fatura {num} gerada com sucesso.",
+    "tab_edit": "Editar venda combinada",
+    "edit_btn": "Editar",
+    "save_changes": "Guardar alterações",
+    "cancel_edit": "Cancelar edição",
+    "success_updated": "Venda combinada atualizada com sucesso.",
+    "edit_combined_sale_title": "Editar venda combinada #{id}"
   }
 }

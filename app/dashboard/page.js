@@ -448,6 +448,8 @@ export default function ClientDashboard() {
   const [saleModalElaboration, setSaleModalElaboration] = useState(null);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [isCombinedSalesModalOpen, setIsCombinedSalesModalOpen] = useState(false);
+  const [combinedSaleToEditId, setCombinedSaleToEditId] = useState(null);
+  const [returnToElaborationFromCombined, setReturnToElaborationFromCombined] = useState(null);
   const [customerForSalesModal, setCustomerForSalesModal] = useState(null);
   const [returnToCustomerSales, setReturnToCustomerSales] = useState(null);
   const handleOpenSaleModal = (elaboration) => {
@@ -10714,6 +10716,13 @@ export default function ClientDashboard() {
           customers={customers}
           profile={profile}
           onProfileUpdated={(updatedProfile) => setProfile(updatedProfile)}
+          onEditCombinedSale={(combinedSaleId) => {
+            setReturnToElaborationFromCombined(saleModalElaboration);
+            setIsSaleModalOpen(false);
+            setSaleModalElaboration(null);
+            setCombinedSaleToEditId(combinedSaleId);
+            setIsCombinedSalesModalOpen(true);
+          }}
           onClose={() => {
             setIsSaleModalOpen(false);
             setSaleModalElaboration(null);
@@ -10742,7 +10751,16 @@ export default function ClientDashboard() {
       {isCombinedSalesModalOpen && session?.user?.role !== "WORKER" && (
         <CombinedSalesModal
           isOpen={isCombinedSalesModalOpen}
-          onClose={() => setIsCombinedSalesModalOpen(false)}
+          initialSaleIdToEdit={combinedSaleToEditId}
+          onClose={() => {
+            setIsCombinedSalesModalOpen(false);
+            setCombinedSaleToEditId(null);
+            if (returnToElaborationFromCombined) {
+              setSaleModalElaboration(returnToElaborationFromCombined);
+              setIsSaleModalOpen(true);
+              setReturnToElaborationFromCombined(null);
+            }
+          }}
           customers={customers}
           profile={profile}
           onSaleCreated={() => {
@@ -10750,6 +10768,8 @@ export default function ClientDashboard() {
           }}
           onNavigateToCustomers={() => {
             setIsCombinedSalesModalOpen(false);
+            setCombinedSaleToEditId(null);
+            setReturnToElaborationFromCombined(null);
             setActiveTab("clientes");
             setSelectedRecipe(null);
             setSelectedRecords([]);
@@ -19023,7 +19043,7 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
   );
 }
 
-function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated, onNavigateToCustomers, onProfileUpdated }) {
+function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, onSaleUpdated, onNavigateToCustomers, onProfileUpdated, onEditCombinedSale }) {
   const { t, locale } = useI18n();
   const [currentProfile, setCurrentProfile] = useState(profile);
   useEffect(() => {
@@ -19209,6 +19229,10 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   };
 
   const handleStartEdit = (s) => {
+    if (s.combinedSaleId && onEditCombinedSale) {
+      onEditCombinedSale(s.combinedSaleId);
+      return;
+    }
     setEditingSaleId(s.id);
     setShowSaleForm(true);
     const qty = s.quantity != null 
@@ -19751,7 +19775,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                             type="button"
                             onClick={() => handleStartEdit(s)}
                             style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', padding: '0.35rem' }}
-                            title={t('elaboration_sales.edit_sale') || "Editar venta"}
+                            title={s.combinedSaleId ? (t('combined_sales.tab_edit') || "Editar venta combinada") : (t('elaboration_sales.edit_sale') || "Editar venta")}
                           >
                             <Edit size={16} />
                           </button>

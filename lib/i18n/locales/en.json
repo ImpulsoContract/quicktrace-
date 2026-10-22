@@ -1694,6 +1694,12 @@
     "already_added": "This elaboration is already included in the list.",
     "holded_api_required": "You must configure your Holded API Key in the 'Business settings' section to issue invoices.",
     "customer_required": "You must assign a registered customer to the combined sale to generate an invoice.",
-    "invoice_success": "Invoice {num} generated successfully."
+    "invoice_success": "Invoice {num} generated successfully.",
+    "tab_edit": "Edit combined sale",
+    "edit_btn": "Edit",
+    "save_changes": "Save changes",
+    "cancel_edit": "Cancel edit",
+    "success_updated": "Combined sale updated successfully.",
+    "edit_combined_sale_title": "Edit Combined Sale #{id}"
   }
 }

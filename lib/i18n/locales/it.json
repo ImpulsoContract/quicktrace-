@@ -1689,6 +1689,12 @@
     "already_added": "Questa elaborazione è già inclusa nell'elenco.",
     "holded_api_required": "Devi configurare la tua API Key di Holded nella sezione 'Configurazione aziendale' per emettere fatture.",
     "customer_required": "Devi assegnare un cliente registrato alla vendita combinata per generare una fattura.",
-    "invoice_success": "Fattura {num} generata con successo."
+    "invoice_success": "Fattura {num} generata con successo.",
+    "tab_edit": "Modifica vendita combinata",
+    "edit_btn": "Modifica",
+    "save_changes": "Salva modifiche",
+    "cancel_edit": "Annulla modifica",
+    "success_updated": "Vendita combinata aggiornata con successo.",
+    "edit_combined_sale_title": "Modifica vendita combinata #{id}"
   }
 }
