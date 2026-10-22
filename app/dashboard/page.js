@@ -13,7 +13,8 @@ import {
   Droplets, Waves, DollarSign, Recycle, PlusCircle, Sparkles, Cpu, UploadCloud, Check, Info,
   Eye, ExternalLink, GripVertical, ChevronUp, ChevronDown, Contact, Phone, Mail, MapPin, Hash,
   Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download,
-  Salad, FileSpreadsheet, MessageCircle, Send
+  Salad, FileSpreadsheet, MessageCircle, Send,
+  GitMerge
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,6 +26,7 @@ import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CustomerImportModal from "@/components/CustomerImportModal";
+import MergeIngredientsModal from "@/components/MergeIngredientsModal";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -558,6 +560,7 @@ export default function ClientDashboard() {
 
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
+  const [isMergeIngredientsModalOpen, setIsMergeIngredientsModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [recipeForm, setRecipeForm] = useState({ 
     name: "", 
@@ -9572,6 +9575,14 @@ export default function ClientDashboard() {
                       <PlayCircle size={18} /> {t('dashboard.video_help')}
                     </button>
                     <button 
+                      type="button"
+                      onClick={() => setIsMergeIngredientsModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                    >
+                      <GitMerge size={18} /> {t('recipes.merge_ingredients_btn') || "Fusionar ingredientes"}
+                    </button>
+                    <button 
                       onClick={() => {
                         setEditingRecipe(null);
                         setRecipeForm({ 
@@ -10708,6 +10719,17 @@ export default function ClientDashboard() {
           onDownload={(rec, includeQuantities) => {
             setRecipeForTechnicalSheet(null);
             handleDownloadRecipeTechnicalSheet(rec, includeQuantities);
+          }}
+        />
+      )}
+
+      {isMergeIngredientsModalOpen && (
+        <MergeIngredientsModal 
+          isOpen={isMergeIngredientsModalOpen}
+          onClose={() => setIsMergeIngredientsModalOpen(false)}
+          recipes={recipes}
+          onSuccess={() => {
+            fetchRecipes();
           }}
         />
       )}
