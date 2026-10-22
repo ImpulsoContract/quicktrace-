@@ -7,17 +7,24 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   try {
-    const profileId = session.user.profileId;
-    if (!profileId) {
+    let profileId = session.user.profileId;
+    if (!profileId && session.user.role === "ADMIN") {
+      const firstProfile = await prisma.clientProfile.findFirst({
+        orderBy: { id: "asc" }
+      });
+      profileId = firstProfile?.id;
+    }
+
+    if (!profileId && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
-    const where = session.user.role === "ADMIN" ? {} : { clientProfileId: profileId };
+    const where = (session.user.role === "ADMIN" && !profileId) ? {} : { clientProfileId: profileId };
 
     const combinedSales = await prisma.combinedSale.findMany({
       where,
@@ -46,12 +53,19 @@ export async function GET(req) {
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   try {
-    const profileId = session.user.profileId;
+    let profileId = session.user.profileId;
+    if (!profileId && session.user.role === "ADMIN") {
+      const firstProfile = await prisma.clientProfile.findFirst({
+        orderBy: { id: "asc" }
+      });
+      profileId = firstProfile?.id;
+    }
+
     if (!profileId) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
@@ -121,7 +135,7 @@ export async function POST(req) {
 
       // Check stock
       const totalProduced = parseFloat(elab.quantityProduced?.toString().replace(',', '.')) || 0;
-      const unit = elab.quantityUnit || elab.recipe?.baseUnit || "unidades";
+      const unit = elab.quantityUnit || "unidades";
 
       const totalSold = (elab.sales || []).reduce((sum, s) => {
         if (s.quantity != null) return sum + s.quantity;

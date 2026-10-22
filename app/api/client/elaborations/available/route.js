@@ -7,26 +7,36 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
+  if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   try {
-    const profileId = session.user.profileId;
-    if (!profileId) {
+    let profileId = session.user.profileId;
+    if (!profileId && session.user.role === "ADMIN") {
+      const firstProfile = await prisma.clientProfile.findFirst({
+        orderBy: { id: "asc" }
+      });
+      profileId = firstProfile?.id;
+    }
+
+    if (!profileId && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
+    const where = (session.user.role === "ADMIN" && !profileId)
+      ? {}
+      : {
+          recipe: { clientProfileId: profileId }
+        };
+
     const elaborations = await prisma.elaboration.findMany({
-      where: {
-        recipe: session.user.role === "ADMIN" ? {} : { clientProfileId: profileId }
-      },
+      where,
       include: {
         recipe: {
           select: {
             id: true,
-            name: true,
-            baseUnit: true
+            name: true
           }
         },
         sales: {
@@ -41,7 +51,7 @@ export async function GET(req) {
 
     const availableElaborations = elaborations.map(el => {
       const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.')) || 0;
-      const unit = el.quantityUnit || el.recipe?.baseUnit || "unidades";
+      const unit = el.quantityUnit || "unidades";
 
       const totalSold = (el.sales || []).reduce((sum, s) => {
         if (s.quantity != null) return sum + s.quantity;
@@ -69,6 +79,6 @@ export async function GET(req) {
     return NextResponse.json({ success: true, data: availableElaborations });
   } catch (error) {
     console.error("Error fetching available elaborations:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
   }
 }

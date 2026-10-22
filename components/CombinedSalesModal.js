@@ -68,10 +68,12 @@ export default function CombinedSalesModal({
   const fetchAvailableElaborations = async () => {
     try {
       setLoadingAvailable(true);
-      const res = await fetch("/api/client/elaborations/available");
+      const res = await fetch(`/api/client/elaborations/available?t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setAvailableElaborations(data.data);
+      } else {
+        console.warn("Failed fetching available elaborations:", data);
       }
     } catch (err) {
       console.error("Error fetching available elaborations:", err);
@@ -86,6 +88,12 @@ export default function CombinedSalesModal({
       fetchAvailableElaborations();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && activeTab === "new") {
+      fetchAvailableElaborations();
+    }
+  }, [activeTab, isOpen]);
 
   // Handle adding an elaboration to the combined sale form
   const handleAddElaboration = () => {
