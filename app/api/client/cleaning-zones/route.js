@@ -47,14 +47,20 @@ export async function POST(req) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
     }
 
-    const { name } = await req.json();
-    if (!name) {
+    const body = await req.json();
+    const { name, sections } = body || {};
+    if (!name || !name.trim()) {
       return NextResponse.json({ error: "Nombre de zona requerido" }, { status: 400 });
     }
 
+    const cleanSections = Array.isArray(sections)
+      ? sections.map(s => String(s).trim()).filter(Boolean)
+      : [];
+
     const zone = await prisma.cleaningZone.create({
       data: {
-        name,
+        name: name.trim(),
+        sections: cleanSections,
         clientProfileId: profile.id
       }
     });
@@ -77,8 +83,9 @@ export async function PATCH(req) {
       where: { userId: parseInt(session.user.id) }
     });
 
-    const { id, name } = await req.json();
-    if (!id || !name) {
+    const body = await req.json();
+    const { id, name, sections } = body || {};
+    if (!id || !name || !name.trim()) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
@@ -90,9 +97,16 @@ export async function PATCH(req) {
       return NextResponse.json({ error: "Zona no encontrada o no pertenece al cliente" }, { status: 403 });
     }
 
+    const updateData = { name: name.trim() };
+    if (sections !== undefined) {
+      updateData.sections = Array.isArray(sections)
+        ? sections.map(s => String(s).trim()).filter(Boolean)
+        : [];
+    }
+
     const updated = await prisma.cleaningZone.update({
       where: { id: parseInt(id) },
-      data: { name }
+      data: updateData
     });
 
     return NextResponse.json({ success: true, zone: updated });

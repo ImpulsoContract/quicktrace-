@@ -363,6 +363,7 @@ model ElaborationIngredient {
 model CleaningZone {
   id              Int           @id @default(autoincrement())
   name            String
+  sections        String[]      @default([])
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
@@ -391,6 +392,7 @@ model CleaningLogZone {
   cleaningLog    CleaningLog  @relation(fields: [cleaningLogId], references: [id], onDelete: Cascade)
   cleaningZoneId Int
   cleaningZone   CleaningZone @relation(fields: [cleaningZoneId], references: [id], onDelete: Cascade)
+  sections       String[]     @default([])
 
   @@id([cleaningLogId, cleaningZoneId])
 }

@@ -2324,7 +2324,9 @@ function ManageCleaningZonesModal({ profile, onClose }) {
   const [initialLoading, setInitialLoading] = useState(true);
   const [zones, setZones] = useState([]);
   const [newZoneName, setNewZoneName] = useState("");
-  const [editingZone, setEditingZone] = useState(null); // { id, name }
+  const [newZoneSections, setNewZoneSections] = useState([]);
+  const [newZoneSectionInput, setNewZoneSectionInput] = useState("");
+  const [editingZone, setEditingZone] = useState(null); // { id, name, sections: [], sectionInput: "" }
 
   const fetchZones = async () => {
     try {
@@ -2342,6 +2344,41 @@ function ManageCleaningZonesModal({ profile, onClose }) {
     fetchZones();
   }, [profile.id]);
 
+  const handleAddNewSection = (e) => {
+    e?.preventDefault?.();
+    const val = newZoneSectionInput.trim();
+    if (val && !newZoneSections.includes(val)) {
+      setNewZoneSections([...newZoneSections, val]);
+      setNewZoneSectionInput("");
+    }
+  };
+
+  const handleRemoveNewSection = (sec) => {
+    setNewZoneSections(newZoneSections.filter(s => s !== sec));
+  };
+
+  const handleAddEditSection = (e) => {
+    e?.preventDefault?.();
+    if (!editingZone) return;
+    const val = (editingZone.sectionInput || "").trim();
+    const currentSections = editingZone.sections || [];
+    if (val && !currentSections.includes(val)) {
+      setEditingZone({
+        ...editingZone,
+        sections: [...currentSections, val],
+        sectionInput: ""
+      });
+    }
+  };
+
+  const handleRemoveEditSection = (sec) => {
+    if (!editingZone) return;
+    setEditingZone({
+      ...editingZone,
+      sections: (editingZone.sections || []).filter(s => s !== sec)
+    });
+  };
+
   const handleAddZone = async (e) => {
     e.preventDefault();
     if (!newZoneName.trim()) return;
@@ -2350,11 +2387,17 @@ function ManageCleaningZonesModal({ profile, onClose }) {
       const res = await fetch("/api/admin/cleaning-zones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientId: profile.id, name: newZoneName.trim() })
+        body: JSON.stringify({
+          clientId: profile.id,
+          name: newZoneName.trim(),
+          sections: newZoneSections
+        })
       });
       const data = await res.json();
       if (data.success) {
         setNewZoneName("");
+        setNewZoneSections([]);
+        setNewZoneSectionInput("");
         fetchZones();
       } else {
         alert(data.error || "Error al añadir zona");
@@ -2374,7 +2417,11 @@ function ManageCleaningZonesModal({ profile, onClose }) {
       const res = await fetch("/api/admin/cleaning-zones", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingZone.id, name: editingZone.name.trim() })
+        body: JSON.stringify({
+          id: editingZone.id,
+          name: editingZone.name.trim(),
+          sections: editingZone.sections || []
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -2415,19 +2462,91 @@ function ManageCleaningZonesModal({ profile, onClose }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           {/* Formulario Añadir */}
-          <form onSubmit={handleAddZone} style={{ display: 'flex', gap: '0.75rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder={t('admin.cleaning.placeholder')} 
-              value={newZoneName}
-              onChange={(e) => setNewZoneName(e.target.value)}
-              disabled={loading}
-              style={{ margin: 0 }}
-            />
-            <button type="submit" className="btn-primary" disabled={loading || !newZoneName.trim()} style={{ whiteSpace: 'nowrap', padding: '0 1.5rem' }}>
-              {t('admin.cleaning.new_zone')}
-            </button>
+          <form onSubmit={handleAddZone} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_zone')}</label>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder={t('admin.cleaning.placeholder')} 
+                  value={newZoneName}
+                  onChange={(e) => setNewZoneName(e.target.value)}
+                  disabled={loading}
+                  style={{ margin: 0, flex: 1 }}
+                  required
+                />
+                <button type="submit" className="btn-primary" disabled={loading || !newZoneName.trim()} style={{ whiteSpace: 'nowrap', padding: '0 1.5rem' }}>
+                  {t('admin.cleaning.new_zone')}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                {t('cleaning.sections_label')}
+              </label>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                {t('cleaning.zone_sections_hint')}
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input 
+                  type="text"
+                  className="input-field"
+                  placeholder={t('cleaning.sections_placeholder')}
+                  value={newZoneSectionInput}
+                  onChange={(e) => setNewZoneSectionInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddNewSection();
+                    }
+                  }}
+                  disabled={loading}
+                  style={{ flex: 1, margin: 0 }}
+                />
+                <button 
+                  type="button" 
+                  onClick={handleAddNewSection} 
+                  className="btn-secondary" 
+                  disabled={loading}
+                  style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}
+                >
+                  <Plus size={16} /> {t('cleaning.add_section_btn')}
+                </button>
+              </div>
+
+              {newZoneSections.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.75rem' }}>
+                  {newZoneSections.map((sec, idx) => (
+                    <span 
+                      key={idx}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        background: 'white',
+                        border: '1px solid var(--border)',
+                        padding: '0.25rem 0.6rem',
+                        borderRadius: '1rem',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        color: 'var(--text-main)'
+                      }}
+                    >
+                      {sec}
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveNewSection(sec)}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                      >
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </form>
 
           {/* Listado de Zonas */}
@@ -2438,26 +2557,118 @@ function ManageCleaningZonesModal({ profile, onClose }) {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {zones.map(zone => (
-                  <div key={zone.id} className="glass-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', border: '1px solid var(--border)' }}>
+                  <div key={zone.id} className="glass-card" style={{ padding: '1.25rem', background: 'white', border: '1px solid var(--border)' }}>
                     {editingZone?.id === zone.id ? (
-                      <form onSubmit={handleUpdateZone} style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={editingZone.name}
-                          onChange={(e) => setEditingZone({ ...editingZone, name: e.target.value })}
-                          autoFocus
-                          style={{ margin: 0, padding: '0.5rem' }}
-                        />
-                        <button type="submit" className="btn-primary" style={{ padding: '0 1rem' }}><Save size={16} /></button>
-                        <button type="button" className="btn-secondary" onClick={() => setEditingZone(null)} style={{ padding: '0 1rem' }}><ArrowLeft size={16} /></button>
+                      <form onSubmit={handleUpdateZone} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            value={editingZone.name}
+                            onChange={(e) => setEditingZone({ ...editingZone, name: e.target.value })}
+                            autoFocus
+                            required
+                            style={{ margin: 0, flex: 1 }}
+                          />
+                          <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '0 1rem' }}><Save size={16} /></button>
+                          <button type="button" className="btn-secondary" onClick={() => setEditingZone(null)} style={{ padding: '0 1rem' }}><ArrowLeft size={16} /></button>
+                        </div>
+
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                            {t('cleaning.sections_label')}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input 
+                              type="text"
+                              className="input-field"
+                              placeholder={t('cleaning.sections_placeholder')}
+                              value={editingZone.sectionInput || ""}
+                              onChange={(e) => setEditingZone({ ...editingZone, sectionInput: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleAddEditSection();
+                                }
+                              }}
+                              style={{ flex: 1, margin: 0, fontSize: '0.85rem', padding: '0.5rem 0.75rem' }}
+                            />
+                            <button 
+                              type="button" 
+                              onClick={handleAddEditSection} 
+                              className="btn-secondary" 
+                              style={{ padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                            >
+                              <Plus size={14} /> {t('cleaning.add_section_btn')}
+                            </button>
+                          </div>
+
+                          {(editingZone.sections || []).length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                              {(editingZone.sections || []).map((sec, idx) => (
+                                <span 
+                                  key={idx}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.35rem',
+                                    background: '#f8fafc',
+                                    border: '1px solid var(--border)',
+                                    padding: '0.2rem 0.5rem',
+                                    borderRadius: '1rem',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '600'
+                                  }}
+                                >
+                                  {sec}
+                                  <button 
+                                    type="button" 
+                                    onClick={() => handleRemoveEditSection(sec)}
+                                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                              {t('cleaning.no_sections')}
+                            </div>
+                          )}
+                        </div>
                       </form>
                     ) : (
-                      <>
-                        <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{zone.name}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1 }}>
+                          <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '1rem' }}>{zone.name}</span>
+                          {Array.isArray(zone.sections) && zone.sections.length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                              {zone.sections.map((sec, idx) => (
+                                <span 
+                                  key={idx}
+                                  style={{
+                                    padding: '0.15rem 0.5rem',
+                                    background: '#f1f5f9',
+                                    color: '#475569',
+                                    borderRadius: '0.4rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '500'
+                                  }}
+                                >
+                                  {sec}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                              {t('cleaning.no_sections')}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <button 
-                            onClick={() => setEditingZone({ id: zone.id, name: zone.name })}
+                            onClick={() => setEditingZone({ id: zone.id, name: zone.name, sections: Array.isArray(zone.sections) ? [...zone.sections] : [], sectionInput: "" })}
                             disabled={loading}
                             style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
                           >
@@ -2471,7 +2682,7 @@ function ManageCleaningZonesModal({ profile, onClose }) {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 ))}

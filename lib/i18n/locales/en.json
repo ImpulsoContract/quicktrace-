@@ -1253,7 +1253,17 @@
     "error_deleting": "Error deleting technical sheet",
     "search_placeholder": "Search by product name...",
     "product_photo_or_pdf": "Document or photo of the product sheet",
-    "view_pdf": "View PDF"
+    "view_pdf": "View PDF",
+    "sections_label": "Zone sections",
+    "sections_placeholder": "Add section (e.g. Oven, Ceiling, Floor...)",
+    "add_section_btn": "Add",
+    "no_sections": "No sections (entire zone will be cleaned)",
+    "zone_sections_hint": "When selecting this zone, these sections will be checked by default but you can uncheck them.",
+    "all_sections_selected": "All sections selected",
+    "sections_count": "{selected} of {total} sections",
+    "select_all_sections": "Select all",
+    "deselect_all_sections": "Deselect all",
+    "sections_cleaned": "Sections:"
   },
   "plan_limit_block": {
     "title": "Recipe Limit Exceeded",

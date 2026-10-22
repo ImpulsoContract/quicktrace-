@@ -635,6 +635,7 @@ export default function ClientDashboard() {
     personName: "",
     date: new Date().toISOString().slice(0, 16), // YYYY-MM-DDTHH:mm
     selectedZones: [], // Array of cleaningZoneId
+    zoneSections: {}, // { [zoneId]: string[] }
     notes: ""
   });
 
@@ -1801,12 +1802,12 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleCreateZone = async (name) => {
+  const handleCreateZone = async (name, sections = []) => {
     try {
       const res = await fetch("/api/client/cleaning-zones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, sections })
       });
       const data = await res.json();
       if (data.success) {
@@ -1824,12 +1825,12 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleEditZone = async (id, name) => {
+  const handleEditZone = async (id, name, sections = []) => {
     try {
       const res = await fetch("/api/client/cleaning-zones", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, name })
+        body: JSON.stringify({ id, name, sections })
       });
       const data = await res.json();
       if (data.success) {
@@ -2591,7 +2592,13 @@ export default function ClientDashboard() {
       const tableRows = logs.map(log => [
         formatDateTimeDDMMYYYY(log.date),
         log.personName,
-        log.zones.map(z => z.cleaningZone.name).join(', '),
+        log.zones.map(z => {
+          const zoneName = z.cleaningZone?.name || '';
+          if (Array.isArray(z.sections) && z.sections.length > 0) {
+            return `${zoneName} (${z.sections.join(', ')})`;
+          }
+          return zoneName;
+        }).join('\n'),
         log.notes || "-"
       ]);
 
@@ -5161,6 +5168,7 @@ export default function ClientDashboard() {
           personName: "",
           date: new Date().toISOString().slice(0, 16),
           selectedZones: [],
+          zoneSections: {},
           notes: ""
         });
         fetchCleaningLogs();
@@ -5177,10 +5185,19 @@ export default function ClientDashboard() {
 
   const handleEditCleaning = (log) => {
     setEditingCleaningLog(log);
+    const initialZoneSections = {};
+    if (Array.isArray(log.zones)) {
+      log.zones.forEach(z => {
+        if (z.cleaningZone?.id) {
+          initialZoneSections[z.cleaningZone.id] = Array.isArray(z.sections) ? z.sections : [];
+        }
+      });
+    }
     setCleaningForm({
-      personName: log.personName,
+      personName: log.personName || "",
       date: new Date(log.date).toISOString().slice(0, 16),
-      selectedZones: log.zones.map(z => z.cleaningZone.id),
+      selectedZones: log.zones ? log.zones.map(z => z.cleaningZone.id) : [],
+      zoneSections: initialZoneSections,
       notes: log.notes || ""
     });
     setIsCleaningModalOpen(true);
@@ -8865,7 +8882,9 @@ export default function ClientDashboard() {
                       setCleaningForm({
                         personName: "",
                         date: new Date().toISOString().slice(0, 16),
-                        selectedZones: []
+                        selectedZones: [],
+                        zoneSections: {},
+                        notes: ""
                       });
                       setIsCleaningModalOpen(true);
                     }}
@@ -9004,11 +9023,20 @@ export default function ClientDashboard() {
                               })}
                             </td>
                             <td style={{ padding: '1.5rem 2rem' }}>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                 {log.zones.map(z => (
-                                  <span key={z.cleaningZone?.id || Math.random()} style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '2rem', fontSize: '0.8rem', fontWeight: '600', border: '1px solid rgba(66, 98, 22, 0.2)' }}>
-                                    {z.cleaningZone?.name || 'Zona eliminada'}
-                                  </span>
+                                  <div key={z.cleaningZone?.id || Math.random()} style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                      <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', borderRadius: '2rem', fontSize: '0.8rem', fontWeight: '700', border: '1px solid rgba(66, 98, 22, 0.2)' }}>
+                                        {z.cleaningZone?.name || 'Zona eliminada'}
+                                      </span>
+                                    </div>
+                                    {Array.isArray(z.sections) && z.sections.length > 0 && (
+                                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', paddingLeft: '0.5rem' }}>
+                                        ↳ {z.sections.join(', ')}
+                                      </span>
+                                    )}
+                                  </div>
                                 ))}
                               </div>
                             </td>
@@ -12858,17 +12886,67 @@ export default function ClientDashboard() {
 function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setFormData, loading, isEditing }) {
   const { t } = useI18n();
   const toggleZone = (zoneId) => {
+    setFormData(prev => {
+      const isSelected = prev.selectedZones.includes(zoneId);
+      const zone = zones.find(z => z.id === zoneId);
+      const newSelectedZones = isSelected
+        ? prev.selectedZones.filter(id => id !== zoneId)
+        : [...prev.selectedZones, zoneId];
+
+      const newZoneSections = { ...(prev.zoneSections || {}) };
+      if (!isSelected) {
+        newZoneSections[zoneId] = Array.isArray(zone?.sections) ? [...zone.sections] : [];
+      } else {
+        delete newZoneSections[zoneId];
+      }
+
+      return {
+        ...prev,
+        selectedZones: newSelectedZones,
+        zoneSections: newZoneSections
+      };
+    });
+  };
+
+  const toggleSection = (zoneId, section) => {
+    setFormData(prev => {
+      const current = prev.zoneSections?.[zoneId] || [];
+      const updated = current.includes(section)
+        ? current.filter(s => s !== section)
+        : [...current, section];
+      return {
+        ...prev,
+        zoneSections: {
+          ...(prev.zoneSections || {}),
+          [zoneId]: updated
+        }
+      };
+    });
+  };
+
+  const selectAllSections = (zoneId, allSections) => {
     setFormData(prev => ({
       ...prev,
-      selectedZones: prev.selectedZones.includes(zoneId)
-        ? prev.selectedZones.filter(id => id !== zoneId)
-        : [...prev.selectedZones, zoneId]
+      zoneSections: {
+        ...(prev.zoneSections || {}),
+        [zoneId]: [...allSections]
+      }
+    }));
+  };
+
+  const deselectAllSections = (zoneId) => {
+    setFormData(prev => ({
+      ...prev,
+      zoneSections: {
+        ...(prev.zoneSections || {}),
+        [zoneId]: []
+      }
     }));
   };
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '600px' }}>
+      <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
@@ -12907,24 +12985,103 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
           </div>
 
           <div>
-            <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>{t('modals.select_zones')}</label>
+            <label className="label" style={{ marginBottom: '0.75rem', display: 'block' }}>{t('modals.select_zones')}</label>
             {zones.length === 0 ? (
               <p style={{ padding: '2rem', background: '#f8fafc', borderRadius: '1rem', textAlign: 'center', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                 {t('modals.no_zones_config')}
               </p>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-                {zones.map(zone => (
-                  <label key={zone.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'white'}>
-                    <input 
-                      type="checkbox" 
-                      checked={formData.selectedZones.includes(zone.id)} 
-                      onChange={() => toggleZone(zone.id)}
-                      style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)' }}
-                    />
-                    <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{zone.name}</span>
-                  </label>
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '320px', overflowY: 'auto', padding: '0.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                {zones.map(zone => {
+                  const isChecked = formData.selectedZones.includes(zone.id);
+                  const hasSections = Array.isArray(zone.sections) && zone.sections.length > 0;
+                  const selectedSecs = formData.zoneSections?.[zone.id] || [];
+
+                  return (
+                    <div 
+                      key={zone.id}
+                      style={{
+                        background: isChecked ? '#f0fdf4' : 'white',
+                        border: isChecked ? '1.5px solid var(--corp-green)' : '1px solid var(--border)',
+                        borderRadius: '0.75rem',
+                        padding: '0.85rem 1rem',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', margin: 0 }}>
+                          <input 
+                            type="checkbox" 
+                            checked={isChecked} 
+                            onChange={() => toggleZone(zone.id)}
+                            style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                          />
+                          <span style={{ fontSize: '0.95rem', fontWeight: '700', color: isChecked ? 'var(--corp-green)' : 'var(--text-main)' }}>
+                            {zone.name}
+                          </span>
+                        </label>
+                        {isChecked && hasSections && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+                            <button
+                              type="button"
+                              onClick={() => selectAllSections(zone.id, zone.sections)}
+                              style={{ background: 'none', border: 'none', color: 'var(--corp-green)', fontWeight: '600', cursor: 'pointer', padding: '0.2rem 0.4rem', textDecoration: 'underline' }}
+                            >
+                              {t('cleaning.select_all_sections')}
+                            </button>
+                            <span style={{ color: '#cbd5e1' }}>|</span>
+                            <button
+                              type="button"
+                              onClick={() => deselectAllSections(zone.id)}
+                              style={{ background: 'none', border: 'none', color: '#64748b', fontWeight: '600', cursor: 'pointer', padding: '0.2rem 0.4rem', textDecoration: 'underline' }}
+                            >
+                              {t('cleaning.deselect_all_sections')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {isChecked && hasSections && (
+                        <div style={{ marginTop: '0.65rem', paddingTop: '0.65rem', borderTop: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>
+                            {t('cleaning.sections_label')}:
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.4rem' }}>
+                            {zone.sections.map((section, idx) => {
+                              const isSecChecked = selectedSecs.includes(section);
+                              return (
+                                <label
+                                  key={idx}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                    padding: '0.35rem 0.5rem',
+                                    borderRadius: '0.4rem',
+                                    background: isSecChecked ? 'white' : '#f8fafc',
+                                    border: isSecChecked ? '1px solid #86efac' : '1px solid #e2e8f0',
+                                    cursor: 'pointer',
+                                    fontSize: '0.82rem'
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isSecChecked}
+                                    onChange={() => toggleSection(zone.id, section)}
+                                    style={{ width: '15px', height: '15px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                                  />
+                                  <span style={{ fontWeight: isSecChecked ? '600' : '400', color: isSecChecked ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                                    {section}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -16584,27 +16741,73 @@ function ManageChambersModal({ chambers, onClose, onCreate, onEdit, onDelete }) 
 function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }) {
   const { t } = useI18n();
   const [newName, setNewName] = useState("");
+  const [newSections, setNewSections] = useState([]);
+  const [newSectionInput, setNewSectionInput] = useState("");
+
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editSections, setEditSections] = useState([]);
+  const [editSectionInput, setEditSectionInput] = useState("");
+
+  const handleAddNewSection = (e) => {
+    e?.preventDefault?.();
+    const val = newSectionInput.trim();
+    if (val && !newSections.includes(val)) {
+      setNewSections([...newSections, val]);
+      setNewSectionInput("");
+    }
+  };
+
+  const handleRemoveNewSection = (sec) => {
+    setNewSections(newSections.filter(s => s !== sec));
+  };
+
+  const handleAddEditSection = (e) => {
+    e?.preventDefault?.();
+    const val = editSectionInput.trim();
+    if (val && !editSections.includes(val)) {
+      setEditSections([...editSections, val]);
+      setEditSectionInput("");
+    }
+  };
+
+  const handleRemoveEditSection = (sec) => {
+    setEditSections(editSections.filter(s => s !== sec));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    const success = await onCreate(newName);
-    if (success) setNewName("");
+    const success = await onCreate(newName.trim(), newSections);
+    if (success) {
+      setNewName("");
+      setNewSections([]);
+      setNewSectionInput("");
+    }
+  };
+
+  const handleStartEdit = (zone) => {
+    setEditingId(zone.id);
+    setEditName(zone.name);
+    setEditSections(Array.isArray(zone.sections) ? [...zone.sections] : []);
+    setEditSectionInput("");
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editName.trim()) return;
-    const success = await onEdit(editingId, editName);
-    if (success) setEditingId(null);
+    const success = await onEdit(editingId, editName.trim(), editSections);
+    if (success) {
+      setEditingId(null);
+      setEditSections([]);
+      setEditSectionInput("");
+    }
   };
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '600px' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div className="modal-content" style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('modals.zones_header')}</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('modals.manage_zones_desc')}</p>
@@ -16614,9 +16817,9 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_zone')}</label>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t('modals.new_zone')}</label>
             <input 
               type="text" 
               className="input-field" 
@@ -16625,31 +16828,194 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
               onChange={(e) => setNewName(e.target.value)}
               required
             />
-            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>{t('modals.add_btn')}</button>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+              {t('cleaning.sections_label')}
+            </label>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+              {t('cleaning.zone_sections_hint')}
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input 
+                type="text"
+                className="input-field"
+                placeholder={t('cleaning.sections_placeholder')}
+                value={newSectionInput}
+                onChange={(e) => setNewSectionInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddNewSection();
+                  }
+                }}
+                style={{ flex: 1, margin: 0 }}
+              />
+              <button 
+                type="button" 
+                onClick={handleAddNewSection} 
+                className="btn-secondary" 
+                style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}
+              >
+                <Plus size={16} /> {t('cleaning.add_section_btn')}
+              </button>
+            </div>
+
+            {newSections.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.75rem' }}>
+                {newSections.map((sec, idx) => (
+                  <span 
+                    key={idx}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      background: 'white',
+                      border: '1px solid var(--border)',
+                      padding: '0.25rem 0.6rem',
+                      borderRadius: '1rem',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      color: 'var(--text-main)'
+                    }}
+                  >
+                    {sec}
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveNewSection(sec)}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+            <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
+              {t('modals.add_btn')}
+            </button>
           </div>
         </form>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {zones.map(zone => (
-            <div key={zone.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1rem' }}>
+            <div key={zone.id} style={{ padding: '1rem 1.25rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1rem' }}>
               {editingId === zone.id ? (
-                <form onSubmit={handleUpdate} style={{ flex: 1, display: 'flex', gap: '0.5rem' }}>
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    autoFocus
-                  />
-                  <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }}><Save size={16} /></button>
-                  <button type="button" className="btn-secondary" onClick={() => setEditingId(null)} style={{ padding: '0.5rem 1rem' }}><X size={16} /></button>
+                <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder={t('modals.zone_placeholder')}
+                      autoFocus
+                      required
+                      style={{ margin: 0, flex: 1 }}
+                    />
+                    <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }}><Save size={16} /></button>
+                    <button type="button" className="btn-secondary" onClick={() => setEditingId(null)} style={{ padding: '0.5rem 1rem' }}><X size={16} /></button>
+                  </div>
+
+                  <div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                      {t('cleaning.sections_label')}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input 
+                        type="text"
+                        className="input-field"
+                        placeholder={t('cleaning.sections_placeholder')}
+                        value={editSectionInput}
+                        onChange={(e) => setEditSectionInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddEditSection();
+                          }
+                        }}
+                        style={{ flex: 1, margin: 0, fontSize: '0.85rem', padding: '0.5rem 0.75rem' }}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={handleAddEditSection} 
+                        className="btn-secondary" 
+                        style={{ padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                      >
+                        <Plus size={14} /> {t('cleaning.add_section_btn')}
+                      </button>
+                    </div>
+
+                    {editSections.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                        {editSections.map((sec, idx) => (
+                          <span 
+                            key={idx}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              background: '#f8fafc',
+                              border: '1px solid var(--border)',
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '1rem',
+                              fontSize: '0.8rem',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {sec}
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemoveEditSection(sec)}
+                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                            >
+                              <X size={14} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                        {t('cleaning.no_sections')}
+                      </div>
+                    )}
+                  </div>
                 </form>
               ) : (
-                <>
-                  <span style={{ fontWeight: '700', fontSize: '1rem' }}>{zone.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1 }}>
+                    <span style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)' }}>{zone.name}</span>
+                    {Array.isArray(zone.sections) && zone.sections.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                        {zone.sections.map((sec, idx) => (
+                          <span 
+                            key={idx}
+                            style={{
+                              padding: '0.15rem 0.5rem',
+                              background: '#f1f5f9',
+                              color: '#475569',
+                              borderRadius: '0.4rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {sec}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                        {t('cleaning.no_sections')}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button 
-                      onClick={() => { setEditingId(zone.id); setEditName(zone.name); }}
+                      onClick={() => handleStartEdit(zone)}
                       style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white', color: 'var(--corp-green)', cursor: 'pointer' }}
                     >
                       <Edit size={16} />
@@ -16661,7 +17027,7 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
                       <Trash2 size={16} />
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </div>
           ))}

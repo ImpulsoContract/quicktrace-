@@ -58,6 +58,26 @@ export async function GET(req) {
   }
 }
 
+function buildZonesData(selectedZones, zoneSections) {
+  if (!Array.isArray(selectedZones)) return [];
+  return selectedZones.map(item => {
+    if (typeof item === 'object' && item !== null) {
+      const zId = parseInt(item.zoneId || item.id);
+      const secs = Array.isArray(item.sections)
+        ? item.sections.map(s => String(s).trim()).filter(Boolean)
+        : [];
+      return { cleaningZoneId: zId, sections: secs };
+    }
+    const zId = parseInt(item);
+    const secs = (zoneSections && Array.isArray(zoneSections[zId]))
+      ? zoneSections[zId].map(s => String(s).trim()).filter(Boolean)
+      : (zoneSections && Array.isArray(zoneSections[String(zId)]))
+        ? zoneSections[String(zId)].map(s => String(s).trim()).filter(Boolean)
+        : [];
+    return { cleaningZoneId: zId, sections: secs };
+  }).filter(z => !isNaN(z.cleaningZoneId));
+}
+
 export async function POST(req) {
   const session = await getServerSession(authOptions);
 
@@ -98,11 +118,13 @@ export async function POST(req) {
     */
 
     const body = await req.json();
-    const { personName, date, selectedZones, notes } = body;
+    const { personName, date, selectedZones, zoneSections, notes } = body;
 
     if (!personName || !date || !Array.isArray(selectedZones)) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
+
+    const zonesData = buildZonesData(selectedZones, zoneSections);
 
     const log = await prisma.cleaningLog.create({
       data: {
@@ -111,9 +133,7 @@ export async function POST(req) {
         notes: notes || null,
         clientProfileId: profile.id,
         zones: {
-          create: selectedZones.map(zoneId => ({
-            cleaningZoneId: zoneId
-          }))
+          create: zonesData
         }
       }
     });
@@ -136,7 +156,8 @@ export async function PATCH(req) {
   }
 
   try {
-    const { id, personName, date, selectedZones, notes } = await req.json();
+    const body = await req.json();
+    const { id, personName, date, selectedZones, zoneSections, notes } = body;
     if (!id || !personName || !date || !Array.isArray(selectedZones)) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
@@ -145,6 +166,8 @@ export async function PATCH(req) {
     if (!currentLog || currentLog.clientProfileId !== session.user.profileId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
+
+    const zonesData = buildZonesData(selectedZones, zoneSections);
 
     // Update the log and its zones relation
     const log = await prisma.cleaningLog.update({
@@ -155,9 +178,7 @@ export async function PATCH(req) {
         notes: notes || null,
         zones: {
           deleteMany: {}, // Clean existing zones
-          create: selectedZones.map(zoneId => ({
-            cleaningZoneId: zoneId
-          }))
+          create: zonesData
         }
       }
     });

@@ -1246,7 +1246,17 @@
     "error_deleting": "Erro ao excluir a ficha técnica",
     "search_placeholder": "Pesquisar por nome do produto...",
     "product_photo_or_pdf": "Documento ou foto da ficha técnica",
-    "view_pdf": "Ver PDF"
+    "view_pdf": "Ver PDF",
+    "sections_label": "Secções da zona",
+    "sections_placeholder": "Adicionar secção (ex: Forno, Teto, Chão...)",
+    "add_section_btn": "Adicionar",
+    "no_sections": "Sem secções (toda a zona será limpa)",
+    "zone_sections_hint": "Ao selecionar esta zona, estas secções serão marcadas por predefinição, mas poderá desmarcá-las.",
+    "all_sections_selected": "Todas as secções selecionadas",
+    "sections_count": "{selected} de {total} secções",
+    "select_all_sections": "Marcar todas",
+    "deselect_all_sections": "Desmarcar todas",
+    "sections_cleaned": "Secções:"
   },
   "plan_limit_block": {
     "title": "Limite de receitas excedido",
