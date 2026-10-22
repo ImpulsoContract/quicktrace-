@@ -468,6 +468,7 @@ model WaterMeasurement {
   date          DateTime @default(now())
   samplingPoint String?
   chlorine      String // Chlorine (mg/liter)
+  combinedChlorine String? // Combined chlorine (mg/liter)
   turbidity     Boolean  @default(false)
   odor          Boolean  @default(false)
   flavor        Boolean  @default(false)

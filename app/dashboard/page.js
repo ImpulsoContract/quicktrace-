@@ -673,6 +673,7 @@ export default function ClientDashboard() {
     date: new Date().toISOString().slice(0, 16),
     samplingPoint: "",
     chlorine: "",
+    combinedChlorine: "",
     ph: "",
     turbidity: false,
     odor: false,
@@ -2019,6 +2020,7 @@ export default function ClientDashboard() {
           date: new Date().toISOString().slice(0, 16),
           samplingPoint: "",
           chlorine: "",
+          combinedChlorine: "",
           ph: "",
           turbidity: false,
           odor: false,
@@ -2047,6 +2049,7 @@ export default function ClientDashboard() {
       date: new Date(measurement.date).toISOString().slice(0, 16),
       samplingPoint: measurement.samplingPoint || "",
       chlorine: measurement.chlorine || "",
+      combinedChlorine: measurement.combinedChlorine || "",
       ph: measurement.ph || "",
       turbidity: !!measurement.turbidity,
       odor: !!measurement.odor,
@@ -2734,6 +2737,13 @@ export default function ClientDashboard() {
         doc.text(`${t('water.chlorine')}:`, 14, 56);
         doc.setFont(undefined, 'normal');
         doc.text(`${m.chlorine} mg/l`, 60, 56);
+
+        if (m.combinedChlorine) {
+          doc.setFont(undefined, 'bold');
+          doc.text(`${t('water.table_combined_chlorine') || 'Cloro combinado'}:`, 105, 56);
+          doc.setFont(undefined, 'normal');
+          doc.text(`${m.combinedChlorine} mg/l`, 155, 56);
+        }
 
         doc.setFont(undefined, 'bold');
         doc.text(`${t('water.ph') || "pH"}:`, 14, 64);
@@ -9379,6 +9389,7 @@ export default function ClientDashboard() {
                           date: new Date().toISOString().slice(0, 16),
                           samplingPoint: "",
                           chlorine: "",
+                          combinedChlorine: "",
                           ph: "",
                           turbidity: false,
                           odor: false,
@@ -9416,6 +9427,7 @@ export default function ClientDashboard() {
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.sampling_point') || "Punto de muestreo"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.chlorine') || "Cloro"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.table_combined_chlorine') || "Cloro combinado"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.ph') || "pH"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'center' }}>{t('water.table_checks')}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('water.responsible') || "Responsable"}</th>
@@ -9430,6 +9442,7 @@ export default function ClientDashboard() {
                             <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleString()}</td>
                             <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{m.samplingPoint || '-'}</td>
                             <td style={{ padding: '1.5rem 2rem', color: 'var(--text-main)', fontWeight: '800' }}>{m.chlorine} mg/l</td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-main)', fontWeight: '800' }}>{m.combinedChlorine ? `${m.combinedChlorine} mg/l` : '-'}</td>
                             <td style={{ padding: '1.5rem 2rem', color: 'var(--text-main)', fontWeight: '800' }}>{m.ph || '-'}</td>
                             <td style={{ padding: '1.5rem 2rem', textAlign: 'center' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
@@ -19831,6 +19844,20 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
               />
             </div>
             <div>
+              <label className="label">{t('water.combined_chlorine')}</label>
+              <input 
+                type="number" 
+                step="0.01"
+                className="input-field" 
+                value={formData.combinedChlorine || ""} 
+                onChange={(e) => setFormData({...formData, combinedChlorine: e.target.value})} 
+                placeholder="0.1"
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div>
               <label className="label">{t('water.ph') || "pH"}</label>
               <input 
                 type="number" 
@@ -19841,9 +19868,6 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
                 placeholder="7.2"
               />
             </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div>
               <label className="label">{t('water.responsible')}</label>
               <input 
@@ -19854,7 +19878,6 @@ function WaterMeasurementRegistrationModal({ onClose, onSubmit, formData, setFor
                 placeholder="Nombre del operario"
               />
             </div>
-            <div></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>

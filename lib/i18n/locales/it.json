@@ -944,7 +944,9 @@
     "no": "No",
     "receipt": "Ricevuta",
     "receipt_photo": "Foto della ricevuta (opzionale)",
-    "generate_report": "Genera rapporto"
+    "generate_report": "Genera rapporto",
+    "combined_chlorine": "Cloro combinato (mg/litro)",
+    "table_combined_chlorine": "Cloro combinato"
   },
   "admin": {
     "sidebar": {
