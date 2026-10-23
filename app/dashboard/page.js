@@ -8567,9 +8567,13 @@ export default function ClientDashboard() {
                     >
                       <Settings size={18} /> {t('modals.manage_merchant_types') || "Gestionar tipos de mercancía"}
                     </button>
-                    {session?.user?.role !== "WORKER" && (
+                    {(session?.user?.role !== "WORKER" || session?.user?.permissions?.hasGoods) && (
                       <button
-                        onClick={() => setIsIngredientCostsModalOpen(true)}
+                        onClick={() => {
+                          setSelectedElaborationForCosts(null);
+                          setCostModalSingleIngredient(null);
+                          setIsIngredientCostsModalOpen(true);
+                        }}
                         className="btn-secondary"
                         style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                       >
@@ -10661,7 +10665,7 @@ export default function ClientDashboard() {
         />
       )}
 
-      {isIngredientCostsModalOpen && session?.user?.role !== "WORKER" && (
+      {isIngredientCostsModalOpen && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasGoods) && (
         <IngredientCostModal 
           onClose={() => {
             setIsIngredientCostsModalOpen(false);
@@ -14251,7 +14255,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
   const [savedLotId, setSavedLotId] = useState(null);
 
   const currSymbol = ALL_CURRENCIES.find(c => c.code === (currency || "EUR"))?.symbol || "€";
-  const showTabs = !singleIngredient && !selectedElaboration;
+  const showTabs = true;
 
   const fetchGoodsForSale = async () => {
     try {
@@ -14765,7 +14769,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                                 <span>
                                   {isExpanded
                                     ? (t('modals.gfs_cost_btn_hide_lots') || "Ocultar lotes")
-                                    : (t('modals.gfs_cost_btn_manage_lots') || "Ver / modificar lotes")}
+                                    : (t('modals.gfs_cost_col_manage_lots') || "Ver/modificar precio de coste de cada lote")}
                                 </span>
                               </button>
                             </td>
