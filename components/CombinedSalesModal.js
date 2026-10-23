@@ -129,6 +129,7 @@ export default function CombinedSalesModal({
         ? s.quantity 
         : (totalProduced > 0 && s.percentage != null ? (totalProduced * s.percentage / 100) : 0);
       const effectiveStock = Math.max(0, Math.round((currentAvailable + saleQty) * 1000) / 1000);
+      const uPrice = (foundInAvailable && foundInAvailable.unitPrice) || elab?.unitPrice || 0;
 
       return {
         elaborationId: s.elaborationId,
@@ -136,6 +137,7 @@ export default function CombinedSalesModal({
         recipeName: elab?.recipe?.name || "Receta",
         availableStock: effectiveStock,
         unit: elab?.quantityUnit || "unidades",
+        unitPrice: uPrice,
         quantity: s.quantity != null ? s.quantity.toString() : "",
         price: s.price != null ? s.price.toString() : ""
       };
@@ -189,6 +191,7 @@ export default function CombinedSalesModal({
         recipeName: elab.recipeName,
         availableStock: elab.availableStock,
         unit: elab.quantityUnit,
+        unitPrice: elab.unitPrice || 0,
         quantity: "",
         price: ""
       }
@@ -199,7 +202,17 @@ export default function CombinedSalesModal({
   const handleUpdateItem = (index, field, value) => {
     setSaleItems(prev => {
       const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
+      const item = { ...updated[index], [field]: value };
+
+      if (field === "quantity") {
+        const qtyNum = parseFloat(value.toString().replace(',', '.'));
+        const unitP = parseFloat(item.unitPrice);
+        if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP > 0) {
+          item.price = (Math.round(qtyNum * unitP * 100) / 100).toFixed(2);
+        }
+      }
+
+      updated[index] = item;
       return updated;
     });
   };
@@ -821,7 +834,7 @@ export default function CombinedSalesModal({
                     <option value="">{t('combined_sales.select_placeholder') || "-- Selecciona una elaboración con stock --"}</option>
                     {availableElaborations.map(elab => (
                       <option key={elab.id} value={elab.id}>
-                        {elab.recipeName} — Lote: {elab.name} (Disp: {elab.availableStock} {elab.quantityUnit})
+                        {elab.recipeName} — Lote: {elab.name} (Disp: {elab.availableStock} {elab.quantityUnit}{Number(elab.unitPrice) > 0 ? ` • PVP: ${Number(elab.unitPrice).toFixed(2)} ${currencySymbol}/${elab.quantityUnit}` : ''})
                       </option>
                     ))}
                   </select>
@@ -871,7 +884,14 @@ export default function CombinedSalesModal({
                           <tr key={`${item.elaborationId}-${idx}`} style={{ borderBottom: '1px solid var(--border)' }}>
                             <td style={{ padding: '0.75rem 0.85rem' }}>
                               <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{item.recipeName}</div>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Lote: <strong>{item.name}</strong></div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                Lote: <strong>{item.name}</strong>
+                                {Number(item.unitPrice) > 0 && (
+                                  <span style={{ marginLeft: '0.5rem', color: 'var(--corp-green)', fontWeight: '700' }}>
+                                    • PVP: {Number(item.unitPrice).toFixed(2)} {currencySymbol}/{item.unit}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td style={{ padding: '0.75rem 0.85rem' }}>
                               <span style={{ 

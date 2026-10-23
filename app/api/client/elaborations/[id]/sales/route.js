@@ -73,6 +73,7 @@ export async function GET(req, { params }) {
       sales,
       totalProduced,
       quantityUnit: unit,
+      unitPrice: elaboration.unitPrice || 0,
       totalSoldQuantity: Math.round(totalSoldQuantity * 1000) / 1000,
       availableQuantity: availableQuantity != null ? Math.round(availableQuantity * 1000) / 1000 : null,
       totalSoldPercentage: Math.min(100, Math.round(totalSoldPercentage * 100) / 100),

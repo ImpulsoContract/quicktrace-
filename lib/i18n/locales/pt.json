@@ -842,7 +842,8 @@
     "elaboration_notes_help": "Poderá colocar este conteúdo na etiqueta.",
     "add_another_lot": "+ Adicionar outro lote para este ingrediente",
     "remove_lot": "Remover este lote",
-    "lot_extra_placeholder": "Número de lote adicional..."
+    "lot_extra_placeholder": "Número de lote adicional...",
+    "unit_price": "Preço unitário (PVP)"
   },
   "goods_receipt_form": {
     "product": "Produto",

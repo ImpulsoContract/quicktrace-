@@ -5752,9 +5752,6 @@ export default function ClientDashboard() {
                         placeholder="Ej: 15.50"
                         disabled={isReadOnlyElab}
                       />
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
-                        {t('traceability_form.unit_price_help')}
-                      </p>
                     </div>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: '700' }}>{t('traceability_form.made_by')}</label>
@@ -19545,6 +19542,9 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
       const data = await res.json();
       if (data.success && Array.isArray(data.sales)) {
         setSales(data.sales);
+        if (data.unitPrice !== undefined) {
+          setCurrentElab(prev => ({ ...prev, unitPrice: data.unitPrice }));
+        }
       }
     } catch (e) {
       console.error("Error fetching sales:", e);
@@ -19658,6 +19658,20 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
       price: "",
       date: new Date().toISOString().slice(0, 10)
     });
+  };
+
+  const handleSaleQuantityChange = (newQty) => {
+    const qtyNum = parseFloat(newQty.toString().replace(',', '.'));
+    const unitP = parseFloat(currentElab?.unitPrice);
+    if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP > 0) {
+      setSaleForm(prev => ({
+        ...prev,
+        quantity: newQty,
+        price: (Math.round(qtyNum * unitP * 100) / 100).toFixed(2)
+      }));
+    } else {
+      setSaleForm(prev => ({ ...prev, quantity: newQty }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -19978,7 +19992,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                   {((editingSaleId ? effectiveAvailableStock : availableStock) != null) && (
                     <button
                       type="button"
-                      onClick={() => setSaleForm({ ...saleForm, quantity: (editingSaleId ? effectiveAvailableStock : availableStock).toString() })}
+                      onClick={() => handleSaleQuantityChange((editingSaleId ? effectiveAvailableStock : availableStock).toString())}
                       style={{ background: 'none', border: 'none', color: 'var(--corp-green)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
                     >
                       {(t('elaboration_sales.sell_all_stock') || "Vender todo el stock disponible ({available} {unit})")
@@ -19995,7 +20009,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                   max={(editingSaleId ? effectiveAvailableStock : availableStock) != null ? (editingSaleId ? effectiveAvailableStock : availableStock) : undefined}
                   className="input-field" 
                   value={saleForm.quantity} 
-                  onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })} 
+                  onChange={(e) => handleSaleQuantityChange(e.target.value)} 
                   placeholder={t('elaboration_sales.quantity_placeholder') || "Ej: 20"}
                   required 
                 />
@@ -20005,6 +20019,11 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
               <div>
                 <label className="label">
                   {t('elaboration_sales.sale_price') || "Precio de venta"} ({profile?.currency || 'EUR'}) <span style={{ color: '#ef4444' }}>*</span>
+                  {Number(currentElab?.unitPrice) > 0 && (
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+                      ({t('traceability_form.unit_price') || "PVP"}: {Number(currentElab.unitPrice).toFixed(2)} {profile?.currency || 'EUR'}{unit ? `/${unit}` : ''})
+                    </span>
+                  )}
                 </label>
                 <input 
                   type="number" 
