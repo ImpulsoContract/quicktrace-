@@ -123,7 +123,8 @@
     "customers": "Clientes",
     "cutting_traceability": "Rastreabilidade de desmanche",
     "oil_collection": "Recolha de óleos de fritura",
-    "vegetable_disinfection": "Desinfeção de vegetais"
+    "vegetable_disinfection": "Desinfeção de vegetais",
+    "sales": "Vendas"
   },
   "inventory": {
     "title": "Controle de Estoque",
@@ -1754,7 +1755,22 @@
     "no_elabs_match": "Nenhuma elaboração com stock disponível encontrada",
     "no_goods_match": "Nenhuma mercadoria com stock disponível encontrada",
     "select_product_first": "Selecione primeiro o produto",
-    "col_product": "Elaboração / Mercadoria"
+    "col_product": "Elaboração / Mercadoria",
+    "save_draft": "Salvar como rascunho",
+    "save_draft_changes": "Salvar rascunho",
+    "confirm_sale": "Confirmar venda",
+    "confirm_and_register": "Confirmar e registrar venda",
+    "badge_draft": "Rascunho",
+    "badge_confirmed": "Confirmada",
+    "filter_all": "Todas",
+    "filter_confirmed": "Confirmadas",
+    "filter_drafts": "Rascunhos",
+    "draft_invoice_blocked": "Não é possível faturar uma venda em rascunho. Confirme a venda primeiro.",
+    "confirm_quick_prompt": "Deseja confirmar e registrar esta venda? O estoque correspondente será deduzido do inventário.",
+    "success_draft_created": "Rascunho salvo com sucesso.",
+    "success_draft_updated": "Rascunho atualizado com sucesso.",
+    "success_confirmed": "Venda confirmada e registrada com sucesso.",
+    "page_subtitle": "Registre, edite e consulte vendas de elaborações e mercadorias para venda"
   },
   "goods_for_sale": {
     "btn_label": "Mercadorias à venda",

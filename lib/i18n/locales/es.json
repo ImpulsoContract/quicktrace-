@@ -123,7 +123,8 @@
     "customers": "Clientes",
     "cutting_traceability": "Trazabilidad de despiece",
     "oil_collection": "Retirada de aceites de fritura",
-    "vegetable_disinfection": "Desinfección de vegetales"
+    "vegetable_disinfection": "Desinfección de vegetales",
+    "sales": "Ventas"
   },
   "inventory": {
     "title": "Gestión de Inventario",
@@ -1760,7 +1761,22 @@
     "no_elabs_match": "No se encontraron elaboraciones con stock disponible",
     "no_goods_match": "No se encontraron mercancías con stock disponible",
     "select_product_first": "Selecciona producto primero",
-    "col_product": "Elaboración / Mercancía"
+    "col_product": "Elaboración / Mercancía",
+    "save_draft": "Guardar como borrador",
+    "save_draft_changes": "Guardar borrador",
+    "confirm_sale": "Confirmar venta",
+    "confirm_and_register": "Confirmar y registrar venta",
+    "badge_draft": "Borrador",
+    "badge_confirmed": "Confirmada",
+    "filter_all": "Todas",
+    "filter_confirmed": "Confirmadas",
+    "filter_drafts": "Borradores",
+    "draft_invoice_blocked": "No se puede facturar una venta en borrador. Confírmala primero.",
+    "confirm_quick_prompt": "¿Deseas confirmar y registrar esta venta? Se descontará el stock correspondiente del inventario.",
+    "success_draft_created": "Borrador guardado correctamente.",
+    "success_draft_updated": "Borrador actualizado correctamente.",
+    "success_confirmed": "Venta confirmada y registrada correctamente.",
+    "page_subtitle": "Registra, edita y consulta ventas de elaboraciones y mercancías en venta"
   },
   "goods_for_sale": {
     "btn_label": "Mercancías en venta",

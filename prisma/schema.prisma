@@ -334,6 +334,7 @@ model ElaborationSale {
   percentage      Float         // Porcentaje de la elaboración vendido (ej: 25.0)
   price           Float         // Precio de venta
   date            DateTime      @default(now())
+  isDraft         Boolean       @default(false)
 
   holdedInvoiceId  String?
   holdedInvoiceNum String?
@@ -359,6 +360,7 @@ model CombinedSale {
   date            DateTime          @default(now())
   totalPrice      Float             @default(0)
   notes           String?
+  isDraft         Boolean           @default(false)
 
   customerId      Int?
   customer        Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)

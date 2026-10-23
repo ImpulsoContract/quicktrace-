@@ -42,7 +42,8 @@ export async function GET(req) {
         sales: {
           select: {
             quantity: true,
-            percentage: true
+            percentage: true,
+            isDraft: true
           }
         }
       },
@@ -53,7 +54,7 @@ export async function GET(req) {
       const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.')) || 0;
       const unit = el.quantityUnit || "unidades";
 
-      const totalSold = (el.sales || []).reduce((sum, s) => {
+      const totalSold = (el.sales || []).filter(s => !s.isDraft).reduce((sum, s) => {
         if (s.quantity != null) return sum + s.quantity;
         if (totalProduced > 0 && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
         return sum;

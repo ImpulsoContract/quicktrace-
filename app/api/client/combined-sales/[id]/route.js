@@ -100,7 +100,8 @@ export async function PUT(req, { params }) {
     }
 
     const body = await req.json();
-    const { customerId, date, notes, items } = body;
+    const { customerId, date, notes, items, isDraft } = body;
+    const isDraftSale = Boolean(isDraft);
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Debes añadir al menos un lote o mercancía para la venta combinada." }, { status: 400 });
@@ -176,7 +177,7 @@ export async function PUT(req, { params }) {
         const totalProduced = parseFloat(elab.quantityProduced?.toString().replace(',', '.')) || 0;
         const unit = elab.quantityUnit || "unidades";
 
-        const totalSoldOthers = (elab.sales || []).reduce((sum, s) => {
+        const totalSoldOthers = (elab.sales || []).filter(s => !s.isDraft).reduce((sum, s) => {
           if (s.combinedSaleId === id) return sum;
           if (s.quantity != null) return sum + s.quantity;
           if (totalProduced > 0 && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
@@ -185,7 +186,7 @@ export async function PUT(req, { params }) {
 
         const availableStock = Math.max(0, Math.round((totalProduced - totalSoldOthers) * 1000) / 1000);
 
-        if (totalProduced > 0 && qty > availableStock + 0.0001) {
+        if (!isDraftSale && totalProduced > 0 && qty > availableStock + 0.0001) {
           return NextResponse.json({
             error: `Stock insuficiente para "${elabName}". Intentas vender ${qty} ${unit}, pero solo hay ${availableStock} ${unit} disponibles.`
           }, { status: 400 });
@@ -244,10 +245,10 @@ export async function PUT(req, { params }) {
           return NextResponse.json({ error: `El precio para "${gfs.name}" debe ser un número válido.` }, { status: 400 });
         }
 
-        const currentlyAllocatedInThisSale = existingAllocByGfs.get(gfsId) || 0;
+        const currentlyAllocatedInThisSale = !existingCombinedSale.isDraft ? (existingAllocByGfs.get(gfsId) || 0) : 0;
         const availableStock = Math.round(((gfs.stock || 0) + currentlyAllocatedInThisSale) * 1000) / 1000;
 
-        if (qty > availableStock + 0.0001) {
+        if (!isDraftSale && qty > availableStock + 0.0001) {
           return NextResponse.json({
             error: `Stock insuficiente para "${gfs.name}". Intentas vender ${qty} ${gfs.unit}, pero solo hay ${availableStock} ${gfs.unit} disponibles.`
           }, { status: 400 });
@@ -267,22 +268,24 @@ export async function PUT(req, { params }) {
 
     // Execute in transaction
     const updated = await prisma.$transaction(async (tx) => {
-      // 1. Restore previous goodsSales allocations
-      for (const gItem of existingCombinedSale.goodsSales) {
-        if (Array.isArray(gItem.lotAllocations)) {
-          for (const alloc of gItem.lotAllocations) {
-            if (alloc.receiptId && alloc.quantity) {
-              await tx.goodsReceipt.update({
-                where: { id: alloc.receiptId },
-                data: { goodsForSaleQuantity: { increment: alloc.quantity } }
-              }).catch(() => {});
+      // 1. Restore previous goodsSales allocations (only if previous was not draft)
+      if (!existingCombinedSale.isDraft) {
+        for (const gItem of existingCombinedSale.goodsSales) {
+          if (Array.isArray(gItem.lotAllocations)) {
+            for (const alloc of gItem.lotAllocations) {
+              if (alloc.receiptId && alloc.quantity) {
+                await tx.goodsReceipt.update({
+                  where: { id: alloc.receiptId },
+                  data: { goodsForSaleQuantity: { increment: alloc.quantity } }
+                }).catch(() => {});
+              }
             }
           }
+          await tx.goodsForSale.update({
+            where: { id: gItem.goodsForSaleId },
+            data: { stock: { increment: gItem.quantity } }
+          }).catch(() => {});
         }
-        await tx.goodsForSale.update({
-          where: { id: gItem.goodsForSaleId },
-          data: { stock: { increment: gItem.quantity } }
-        }).catch(() => {});
       }
 
       // 2. Remove old records
@@ -300,7 +303,8 @@ export async function PUT(req, { params }) {
           customerId: validCustomerId,
           date: saleDate,
           totalPrice: Math.round(totalPrice * 100) / 100,
-          notes: notes ? notes.trim() : null
+          notes: notes ? notes.trim() : null,
+          isDraft: isDraftSale
         }
       });
 
@@ -315,6 +319,7 @@ export async function PUT(req, { params }) {
             percentage: item.percentage,
             price: item.price,
             date: saleDate,
+            isDraft: isDraftSale,
             clientProfileId: existingCombinedSale.clientProfileId,
             holdedInvoiceId: existingCombinedSale.holdedInvoiceId || null,
             holdedInvoiceNum: existingCombinedSale.holdedInvoiceNum || null,
@@ -323,41 +328,45 @@ export async function PUT(req, { params }) {
         });
       }
 
-      // 5. Create new goodsSales and deduct stock FIFO
+      // 5. Create new goodsSales (deduct stock FIFO only if NOT draft)
       for (const item of validatedGoodsItems) {
-        const receipts = await tx.goodsReceipt.findMany({
-          where: {
-            goodsForSaleId: item.goodsForSaleId,
-            goodsForSaleQuantity: { gt: 0 }
-          },
-          orderBy: { date: 'asc' }
-        });
+        let lotAllocations = null;
 
-        let remainingToDeduct = item.quantity;
-        const lotAllocations = [];
-
-        for (const r of receipts) {
-          if (remainingToDeduct <= 0) break;
-          const avail = r.goodsForSaleQuantity || 0;
-          const deduct = Math.min(avail, remainingToDeduct);
-          const newLotQty = Math.round((avail - deduct) * 10000) / 10000;
-          await tx.goodsReceipt.update({
-            where: { id: r.id },
-            data: { goodsForSaleQuantity: newLotQty }
+        if (!isDraftSale) {
+          const receipts = await tx.goodsReceipt.findMany({
+            where: {
+              goodsForSaleId: item.goodsForSaleId,
+              goodsForSaleQuantity: { gt: 0 }
+            },
+            orderBy: { date: 'asc' }
           });
-          lotAllocations.push({ receiptId: r.id, quantity: deduct });
-          remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
-        }
 
-        const currentGfs = await tx.goodsForSale.findUnique({
-          where: { id: item.goodsForSaleId }
-        });
-        const currentStock = currentGfs?.stock || 0;
-        const newStock = Math.max(0, Math.round((currentStock - item.quantity) * 10000) / 10000);
-        await tx.goodsForSale.update({
-          where: { id: item.goodsForSaleId },
-          data: { stock: newStock }
-        });
+          let remainingToDeduct = item.quantity;
+          lotAllocations = [];
+
+          for (const r of receipts) {
+            if (remainingToDeduct <= 0) break;
+            const avail = r.goodsForSaleQuantity || 0;
+            const deduct = Math.min(avail, remainingToDeduct);
+            const newLotQty = Math.round((avail - deduct) * 10000) / 10000;
+            await tx.goodsReceipt.update({
+              where: { id: r.id },
+              data: { goodsForSaleQuantity: newLotQty }
+            });
+            lotAllocations.push({ receiptId: r.id, quantity: deduct });
+            remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
+          }
+
+          const currentGfs = await tx.goodsForSale.findUnique({
+            where: { id: item.goodsForSaleId }
+          });
+          const currentStock = currentGfs?.stock || 0;
+          const newStock = Math.max(0, Math.round((currentStock - item.quantity) * 10000) / 10000);
+          await tx.goodsForSale.update({
+            where: { id: item.goodsForSaleId },
+            data: { stock: newStock }
+          });
+        }
 
         await tx.combinedSaleGoodsItem.create({
           data: {
@@ -434,23 +443,25 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    // Restore goods for sale stock before deleting
+    // Restore goods for sale stock before deleting (only if not draft)
     await prisma.$transaction(async (tx) => {
-      for (const gItem of combinedSale.goodsSales) {
-        if (Array.isArray(gItem.lotAllocations)) {
-          for (const alloc of gItem.lotAllocations) {
-            if (alloc.receiptId && alloc.quantity) {
-              await tx.goodsReceipt.update({
-                where: { id: alloc.receiptId },
-                data: { goodsForSaleQuantity: { increment: alloc.quantity } }
-              }).catch(() => {});
+      if (!combinedSale.isDraft) {
+        for (const gItem of combinedSale.goodsSales) {
+          if (Array.isArray(gItem.lotAllocations)) {
+            for (const alloc of gItem.lotAllocations) {
+              if (alloc.receiptId && alloc.quantity) {
+                await tx.goodsReceipt.update({
+                  where: { id: alloc.receiptId },
+                  data: { goodsForSaleQuantity: { increment: alloc.quantity } }
+                }).catch(() => {});
+              }
             }
           }
+          await tx.goodsForSale.update({
+            where: { id: gItem.goodsForSaleId },
+            data: { stock: { increment: gItem.quantity } }
+          }).catch(() => {});
         }
-        await tx.goodsForSale.update({
-          where: { id: gItem.goodsForSaleId },
-          data: { stock: { increment: gItem.quantity } }
-        }).catch(() => {});
       }
 
       await tx.combinedSale.delete({

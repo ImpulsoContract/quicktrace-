@@ -123,7 +123,8 @@
     "customers": "Clients",
     "cutting_traceability": "Traçabilité de découpe",
     "oil_collection": "Collecte des huiles de friture",
-    "vegetable_disinfection": "Désinfection des végétaux"
+    "vegetable_disinfection": "Désinfection des végétaux",
+    "sales": "Ventes"
   },
   "inventory": {
     "title": "Gestion des Stocks",
@@ -1755,7 +1756,22 @@
     "no_elabs_match": "Aucune préparation avec stock disponible trouvée",
     "no_goods_match": "Aucune marchandise avec stock disponible trouvée",
     "select_product_first": "Sélectionnez d'abord un produit",
-    "col_product": "Préparation / Marchandise"
+    "col_product": "Préparation / Marchandise",
+    "save_draft": "Enregistrer comme brouillon",
+    "save_draft_changes": "Enregistrer le brouillon",
+    "confirm_sale": "Confirmer la vente",
+    "confirm_and_register": "Confirmer et enregistrer la vente",
+    "badge_draft": "Brouillon",
+    "badge_confirmed": "Confirmée",
+    "filter_all": "Toutes",
+    "filter_confirmed": "Confirmées",
+    "filter_drafts": "Brouillons",
+    "draft_invoice_blocked": "Impossible de facturer une vente en brouillon. Veuillez d'abord la confirmer.",
+    "confirm_quick_prompt": "Voulez-vous confirmer et enregistrer cette vente ? Le stock correspondant sera déduit de l'inventaire.",
+    "success_draft_created": "Brouillon enregistré avec succès.",
+    "success_draft_updated": "Brouillon mis à jour avec succès.",
+    "success_confirmed": "Vente confirmée et enregistrée avec succès.",
+    "page_subtitle": "Enregistrez, modifiez et consultez les ventes d'élaborations et de marchandises en vente"
   },
   "goods_for_sale": {
     "btn_label": "Marchandises en vente",

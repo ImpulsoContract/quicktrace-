@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { 
   X, Plus, Trash2, ShoppingCart, Loader2, FileText, CheckCircle,
   AlertCircle, DollarSign, Calendar, User, Layers, ChevronRight, Eye, Edit,
-  Search, Tag, Package, ChevronDown
+  Search, Tag, Package, ChevronDown, Clock
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -13,7 +13,8 @@ export default function CombinedSalesModal({
   profile,
   onSaleCreated,
   onNavigateToCustomers,
-  initialSaleIdToEdit = null
+  initialSaleIdToEdit = null,
+  isPage = false
 }) {
   const { t, locale } = useI18n();
 
@@ -24,9 +25,13 @@ export default function CombinedSalesModal({
   const [loadingList, setLoadingList] = useState(false);
   const [invoicingId, setInvoicingId] = useState(null);
   const [expandedSaleId, setExpandedSaleId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "confirmed" | "drafts"
+  const [searchTerm, setSearchTerm] = useState("");
 
   // New & Edit sale state
   const [editingSaleId, setEditingSaleId] = useState(null);
+  const [editingIsDraft, setEditingIsDraft] = useState(false);
+  const [submittingDraft, setSubmittingDraft] = useState(false);
   const [availableElaborations, setAvailableElaborations] = useState([]);
   const [availableGoods, setAvailableGoods] = useState([]);
   const [loadingAvailable, setLoadingAvailable] = useState(false);
@@ -130,6 +135,7 @@ export default function CombinedSalesModal({
   // Start editing a combined sale
   const handleStartEdit = async (cs) => {
     setEditingSaleId(cs.id);
+    setEditingIsDraft(Boolean(cs.isDraft));
     setFormCustomer(cs.customerId ? cs.customerId.toString() : "");
     setFormDate(cs.date ? new Date(cs.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
     setFormNotes(cs.notes || "");
@@ -149,7 +155,7 @@ export default function CombinedSalesModal({
       const saleQty = s.quantity != null 
         ? s.quantity 
         : (totalProduced > 0 && s.percentage != null ? (totalProduced * s.percentage / 100) : 0);
-      const effectiveStock = Math.max(0, Math.round((currentAvailable + saleQty) * 1000) / 1000);
+      const effectiveStock = cs.isDraft ? currentAvailable : Math.max(0, Math.round((currentAvailable + saleQty) * 1000) / 1000);
       const uPrice = (foundInAvailable && foundInAvailable.unitPrice) || elab?.unitPrice || 0;
 
       return {
@@ -213,6 +219,7 @@ export default function CombinedSalesModal({
   // Cancel edit mode
   const handleCancelEdit = () => {
     setEditingSaleId(null);
+    setEditingIsDraft(false);
     setSaleItems([]);
     setFormCustomer("");
     setFormDate(new Date().toISOString().slice(0, 10));
@@ -373,9 +380,8 @@ export default function CombinedSalesModal({
     return errors;
   }, [saleItems, t]);
 
-  const isFormValid = useMemo(() => {
+  const isDraftValid = useMemo(() => {
     if (saleItems.length === 0) return false;
-    if (Object.keys(formErrors).length > 0) return false;
     for (const item of saleItems) {
       if (item.type === 'elaboration' && !item.elaborationId) return false;
       if (item.type === 'goods_for_sale' && !item.goodsForSaleId) return false;
@@ -385,19 +391,34 @@ export default function CombinedSalesModal({
       if (isNaN(prc) || prc < 0) return false;
     }
     return true;
-  }, [saleItems, formErrors]);
+  }, [saleItems]);
 
-  // Submit combined sale (create or edit)
-  const handleSubmitCombinedSale = async (e) => {
-    e.preventDefault();
-    if (!isFormValid) return;
+  const isConfirmedValid = useMemo(() => {
+    if (!isDraftValid) return false;
+    if (Object.keys(formErrors).length > 0) return false;
+    return true;
+  }, [isDraftValid, formErrors]);
 
-    setSubmitting(true);
+  // Submit combined sale (create or edit, confirmed or draft)
+  const handleSubmitCombinedSale = async (e, forceDraft = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const saveAsDraft = forceDraft !== null ? forceDraft : false;
+
+    if (saveAsDraft && !isDraftValid) return;
+    if (!saveAsDraft && !isConfirmedValid) return;
+
+    if (saveAsDraft) {
+      setSubmittingDraft(true);
+    } else {
+      setSubmitting(true);
+    }
+
     try {
       const payload = {
         customerId: formCustomer ? parseInt(formCustomer) : null,
         date: formDate,
         notes: formNotes,
+        isDraft: saveAsDraft,
         items: saleItems.map(it => ({
           type: it.type,
           elaborationId: it.type === 'elaboration' ? it.elaborationId : null,
@@ -420,10 +441,19 @@ export default function CombinedSalesModal({
       const data = await res.json();
 
       if (res.ok && data.success) {
-        alert(editingSaleId 
-          ? (t('combined_sales.success_updated') || "Venta combinada actualizada correctamente.")
-          : (t('combined_sales.success_created') || "Venta combinada registrada correctamente.")
-        );
+        if (saveAsDraft) {
+          alert(editingSaleId 
+            ? (t('combined_sales.success_draft_updated') || "Borrador actualizado correctamente.")
+            : (t('combined_sales.success_draft_created') || "Borrador guardado correctamente.")
+          );
+        } else {
+          alert(editingSaleId 
+            ? (editingIsDraft 
+                ? (t('combined_sales.success_confirmed') || "Venta confirmada y registrada correctamente.")
+                : (t('combined_sales.success_updated') || "Venta combinada actualizada correctamente."))
+            : (t('combined_sales.success_created') || "Venta combinada registrada correctamente.")
+          );
+        }
         handleCancelEdit();
         
         await fetchCombinedSales();
@@ -433,10 +463,64 @@ export default function CombinedSalesModal({
 
         setActiveTab("list");
       } else {
-        alert(data.error || (editingSaleId ? "Error al actualizar la venta combinada" : "Error al registrar la venta combinada"));
+        alert(data.error || (editingSaleId ? "Error al actualizar la venta" : "Error al registrar la venta"));
       }
     } catch (err) {
       console.error("Error saving combined sale:", err);
+      alert(t('alerts.connection_error') || "Error de conexión");
+    } finally {
+      setSubmitting(false);
+      setSubmittingDraft(false);
+    }
+  };
+
+  // Quick confirm a draft sale from list
+  const handleQuickConfirmDraft = async (cs) => {
+    if (!confirm(t('combined_sales.confirm_quick_prompt') || "¿Deseas confirmar y registrar esta venta? Se descontará el stock correspondiente del inventario.")) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        customerId: cs.customerId || null,
+        date: cs.date,
+        notes: cs.notes,
+        isDraft: false,
+        items: [
+          ...(cs.sales || []).map(s => ({
+            type: 'elaboration',
+            elaborationId: s.elaborationId,
+            quantity: s.quantity,
+            price: s.price
+          })),
+          ...(cs.goodsSales || []).map(gs => ({
+            type: 'goods_for_sale',
+            goodsForSaleId: gs.goodsForSaleId,
+            quantity: gs.quantity,
+            price: gs.price
+          }))
+        ]
+      };
+
+      const res = await fetch(`/api/client/combined-sales/${cs.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        alert(t('combined_sales.success_confirmed') || "Venta confirmada y registrada correctamente.");
+        await fetchCombinedSales();
+        await fetchAvailableElaborations();
+        await fetchAvailableGoods();
+        if (onSaleCreated) onSaleCreated();
+      } else {
+        alert(data.error || "Error al confirmar la venta");
+      }
+    } catch (err) {
+      console.error("Error confirming draft:", err);
       alert(t('alerts.connection_error') || "Error de conexión");
     } finally {
       setSubmitting(false);
@@ -517,42 +601,81 @@ export default function CombinedSalesModal({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="modal-overlay" style={{ zIndex: 1100 }}>
-      <div 
-        className="modal-content" 
-        style={{ 
-          maxWidth: '980px', 
-          width: '95%',
-          maxHeight: '92vh', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          padding: '1.75rem',
-          animation: 'scaleUp 0.2s ease'
-        }}
-      >
-        {/* Header */}
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.6rem' }}>
-              <ShoppingCart size={24} />
-            </div>
-            <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
-                {t('combined_sales.modal_title') || "Ventas combinadas"}
-              </h2>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Registra, edita y consulta ventas compuestas por múltiples elaboraciones y mercancías
-              </p>
-            </div>
+  const confirmedCount = combinedSales.filter(cs => !cs.isDraft).length;
+  const draftCount = combinedSales.filter(cs => cs.isDraft).length;
+
+  const filteredCombinedSales = combinedSales.filter(cs => {
+    if (statusFilter === "confirmed" && cs.isDraft) return false;
+    if (statusFilter === "drafts" && !cs.isDraft) return false;
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      const custName = (cs.customer?.commercialName || cs.customer?.fiscalName || "").toLowerCase();
+      const nif = (cs.customer?.nif || "").toLowerCase();
+      const notes = (cs.notes || "").toLowerCase();
+      const idStr = `#${cs.id}`;
+      if (!custName.includes(term) && !nif.includes(term) && !notes.includes(term) && !idStr.includes(term)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const mainViewContent = (
+    <div 
+      className={isPage ? "combined-sales-page-container" : "modal-content"} 
+      style={isPage ? { 
+        width: '100%', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        background: 'white',
+        borderRadius: '1.25rem',
+        border: '1px solid var(--border)',
+        padding: '2rem',
+        boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)'
+      } : { 
+        maxWidth: '980px', 
+        width: '95%',
+        maxHeight: '92vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        padding: '1.75rem',
+        animation: 'scaleUp 0.2s ease'
+      }}
+    >
+      {/* Header */}
+      <header style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '1.25rem', 
+        borderBottom: '1px solid var(--border)', 
+        paddingBottom: '1rem',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.6rem' }}>
+            <ShoppingCart size={24} />
           </div>
+          <div>
+            <h2 style={{ fontSize: isPage ? '1.85rem' : '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+              {isPage ? (t('sidebar.sales') || "Ventas") : (t('combined_sales.modal_title') || "Ventas combinadas")}
+            </h2>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              {t('combined_sales.page_subtitle') || "Registra, edita y consulta ventas compuestas por múltiples elaboraciones y mercancías"}
+            </p>
+          </div>
+        </div>
+        {!isPage && onClose && (
           <button 
             onClick={onClose} 
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
           >
             <X size={24} />
           </button>
-        </header>
+        )}
+      </header>
 
         {/* Tab switcher */}
         <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
@@ -622,14 +745,113 @@ export default function CombinedSalesModal({
           </button>
         </div>
 
-        {/* Tab 1: Consultar ventas combinadas */}
+        {/* Tab 1: Consultar ventas */}
         {activeTab === "list" && (
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Filter and Search Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+              {/* Status pills */}
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("all")}
+                  style={{
+                    padding: '0.35rem 0.8rem',
+                    borderRadius: '2rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    border: '1px solid',
+                    borderColor: statusFilter === "all" ? 'var(--corp-green)' : '#cbd5e1',
+                    background: statusFilter === "all" ? 'var(--corp-green)' : 'white',
+                    color: statusFilter === "all" ? 'white' : '#475569',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  {t('combined_sales.filter_all') || "Todas"}
+                  <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '1rem', background: statusFilter === "all" ? 'rgba(255,255,255,0.25)' : '#f1f5f9' }}>
+                    {combinedSales.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("confirmed")}
+                  style={{
+                    padding: '0.35rem 0.8rem',
+                    borderRadius: '2rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    border: '1px solid',
+                    borderColor: statusFilter === "confirmed" ? '#15803d' : '#cbd5e1',
+                    background: statusFilter === "confirmed" ? '#15803d' : 'white',
+                    color: statusFilter === "confirmed" ? 'white' : '#15803d',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <CheckCircle size={13} />
+                  {t('combined_sales.filter_confirmed') || "Confirmadas"}
+                  <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '1rem', background: statusFilter === "confirmed" ? 'rgba(255,255,255,0.25)' : '#dcfce7' }}>
+                    {confirmedCount}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("drafts")}
+                  style={{
+                    padding: '0.35rem 0.8rem',
+                    borderRadius: '2rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    border: '1px solid',
+                    borderColor: statusFilter === "drafts" ? '#b45309' : '#cbd5e1',
+                    background: statusFilter === "drafts" ? '#b45309' : 'white',
+                    color: statusFilter === "drafts" ? 'white' : '#b45309',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <Clock size={13} />
+                  {t('combined_sales.filter_drafts') || "Borradores"}
+                  <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '1rem', background: statusFilter === "drafts" ? 'rgba(255,255,255,0.25)' : '#fef3c7', color: statusFilter === "drafts" ? 'white' : '#b45309' }}>
+                    {draftCount}
+                  </span>
+                </button>
+              </div>
+
+              {/* Search input */}
+              <div style={{ position: 'relative', minWidth: '220px' }}>
+                <Search size={15} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input
+                  type="text"
+                  placeholder={t('common.search') || "Buscar por cliente o nº..."}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.4rem 0.6rem 0.4rem 2rem',
+                    fontSize: '0.82rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid var(--border)',
+                    outline: 'none',
+                    background: 'white'
+                  }}
+                />
+              </div>
+            </div>
             {loadingList ? (
               <div style={{ textAlign: 'center', padding: '3rem' }}>
                 <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto', color: 'var(--corp-green)' }} />
               </div>
-            ) : combinedSales.length === 0 ? (
+            ) : filteredCombinedSales.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed var(--border)' }}>
                 <ShoppingCart size={40} style={{ margin: '0 auto 0.75rem', color: '#94a3b8' }} />
                 <p style={{ margin: 0, fontWeight: '700', color: 'var(--text-muted)' }}>
@@ -646,7 +868,7 @@ export default function CombinedSalesModal({
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {combinedSales.map(cs => {
+                {filteredCombinedSales.map(cs => {
                   const isExpanded = expandedSaleId === cs.id;
                   const isInvoicing = invoicingId === cs.id;
                   const totalLines = (cs.sales?.length || 0) + (cs.goodsSales?.length || 0);
@@ -665,16 +887,51 @@ export default function CombinedSalesModal({
                       {/* Main card header */}
                       <div style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', background: isExpanded ? '#f8fafc' : '#ffffff' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                          <span style={{ 
-                            padding: '0.3rem 0.65rem', 
-                            background: 'rgba(66, 98, 22, 0.1)', 
-                            color: 'var(--corp-green)', 
-                            borderRadius: '0.4rem', 
-                            fontWeight: '800', 
-                            fontSize: '0.85rem' 
-                          }}>
-                            #{cs.id}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ 
+                              padding: '0.3rem 0.65rem', 
+                              background: 'rgba(66, 98, 22, 0.1)', 
+                              color: 'var(--corp-green)', 
+                              borderRadius: '0.4rem', 
+                              fontWeight: '800', 
+                              fontSize: '0.85rem' 
+                            }}>
+                              #{cs.id}
+                            </span>
+                            {cs.isDraft ? (
+                              <span style={{ 
+                                padding: '0.2rem 0.55rem', 
+                                background: '#fef3c7', 
+                                color: '#b45309', 
+                                border: '1px solid #fde68a', 
+                                borderRadius: '1rem', 
+                                fontSize: '0.72rem', 
+                                fontWeight: '800', 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '0.25rem' 
+                              }}>
+                                <Clock size={11} />
+                                {t('combined_sales.badge_draft') || "Borrador"}
+                              </span>
+                            ) : (
+                              <span style={{ 
+                                padding: '0.2rem 0.55rem', 
+                                background: '#dcfce7', 
+                                color: '#15803d', 
+                                border: '1px solid #bbf7d0', 
+                                borderRadius: '1rem', 
+                                fontSize: '0.72rem', 
+                                fontWeight: '800', 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '0.25rem' 
+                              }}>
+                                <CheckCircle size={11} />
+                                {t('combined_sales.badge_confirmed') || "Confirmada"}
+                              </span>
+                            )}
+                          </div>
 
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', color: 'var(--text-main)', fontSize: '0.95rem' }}>
@@ -696,6 +953,32 @@ export default function CombinedSalesModal({
                           <span style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--corp-green)' }}>
                             {cs.totalPrice.toFixed(2)} {currencySymbol}
                           </span>
+
+                          {/* Quick confirm button for drafts */}
+                          {cs.isDraft && (
+                            <button
+                              type="button"
+                              disabled={submitting}
+                              onClick={() => handleQuickConfirmDraft(cs)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                padding: '0.4rem 0.75rem',
+                                background: 'var(--corp-green)',
+                                border: 'none',
+                                color: 'white',
+                                borderRadius: '0.4rem',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                              title={t('combined_sales.confirm_and_register') || "Confirmar y registrar venta"}
+                            >
+                              <CheckCircle size={14} />
+                              {t('combined_sales.confirm_sale') || "Confirmar"}
+                            </button>
+                          )}
 
                           {/* Invoice status / buttons */}
                           {cs.holdedInvoiceId ? (
@@ -719,6 +1002,28 @@ export default function CombinedSalesModal({
                             >
                               <FileText size={14} />
                               {(t('combined_sales.invoice_badge') || "Factura: {num}").replace('{num}', cs.holdedInvoiceNum || cs.holdedInvoiceId)}
+                            </button>
+                          ) : cs.isDraft ? (
+                            <button
+                              type="button"
+                              disabled={true}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                padding: '0.4rem 0.75rem',
+                                background: '#f1f5f9',
+                                border: '1px solid var(--border)',
+                                color: '#94a3b8',
+                                borderRadius: '0.4rem',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                cursor: 'not-allowed'
+                              }}
+                              title={t('combined_sales.draft_invoice_blocked') || "No se puede facturar una venta en borrador. Confírmala primero."}
+                            >
+                              <FileText size={14} />
+                              {t('combined_sales.generate_invoice') || "Facturar"}
                             </button>
                           ) : (
                             <button
@@ -1424,28 +1729,67 @@ export default function CombinedSalesModal({
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <button
                   type="button"
                   onClick={handleCancelEdit}
                   className="btn-secondary"
-                  style={{ padding: '0.75rem 1.5rem', fontSize: '0.88rem' }}
+                  style={{ padding: '0.75rem 1.25rem', fontSize: '0.88rem' }}
                 >
                   {t('common.cancel') || "Cancelar"}
                 </button>
 
+                {/* Guardar como borrador button (when creating or editing a draft) */}
+                {(!editingSaleId || editingIsDraft) && (
+                  <button
+                    type="button"
+                    disabled={!isDraftValid || submitting || submittingDraft}
+                    onClick={(e) => handleSubmitCombinedSale(e, true)}
+                    style={{
+                      padding: '0.75rem 1.25rem',
+                      fontSize: '0.88rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      background: '#f8fafc',
+                      color: '#475569',
+                      border: '1.5px solid #cbd5e1',
+                      borderRadius: '0.5rem',
+                      fontWeight: '700',
+                      cursor: !isDraftValid || submitting || submittingDraft ? 'not-allowed' : 'pointer',
+                      opacity: !isDraftValid || submitting || submittingDraft ? 0.6 : 1
+                    }}
+                  >
+                    {submittingDraft ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        {t('combined_sales.saving') || "Guardando..."}
+                      </>
+                    ) : (
+                      <>
+                        <FileText size={16} />
+                        {editingSaleId 
+                          ? (t('combined_sales.save_draft_changes') || "Guardar borrador")
+                          : (t('combined_sales.save_draft') || "Guardar como borrador")}
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {/* Confirmar / Registrar venta button */}
                 <button
-                  type="submit"
-                  disabled={!isFormValid || submitting}
+                  type="button"
+                  disabled={!isConfirmedValid || submitting || submittingDraft}
+                  onClick={(e) => handleSubmitCombinedSale(e, false)}
                   className="btn-primary"
                   style={{ 
-                    padding: '0.75rem 2rem', 
+                    padding: '0.75rem 1.75rem', 
                     fontSize: '0.88rem', 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.5rem',
-                    opacity: !isFormValid ? 0.6 : 1,
-                    cursor: !isFormValid ? 'not-allowed' : 'pointer'
+                    opacity: !isConfirmedValid ? 0.6 : 1,
+                    cursor: !isConfirmedValid ? 'not-allowed' : 'pointer'
                   }}
                 >
                   {submitting ? (
@@ -1457,8 +1801,10 @@ export default function CombinedSalesModal({
                     <>
                       <CheckCircle size={16} />
                       {editingSaleId 
-                        ? (t('combined_sales.save_changes') || "Guardar cambios")
-                        : (t('combined_sales.submit_btn') || "Registrar venta combinada")}
+                        ? (editingIsDraft 
+                            ? (t('combined_sales.confirm_and_register') || "Confirmar y registrar venta")
+                            : (t('combined_sales.save_changes') || "Guardar cambios"))
+                        : (t('combined_sales.submit_btn') || "Registrar venta")}
                     </>
                   )}
                 </button>
@@ -1467,6 +1813,15 @@ export default function CombinedSalesModal({
           </form>
         )}
       </div>
+    );
+
+  if (isPage) {
+    return mainViewContent;
+  }
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1100 }}>
+      {mainViewContent}
     </div>
   );
 }

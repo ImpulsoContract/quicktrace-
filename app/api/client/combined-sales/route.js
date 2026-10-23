@@ -77,7 +77,8 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { customerId, date, notes, items } = body;
+    const { customerId, date, notes, items, isDraft } = body;
+    const isDraftSale = Boolean(isDraft);
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Debes añadir al menos un lote o mercancía para la venta combinada." }, { status: 400 });
@@ -152,7 +153,7 @@ export async function POST(req) {
         const totalProduced = parseFloat(elab.quantityProduced?.toString().replace(',', '.')) || 0;
         const unit = elab.quantityUnit || "unidades";
 
-        const totalSold = (elab.sales || []).reduce((sum, s) => {
+        const totalSold = (elab.sales || []).filter(s => !s.isDraft).reduce((sum, s) => {
           if (s.quantity != null) return sum + s.quantity;
           if (totalProduced > 0 && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
           return sum;
@@ -160,7 +161,7 @@ export async function POST(req) {
 
         const availableStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
 
-        if (totalProduced > 0 && qty > availableStock + 0.0001) {
+        if (!isDraftSale && totalProduced > 0 && qty > availableStock + 0.0001) {
           return NextResponse.json({
             error: `Stock insuficiente para "${elabName}". Intentas vender ${qty} ${unit}, pero solo hay ${availableStock} ${unit} disponibles.`
           }, { status: 400 });
@@ -214,7 +215,7 @@ export async function POST(req) {
         }
 
         const availableStock = gfs.stock || 0;
-        if (qty > availableStock + 0.0001) {
+        if (!isDraftSale && qty > availableStock + 0.0001) {
           return NextResponse.json({
             error: `Stock insuficiente para "${gfs.name}". Intentas vender ${qty} ${gfs.unit}, pero solo hay ${availableStock} ${gfs.unit} disponibles.`
           }, { status: 400 });
@@ -240,7 +241,8 @@ export async function POST(req) {
           customerId: validCustomerId,
           date: saleDate,
           totalPrice: Math.round(totalPrice * 100) / 100,
-          notes: notes ? notes.trim() : null
+          notes: notes ? notes.trim() : null,
+          isDraft: isDraftSale
         }
       });
 
@@ -255,47 +257,52 @@ export async function POST(req) {
             percentage: item.percentage,
             price: item.price,
             date: saleDate,
+            isDraft: isDraftSale,
             clientProfileId: profileId
           }
         });
       }
 
-      // 2. Create GoodsSales and deduct stock FIFO from receipts
+      // 2. Create GoodsSales (deduct stock FIFO only if NOT draft)
       for (const item of validatedGoodsItems) {
-        const receipts = await tx.goodsReceipt.findMany({
-          where: {
-            goodsForSaleId: item.goodsForSaleId,
-            goodsForSaleQuantity: { gt: 0 }
-          },
-          orderBy: { date: 'asc' }
-        });
+        let lotAllocations = null;
 
-        let remainingToDeduct = item.quantity;
-        const lotAllocations = [];
-
-        for (const r of receipts) {
-          if (remainingToDeduct <= 0) break;
-          const avail = r.goodsForSaleQuantity || 0;
-          const deduct = Math.min(avail, remainingToDeduct);
-          const newLotQty = Math.round((avail - deduct) * 10000) / 10000;
-          await tx.goodsReceipt.update({
-            where: { id: r.id },
-            data: { goodsForSaleQuantity: newLotQty }
+        if (!isDraftSale) {
+          const receipts = await tx.goodsReceipt.findMany({
+            where: {
+              goodsForSaleId: item.goodsForSaleId,
+              goodsForSaleQuantity: { gt: 0 }
+            },
+            orderBy: { date: 'asc' }
           });
-          lotAllocations.push({ receiptId: r.id, quantity: deduct });
-          remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
-        }
 
-        // Decrement GoodsForSale total stock
-        const currentGfs = await tx.goodsForSale.findUnique({
-          where: { id: item.goodsForSaleId }
-        });
-        const currentStock = currentGfs?.stock || 0;
-        const newStock = Math.max(0, Math.round((currentStock - item.quantity) * 10000) / 10000);
-        await tx.goodsForSale.update({
-          where: { id: item.goodsForSaleId },
-          data: { stock: newStock }
-        });
+          let remainingToDeduct = item.quantity;
+          lotAllocations = [];
+
+          for (const r of receipts) {
+            if (remainingToDeduct <= 0) break;
+            const avail = r.goodsForSaleQuantity || 0;
+            const deduct = Math.min(avail, remainingToDeduct);
+            const newLotQty = Math.round((avail - deduct) * 10000) / 10000;
+            await tx.goodsReceipt.update({
+              where: { id: r.id },
+              data: { goodsForSaleQuantity: newLotQty }
+            });
+            lotAllocations.push({ receiptId: r.id, quantity: deduct });
+            remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
+          }
+
+          // Decrement GoodsForSale total stock
+          const currentGfs = await tx.goodsForSale.findUnique({
+            where: { id: item.goodsForSaleId }
+          });
+          const currentStock = currentGfs?.stock || 0;
+          const newStock = Math.max(0, Math.round((currentStock - item.quantity) * 10000) / 10000);
+          await tx.goodsForSale.update({
+            where: { id: item.goodsForSaleId },
+            data: { stock: newStock }
+          });
+        }
 
         await tx.combinedSaleGoodsItem.create({
           data: {

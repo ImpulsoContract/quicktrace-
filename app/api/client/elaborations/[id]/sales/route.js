@@ -57,7 +57,7 @@ export async function GET(req, { params }) {
     const totalProduced = parseFloat(elaboration.quantityProduced?.toString().replace(',', '.')) || null;
     const unit = elaboration.quantityUnit || "";
 
-    const totalSoldQuantity = sales.reduce((sum, s) => {
+    const totalSoldQuantity = sales.filter(s => !s.isDraft).reduce((sum, s) => {
       if (s.quantity != null) return sum + s.quantity;
       if (totalProduced != null && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
       return sum;
@@ -66,7 +66,7 @@ export async function GET(req, { params }) {
     const availableQuantity = totalProduced != null ? Math.max(0, totalProduced - totalSoldQuantity) : null;
     const totalSoldPercentage = totalProduced != null && totalProduced > 0
       ? (totalSoldQuantity / totalProduced) * 100
-      : sales.reduce((sum, s) => sum + (s.percentage || 0), 0);
+      : sales.filter(s => !s.isDraft).reduce((sum, s) => sum + (s.percentage || 0), 0);
 
     return NextResponse.json({
       success: true,

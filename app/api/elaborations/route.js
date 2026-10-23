@@ -106,7 +106,7 @@ export async function GET(req) {
       const withStock = allMatching.filter(el => {
         const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.'));
         if (isNaN(totalProduced) || totalProduced <= 0) return false;
-        const totalSold = (el.sales || []).reduce((sum, s) => {
+        const totalSold = (el.sales || []).filter(s => !s.isDraft).reduce((sum, s) => {
           if (s.quantity != null) return sum + s.quantity;
           if (s.percentage != null) return sum + (totalProduced * s.percentage / 100);
           return sum;

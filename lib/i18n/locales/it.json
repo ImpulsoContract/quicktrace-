@@ -123,7 +123,8 @@
     "customers": "Clienti",
     "cutting_traceability": "Tracciabilità di sezionamento",
     "oil_collection": "Ritiro oli di frittura",
-    "vegetable_disinfection": "Disinfezione dei vegetali"
+    "vegetable_disinfection": "Disinfezione dei vegetali",
+    "sales": "Vendite"
   },
   "inventory": {
     "title": "Gestione dell'Inventario",
@@ -1755,7 +1756,22 @@
     "no_elabs_match": "Nessuna elaborazione con giacenza disponibile trovata",
     "no_goods_match": "Nessuna merce con giacenza disponibile trovata",
     "select_product_first": "Seleziona prima il prodotto",
-    "col_product": "Elaborazione / Merce"
+    "col_product": "Elaborazione / Merce",
+    "save_draft": "Salva come bozza",
+    "save_draft_changes": "Salva bozza",
+    "confirm_sale": "Conferma vendita",
+    "confirm_and_register": "Conferma e registra vendita",
+    "badge_draft": "Bozza",
+    "badge_confirmed": "Confermata",
+    "filter_all": "Tutte",
+    "filter_confirmed": "Confermate",
+    "filter_drafts": "Bozze",
+    "draft_invoice_blocked": "Impossibile fatturare una vendita in bozza. Conferma prima la vendita.",
+    "confirm_quick_prompt": "Vuoi confermare e registrare questa vendita? Il relativo stock verrà detratto dall'inventario.",
+    "success_draft_created": "Bozza salvata con successo.",
+    "success_draft_updated": "Bozza aggiornata con successo.",
+    "success_confirmed": "Vendita confermata e registrata con successo.",
+    "page_subtitle": "Registra, modifica e consulta le vendite di elaborazioni e merci in vendita"
   },
   "goods_for_sale": {
     "btn_label": "Merci in vendita",

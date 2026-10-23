@@ -61,6 +61,12 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
+    if (combinedSale.isDraft) {
+      return NextResponse.json({
+        error: "No se puede facturar una venta en borrador. Debes confirmar la venta antes de generar la factura."
+      }, { status: 400 });
+    }
+
     // Check if already invoiced
     if (combinedSale.holdedInvoiceId) {
       return NextResponse.json({

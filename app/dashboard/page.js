@@ -358,6 +358,7 @@ const DASHBOARD_TABS = [
   "trabajadores",
   "despiece",
   "historial",
+  "ventas",
   "limpieza",
   "temperaturas",
   "agua",
@@ -5501,6 +5502,14 @@ export default function ClientDashboard() {
                   active={activeTab === "historial"} 
                   onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
+                {session?.user?.role !== "WORKER" && (
+                  <SidebarBtn 
+                    icon={<ShoppingCart size={20} />} 
+                    label={t('sidebar.sales') || "Ventas"} 
+                    active={activeTab === "ventas"} 
+                    onClick={() => { setActiveTab("ventas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                  />
+                )}
               </>
             )}
 
@@ -7917,6 +7926,25 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          ) : activeTab === 'ventas' ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <CombinedSalesModal
+                isPage={true}
+                isOpen={true}
+                customers={customers}
+                profile={profile}
+                onSaleCreated={() => {
+                  fetchElaborations();
+                }}
+                onNavigateToCustomers={() => {
+                  setActiveTab("clientes");
+                  setSelectedRecipe(null);
+                  setSelectedRecords([]);
+                  if (window.innerWidth <= 1024) setIsSidebarOpen(false);
+                  scrollToTop();
+                }}
+              />
             </div>
           ) : activeTab === 'residuos' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
