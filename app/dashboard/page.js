@@ -10796,7 +10796,6 @@ export default function ClientDashboard() {
           isOpen={isGoodsForSaleModalOpen}
           onClose={() => setIsGoodsForSaleModalOpen(false)}
           profile={profile}
-          goodsReceipts={goodsReceipts}
         />
       )}
 

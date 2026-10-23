@@ -8,8 +8,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 export default function GoodsForSaleModal({
   isOpen,
   onClose,
-  profile,
-  goodsReceipts = []
+  profile
 }) {
   const { t, locale } = useI18n();
 
@@ -30,17 +29,6 @@ export default function GoodsForSaleModal({
     const map = { EUR: "€", USD: "$", GBP: "£" };
     return map[cur] || cur;
   }, [profile?.currency]);
-
-  // Extract suggestions from goods receipts
-  const productSuggestions = useMemo(() => {
-    const set = new Set();
-    goodsReceipts.forEach(gr => {
-      if (gr.productName && gr.productName.trim()) {
-        set.add(gr.productName.trim());
-      }
-    });
-    return Array.from(set).sort();
-  }, [goodsReceipts]);
 
   const commonUnits = ["kg", "g", "l", "ml", "ud", "caja", "paquete", "botella", "bandeja", "bolsa"];
 
@@ -257,7 +245,6 @@ export default function GoodsForSaleModal({
                   </label>
                   <input
                     type="text"
-                    list="goods-product-suggestions"
                     className="input-field"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -265,11 +252,6 @@ export default function GoodsForSaleModal({
                     required
                     style={{ margin: 0, fontSize: '0.88rem' }}
                   />
-                  <datalist id="goods-product-suggestions">
-                    {productSuggestions.map((p, idx) => (
-                      <option key={idx} value={p} />
-                    ))}
-                  </datalist>
                 </div>
 
                 {/* Unidad de medida */}
