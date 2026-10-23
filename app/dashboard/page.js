@@ -5549,14 +5549,16 @@ export default function ClientDashboard() {
               />
             )}
 
+            {(session?.user?.role !== "WORKER" || session?.user?.permissions?.hasGoods) && (
+              <SidebarBtn 
+                icon={<Truck size={20} />} 
+                label={t('sidebar.providers') || "Proveedores"} 
+                active={activeTab === "proveedores"} 
+                onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
             {(session?.user?.role !== "WORKER") && (
               <>
-                <SidebarBtn 
-                  icon={<Truck size={20} />} 
-                  label={t('sidebar.providers') || "Proveedores"} 
-                  active={activeTab === "proveedores"} 
-                  onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                />
                 <SidebarBtn 
                   icon={<Contact size={20} />} 
                   label={t('sidebar.customers') || "Clientes"} 
@@ -8159,37 +8161,7 @@ export default function ClientDashboard() {
             </div>
           ) : activeTab === 'proveedores' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
-              {!profile?.plan?.hasProviders ? (
-                <div style={{ 
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-                  minHeight: '60vh', textAlign: 'center', padding: '2rem', background: 'white', 
-                  borderRadius: '2rem', border: '1px solid var(--border)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)'
-                }}>
-                  <div style={{ 
-                    width: '100px', height: '100px', background: 'rgba(66, 98, 22, 0.05)', 
-                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                    marginBottom: '2rem', border: '1px solid rgba(66, 98, 22, 0.1)'
-                  }}>
-                    <Truck size={48} color="var(--corp-green)" />
-                  </div>
-                  <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '1rem', maxWidth: '600px', lineHeight: '1.2' }}>
-                    {t('providers.restricted_title')}
-                  </h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '650px', marginBottom: '2.5rem', lineHeight: '1.6' }} dangerouslySetInnerHTML={{ __html: t('providers.restricted_desc') }} />
-                  <Link 
-                    href="/dashboard/plans" 
-                    className="btn-primary" 
-                    style={{ 
-                      padding: '1rem 2rem', fontSize: '1rem', fontWeight: '800', 
-                      display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none'
-                    }}
-                  >
-                    <Crown size={20} /> {t('providers.view_plans')}
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <div>
                       <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', margin: 0, letterSpacing: '-0.03em' }}>{t('sidebar.providers') || "Proveedores"}</h2>
                       <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{t('dashboard.providers_info') || "Gestiona tu lista de proveedores habituales"}</p>
@@ -8327,8 +8299,6 @@ export default function ClientDashboard() {
                       ))}
                     </div>
                   )}
-                </>
-              )}
             </div>
           ) : activeTab === 'clientes' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>

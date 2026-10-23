@@ -217,7 +217,7 @@ model PricingPlan {
   hasWater   Boolean @default(false)
   waterLimit Int?
 
-  hasProviders Boolean @default(false)
+  hasProviders Boolean @default(true)
 
   clients         ClientProfile[]
   discountCoupons DiscountCoupon[]

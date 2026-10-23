@@ -13,7 +13,7 @@ async function main() {
     update: {
       waterLimit: 20,
       hasWater: true,
-      hasProviders: false
+      hasProviders: true
     },
     create: {
       name: 'Demo',
@@ -27,7 +27,7 @@ async function main() {
       temperaturesLimit: 10,
       hasWater: true,
       waterLimit: 20,
-      hasProviders: false,
+      hasProviders: true,
     },
   });
 
