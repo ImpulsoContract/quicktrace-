@@ -389,6 +389,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleTogglePosMode = async (client) => {
+    const currentVal = Boolean(client.clientProfile?.hasPosMode);
+    const newVal = !currentVal;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/clients/update/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hasPosMode: newVal })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(newVal ? "Modo TPV activado para este cliente." : "Modo TPV desactivado para este cliente.");
+        setActiveMenu(null);
+        await fetchClients();
+      } else {
+        alert(data.error || "Error al actualizar el modo TPV");
+      }
+    } catch (err) {
+      console.error("Error toggling POS mode:", err);
+      alert("Error de conexión al actualizar el modo TPV");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
       
