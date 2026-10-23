@@ -21478,12 +21478,27 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
 
 function InventoryModal({ isOpen, onClose }) {
   const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState("ingredients");
+
+  // Ingredients tab state
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedLotIngredient, setSelectedLotIngredient] = useState(null);
+
+  // Goods for sale tab state
+  const [goodsForSaleList, setGoodsForSaleList] = useState([]);
+  const [gfsLoading, setGfsLoading] = useState(false);
+  const [gfsLoaded, setGfsLoaded] = useState(false);
+  const [gfsSearch, setGfsSearch] = useState("");
+  const [gfsError, setGfsError] = useState("");
+  const [expandedGfsIds, setExpandedGfsIds] = useState([]);
+  const [gfsLotsData, setGfsLotsData] = useState({});
+  const [lotEditingValues, setLotEditingValues] = useState({});
+  const [savingLotId, setSavingLotId] = useState(null);
+  const [savedLotId, setSavedLotId] = useState(null);
 
   const fetchInventory = async () => {
     try {
@@ -21503,9 +21518,29 @@ function InventoryModal({ isOpen, onClose }) {
     }
   };
 
+  const fetchGoodsForSale = async () => {
+    try {
+      setGfsLoading(true);
+      setGfsError("");
+      const res = await fetch("/api/client/goods-for-sale");
+      if (!res.ok) {
+        throw new Error("Error fetching goods for sale");
+      }
+      const data = await res.json();
+      setGoodsForSaleList(Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []));
+      setGfsLoaded(true);
+    } catch (err) {
+      console.error("Error fetching goods for sale:", err);
+      setGfsError(t('alerts.connection_error') || "Error al cargar mercancías en venta");
+    } finally {
+      setGfsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetchInventory();
+      fetchGoodsForSale();
     }
   }, [isOpen]);
 
@@ -21554,11 +21589,118 @@ function InventoryModal({ isOpen, onClose }) {
     );
   }, [inventory, search]);
 
+  const filteredGoodsForSale = useMemo(() => {
+    if (!gfsSearch.trim()) return goodsForSaleList;
+    const term = gfsSearch.toLowerCase().trim();
+    return goodsForSaleList.filter(item => 
+      (item.name && item.name.toLowerCase().includes(term)) ||
+      (item.unit && item.unit.toLowerCase().includes(term))
+    );
+  }, [goodsForSaleList, gfsSearch]);
+
+  const fetchLotsForGfs = async (gfsId) => {
+    setGfsLotsData(prev => ({
+      ...prev,
+      [gfsId]: { ...(prev[gfsId] || {}), loading: true, error: "" }
+    }));
+    try {
+      const res = await fetch(`/api/client/goods-for-sale/${gfsId}/lots`);
+      if (!res.ok) throw new Error("Error fetching lots");
+      const data = await res.json();
+      const lots = Array.isArray(data.lots) ? data.lots : [];
+      setGfsLotsData(prev => ({
+        ...prev,
+        [gfsId]: { loading: false, lots, error: "" }
+      }));
+      setLotEditingValues(prev => {
+        const next = { ...prev };
+        lots.forEach(l => {
+          if (next[l.id] === undefined) {
+            next[l.id] = l.goodsForSaleQuantity ?? "";
+          }
+        });
+        return next;
+      });
+    } catch (err) {
+      console.error(`Error fetching lots for gfs ${gfsId}:`, err);
+      setGfsLotsData(prev => ({
+        ...prev,
+        [gfsId]: { loading: false, lots: [], error: t('alerts.connection_error') || "Error al cargar los lotes" }
+      }));
+    }
+  };
+
+  const toggleExpandGfs = (gfsId) => {
+    const isExpanded = expandedGfsIds.includes(gfsId);
+    if (isExpanded) {
+      setExpandedGfsIds(prev => prev.filter(id => id !== gfsId));
+    } else {
+      setExpandedGfsIds(prev => [...prev, gfsId]);
+      fetchLotsForGfs(gfsId);
+    }
+  };
+
+  const handleLotStockInputChange = (receiptId, val) => {
+    setLotEditingValues(prev => ({
+      ...prev,
+      [receiptId]: val
+    }));
+  };
+
+  const handleSaveLotStock = async (gfsId, receiptId) => {
+    try {
+      setSavingLotId(receiptId);
+      const rawVal = lotEditingValues[receiptId];
+      const newQty = parseFloat(rawVal?.toString().replace(',', '.')) || 0;
+      const res = await fetch(`/api/client/goods-for-sale/${gfsId}/lots`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receiptId, newQuantity: newQty })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGoodsForSaleList(prev => prev.map(item => {
+          if (item.id === gfsId) {
+            return { ...item, stock: data.newStock };
+          }
+          return item;
+        }));
+        setGfsLotsData(prev => {
+          const currentLots = prev[gfsId]?.lots || [];
+          const updatedLots = currentLots.map(l => {
+            if (l.id === receiptId) {
+              return { ...l, goodsForSaleQuantity: newQty };
+            }
+            return l;
+          });
+          return {
+            ...prev,
+            [gfsId]: {
+              ...prev[gfsId],
+              lots: updatedLots
+            }
+          };
+        });
+        setSavedLotId(receiptId);
+        setTimeout(() => {
+          setSavedLotId(prev => (prev === receiptId ? null : prev));
+        }, 2500);
+      } else {
+        alert(data.error || t('alerts.request_error') || "Error al actualizar el lote");
+      }
+    } catch (err) {
+      console.error("Error saving lot stock:", err);
+      alert(t('alerts.connection_error') || "Error de conexión");
+    } finally {
+      setSavingLotId(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" style={{ zIndex: 10000 }}>
-      <div className="modal-content" style={{ maxWidth: '900px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '2rem', position: 'relative' }}>
+      <div className="modal-content" style={{ maxWidth: '960px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '2rem', position: 'relative' }}>
         <button 
           onClick={onClose} 
           style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
@@ -21567,153 +21709,486 @@ function InventoryModal({ isOpen, onClose }) {
           <X size={24} />
         </button>
 
-        <div className="modal-header" style={{ marginBottom: '1.25rem', paddingRight: '2rem' }}>
+        <div className="modal-header" style={{ marginBottom: '1rem', paddingRight: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--corp-green)' }}>
-              <Boxes size={22} />
+              {activeTab === "ingredients" ? <Boxes size={22} /> : <Tag size={22} />}
             </div>
             <h2 className="modal-title" style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>
               {t('inventory.title') || "Gestión de Inventario"}
             </h2>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5', margin: 0 }}>
-            {t('inventory.description') || "Visualiza y edita el stock actual de tus ingredientes. El stock se actualiza automáticamente al registrar entradas de mercancías y elaborar recetas."}
+            {activeTab === "ingredients"
+              ? (t('inventory.description') || "Visualiza y edita el stock actual de tus ingredientes. El stock se actualiza automáticamente al registrar entradas de mercancías y elaborar recetas.")
+              : (t('inventory.description_goods_for_sale') || "Visualiza el stock de tus mercancías en venta y gestiona el stock disponible de cada lote.")}
           </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab("ingredients")}
+            style={{
+              padding: '0.65rem 1.25rem',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === "ingredients" ? '3px solid var(--corp-green)' : '3px solid transparent',
+              color: activeTab === "ingredients" ? 'var(--corp-green)' : 'var(--text-muted)',
+              fontWeight: activeTab === "ingredients" ? '800' : '600',
+              fontSize: '0.92rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Boxes size={18} />
+            <span>{t('inventory.tab_ingredients') || "Ingredientes"}</span>
+            {inventory.length > 0 && (
+              <span style={{
+                background: activeTab === "ingredients" ? 'var(--corp-green)' : '#cbd5e1',
+                color: 'white',
+                fontSize: '0.72rem',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '1rem',
+                fontWeight: '700'
+              }}>
+                {inventory.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("goodsForSale");
+              if (!gfsLoaded) fetchGoodsForSale();
+            }}
+            style={{
+              padding: '0.65rem 1.25rem',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === "goodsForSale" ? '3px solid var(--corp-green)' : '3px solid transparent',
+              color: activeTab === "goodsForSale" ? 'var(--corp-green)' : 'var(--text-muted)',
+              fontWeight: activeTab === "goodsForSale" ? '800' : '600',
+              fontSize: '0.92rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Tag size={18} />
+            <span>{t('inventory.tab_goods_for_sale') || "Mercancías en venta"}</span>
+            {goodsForSaleList.length > 0 && (
+              <span style={{
+                background: activeTab === "goodsForSale" ? 'var(--corp-green)' : '#cbd5e1',
+                color: 'white',
+                fontSize: '0.72rem',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '1rem',
+                fontWeight: '700'
+              }}>
+                {goodsForSaleList.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Search bar */}
         <div style={{ marginBottom: '1rem', position: 'relative' }}>
           <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input 
-            type="text" 
-            className="input-field" 
-            placeholder={t('inventory.search_placeholder') || "Buscar ingrediente..."}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ paddingLeft: '2.75rem', width: '100%' }}
-          />
+          {activeTab === "ingredients" ? (
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder={t('inventory.search_placeholder') || "Buscar ingrediente..."}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: '2.75rem', width: '100%' }}
+            />
+          ) : (
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder={t('inventory.search_goods_for_sale_placeholder') || "Buscar mercancía en venta..."}
+              value={gfsSearch}
+              onChange={(e) => setGfsSearch(e.target.value)}
+              style={{ paddingLeft: '2.75rem', width: '100%' }}
+            />
+          )}
         </div>
 
         {/* Body content */}
         <div className="modal-body" style={{ flex: 1, overflowY: 'auto', minHeight: '200px', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '0.5rem' }}>
-          {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '1rem' }}>
-              <Loader2 className="animate-spin" size={36} style={{ color: 'var(--corp-green)' }} />
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('common.loading') || "Cargando inventario..."}</p>
-            </div>
-          ) : errorMessage ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#ef4444', gap: '0.5rem' }}>
-              <AlertCircle size={32} />
-              <p>{errorMessage}</p>
-              <button onClick={fetchInventory} className="btn-secondary" style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-                Reintentar
-              </button>
-            </div>
-          ) : inventory.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
-              <Boxes size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
-              <p style={{ fontSize: '1rem', fontWeight: 600 }}>{t('inventory.no_ingredients') || "No hay ingredientes en el inventario. Crea recetas e ingredientes para empezar."}</p>
-            </div>
-          ) : filteredInventory.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
-              <p style={{ fontSize: '0.95rem' }}>{t('common.no_results') || "No se encontraron ingredientes que coincidan con la búsqueda."}</p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
-                  <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                      {t('inventory.col_ingredient') || "Ingrediente"}
-                    </th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '100px' }}>
-                      {t('inventory.col_unit') || "Unidad"}
-                    </th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                      {t('inventory.col_recipes') || "Recetas Relacionadas"}
-                    </th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '180px' }}>
-                      {t('inventory.col_lot') || "Stock por lote"}
-                    </th>
-                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '180px' }}>
-                      {t('inventory.col_stock') || "Stock Actual"}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredInventory.map((item, idx) => (
-                    <tr key={`${item.name}_${item.unit}_${idx}`} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
-                      <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                        {item.name}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
-                          {item.unit || "-"}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        {item.recipes && item.recipes.length > 0 ? (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                            {item.recipes.map((r, rIdx) => (
-                              <span key={rIdx} style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 500 }}>
-                                {r}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedLotIngredient(item)}
-                          className="btn-secondary"
-                          style={{
-                            padding: '0.35rem 0.65rem',
-                            fontSize: '0.78rem',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            borderRadius: '6px',
-                            whiteSpace: 'nowrap',
-                            fontWeight: 600
-                          }}
-                          title={t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}
-                        >
-                          <Layers size={14} style={{ color: 'var(--corp-green)' }} />
-                          <span>{t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}</span>
-                        </button>
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                          <input 
-                            type="number" 
-                            step="any" 
-                            min="0"
-                            className="input-field" 
-                            style={{ width: '110px', textAlign: 'right', padding: '0.45rem 0.6rem', fontWeight: 700, fontSize: '0.95rem' }}
-                            value={item.stock === null || item.stock === undefined ? "" : item.stock}
-                            onChange={(e) => handleStockChange(item.name, item.unit, e.target.value)}
-                            placeholder="0"
-                          />
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', minWidth: '24px', textAlign: 'left', fontWeight: 600 }}>
-                            {item.unit}
-                          </span>
-                        </div>
-                      </td>
+          {activeTab === "ingredients" ? (
+            loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '1rem' }}>
+                <Loader2 className="animate-spin" size={36} style={{ color: 'var(--corp-green)' }} />
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('common.loading') || "Cargando inventario..."}</p>
+              </div>
+            ) : errorMessage ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#ef4444', gap: '0.5rem' }}>
+                <AlertCircle size={32} />
+                <p>{errorMessage}</p>
+                <button onClick={fetchInventory} className="btn-secondary" style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                  Reintentar
+                </button>
+              </div>
+            ) : inventory.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+                <Boxes size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+                <p style={{ fontSize: '1rem', fontWeight: 600 }}>{t('inventory.no_ingredients') || "No hay ingredientes en el inventario. Crea recetas e ingredientes para empezar."}</p>
+              </div>
+            ) : filteredInventory.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '0.95rem' }}>{t('common.no_results') || "No se encontraron ingredientes que coincidan con la búsqueda."}</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                    <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                        {t('inventory.col_ingredient') || "Ingrediente"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '100px' }}>
+                        {t('inventory.col_unit') || "Unidad"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                        {t('inventory.col_recipes') || "Recetas Relacionadas"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '180px' }}>
+                        {t('inventory.col_lot') || "Stock por lote"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '180px' }}>
+                        {t('inventory.col_stock') || "Stock Actual"}
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredInventory.map((item, idx) => (
+                      <tr key={`${item.name}_${item.unit}_${idx}`} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                        <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                          {item.name}
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem' }}>
+                          <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
+                            {item.unit || "-"}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          {item.recipes && item.recipes.length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                              {item.recipes.map((r, rIdx) => (
+                                <span key={rIdx} style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 500 }}>
+                                  {r}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLotIngredient(item)}
+                            className="btn-secondary"
+                            style={{
+                              padding: '0.35rem 0.65rem',
+                              fontSize: '0.78rem',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              borderRadius: '6px',
+                              whiteSpace: 'nowrap',
+                              fontWeight: 600
+                            }}
+                            title={t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}
+                          >
+                            <Layers size={14} style={{ color: 'var(--corp-green)' }} />
+                            <span>{t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}</span>
+                          </button>
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                            <input 
+                              type="number" 
+                              step="any" 
+                              min="0"
+                              className="input-field" 
+                              style={{ width: '110px', textAlign: 'right', padding: '0.45rem 0.6rem', fontWeight: 700, fontSize: '0.95rem' }}
+                              value={item.stock === null || item.stock === undefined ? "" : item.stock}
+                              onChange={(e) => handleStockChange(item.name, item.unit, e.target.value)}
+                              placeholder="0"
+                            />
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', minWidth: '24px', textAlign: 'left', fontWeight: 600 }}>
+                              {item.unit}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          ) : (
+            // GOODS FOR SALE TAB
+            gfsLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '1rem' }}>
+                <Loader2 className="animate-spin" size={36} style={{ color: 'var(--corp-green)' }} />
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('common.loading') || "Cargando mercancías en venta..."}</p>
+              </div>
+            ) : gfsError ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#ef4444', gap: '0.5rem' }}>
+                <AlertCircle size={32} />
+                <p>{gfsError}</p>
+                <button onClick={fetchGoodsForSale} className="btn-secondary" style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                  Reintentar
+                </button>
+              </div>
+            ) : goodsForSaleList.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+                <Tag size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+                <p style={{ fontSize: '1rem', fontWeight: 600 }}>
+                  {t('inventory.no_goods_for_sale') || "No hay mercancías en venta registradas. Crea mercancías en venta para empezar."}
+                </p>
+              </div>
+            ) : filteredGoodsForSale.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '0.95rem' }}>
+                  {t('inventory.no_goods_for_sale_filtered') || "No se encontraron mercancías en venta que coincidan con la búsqueda."}
+                </p>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                    <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                        {t('inventory.col_gfs_name') || "Nombre de la mercancía"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '140px' }}>
+                        {t('inventory.col_gfs_unit') || "Unidad de medida"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '230px' }}>
+                        {t('inventory.col_gfs_lot_stock') || "Ver/modificar el stock de cada lote"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '170px' }}>
+                        {t('inventory.col_gfs_current_stock') || "Stock actual"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredGoodsForSale.map((item) => {
+                      const isExpanded = expandedGfsIds.includes(item.id);
+                      const lotState = gfsLotsData[item.id] || { loading: false, lots: [], error: "" };
+
+                      return (
+                        <React.Fragment key={item.id}>
+                          <tr style={{ borderBottom: isExpanded ? 'none' : '1px solid var(--border)', background: isExpanded ? '#f8fafc' : 'transparent', transition: 'background 0.2s' }}>
+                            <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                              {item.name}
+                            </td>
+                            <td style={{ padding: '0.85rem 1rem' }}>
+                              <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
+                                {item.unit || "-"}
+                              </span>
+                            </td>
+                            <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => toggleExpandGfs(item.id)}
+                                className="btn-secondary"
+                                style={{
+                                  padding: '0.35rem 0.75rem',
+                                  fontSize: '0.8rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                  borderRadius: '6px',
+                                  whiteSpace: 'nowrap',
+                                  fontWeight: 600
+                                }}
+                              >
+                                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                <Layers size={14} style={{ color: 'var(--corp-green)' }} />
+                                <span>
+                                  {isExpanded
+                                    ? (t('inventory.btn_hide_lot_stock') || "Ocultar lotes")
+                                    : (t('inventory.btn_manage_lot_stock') || "Ver / modificar lotes")}
+                                </span>
+                              </button>
+                            </td>
+                            <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                <span style={{
+                                  fontSize: '1.05rem',
+                                  fontWeight: 800,
+                                  color: (item.stock > 0 ? 'var(--corp-green)' : 'var(--text-muted)')
+                                }}>
+                                  {item.stock !== undefined && item.stock !== null ? item.stock : 0}
+                                </span>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, minWidth: '24px', textAlign: 'left' }}>
+                                  {item.unit}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Expanded Lots Section */}
+                          {isExpanded && (
+                            <tr style={{ borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
+                              <td colSpan={4} style={{ padding: '0.75rem 1.25rem 1.25rem 1.25rem' }}>
+                                <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                    <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                      <Package size={16} style={{ color: 'var(--corp-green)' }} />
+                                      <span>{t('inventory.gfs_lots_title') || "Entradas de mercancía con stock disponible"}</span>
+                                    </h4>
+                                    {!lotState.loading && lotState.lots.length > 0 && (
+                                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                        {lotState.lots.length} {lotState.lots.length === 1 ? 'lote' : 'lotes'}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {lotState.loading ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', gap: '0.75rem' }}>
+                                      <Loader2 className="animate-spin" size={20} style={{ color: 'var(--corp-green)' }} />
+                                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('common.loading') || "Cargando lotes..."}</span>
+                                    </div>
+                                  ) : lotState.error ? (
+                                    <div style={{ color: '#ef4444', fontSize: '0.85rem', padding: '0.75rem 0' }}>
+                                      {lotState.error}
+                                    </div>
+                                  ) : (!lotState.lots || lotState.lots.length === 0) ? (
+                                    <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                                      {t('inventory.no_gfs_lots') || "No hay entradas de mercancía con stock disponible para esta mercancía en venta."}
+                                    </div>
+                                  ) : (
+                                    <div style={{ overflowX: 'auto' }}>
+                                      <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                          <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                                            <th style={{ padding: '0.5rem 0.5rem', textAlign: 'left', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                                              {t('inventory.col_lot_number') || "Lote"}
+                                            </th>
+                                            <th style={{ padding: '0.5rem 0.5rem', textAlign: 'left', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                                              {t('inventory.col_receipt_date') || "Fecha de entrada"}
+                                            </th>
+                                            <th style={{ padding: '0.5rem 0.5rem', textAlign: 'left', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                                              {t('inventory.col_provider_or_invoice') || "Proveedor / Albarán"}
+                                            </th>
+                                            <th style={{ padding: '0.5rem 0.5rem', textAlign: 'right', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', width: '160px' }}>
+                                              {t('inventory.col_lot_available_stock') || "Stock disponible"}
+                                            </th>
+                                            <th style={{ padding: '0.5rem 0.5rem', textAlign: 'center', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', width: '120px' }}>
+                                              {t('common.actions') || "Acción"}
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {lotState.lots.map((lot) => {
+                                            const isSavingThis = savingLotId === lot.id;
+                                            const isSavedThis = savedLotId === lot.id;
+                                            const lotDisplay = lot.lote ? lot.lote.trim() : (t('inventory.no_lot_assigned') || "Sin lote");
+                                            const providerInfo = [lot.providerName, lot.invoiceNumber ? `(${lot.invoiceNumber})` : null].filter(Boolean).join(" ");
+
+                                            return (
+                                              <tr key={lot.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                <td style={{ padding: '0.6rem 0.5rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                                                  {lotDisplay}
+                                                </td>
+                                                <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text-muted)' }}>
+                                                  {lot.date ? new Date(lot.date).toLocaleDateString() : "-"}
+                                                </td>
+                                                <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text-muted)' }}>
+                                                  {providerInfo || "-"}
+                                                </td>
+                                                <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>
+                                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                                                    <input
+                                                      type="number"
+                                                      step="any"
+                                                      min="0"
+                                                      className="input-field"
+                                                      style={{
+                                                        width: '90px',
+                                                        textAlign: 'right',
+                                                        padding: '0.35rem 0.5rem',
+                                                        fontWeight: 700,
+                                                        fontSize: '0.9rem'
+                                                      }}
+                                                      value={lotEditingValues[lot.id] !== undefined ? lotEditingValues[lot.id] : (lot.goodsForSaleQuantity ?? "")}
+                                                      onChange={(e) => handleLotStockInputChange(lot.id, e.target.value)}
+                                                    />
+                                                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, minWidth: '24px', textAlign: 'left' }}>
+                                                      {item.unit}
+                                                    </span>
+                                                  </div>
+                                                </td>
+                                                <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center' }}>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => handleSaveLotStock(item.id, lot.id)}
+                                                    disabled={isSavingThis}
+                                                    className={isSavedThis ? "btn-secondary" : "btn-primary"}
+                                                    style={{
+                                                      padding: '0.35rem 0.75rem',
+                                                      fontSize: '0.78rem',
+                                                      display: 'inline-flex',
+                                                      alignItems: 'center',
+                                                      gap: '0.35rem',
+                                                      borderRadius: '6px',
+                                                      backgroundColor: isSavedThis ? '#ecfdf5' : undefined,
+                                                      color: isSavedThis ? 'var(--corp-green)' : undefined,
+                                                      borderColor: isSavedThis ? 'var(--corp-green)' : undefined
+                                                    }}
+                                                  >
+                                                    {isSavingThis ? (
+                                                      <Loader2 className="animate-spin" size={13} />
+                                                    ) : isSavedThis ? (
+                                                      <Check size={13} />
+                                                    ) : (
+                                                      <Save size={13} />
+                                                    )}
+                                                    <span>{isSavedThis ? (t('common.saved') || "Guardado") : (t('inventory.btn_save_lot') || "Guardar")}</span>
+                                                  </button>
+                                                </td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
         </div>
 
         {/* Footer */}
         <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', marginTop: '1.25rem', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            {!loading && `${filteredInventory.length} ${filteredInventory.length === 1 ? 'ingrediente' : 'ingredientes'}`}
+            {activeTab === "ingredients"
+              ? (!loading && `${filteredInventory.length} ${filteredInventory.length === 1 ? 'ingrediente' : 'ingredientes'}`)
+              : (!gfsLoading && `${filteredGoodsForSale.length} ${filteredGoodsForSale.length === 1 ? 'mercancía en venta' : 'mercancías en venta'}`)}
           </span>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button 
@@ -21722,18 +22197,20 @@ function InventoryModal({ isOpen, onClose }) {
               onClick={onClose}
               style={{ padding: '0.75rem 1.5rem' }}
             >
-              {t('common.cancel') || "Cancelar"}
+              {activeTab === "ingredients" ? (t('common.cancel') || "Cancelar") : (t('common.close') || "Cerrar")}
             </button>
-            <button 
-              type="button" 
-              className="btn-primary" 
-              onClick={handleSave}
-              disabled={loading || saving}
-              style={{ padding: '0.75rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              {saving ? (t('common.saving') || "Guardando...") : (t('inventory.btn_save') || "Guardar Cambios")}
-            </button>
+            {activeTab === "ingredients" && (
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={handleSave}
+                disabled={loading || saving}
+                style={{ padding: '0.75rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                {saving ? (t('common.saving') || "Guardando...") : (t('inventory.btn_save') || "Guardar Cambios")}
+              </button>
+            )}
           </div>
         </div>
 
