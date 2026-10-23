@@ -1771,7 +1771,9 @@
     "success_draft_created": "Brouillon enregistré avec succès.",
     "success_draft_updated": "Brouillon mis à jour avec succès.",
     "success_confirmed": "Vente confirmée et enregistrée avec succès.",
-    "page_subtitle": "Enregistrez, modifiez et consultez les ventes d'élaborations et de marchandises en vente"
+    "page_subtitle": "Enregistrez, modifiez et consultez les ventes d'élaborations et de marchandises en vente",
+    "select_customer": "Sélectionner un client",
+    "included_lots": "Lots inclus dans la vente"
   },
   "goods_for_sale": {
     "btn_label": "Marchandises en vente",

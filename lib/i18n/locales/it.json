@@ -1771,7 +1771,9 @@
     "success_draft_created": "Bozza salvata con successo.",
     "success_draft_updated": "Bozza aggiornata con successo.",
     "success_confirmed": "Vendita confermata e registrata con successo.",
-    "page_subtitle": "Registra, modifica e consulta le vendite di elaborazioni e merci in vendita"
+    "page_subtitle": "Registra, modifica e consulta le vendite di elaborazioni e merci in vendita",
+    "select_customer": "Seleziona cliente",
+    "included_lots": "Lotti inclusi nella vendita"
   },
   "goods_for_sale": {
     "btn_label": "Merci in vendita",

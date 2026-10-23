@@ -219,6 +219,17 @@ export default function PosDisplay({
     init();
   }, []);
 
+  // Close search suggestions on outside click
+  useEffect(() => {
+    const handleDocumentClick = (e) => {
+      if (activeSearchIdx !== null && !e.target.closest?.('.pos-combobox-container')) {
+        setActiveSearchIdx(null);
+      }
+    };
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
+  }, [activeSearchIdx]);
+
   // When switching seller: save current draft if needed and load target seller's draft
   const handleSelectSeller = async (seller) => {
     if (selectedSeller.id === seller.id) return;
@@ -794,88 +805,28 @@ export default function PosDisplay({
             flexDirection: 'column',
             flex: 1
           }}>
-            {/* Seller attribution Banner */}
+            {/* Ticket Header Inputs: Customer, Date, Notes with inline labels */}
             <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '0.75rem 1rem',
-              background: '#f8fafc',
-              borderRadius: '0.75rem',
-              border: '1px solid var(--border)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '1rem',
               marginBottom: '1.5rem',
-              flexWrap: 'wrap',
-              gap: '0.5rem'
+              background: '#f8fafc',
+              padding: '1rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: '1px solid var(--border)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)' }}>
-                  {t('pos.seller_label') || "Vendedor activo"}:
-                </span>
-                <span style={{
-                  padding: '0.25rem 0.75rem',
-                  background: 'rgba(66, 98, 22, 0.1)',
-                  color: 'var(--corp-green)',
-                  borderRadius: '1rem',
-                  fontWeight: '800',
-                  fontSize: '0.85rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem'
-                }}>
-                  <User size={13} />
-                  {selectedSeller.name}
-                </span>
-                {currentDraftId && (
-                  <span style={{
-                    padding: '0.2rem 0.6rem',
-                    background: '#fef3c7',
-                    color: '#b45309',
-                    borderRadius: '1rem',
-                    fontSize: '0.75rem',
-                    fontWeight: '800',
-                    border: '1px solid #fde68a'
-                  }}>
-                    Borrador #{currentDraftId}
-                  </span>
-                )}
-              </div>
-
-              {saleItems.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleDiscardTicket}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
-                    fontSize: '0.8rem',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '0.35rem'
-                  }}
-                >
-                  <Trash2 size={13} />
-                  {t('pos.discard_btn') || "Descartar venta"}
-                </button>
-              )}
-            </div>
-
-            {/* Ticket Header Inputs: Customer, Date, Notes */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', marginBottom: '0.4rem', color: 'var(--text-main)' }}>
-                  {t('combined_sales.col_customer') || "Cliente (opcional)"}
+              {/* Cliente */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', minWidth: 'fit-content' }}>
+                  {t('combined_sales.col_customer') || "Cliente"}:
                 </label>
                 <select
                   value={formCustomer}
                   onChange={(e) => setFormCustomer(e.target.value)}
                   style={{
-                    width: '100%',
-                    padding: '0.65rem 0.75rem',
+                    flex: 1,
+                    padding: '0.55rem 0.75rem',
                     borderRadius: '0.5rem',
                     border: '1px solid var(--border)',
                     fontSize: '0.88rem',
@@ -883,7 +834,7 @@ export default function PosDisplay({
                     outline: 'none'
                   }}
                 >
-                  <option value="">{t('combined_sales.select_customer') || "Venta directa / Sin cliente"}</option>
+                  <option value="">{t('combined_sales.select_customer') || "Seleccionar cliente"}</option>
                   {customers.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.commercialName || c.fiscalName} {c.nif ? `(${c.nif})` : ""}
@@ -892,17 +843,18 @@ export default function PosDisplay({
                 </select>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', marginBottom: '0.4rem', color: 'var(--text-main)' }}>
-                  {t('common.date') || "Fecha"}
+              {/* Fecha */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', minWidth: 'fit-content' }}>
+                  {t('common.date') || "Fecha"}:
                 </label>
                 <input
                   type="date"
                   value={formDate}
                   onChange={(e) => setFormDate(e.target.value)}
                   style={{
-                    width: '100%',
-                    padding: '0.65rem 0.75rem',
+                    flex: 1,
+                    padding: '0.55rem 0.75rem',
                     borderRadius: '0.5rem',
                     border: '1px solid var(--border)',
                     fontSize: '0.88rem',
@@ -912,18 +864,19 @@ export default function PosDisplay({
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', marginBottom: '0.4rem', color: 'var(--text-main)' }}>
-                  {t('combined_sales.notes_placeholder') || "Notas / Observaciones"}
+              {/* Notas */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', minWidth: 'fit-content' }}>
+                  {t('combined_sales.notes_label') || "Notas"}:
                 </label>
                 <input
                   type="text"
-                  placeholder={t('combined_sales.notes_placeholder') || "Observaciones de la venta..."}
+                  placeholder={t('combined_sales.notes_placeholder') || "Observaciones..."}
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                   style={{
-                    width: '100%',
-                    padding: '0.65rem 0.75rem',
+                    flex: 1,
+                    padding: '0.55rem 0.75rem',
                     borderRadius: '0.5rem',
                     border: '1px solid var(--border)',
                     fontSize: '0.88rem',
@@ -936,8 +889,76 @@ export default function PosDisplay({
 
             {/* Items Table / Section */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
-              <div style={{ fontSize: '0.95rem', fontWeight: '800', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span>{t('combined_sales.included_lots') || "Productos incluidos en la venta"} ({saleItems.length})</span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '0.85rem',
+                flexWrap: 'wrap',
+                gap: '0.75rem'
+              }}>
+                <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>{t('combined_sales.included_lots') || "Lotes incluidos en la venta"}</span>
+                  <span style={{
+                    padding: '0.15rem 0.55rem',
+                    background: 'rgba(66, 98, 22, 0.1)',
+                    color: 'var(--corp-green)',
+                    borderRadius: '1rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '800'
+                  }}>
+                    {saleItems.length}
+                  </span>
+                </div>
+
+                {/* Add item buttons placed ABOVE items */}
+                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={handleAddElaborationRow}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.55rem 0.95rem',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      color: '#1d4ed8',
+                      background: '#eff6ff',
+                      border: '1.5px solid #bfdbfe',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <Plus size={15} />
+                    <span>{t('combined_sales.btn_add_elaboration') || "Añadir elaborado"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAddGoodsRow}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.55rem 0.95rem',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      color: '#15803d',
+                      background: '#f0fdf4',
+                      border: '1.5px solid #bbf7d0',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <Plus size={15} />
+                    <span>{t('combined_sales.btn_add_goods') || "Añadir mercancía en venta"}</span>
+                  </button>
+                </div>
               </div>
 
               {saleItems.length === 0 ? (
@@ -954,11 +975,17 @@ export default function PosDisplay({
                     El ticket actual está vacío.
                   </p>
                   <p style={{ margin: '0.25rem 0 0', fontSize: '0.82rem' }}>
-                    Pulsa en los botones inferiores para añadir elaborados o mercancías en venta.
+                    Pulsa en los botones superiores para añadir elaborados o mercancías en venta.
                   </p>
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '0.75rem' }}>
+                <div style={{
+                  position: 'relative',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.75rem',
+                  minHeight: activeSearchIdx !== null ? '300px' : 'auto',
+                  background: '#ffffff'
+                }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead>
                       <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)', fontWeight: '700' }}>
@@ -978,9 +1005,9 @@ export default function PosDisplay({
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 0 ? '#ffffff' : '#fafafa' }}>
                             {/* Product column */}
-                            <td style={{ padding: '0.75rem 1rem', position: 'relative' }}>
+                            <td style={{ padding: '0.75rem 1rem', position: 'relative', zIndex: isSearchOpen ? 60 : 1 }}>
                               {!hasProduct || isSearchOpen ? (
-                                <div style={{ position: 'relative' }}>
+                                <div className="pos-combobox-container" style={{ position: 'relative' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                     <span style={{
                                       fontSize: '0.7rem',
@@ -1011,36 +1038,65 @@ export default function PosDisplay({
                                         background: 'white'
                                       }}
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (!hasProduct) {
+                                          handleRemoveItem(idx);
+                                        } else {
+                                          setActiveSearchIdx(null);
+                                        }
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#64748b',
+                                        cursor: 'pointer',
+                                        padding: '0.25rem',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                      }}
+                                      title={t('common.cancel') || "Cancelar"}
+                                    >
+                                      <X size={16} />
+                                    </button>
                                   </div>
 
                                   {/* Dropdown suggestions */}
                                   {isSearchOpen && (
                                     <div style={{
                                       position: 'absolute',
-                                      top: '100%',
+                                      top: 'calc(100% + 4px)',
                                       left: 0,
-                                      right: 0,
-                                      background: 'white',
-                                      border: '1.5px solid var(--border)',
-                                      borderRadius: '0.5rem',
-                                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                      maxHeight: '220px',
+                                      minWidth: '340px',
+                                      width: '100%',
+                                      maxWidth: '520px',
+                                      background: '#ffffff',
+                                      border: '1.5px solid var(--corp-green)',
+                                      borderRadius: '0.6rem',
+                                      boxShadow: '0 12px 30px -4px rgba(0,0,0,0.2), 0 4px 8px -2px rgba(0,0,0,0.08)',
+                                      maxHeight: '260px',
                                       overflowY: 'auto',
-                                      zIndex: 100,
+                                      zIndex: 9999,
                                       marginTop: '0.25rem'
                                     }}>
                                       {item.type === 'elaboration' ? (
-                                        availableElaborations
-                                          .filter(e => {
-                                            const q = (item.searchQuery || "").toLowerCase();
-                                            return !q || e.name.toLowerCase().includes(q) || (e.recipeName || "").toLowerCase().includes(q);
-                                          })
-                                          .map(elab => (
+                                        (() => {
+                                          const q = (item.searchQuery || "").toLowerCase();
+                                          const matches = availableElaborations.filter(e => !q || e.name.toLowerCase().includes(q) || (e.recipeName || "").toLowerCase().includes(q));
+                                          if (matches.length === 0) {
+                                            return (
+                                              <div style={{ padding: '0.85rem', color: '#94a3b8', fontSize: '0.82rem', textAlign: 'center' }}>
+                                                {t('combined_sales.no_elabs_match') || "No se encontraron elaboraciones con stock disponible"}
+                                              </div>
+                                            );
+                                          }
+                                          return matches.map(elab => (
                                             <div
                                               key={elab.id}
                                               onClick={() => handleSelectElaboration(idx, elab)}
                                               style={{
-                                                padding: '0.6rem 0.85rem',
+                                                padding: '0.65rem 0.85rem',
                                                 borderBottom: '1px solid #f1f5f9',
                                                 cursor: 'pointer',
                                                 display: 'flex',
@@ -1051,7 +1107,7 @@ export default function PosDisplay({
                                               onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
                                             >
                                               <div>
-                                                <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{elab.recipeName}</div>
+                                                <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.86rem' }}>{elab.recipeName}</div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lote: {elab.name}</div>
                                               </div>
                                               <div style={{ textAlign: 'right' }}>
@@ -1059,23 +1115,29 @@ export default function PosDisplay({
                                                   {elab.availableStock} {elab.quantityUnit}
                                                 </span>
                                                 {elab.unitPrice > 0 && (
-                                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{elab.unitPrice.toFixed(2)} {currencySymbol}/ud</div>
+                                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{elab.unitPrice.toFixed(2)} {currencySymbol}/ud</div>
                                                 )}
                                               </div>
                                             </div>
-                                          ))
+                                          ));
+                                        })()
                                       ) : (
-                                        availableGoods
-                                          .filter(g => {
-                                            const q = (item.searchQuery || "").toLowerCase();
-                                            return !q || g.name.toLowerCase().includes(q);
-                                          })
-                                          .map(gfs => (
+                                        (() => {
+                                          const q = (item.searchQuery || "").toLowerCase();
+                                          const matches = availableGoods.filter(g => !q || g.name.toLowerCase().includes(q));
+                                          if (matches.length === 0) {
+                                            return (
+                                              <div style={{ padding: '0.85rem', color: '#94a3b8', fontSize: '0.82rem', textAlign: 'center' }}>
+                                                {t('combined_sales.no_goods_match') || "No se encontraron mercancías con stock disponible"}
+                                              </div>
+                                            );
+                                          }
+                                          return matches.map(gfs => (
                                             <div
                                               key={gfs.id}
                                               onClick={() => handleSelectGoods(idx, gfs)}
                                               style={{
-                                                padding: '0.6rem 0.85rem',
+                                                padding: '0.65rem 0.85rem',
                                                 borderBottom: '1px solid #f1f5f9',
                                                 cursor: 'pointer',
                                                 display: 'flex',
@@ -1086,7 +1148,7 @@ export default function PosDisplay({
                                               onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
                                             >
                                               <div>
-                                                <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{gfs.name}</div>
+                                                <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.86rem' }}>{gfs.name}</div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{gfs.unit}</div>
                                               </div>
                                               <div style={{ textAlign: 'right' }}>
@@ -1094,11 +1156,12 @@ export default function PosDisplay({
                                                   {gfs.stock} {gfs.unit}
                                                 </span>
                                                 {gfs.salePrice > 0 && (
-                                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{gfs.salePrice.toFixed(2)} {currencySymbol}/{gfs.unit}</div>
+                                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{gfs.salePrice.toFixed(2)} {currencySymbol}/{gfs.unit}</div>
                                                 )}
                                               </div>
                                             </div>
-                                          ))
+                                          ));
+                                        })()
                                       )}
                                     </div>
                                   )}
@@ -1215,43 +1278,6 @@ export default function PosDisplay({
                   </table>
                 </div>
               )}
-
-              {/* Add item buttons under table */}
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={handleAddElaborationRow}
-                  className="btn-secondary"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.65rem 1.25rem',
-                    fontSize: '0.85rem',
-                    fontWeight: '700'
-                  }}
-                >
-                  <Plus size={16} />
-                  {t('combined_sales.btn_add_elaboration') || "Añadir elaborado"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleAddGoodsRow}
-                  className="btn-secondary"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.65rem 1.25rem',
-                    fontSize: '0.85rem',
-                    fontWeight: '700'
-                  }}
-                >
-                  <Plus size={16} />
-                  {t('combined_sales.btn_add_goods') || "Añadir mercancía en venta"}
-                </button>
-              </div>
             </div>
 
             {/* Bottom Checkout & Action Area */}
@@ -1277,6 +1303,29 @@ export default function PosDisplay({
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                {saleItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleDiscardTicket}
+                    style={{
+                      background: '#fef2f2',
+                      border: '1px solid #fee2e2',
+                      color: '#ef4444',
+                      fontSize: '0.88rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.85rem 1.25rem',
+                      borderRadius: '0.75rem'
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    <span>{t('pos.discard_btn') || "Descartar venta"}</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   disabled={!isConfirmedValid || finalizing}

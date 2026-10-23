@@ -1770,7 +1770,9 @@
     "success_draft_created": "Rascunho salvo com sucesso.",
     "success_draft_updated": "Rascunho atualizado com sucesso.",
     "success_confirmed": "Venda confirmada e registrada com sucesso.",
-    "page_subtitle": "Registre, edite e consulte vendas de elaborações e mercadorias para venda"
+    "page_subtitle": "Registre, edite e consulte vendas de elaborações e mercadorias para venda",
+    "select_customer": "Selecionar cliente",
+    "included_lots": "Lotes incluídos na venda"
   },
   "goods_for_sale": {
     "btn_label": "Mercadorias à venda",
