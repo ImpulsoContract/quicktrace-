@@ -38,7 +38,19 @@ export async function PUT(req, { params }) {
     }
 
     const body = await req.json();
-    const { name, unit, salePrice } = body;
+
+    // If only toggling isArchived:
+    if (body.isArchived !== undefined && body.name === undefined) {
+      const updated = await prisma.goodsForSale.update({
+        where: { id },
+        data: {
+          isArchived: Boolean(body.isArchived)
+        }
+      });
+      return NextResponse.json({ success: true, data: updated });
+    }
+
+    const { name, unit, salePrice, isArchived } = body;
 
     const trimmedName = (name || "").trim();
     const trimmedUnit = (unit || "").trim();
@@ -70,13 +82,19 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ error: "Ya existe otra mercancía en venta con este nombre y unidad de medida." }, { status: 400 });
     }
 
+    const updateData = {
+      name: trimmedName,
+      unit: trimmedUnit,
+      salePrice: Math.round(parsedPrice * 100) / 100
+    };
+
+    if (isArchived !== undefined) {
+      updateData.isArchived = Boolean(isArchived);
+    }
+
     const updated = await prisma.goodsForSale.update({
       where: { id },
-      data: {
-        name: trimmedName,
-        unit: trimmedUnit,
-        salePrice: Math.round(parsedPrice * 100) / 100
-      }
+      data: updateData
     });
 
     return NextResponse.json({ success: true, data: updated });
@@ -116,6 +134,19 @@ export async function DELETE(req, { params }) {
 
     if (session.user.role !== "ADMIN" && existingItem.clientProfileId !== profileId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    // Check if there are related goods receipts
+    const receiptsCount = await prisma.goodsReceipt.count({
+      where: { goodsForSaleId: id }
+    });
+
+    if (receiptsCount > 0) {
+      return NextResponse.json({
+        error: "No se puede eliminar la mercancía porque tiene entradas asociadas. Puedes archivarla en su lugar.",
+        hasReceipts: true,
+        canArchive: true
+      }, { status: 400 });
     }
 
     await prisma.goodsForSale.delete({

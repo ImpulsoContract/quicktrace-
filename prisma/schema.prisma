@@ -707,6 +707,7 @@ model GoodsForSale {
   salePrice Float         @default(0)
   costPrice Float?
   stock     Float         @default(0)
+  isArchived Boolean       @default(false)
 
   goodsReceipts GoodsReceipt[]
 
@@ -715,4 +716,5 @@ model GoodsForSale {
 
   @@unique([clientProfileId, name, unit])
   @@index([clientProfileId])
+  @@index([clientProfileId, isArchived])
 }

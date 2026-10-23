@@ -24,16 +24,51 @@ export async function GET(req) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
-    const where = (session.user.role === "ADMIN" && !profileId)
-      ? {}
-      : { clientProfileId: profileId };
+    const { searchParams } = new URL(req.url);
+    const archived = searchParams.get("archived");
+    const all = searchParams.get("all");
+
+    let isArchivedCondition = { isArchived: false };
+    if (archived === "true") {
+      isArchivedCondition = { isArchived: true };
+    } else if (all === "true") {
+      isArchivedCondition = {};
+    }
+
+    const where = {
+      ...(session.user.role === "ADMIN" && !profileId ? {} : { clientProfileId: profileId }),
+      ...isArchivedCondition
+    };
 
     const items = await prisma.goodsForSale.findMany({
       where,
+      include: {
+        _count: {
+          select: { goodsReceipts: true }
+        }
+      },
       orderBy: { name: 'asc' }
     });
 
-    return NextResponse.json({ success: true, data: items });
+    const baseWhere = (session.user.role === "ADMIN" && !profileId)
+      ? {}
+      : { clientProfileId: profileId };
+
+    const [activeCount, archivedCount] = await Promise.all([
+      prisma.goodsForSale.count({
+        where: { ...baseWhere, isArchived: false }
+      }),
+      prisma.goodsForSale.count({
+        where: { ...baseWhere, isArchived: true }
+      })
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      data: items,
+      activeCount,
+      archivedCount
+    });
   } catch (error) {
     console.error("Error fetching goods for sale:", error);
     return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
