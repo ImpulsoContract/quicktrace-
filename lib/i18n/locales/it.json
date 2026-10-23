@@ -1745,7 +1745,17 @@
     "save_changes": "Salva modifiche",
     "cancel_edit": "Annulla modifica",
     "success_updated": "Vendita combinata aggiornata con successo.",
-    "edit_combined_sale_title": "Modifica vendita combinata #{id}"
+    "edit_combined_sale_title": "Modifica vendita combinata #{id}",
+    "btn_add_elaboration": "Aggiungi elaborazione",
+    "btn_add_goods": "Aggiungi merce in vendita",
+    "badge_elaboration": "Elaborazione",
+    "badge_goods": "Merce",
+    "search_elaboration_placeholder": "Cerca lotto di elaborazione con giacenza...",
+    "search_goods_placeholder": "Cerca merce in vendita con giacenza...",
+    "no_elabs_match": "Nessuna elaborazione con giacenza disponibile trovata",
+    "no_goods_match": "Nessuna merce con giacenza disponibile trovata",
+    "select_product_first": "Seleziona prima il prodotto",
+    "col_product": "Elaborazione / Merce"
   },
   "goods_for_sale": {
     "btn_label": "Merci in vendita",

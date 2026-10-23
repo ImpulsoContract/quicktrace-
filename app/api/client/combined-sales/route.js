@@ -39,6 +39,12 @@ export async function GET(req) {
             }
           },
           orderBy: { id: 'asc' }
+        },
+        goodsSales: {
+          include: {
+            goodsForSale: true
+          },
+          orderBy: { id: 'asc' }
         }
       },
       orderBy: { date: 'desc' }
@@ -74,7 +80,7 @@ export async function POST(req) {
     const { customerId, date, notes, items } = body;
 
     if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "Debes seleccionar al menos una elaboración para la venta combinada." }, { status: 400 });
+      return NextResponse.json({ error: "Debes añadir al menos un lote o mercancía para la venta combinada." }, { status: 400 });
     }
 
     // Validate customer
@@ -91,80 +97,142 @@ export async function POST(req) {
       }
     }
 
-    // Fetch elaborations and validate stock
-    const elaborationIds = items.map(it => parseInt(it.elaborationId)).filter(id => !isNaN(id));
-    if (elaborationIds.length !== items.length) {
-      return NextResponse.json({ error: "IDs de elaboración inválidos." }, { status: 400 });
+    // Separate elaboration items vs goods_for_sale items
+    const elabRawItems = items.filter(it => it.type === 'elaboration' || (!it.type && it.elaborationId));
+    const goodsRawItems = items.filter(it => it.type === 'goods_for_sale' || (!it.type && it.goodsForSaleId));
+
+    if (elabRawItems.length + goodsRawItems.length === 0) {
+      return NextResponse.json({ error: "Debes seleccionar al menos un producto para la venta combinada." }, { status: 400 });
     }
-
-    const elaborations = await prisma.elaboration.findMany({
-      where: {
-        id: { in: elaborationIds },
-        recipe: session.user.role === "ADMIN" ? {} : { clientProfileId: profileId }
-      },
-      include: {
-        recipe: true,
-        sales: true
-      }
-    });
-
-    if (elaborations.length !== elaborationIds.length) {
-      return NextResponse.json({ error: "Una o más elaboraciones no fueron encontradas o no pertenecen a tu cuenta." }, { status: 400 });
-    }
-
-    const elabMap = new Map();
-    elaborations.forEach(e => elabMap.set(e.id, e));
 
     let totalPrice = 0;
-    const validatedItems = [];
+    const validatedElabItems = [];
+    const validatedGoodsItems = [];
 
-    for (const item of items) {
-      const elabId = parseInt(item.elaborationId);
-      const elab = elabMap.get(elabId);
-      const elabName = `${elab.recipe?.name || 'Receta'} (Lote: ${elab.name})`;
-
-      const qty = parseFloat(item.quantity?.toString().replace(',', '.'));
-      if (isNaN(qty) || qty <= 0) {
-        return NextResponse.json({ error: `La cantidad para "${elabName}" debe ser un número mayor a 0.` }, { status: 400 });
+    // Validate elaborations
+    if (elabRawItems.length > 0) {
+      const elaborationIds = elabRawItems.map(it => parseInt(it.elaborationId)).filter(id => !isNaN(id));
+      if (elaborationIds.length !== elabRawItems.length) {
+        return NextResponse.json({ error: "IDs de elaboración inválidos." }, { status: 400 });
       }
 
-      const price = parseFloat(item.price?.toString().replace(',', '.'));
-      if (isNaN(price) || price < 0) {
-        return NextResponse.json({ error: `El precio para "${elabName}" debe ser un número válido.` }, { status: 400 });
-      }
-
-      // Check stock
-      const totalProduced = parseFloat(elab.quantityProduced?.toString().replace(',', '.')) || 0;
-      const unit = elab.quantityUnit || "unidades";
-
-      const totalSold = (elab.sales || []).reduce((sum, s) => {
-        if (s.quantity != null) return sum + s.quantity;
-        if (totalProduced > 0 && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
-        return sum;
-      }, 0);
-
-      const availableStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
-
-      if (totalProduced > 0 && qty > availableStock + 0.0001) {
-        return NextResponse.json({
-          error: `Stock insuficiente para "${elabName}". Intentas vender ${qty} ${unit}, pero solo hay ${availableStock} ${unit} disponibles.`
-        }, { status: 400 });
-      }
-
-      const percentage = totalProduced > 0 ? (qty / totalProduced) * 100 : 0;
-      totalPrice += price;
-
-      validatedItems.push({
-        elaborationId: elabId,
-        quantity: Math.round(qty * 1000) / 1000,
-        percentage: Math.round(percentage * 100) / 100,
-        price: Math.round(price * 100) / 100
+      const elaborations = await prisma.elaboration.findMany({
+        where: {
+          id: { in: elaborationIds },
+          recipe: session.user.role === "ADMIN" ? {} : { clientProfileId: profileId }
+        },
+        include: {
+          recipe: true,
+          sales: true
+        }
       });
+
+      if (elaborations.length !== elaborationIds.length) {
+        return NextResponse.json({ error: "Una o más elaboraciones no fueron encontradas o no pertenecen a tu cuenta." }, { status: 400 });
+      }
+
+      const elabMap = new Map();
+      elaborations.forEach(e => elabMap.set(e.id, e));
+
+      for (const item of elabRawItems) {
+        const elabId = parseInt(item.elaborationId);
+        const elab = elabMap.get(elabId);
+        const elabName = `${elab.recipe?.name || 'Receta'} (Lote: ${elab.name})`;
+
+        const qty = parseFloat(item.quantity?.toString().replace(',', '.'));
+        if (isNaN(qty) || qty <= 0) {
+          return NextResponse.json({ error: `La cantidad para "${elabName}" debe ser un número mayor a 0.` }, { status: 400 });
+        }
+
+        const price = parseFloat(item.price?.toString().replace(',', '.'));
+        if (isNaN(price) || price < 0) {
+          return NextResponse.json({ error: `El precio para "${elabName}" debe ser un número válido.` }, { status: 400 });
+        }
+
+        const totalProduced = parseFloat(elab.quantityProduced?.toString().replace(',', '.')) || 0;
+        const unit = elab.quantityUnit || "unidades";
+
+        const totalSold = (elab.sales || []).reduce((sum, s) => {
+          if (s.quantity != null) return sum + s.quantity;
+          if (totalProduced > 0 && s.percentage != null) return sum + (totalProduced * s.percentage / 100);
+          return sum;
+        }, 0);
+
+        const availableStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
+
+        if (totalProduced > 0 && qty > availableStock + 0.0001) {
+          return NextResponse.json({
+            error: `Stock insuficiente para "${elabName}". Intentas vender ${qty} ${unit}, pero solo hay ${availableStock} ${unit} disponibles.`
+          }, { status: 400 });
+        }
+
+        const percentage = totalProduced > 0 ? (qty / totalProduced) * 100 : 0;
+        totalPrice += price;
+
+        validatedElabItems.push({
+          elaborationId: elabId,
+          quantity: Math.round(qty * 1000) / 1000,
+          percentage: Math.round(percentage * 100) / 100,
+          price: Math.round(price * 100) / 100
+        });
+      }
+    }
+
+    // Validate goods for sale
+    if (goodsRawItems.length > 0) {
+      const gfsIds = goodsRawItems.map(it => parseInt(it.goodsForSaleId)).filter(id => !isNaN(id));
+      if (gfsIds.length !== goodsRawItems.length) {
+        return NextResponse.json({ error: "IDs de mercancía en venta inválidos." }, { status: 400 });
+      }
+
+      const goodsList = await prisma.goodsForSale.findMany({
+        where: {
+          id: { in: gfsIds },
+          ...(session.user.role === "ADMIN" && !profileId ? {} : { clientProfileId: profileId })
+        }
+      });
+
+      if (goodsList.length !== gfsIds.length) {
+        return NextResponse.json({ error: "Una o más mercancías en venta no fueron encontradas." }, { status: 400 });
+      }
+
+      const gfsMap = new Map();
+      goodsList.forEach(g => gfsMap.set(g.id, g));
+
+      for (const item of goodsRawItems) {
+        const gfsId = parseInt(item.goodsForSaleId);
+        const gfs = gfsMap.get(gfsId);
+
+        const qty = parseFloat(item.quantity?.toString().replace(',', '.'));
+        if (isNaN(qty) || qty <= 0) {
+          return NextResponse.json({ error: `La cantidad para "${gfs.name}" debe ser un número mayor a 0.` }, { status: 400 });
+        }
+
+        const price = parseFloat(item.price?.toString().replace(',', '.'));
+        if (isNaN(price) || price < 0) {
+          return NextResponse.json({ error: `El precio para "${gfs.name}" debe ser un número válido.` }, { status: 400 });
+        }
+
+        const availableStock = gfs.stock || 0;
+        if (qty > availableStock + 0.0001) {
+          return NextResponse.json({
+            error: `Stock insuficiente para "${gfs.name}". Intentas vender ${qty} ${gfs.unit}, pero solo hay ${availableStock} ${gfs.unit} disponibles.`
+          }, { status: 400 });
+        }
+
+        totalPrice += price;
+
+        validatedGoodsItems.push({
+          goodsForSaleId: gfsId,
+          quantity: Math.round(qty * 1000) / 1000,
+          price: Math.round(price * 100) / 100
+        });
+      }
     }
 
     const saleDate = date ? new Date(date) : new Date();
 
-    // Execute in a transaction
+    // Execute in transaction
     const result = await prisma.$transaction(async (tx) => {
       const combinedSale = await tx.combinedSale.create({
         data: {
@@ -176,7 +244,8 @@ export async function POST(req) {
         }
       });
 
-      for (const item of validatedItems) {
+      // 1. Create ElaborationSales
+      for (const item of validatedElabItems) {
         await tx.elaborationSale.create({
           data: {
             elaborationId: item.elaborationId,
@@ -187,6 +256,54 @@ export async function POST(req) {
             price: item.price,
             date: saleDate,
             clientProfileId: profileId
+          }
+        });
+      }
+
+      // 2. Create GoodsSales and deduct stock FIFO from receipts
+      for (const item of validatedGoodsItems) {
+        const receipts = await tx.goodsReceipt.findMany({
+          where: {
+            goodsForSaleId: item.goodsForSaleId,
+            goodsForSaleQuantity: { gt: 0 }
+          },
+          orderBy: { date: 'asc' }
+        });
+
+        let remainingToDeduct = item.quantity;
+        const lotAllocations = [];
+
+        for (const r of receipts) {
+          if (remainingToDeduct <= 0) break;
+          const avail = r.goodsForSaleQuantity || 0;
+          const deduct = Math.min(avail, remainingToDeduct);
+          const newLotQty = Math.round((avail - deduct) * 10000) / 10000;
+          await tx.goodsReceipt.update({
+            where: { id: r.id },
+            data: { goodsForSaleQuantity: newLotQty }
+          });
+          lotAllocations.push({ receiptId: r.id, quantity: deduct });
+          remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
+        }
+
+        // Decrement GoodsForSale total stock
+        const currentGfs = await tx.goodsForSale.findUnique({
+          where: { id: item.goodsForSaleId }
+        });
+        const currentStock = currentGfs?.stock || 0;
+        const newStock = Math.max(0, Math.round((currentStock - item.quantity) * 10000) / 10000);
+        await tx.goodsForSale.update({
+          where: { id: item.goodsForSaleId },
+          data: { stock: newStock }
+        });
+
+        await tx.combinedSaleGoodsItem.create({
+          data: {
+            combinedSaleId: combinedSale.id,
+            goodsForSaleId: item.goodsForSaleId,
+            quantity: item.quantity,
+            price: item.price,
+            lotAllocations: lotAllocations
           }
         });
       }
@@ -202,6 +319,11 @@ export async function POST(req) {
                   recipe: true
                 }
               }
+            }
+          },
+          goodsSales: {
+            include: {
+              goodsForSale: true
             }
           }
         }

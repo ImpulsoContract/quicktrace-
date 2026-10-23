@@ -1750,7 +1750,17 @@
     "save_changes": "Guardar cambios",
     "cancel_edit": "Cancelar edición",
     "success_updated": "Venta combinada actualizada correctamente.",
-    "edit_combined_sale_title": "Editar Venta Combinada #{id}"
+    "edit_combined_sale_title": "Editar Venta Combinada #{id}",
+    "btn_add_elaboration": "Añadir elaborado",
+    "btn_add_goods": "Añadir mercancía en venta",
+    "badge_elaboration": "Elaborado",
+    "badge_goods": "Mercancía",
+    "search_elaboration_placeholder": "Buscar lote de elaboración con stock...",
+    "search_goods_placeholder": "Buscar mercancía en venta con stock...",
+    "no_elabs_match": "No se encontraron elaboraciones con stock disponible",
+    "no_goods_match": "No se encontraron mercancías con stock disponible",
+    "select_product_first": "Selecciona producto primero",
+    "col_product": "Elaboración / Mercancía"
   },
   "goods_for_sale": {
     "btn_label": "Mercancías en venta",

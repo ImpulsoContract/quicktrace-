@@ -1750,7 +1750,17 @@
     "save_changes": "Save changes",
     "cancel_edit": "Cancel edit",
     "success_updated": "Combined sale updated successfully.",
-    "edit_combined_sale_title": "Edit Combined Sale #{id}"
+    "edit_combined_sale_title": "Edit Combined Sale #{id}",
+    "btn_add_elaboration": "Add elaboration",
+    "btn_add_goods": "Add goods for sale",
+    "badge_elaboration": "Elaboration",
+    "badge_goods": "Goods",
+    "search_elaboration_placeholder": "Search elaboration lot with stock...",
+    "search_goods_placeholder": "Search goods for sale with stock...",
+    "no_elabs_match": "No elaborations with available stock found",
+    "no_goods_match": "No goods for sale with available stock found",
+    "select_product_first": "Select product first",
+    "col_product": "Elaboration / Goods"
   },
   "goods_for_sale": {
     "btn_label": "Goods for sale",

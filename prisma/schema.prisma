@@ -364,6 +364,7 @@ model CombinedSale {
   customer        Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   sales           ElaborationSale[]
+  goodsSales      CombinedSaleGoodsItem[]
 
   holdedInvoiceId  String?
   holdedInvoiceNum String?
@@ -710,6 +711,7 @@ model GoodsForSale {
   isArchived Boolean       @default(false)
 
   goodsReceipts GoodsReceipt[]
+  combinedSaleItems CombinedSaleGoodsItem[]
 
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -717,4 +719,24 @@ model GoodsForSale {
   @@unique([clientProfileId, name, unit])
   @@index([clientProfileId])
   @@index([clientProfileId, isArchived])
+}
+
+
+model CombinedSaleGoodsItem {
+  id              Int           @id @default(autoincrement())
+  combinedSaleId  Int
+  combinedSale    CombinedSale  @relation(fields: [combinedSaleId], references: [id], onDelete: Cascade)
+
+  goodsForSaleId  Int
+  goodsForSale    GoodsForSale  @relation(fields: [goodsForSaleId], references: [id], onDelete: Cascade)
+
+  quantity        Float
+  price           Float
+  lotAllocations  Json?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([combinedSaleId])
+  @@index([goodsForSaleId])
 }

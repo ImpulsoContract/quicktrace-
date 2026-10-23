@@ -44,6 +44,11 @@ export async function POST(request, { params }) {
               }
             }
           }
+        },
+        goodsSales: {
+          include: {
+            goodsForSale: true
+          }
         }
       }
     });
@@ -209,7 +214,7 @@ export async function POST(request, { params }) {
       ? profile.holdedTax 
       : 10;
 
-    const itemsV1 = combinedSale.sales.map(s => {
+    const elabItemsV1 = (combinedSale.sales || []).map(s => {
       const itemName = s.elaboration?.recipe?.name || s.elaboration?.name || "Elaboración";
       const descParts = [];
       if (s.elaboration?.name) descParts.push(`Lote: ${s.elaboration.name}`);
@@ -231,7 +236,26 @@ export async function POST(request, { params }) {
       };
     });
 
-    const itemsV2 = combinedSale.sales.map(s => {
+    const goodsItemsV1 = (combinedSale.goodsSales || []).map(gs => {
+      const itemName = gs.goodsForSale?.name || "Mercancía en venta";
+      const itemDesc = gs.goodsForSale?.unit ? `Unidad: ${gs.goodsForSale.unit}` : "";
+      const units = gs.quantity && gs.quantity > 0 ? gs.quantity : 1;
+      const subtotal = gs.quantity && gs.quantity > 0
+        ? parseFloat((gs.price / gs.quantity).toFixed(4))
+        : parseFloat((gs.price || 0).toFixed(4));
+
+      return {
+        name: itemName,
+        desc: itemDesc,
+        units,
+        subtotal,
+        tax: taxRate
+      };
+    });
+
+    const itemsV1 = [...elabItemsV1, ...goodsItemsV1];
+
+    const elabItemsV2 = (combinedSale.sales || []).map(s => {
       const itemName = s.elaboration?.recipe?.name || s.elaboration?.name || "Elaboración";
       const descParts = [];
       if (s.elaboration?.name) descParts.push(`Lote: ${s.elaboration.name}`);
@@ -252,6 +276,25 @@ export async function POST(request, { params }) {
         tax: taxRate
       };
     });
+
+    const goodsItemsV2 = (combinedSale.goodsSales || []).map(gs => {
+      const itemName = gs.goodsForSale?.name || "Mercancía en venta";
+      const itemDesc = gs.goodsForSale?.unit ? `Unidad: ${gs.goodsForSale.unit}` : "";
+      const units = gs.quantity && gs.quantity > 0 ? gs.quantity : 1;
+      const price = gs.quantity && gs.quantity > 0
+        ? parseFloat((gs.price / gs.quantity).toFixed(4))
+        : parseFloat((gs.price || 0).toFixed(4));
+
+      return {
+        name: itemName,
+        description: itemDesc,
+        units,
+        price,
+        tax: taxRate
+      };
+    });
+
+    const itemsV2 = [...elabItemsV2, ...goodsItemsV2];
 
     let invoiceId = null;
     let invoiceNum = null;
