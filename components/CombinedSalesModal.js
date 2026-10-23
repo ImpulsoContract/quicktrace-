@@ -2,9 +2,10 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { 
   X, Plus, Trash2, ShoppingCart, Loader2, FileText, CheckCircle,
   AlertCircle, DollarSign, Calendar, User, Layers, ChevronRight, Eye, Edit,
-  Search, Tag, Package, ChevronDown, Clock
+  Search, Tag, Package, ChevronDown, Clock, Users
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import ManageSellersModal from "@/components/ManageSellersModal";
 
 export default function CombinedSalesModal({
   isOpen,
@@ -32,6 +33,7 @@ export default function CombinedSalesModal({
   const [editingSaleId, setEditingSaleId] = useState(null);
   const [editingIsDraft, setEditingIsDraft] = useState(false);
   const [submittingDraft, setSubmittingDraft] = useState(false);
+  const [isSellersModalOpen, setIsSellersModalOpen] = useState(false);
   const [availableElaborations, setAvailableElaborations] = useState([]);
   const [availableGoods, setAvailableGoods] = useState([]);
   const [loadingAvailable, setLoadingAvailable] = useState(false);
@@ -667,14 +669,33 @@ export default function CombinedSalesModal({
             </p>
           </div>
         </div>
-        {!isPage && onClose && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button 
-            onClick={onClose} 
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
+            type="button"
+            onClick={() => setIsSellersModalOpen(true)}
+            className="btn-secondary"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              padding: '0.5rem 1rem', 
+              fontSize: '0.85rem', 
+              fontWeight: '700',
+              borderRadius: '0.6rem'
+            }}
           >
-            <X size={24} />
+            <Users size={16} />
+            {t('sellers.manage_btn') || "Gestionar vendedores"}
           </button>
-        )}
+          {!isPage && onClose && (
+            <button 
+              onClick={onClose} 
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
+            >
+              <X size={24} />
+            </button>
+          )}
+        </div>
       </header>
 
         {/* Tab switcher */}
@@ -1812,6 +1833,11 @@ export default function CombinedSalesModal({
             </div>
           </form>
         )}
+
+        <ManageSellersModal
+          isOpen={isSellersModalOpen}
+          onClose={() => setIsSellersModalOpen(false)}
+        />
       </div>
     );
 

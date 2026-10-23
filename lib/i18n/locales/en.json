@@ -1826,5 +1826,19 @@
     "col_receipt_cost_price": "Cost price / unit",
     "save_receipt_changes": "Save",
     "receipt_saved_success": "Receipt updated successfully."
+  },
+  "sellers": {
+    "manage_btn": "Manage salespeople",
+    "modal_title": "Manage salespeople",
+    "modal_desc": "Create, edit and delete your company's salespeople",
+    "new_seller": "New salesperson",
+    "edit_seller": "Edit salesperson",
+    "name_placeholder": "Salesperson name...",
+    "name_required": "The salesperson name is required.",
+    "add_btn": "Add",
+    "save_btn": "Save",
+    "delete_confirm": "Are you sure you want to delete this salesperson?",
+    "empty": "No salespeople registered yet.",
+    "empty_hint": "Add the first salesperson using the field above."
   }
 }

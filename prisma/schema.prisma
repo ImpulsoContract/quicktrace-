@@ -124,6 +124,7 @@ model ClientProfile {
   oilCollections             OilCollection[]
   vegetableDisinfections     VegetableDisinfection[]
   goodsForSale               GoodsForSale[]
+  sellers                    Seller[]
 
   holdedApiKey               String?
   holdedTax                  Float?            @default(10)
@@ -741,4 +742,16 @@ model CombinedSaleGoodsItem {
 
   @@index([combinedSaleId])
   @@index([goodsForSaleId])
+}
+
+model Seller {
+  id              Int           @id @default(autoincrement())
+  name            String
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([clientProfileId])
 }

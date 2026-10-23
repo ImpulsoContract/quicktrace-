@@ -1826,5 +1826,19 @@
     "col_receipt_cost_price": "Precio coste / ud",
     "save_receipt_changes": "Guardar",
     "receipt_saved_success": "Entrada actualizada correctamente."
+  },
+  "sellers": {
+    "manage_btn": "Gestionar vendedores",
+    "modal_title": "Gestionar vendedores",
+    "modal_desc": "Crea, modifica y elimina los vendedores de tu empresa",
+    "new_seller": "Nuevo vendedor",
+    "edit_seller": "Modificar vendedor",
+    "name_placeholder": "Nombre del vendedor...",
+    "name_required": "El nombre del vendedor es obligatorio.",
+    "add_btn": "Añadir",
+    "save_btn": "Guardar",
+    "delete_confirm": "¿Estás seguro de que deseas eliminar a este vendedor?",
+    "empty": "No hay vendedores registrados todavía.",
+    "empty_hint": "Añade el primer vendedor con el campo superior."
   }
 }

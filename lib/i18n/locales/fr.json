@@ -1821,5 +1821,19 @@
     "col_receipt_cost_price": "Prix de revient / unité",
     "save_receipt_changes": "Enregistrer",
     "receipt_saved_success": "Entrée mise à jour avec succès."
+  },
+  "sellers": {
+    "manage_btn": "Gérer les vendeurs",
+    "modal_title": "Gérer les vendeurs",
+    "modal_desc": "Créez, modifiez et supprimez les vendeurs de votre entreprise",
+    "new_seller": "Nouveau vendeur",
+    "edit_seller": "Modifier le vendeur",
+    "name_placeholder": "Nom du vendeur...",
+    "name_required": "Le nom du vendeur est obligatoire.",
+    "add_btn": "Ajouter",
+    "save_btn": "Enregistrer",
+    "delete_confirm": "Êtes-vous sûr de vouloir supprimer ce vendeur ?",
+    "empty": "Aucun vendeur enregistré pour le moment.",
+    "empty_hint": "Ajoutez le premier vendeur avec le champ ci-dessus."
   }
 }
