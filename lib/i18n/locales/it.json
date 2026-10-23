@@ -1835,5 +1835,22 @@
     "delete_confirm": "Sei sicuro di voler eliminare questo venditore?",
     "empty": "Nessun venditore registrato finora.",
     "empty_hint": "Aggiungi il primo venditore con il campo sopra."
+  },
+  "pos": {
+    "enter_btn": "Modalità POS",
+    "exit_btn": "Modalità gestione",
+    "seller_anonymous": "Anonimo",
+    "seller_management": "Gestione",
+    "auto_saving": "Salvataggio...",
+    "auto_saved": "Salvato auto",
+    "draft_loaded": "Bozza caricata",
+    "finalize_btn": "Incassa / Completa",
+    "discard_btn": "Annulla vendita",
+    "discard_confirm": "Sei sicuro di voler annullare la vendita corrente? La bozza in corso verrà eliminata.",
+    "sale_completed": "Vendita registrata con successo!",
+    "seller_label": "Venditore",
+    "tab_ticket": "Vendita corrente",
+    "tab_history": "Cronologia vendite",
+    "col_seller": "Venditore"
   }
 }

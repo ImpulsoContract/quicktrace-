@@ -1835,5 +1835,22 @@
     "delete_confirm": "Êtes-vous sûr de vouloir supprimer ce vendeur ?",
     "empty": "Aucun vendeur enregistré pour le moment.",
     "empty_hint": "Ajoutez le premier vendeur avec le champ ci-dessus."
+  },
+  "pos": {
+    "enter_btn": "Mode TPV",
+    "exit_btn": "Mode gestion",
+    "seller_anonymous": "Anonyme",
+    "seller_management": "Gestion",
+    "auto_saving": "Enregistrement...",
+    "auto_saved": "Enregistré auto",
+    "draft_loaded": "Brouillon chargé",
+    "finalize_btn": "Encaisser / Finaliser",
+    "discard_btn": "Abandonner la vente",
+    "discard_confirm": "Êtes-vous sûr de vouloir abandonner la vente en cours ? Le brouillon sera supprimé.",
+    "sale_completed": "Vente enregistrée avec succès !",
+    "seller_label": "Vendeur",
+    "tab_ticket": "Vente en cours",
+    "tab_history": "Historique des ventes",
+    "col_seller": "Vendeur"
   }
 }

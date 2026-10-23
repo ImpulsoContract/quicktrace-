@@ -125,6 +125,7 @@ model ClientProfile {
   vegetableDisinfections     VegetableDisinfection[]
   goodsForSale               GoodsForSale[]
   sellers                    Seller[]
+  hasPosMode                 Boolean           @default(false)
 
   holdedApiKey               String?
   holdedTax                  Float?            @default(10)
@@ -363,6 +364,10 @@ model CombinedSale {
   notes           String?
   isDraft         Boolean           @default(false)
 
+  sellerId        Int?
+  seller          Seller?           @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  sellerName      String?
+
   customerId      Int?
   customer        Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
@@ -381,6 +386,7 @@ model CombinedSale {
 
   @@index([clientProfileId])
   @@index([customerId])
+  @@index([sellerId])
 }
 
 model ElaborationIngredient {
@@ -749,6 +755,8 @@ model Seller {
   name            String
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  combinedSales   CombinedSale[]
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

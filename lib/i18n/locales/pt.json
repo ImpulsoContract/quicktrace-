@@ -1834,5 +1834,22 @@
     "delete_confirm": "Tem a certeza de que deseja eliminar este vendedor?",
     "empty": "Nenhum vendedor registado ainda.",
     "empty_hint": "Adicione o primeiro vendedor com o campo acima."
+  },
+  "pos": {
+    "enter_btn": "Modo TPV",
+    "exit_btn": "Modo gestão",
+    "seller_anonymous": "Anônimo",
+    "seller_management": "Gestão",
+    "auto_saving": "Salvando...",
+    "auto_saved": "Autosalvo",
+    "draft_loaded": "Rascunho carregado",
+    "finalize_btn": "Cobrar / Finalizar venda",
+    "discard_btn": "Descartar venda",
+    "discard_confirm": "Tem a certeza de que deseja descartar a venda atual? O rascunho em curso será eliminado.",
+    "sale_completed": "Venda registada com sucesso!",
+    "seller_label": "Vendedor",
+    "tab_ticket": "Venda atual",
+    "tab_history": "Histórico de vendas",
+    "col_seller": "Vendedor"
   }
 }

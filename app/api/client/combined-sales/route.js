@@ -24,12 +24,39 @@ export async function GET(req) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
     }
 
-    const where = (session.user.role === "ADMIN" && !profileId) ? {} : { clientProfileId: profileId };
+    const { searchParams } = new URL(req.url);
+    const isDraftParam = searchParams.get("isDraft");
+    const sellerIdParam = searchParams.get("sellerId");
+    const sellerNameParam = searchParams.get("sellerName");
+
+    let draftFilter = {};
+    if (isDraftParam === "true") draftFilter.isDraft = true;
+    else if (isDraftParam === "false") draftFilter.isDraft = false;
+
+    let sellerFilter = {};
+    if (sellerIdParam !== null && sellerIdParam !== undefined) {
+      if (sellerIdParam === "null" || sellerIdParam === "anonymous") {
+        sellerFilter.sellerId = null;
+      } else {
+        const parsedSId = parseInt(sellerIdParam);
+        if (!isNaN(parsedSId)) sellerFilter.sellerId = parsedSId;
+      }
+    }
+    if (sellerNameParam) {
+      sellerFilter.sellerName = sellerNameParam;
+    }
+
+    const where = {
+      ...((session.user.role === "ADMIN" && !profileId) ? {} : { clientProfileId: profileId }),
+      ...draftFilter,
+      ...sellerFilter
+    };
 
     const combinedSales = await prisma.combinedSale.findMany({
       where,
       include: {
         customer: true,
+        seller: true,
         sales: {
           include: {
             elaboration: {
@@ -77,7 +104,7 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { customerId, date, notes, items, isDraft } = body;
+    const { customerId, date, notes, items, isDraft, sellerId, sellerName } = body;
     const isDraftSale = Boolean(isDraft);
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -231,6 +258,23 @@ export async function POST(req) {
       }
     }
 
+    let finalSellerId = null;
+    let finalSellerName = sellerName || "Gestión";
+
+    if (sellerId) {
+      const parsedSId = parseInt(sellerId);
+      if (!isNaN(parsedSId)) {
+        const seller = await prisma.seller.findUnique({ where: { id: parsedSId } });
+        if (seller && (session.user.role === "ADMIN" || seller.clientProfileId === profileId)) {
+          finalSellerId = seller.id;
+          finalSellerName = seller.name;
+        }
+      }
+    } else if (sellerName === "Anónimo" || sellerName === "Anonimo") {
+      finalSellerId = null;
+      finalSellerName = "Anónimo";
+    }
+
     const saleDate = date ? new Date(date) : new Date();
 
     // Execute in transaction
@@ -239,6 +283,8 @@ export async function POST(req) {
         data: {
           clientProfileId: profileId,
           customerId: validCustomerId,
+          sellerId: finalSellerId,
+          sellerName: finalSellerName,
           date: saleDate,
           totalPrice: Math.round(totalPrice * 100) / 100,
           notes: notes ? notes.trim() : null,
@@ -319,6 +365,7 @@ export async function POST(req) {
         where: { id: combinedSale.id },
         include: {
           customer: true,
+          seller: true,
           sales: {
             include: {
               elaboration: {

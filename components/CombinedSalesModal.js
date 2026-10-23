@@ -418,6 +418,8 @@ export default function CombinedSalesModal({
     try {
       const payload = {
         customerId: formCustomer ? parseInt(formCustomer) : null,
+        sellerId: null,
+        sellerName: "Gestión",
         date: formDate,
         notes: formNotes,
         isDraft: saveAsDraft,
@@ -952,6 +954,21 @@ export default function CombinedSalesModal({
                                 {t('combined_sales.badge_confirmed') || "Confirmada"}
                               </span>
                             )}
+                            <span style={{ 
+                              padding: '0.2rem 0.55rem', 
+                              background: '#f1f5f9', 
+                              color: '#475569', 
+                              border: '1px solid #e2e8f0', 
+                              borderRadius: '1rem', 
+                              fontSize: '0.72rem', 
+                              fontWeight: '700', 
+                              display: 'inline-flex', 
+                              alignItems: 'center', 
+                              gap: '0.25rem' 
+                            }}>
+                              <Users size={11} />
+                              {cs.sellerName || cs.seller?.name || "Gestión"}
+                            </span>
                           </div>
 
                           <div>

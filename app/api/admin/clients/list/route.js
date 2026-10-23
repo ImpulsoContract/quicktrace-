@@ -42,6 +42,7 @@ export async function GET() {
             fbclid: true,
             plan: true,
             hasIaGoods: true,
+            hasPosMode: true,
             apiKey: true,
             apiKeyCreatedAt: true,
             _count: {

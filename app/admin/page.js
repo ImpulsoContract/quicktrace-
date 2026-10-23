@@ -10,7 +10,7 @@ import {
   X, AlertCircle, Loader2, LogOut,
   Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu, ExternalLink,
   Key, Eye, EyeOff, Copy, Check,
-  Table, Download, BarChart3
+  Table, Download, BarChart3, Store
 } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 
@@ -920,6 +920,11 @@ export default function AdminDashboard() {
               {t('admin.actions.title')}: {activeMenu.clientProfile?.razonSocial}
             </div>
             <MenuBtn icon={<ShieldCheck size={16} />} text="Entrar como cliente" onClick={() => handleImpersonate(activeMenu.id)} />
+            <MenuBtn 
+              icon={<Store size={16} />} 
+              text={activeMenu.clientProfile?.hasPosMode ? "Desactivar modo TPV" : "Activar modo TPV"} 
+              onClick={() => handleTogglePosMode(activeMenu)} 
+            />
             <MenuBtn icon={<Edit size={16} />} text={t('admin.actions.edit')} onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile, personName: activeMenu.clientProfile?.personName || activeMenu.name || "" } }); setActiveMenu(null); }} />
             <MenuBtn
               icon={<Plus size={16} />}

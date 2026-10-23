@@ -29,6 +29,7 @@ export async function GET(req, { params }) {
       where: { id },
       include: {
         customer: true,
+        seller: true,
         sales: {
           include: {
             elaboration: {
@@ -100,7 +101,7 @@ export async function PUT(req, { params }) {
     }
 
     const body = await req.json();
-    const { customerId, date, notes, items, isDraft } = body;
+    const { customerId, date, notes, items, isDraft, sellerId, sellerName } = body;
     const isDraftSale = Boolean(isDraft);
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -264,6 +265,27 @@ export async function PUT(req, { params }) {
       }
     }
 
+    let finalSellerId = undefined;
+    let finalSellerName = undefined;
+
+    if (sellerId !== undefined) {
+      if (!sellerId || sellerId === 'anonymous') {
+        finalSellerId = null;
+        finalSellerName = sellerName || "Anónimo";
+      } else {
+        const parsedSId = parseInt(sellerId);
+        if (!isNaN(parsedSId)) {
+          const seller = await prisma.seller.findUnique({ where: { id: parsedSId } });
+          if (seller) {
+            finalSellerId = seller.id;
+            finalSellerName = seller.name;
+          }
+        }
+      }
+    } else if (sellerName !== undefined) {
+      finalSellerName = sellerName;
+    }
+
     const saleDate = date ? new Date(date) : new Date();
 
     // Execute in transaction
@@ -301,6 +323,8 @@ export async function PUT(req, { params }) {
         where: { id },
         data: {
           customerId: validCustomerId,
+          ...(finalSellerId !== undefined ? { sellerId: finalSellerId } : {}),
+          ...(finalSellerName !== undefined ? { sellerName: finalSellerName } : {}),
           date: saleDate,
           totalPrice: Math.round(totalPrice * 100) / 100,
           notes: notes ? notes.trim() : null,
@@ -383,6 +407,7 @@ export async function PUT(req, { params }) {
         where: { id },
         include: {
           customer: true,
+          seller: true,
           sales: {
             include: {
               elaboration: {

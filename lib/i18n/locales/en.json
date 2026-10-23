@@ -1840,5 +1840,22 @@
     "delete_confirm": "Are you sure you want to delete this salesperson?",
     "empty": "No salespeople registered yet.",
     "empty_hint": "Add the first salesperson using the field above."
+  },
+  "pos": {
+    "enter_btn": "POS Mode",
+    "exit_btn": "Management Mode",
+    "seller_anonymous": "Anonymous",
+    "seller_management": "Management",
+    "auto_saving": "Saving...",
+    "auto_saved": "Auto-saved",
+    "draft_loaded": "Draft loaded",
+    "finalize_btn": "Charge / Finalize sale",
+    "discard_btn": "Discard sale",
+    "discard_confirm": "Are you sure you want to discard the current sale? The in-progress draft will be deleted.",
+    "sale_completed": "Sale registered successfully!",
+    "seller_label": "Salesperson",
+    "tab_ticket": "Current sale",
+    "tab_history": "Sales history",
+    "col_seller": "Salesperson"
   }
 }

@@ -16,7 +16,8 @@ import {
   Salad, FileSpreadsheet, MessageCircle, Send,
   GitMerge,
   ShoppingCart,
-  Tag
+  Tag,
+  Store
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -30,6 +31,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CustomerImportModal from "@/components/CustomerImportModal";
 import MergeIngredientsModal from "@/components/MergeIngredientsModal";
 import CombinedSalesModal from "@/components/CombinedSalesModal";
+import PosDisplay from "@/components/PosDisplay";
 import GoodsForSaleModal from "@/components/GoodsForSaleModal";
 import RelateGoodsReceiptModal from "@/components/RelateGoodsReceiptModal";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
@@ -453,6 +455,7 @@ export default function ClientDashboard() {
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [isCombinedSalesModalOpen, setIsCombinedSalesModalOpen] = useState(false);
   const [combinedSaleToEditId, setCombinedSaleToEditId] = useState(null);
+  const [isPosMode, setIsPosMode] = useState(false);
   const [returnToElaborationFromCombined, setReturnToElaborationFromCombined] = useState(null);
   const [customerForSalesModal, setCustomerForSalesModal] = useState(null);
   const [returnToCustomerSales, setReturnToCustomerSales] = useState(null);
@@ -5421,10 +5424,23 @@ export default function ClientDashboard() {
     );
   }
 
+  if (isPosMode && profile?.hasPosMode) {
+    return (
+      <PosDisplay
+        profile={profile}
+        customers={customers}
+        onExitPos={() => setIsPosMode(false)}
+        onSaleCreated={() => {
+          fetchElaborations();
+        }}
+      />
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
       {/* Mobile Top Header */}
-      <div className="mobile-header" style={{ padding: '1rem 1.5rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
+      <div className="mobile-header" style={{ padding: '0.75rem 1.25rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ position: 'relative', width: '28px', height: '28px' }}>
             <img src="/images/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -5433,12 +5449,35 @@ export default function ClientDashboard() {
             QuickTrace
           </h1>
         </div>
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          style={{ background: 'transparent', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--text-main)' }}
-        >
-          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {profile?.hasPosMode && (
+            <button 
+              onClick={() => setIsPosMode(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.45rem 0.75rem',
+                background: 'linear-gradient(135deg, #426216 0%, #2d450e 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontWeight: '700',
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              <Store size={15} />
+              <span>{t('pos.enter_btn') || "Modo TPV"}</span>
+            </button>
+          )}
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            style={{ background: 'transparent', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--text-main)' }}
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar / Topbar combined for responsive */}
@@ -5654,15 +5693,41 @@ export default function ClientDashboard() {
         {/* Main Content */}
         <main ref={mainContentRef} style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', minWidth: 0, transition: 'padding 0.3s ease' }}>
           
-          {/* Desktop Toggle Button */}
-          <div className="desktop-only" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              style={{ background: 'white', border: '1px solid var(--border)', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-            >
-              <Menu size={20} />
-            </button>
-            {!isSidebarOpen && <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>QuickTrace</h2>}
+          {/* Desktop Toggle Button & Top Right Actions */}
+          <div className="desktop-only" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <button 
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                style={{ background: 'white', border: '1px solid var(--border)', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+              >
+                <Menu size={20} />
+              </button>
+              {!isSidebarOpen && <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>QuickTrace</h2>}
+            </div>
+
+            {profile?.hasPosMode && (
+              <button 
+                onClick={() => setIsPosMode(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.55rem',
+                  padding: '0.6rem 1.25rem',
+                  background: 'linear-gradient(135deg, #426216 0%, #2d450e 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.65rem',
+                  fontWeight: '800',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 3px 10px rgba(66, 98, 22, 0.25)',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <Store size={18} />
+                <span>{t('pos.enter_btn') || "Modo TPV"}</span>
+              </button>
+            )}
           </div>
 
           {selectedRecipe ? (

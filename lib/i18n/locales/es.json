@@ -1840,5 +1840,22 @@
     "delete_confirm": "¿Estás seguro de que deseas eliminar a este vendedor?",
     "empty": "No hay vendedores registrados todavía.",
     "empty_hint": "Añade el primer vendedor con el campo superior."
+  },
+  "pos": {
+    "enter_btn": "Modo TPV",
+    "exit_btn": "Modo gestión",
+    "seller_anonymous": "Anónimo",
+    "seller_management": "Gestión",
+    "auto_saving": "Guardando...",
+    "auto_saved": "Autoguardado",
+    "draft_loaded": "Borrador cargado",
+    "finalize_btn": "Cobrar / Finalizar venta",
+    "discard_btn": "Descartar venta",
+    "discard_confirm": "¿Estás seguro de que deseas descartar la venta actual? Se eliminará el borrador en curso.",
+    "sale_completed": "¡Venta registrada con éxito!",
+    "seller_label": "Vendedor",
+    "tab_ticket": "Venta actual",
+    "tab_history": "Historial de ventas",
+    "col_seller": "Vendedor"
   }
 }

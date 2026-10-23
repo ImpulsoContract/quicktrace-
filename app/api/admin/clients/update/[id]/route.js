@@ -19,7 +19,8 @@ export async function PATCH(req, { params }) {
       email, name, razonSocial, nif, phone, urlClientify,
       planId, personName, address, postalCode, city, province, country,
       stripeSubscriptionId, stripeCustomerId, stripeCurrentPeriodEnd,
-      hasIaGoods
+      hasIaGoods,
+      hasPosMode
     } = body;
 
     const userId = parseInt(id);
@@ -48,7 +49,8 @@ export async function PATCH(req, { params }) {
         stripeSubscriptionId: stripeSubscriptionId || null,
         stripeCustomerId: stripeCustomerId || null,
         stripeCurrentPeriodEnd: stripeCurrentPeriodEnd || null,
-        hasIaGoods: hasIaGoods !== undefined ? Boolean(hasIaGoods) : undefined
+        hasIaGoods: hasIaGoods !== undefined ? Boolean(hasIaGoods) : undefined,
+        hasPosMode: hasPosMode !== undefined ? Boolean(hasPosMode) : undefined
       };
 
       await tx.clientProfile.update({
