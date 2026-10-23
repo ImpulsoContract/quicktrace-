@@ -55,7 +55,8 @@
     "notes_corrective": "Notes ou mesures correctives",
     "days": "jours",
     "page": "Page",
-    "not_applicable": "N/A"
+    "not_applicable": "N/A",
+    "saved": "Enregistré"
   },
   "profile": {
     "title": "Profil",
@@ -579,7 +580,22 @@
     "chamber_range_hint_min": "Valeurs habituelles à partir de {min}ºC",
     "chamber_range_hint_max": "Valeurs habituelles jusqu'à {max}ºC",
     "chamber_normal_range": "Plage habituelle",
-    "chamber_email_alert_badge": "Alerte e-mail active"
+    "chamber_email_alert_badge": "Alerte e-mail active",
+    "tab_ingredients": "Ingrédients",
+    "tab_goods_for_sale": "Marchandises en vente",
+    "gfs_costs_desc": "Consultez les prix de revient de vos marchandises en vente et modifiez le prix de revient de chaque lot dans son entrée de marchandise.",
+    "gfs_cost_col_name": "Nom de la marchandise",
+    "gfs_cost_col_unit": "Unité de mesure",
+    "gfs_cost_col_unit_price": "Prix de revient unitaire",
+    "gfs_cost_col_manage_lots": "Voir/modifier le prix de revient de chaque lot",
+    "gfs_cost_btn_manage_lots": "Voir / modifier lots",
+    "gfs_cost_btn_hide_lots": "Masquer les lots",
+    "gfs_cost_lots_title": "Entrées de marchandises et prix de revient par lot",
+    "gfs_cost_col_lot_price": "Prix de revient",
+    "gfs_cost_no_receipts": "Aucune entrée de marchandise enregistrée pour cette marchandise en vente.",
+    "gfs_cost_search_placeholder": "Rechercher une marchandise en vente...",
+    "gfs_cost_updated_success": "Prix de revient du lot mis à jour avec succès",
+    "no_goods_for_sale": "Aucune marchandise en vente enregistrée. Créez des marchandises en vente pour commencer."
   },
   "workers": {
     "title": "Gestion des Travailleurs",

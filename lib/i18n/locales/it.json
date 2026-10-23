@@ -55,7 +55,8 @@
     "notes_corrective": "Note o azioni correttive",
     "days": "giorni",
     "page": "Pagina",
-    "not_applicable": "N/D"
+    "not_applicable": "N/D",
+    "saved": "Salvato"
   },
   "profile": {
     "title": "Profilo",
@@ -579,7 +580,22 @@
     "chamber_range_hint_min": "Valori abituali a partire da {min}ºC",
     "chamber_range_hint_max": "Valori abituali fino a {max}ºC",
     "chamber_normal_range": "Intervallo abituale",
-    "chamber_email_alert_badge": "Avviso e-mail attivo"
+    "chamber_email_alert_badge": "Avviso e-mail attivo",
+    "tab_ingredients": "Ingredienti",
+    "tab_goods_for_sale": "Merci in vendita",
+    "gfs_costs_desc": "Consulta i prezzi di costo delle tue merci in vendita e modifica il prezzo di costo di ciascun lotto nella sua entrata merci.",
+    "gfs_cost_col_name": "Nome della merce",
+    "gfs_cost_col_unit": "Unità di misura",
+    "gfs_cost_col_unit_price": "Prezzo di costo per unità",
+    "gfs_cost_col_manage_lots": "Visualizza/modifica il prezzo di costo di ciascun lotto",
+    "gfs_cost_btn_manage_lots": "Vedi / modifica lotti",
+    "gfs_cost_btn_hide_lots": "Nascondi lotti",
+    "gfs_cost_lots_title": "Entrate merci e prezzo di costo per lotto",
+    "gfs_cost_col_lot_price": "Prezzo di costo",
+    "gfs_cost_no_receipts": "Nessuna entrata merci registrata per questa merce in vendita.",
+    "gfs_cost_search_placeholder": "Cerca merce in vendita...",
+    "gfs_cost_updated_success": "Prezzo di costo del lotto aggiornato con successo",
+    "no_goods_for_sale": "Nessuna merce in vendita registrata. Crea merci in vendita per iniziare."
   },
   "workers": {
     "title": "Gestione dei Lavoratori",

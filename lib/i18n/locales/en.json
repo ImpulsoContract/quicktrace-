@@ -55,7 +55,8 @@
     "notes_corrective": "Notes or corrective actions",
     "days": "days",
     "page": "Page",
-    "not_applicable": "N/A"
+    "not_applicable": "N/A",
+    "saved": "Saved"
   },
   "profile": {
     "title": "Profile",
@@ -583,7 +584,22 @@
     "chamber_range_hint_min": "Normal values from {min}ºC",
     "chamber_range_hint_max": "Normal values up to {max}ºC",
     "chamber_normal_range": "Normal range",
-    "chamber_email_alert_badge": "Email alert active"
+    "chamber_email_alert_badge": "Email alert active",
+    "tab_ingredients": "Ingredients",
+    "tab_goods_for_sale": "Goods for sale",
+    "gfs_costs_desc": "Check the cost prices of your goods for sale and modify the cost price of each lot in its goods receipt.",
+    "gfs_cost_col_name": "Goods name",
+    "gfs_cost_col_unit": "Unit of measurement",
+    "gfs_cost_col_unit_price": "Cost price per unit",
+    "gfs_cost_col_manage_lots": "View/modify cost price of each lot",
+    "gfs_cost_btn_manage_lots": "View / modify lots",
+    "gfs_cost_btn_hide_lots": "Hide lots",
+    "gfs_cost_lots_title": "Goods receipts and cost price per lot",
+    "gfs_cost_col_lot_price": "Cost price",
+    "gfs_cost_no_receipts": "No goods receipts recorded for this goods for sale.",
+    "gfs_cost_search_placeholder": "Search goods for sale...",
+    "gfs_cost_updated_success": "Lot cost price updated successfully",
+    "no_goods_for_sale": "No goods for sale recorded. Create goods for sale to get started."
   },
   "workers": {
     "title": "Worker Management",

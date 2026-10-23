@@ -44,12 +44,17 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: "Mercancía en venta no encontrada" }, { status: 404 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const inStockOnly = searchParams.get("inStockOnly") === "true";
+
+    const where = {
+      goodsForSaleId: goodsForSaleId,
+      clientProfileId: goodsForSale.clientProfileId,
+      ...(inStockOnly ? { goodsForSaleQuantity: { gt: 0 } } : {})
+    };
+
     const receipts = await prisma.goodsReceipt.findMany({
-      where: {
-        goodsForSaleId: goodsForSaleId,
-        clientProfileId: goodsForSale.clientProfileId,
-        goodsForSaleQuantity: { gt: 0 }
-      },
+      where,
       select: {
         id: true,
         lote: true,
@@ -68,7 +73,8 @@ export async function GET(req, { params }) {
         id: goodsForSale.id,
         name: goodsForSale.name,
         unit: goodsForSale.unit,
-        stock: goodsForSale.stock
+        stock: goodsForSale.stock,
+        costPrice: goodsForSale.costPrice
       },
       lots: receipts
     });
@@ -122,17 +128,21 @@ export async function PUT(req, { params }) {
     if (Array.isArray(body.updates)) {
       updates = body.updates;
     } else if (body.receiptId !== undefined) {
-      updates = [{ receiptId: body.receiptId, newQuantity: body.newQuantity }];
+      updates = [{
+        receiptId: body.receiptId,
+        newQuantity: body.newQuantity,
+        newCostPrice: body.newCostPrice
+      }];
     } else {
       return NextResponse.json({ error: "Datos de actualización inválidos" }, { status: 400 });
     }
 
+    let hasQuantityUpdate = false;
+    let hasCostPriceUpdate = false;
+
     for (const u of updates) {
       const receiptId = parseInt(u.receiptId, 10);
-      const newQty = parseFloat(u.newQuantity?.toString().replace(',', '.'));
-      if (isNaN(receiptId) || isNaN(newQty) || newQty < 0) {
-        continue;
-      }
+      if (isNaN(receiptId)) continue;
 
       // Verify that this receipt belongs to this goods for sale and client
       const receipt = await prisma.goodsReceipt.findFirst({
@@ -143,35 +153,79 @@ export async function PUT(req, { params }) {
         }
       });
 
-      if (receipt) {
-        const roundedQty = Math.round(newQty * 10000) / 10000;
+      if (!receipt) continue;
+
+      const updateData = {};
+
+      if (u.newQuantity !== undefined && u.newQuantity !== null && u.newQuantity !== "") {
+        const parsedQty = parseFloat(u.newQuantity?.toString().replace(',', '.'));
+        if (!isNaN(parsedQty) && parsedQty >= 0) {
+          updateData.goodsForSaleQuantity = Math.round(parsedQty * 10000) / 10000;
+          hasQuantityUpdate = true;
+        }
+      }
+
+      if (u.newCostPrice !== undefined) {
+        if (u.newCostPrice === null || u.newCostPrice === "") {
+          updateData.goodsForSaleCostPrice = null;
+          hasCostPriceUpdate = true;
+        } else {
+          const parsedCost = parseFloat(u.newCostPrice?.toString().replace(',', '.'));
+          if (!isNaN(parsedCost) && parsedCost >= 0) {
+            updateData.goodsForSaleCostPrice = Math.round(parsedCost * 100) / 100;
+            hasCostPriceUpdate = true;
+          }
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
         await prisma.goodsReceipt.update({
           where: { id: receiptId },
-          data: { goodsForSaleQuantity: roundedQty }
+          data: updateData
         });
       }
     }
 
-    // Recalculate total stock for this GoodsForSale
-    const allReceipts = await prisma.goodsReceipt.findMany({
-      where: {
-        goodsForSaleId: goodsForSaleId,
-        clientProfileId: goodsForSale.clientProfileId
-      },
-      select: { goodsForSaleQuantity: true }
-    });
+    const goodsForSaleUpdates = {};
 
-    const totalStock = allReceipts.reduce((sum, r) => sum + (parseFloat(r.goodsForSaleQuantity) || 0), 0);
-    const roundedTotalStock = Math.round(totalStock * 10000) / 10000;
+    // Recalculate total stock if quantity was updated
+    if (hasQuantityUpdate) {
+      const allReceipts = await prisma.goodsReceipt.findMany({
+        where: {
+          goodsForSaleId: goodsForSaleId,
+          clientProfileId: goodsForSale.clientProfileId
+        },
+        select: { goodsForSaleQuantity: true }
+      });
+      const totalStock = allReceipts.reduce((sum, r) => sum + (parseFloat(r.goodsForSaleQuantity) || 0), 0);
+      goodsForSaleUpdates.stock = Math.round(totalStock * 10000) / 10000;
+    }
 
-    const updatedGoodsForSale = await prisma.goodsForSale.update({
-      where: { id: goodsForSaleId },
-      data: { stock: roundedTotalStock }
-    });
+    // Update costPrice on GoodsForSale from the most recent receipt with a cost price
+    if (hasCostPriceUpdate) {
+      const latestReceiptWithCost = await prisma.goodsReceipt.findFirst({
+        where: {
+          goodsForSaleId: goodsForSaleId,
+          clientProfileId: goodsForSale.clientProfileId,
+          goodsForSaleCostPrice: { not: null }
+        },
+        orderBy: { date: "desc" }
+      });
+      goodsForSaleUpdates.costPrice = latestReceiptWithCost ? latestReceiptWithCost.goodsForSaleCostPrice : null;
+    }
+
+    let updatedGoodsForSale = goodsForSale;
+    if (Object.keys(goodsForSaleUpdates).length > 0) {
+      updatedGoodsForSale = await prisma.goodsForSale.update({
+        where: { id: goodsForSaleId },
+        data: goodsForSaleUpdates
+      });
+    }
 
     return NextResponse.json({
       success: true,
-      newStock: roundedTotalStock,
+      newStock: updatedGoodsForSale.stock,
+      newCostPrice: updatedGoodsForSale.costPrice,
       goodsForSale: updatedGoodsForSale
     });
   } catch (error) {

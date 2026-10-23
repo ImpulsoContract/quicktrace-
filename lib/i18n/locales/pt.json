@@ -55,7 +55,8 @@
     "notes_corrective": "Notas ou medidas corretivas",
     "days": "dias",
     "page": "Página",
-    "not_applicable": "N/A"
+    "not_applicable": "N/A",
+    "saved": "Guardado"
   },
   "profile": {
     "title": "Perfil",
@@ -579,7 +580,22 @@
     "chamber_range_hint_min": "Valores habituais a partir de {min}ºC",
     "chamber_range_hint_max": "Valores habituais até {max}ºC",
     "chamber_normal_range": "Intervalo habitual",
-    "chamber_email_alert_badge": "Alerta de e-mail ativo"
+    "chamber_email_alert_badge": "Alerta de e-mail ativo",
+    "tab_ingredients": "Ingredientes",
+    "tab_goods_for_sale": "Mercadorias para venda",
+    "gfs_costs_desc": "Consulte os preços de custo das suas mercadorias para venda e modifique o preço de custo de cada lote na sua entrada de mercadoria.",
+    "gfs_cost_col_name": "Nome da mercadoria",
+    "gfs_cost_col_unit": "Unidade de medida",
+    "gfs_cost_col_unit_price": "Preço de custo por unidade",
+    "gfs_cost_col_manage_lots": "Ver/modificar o preço de custo de cada lote",
+    "gfs_cost_btn_manage_lots": "Ver / modificar lotes",
+    "gfs_cost_btn_hide_lots": "Ocultar lotes",
+    "gfs_cost_lots_title": "Entradas de mercadorias e preço de custo por lote",
+    "gfs_cost_col_lot_price": "Preço de custo",
+    "gfs_cost_no_receipts": "Não há entradas de mercadorias registadas para esta mercadoria para venda.",
+    "gfs_cost_search_placeholder": "Pesquisar mercadoria para venda...",
+    "gfs_cost_updated_success": "Preço de custo do lote atualizado com sucesso",
+    "no_goods_for_sale": "Não há mercadorias para venda registadas. Crie mercadorias para venda para começar."
   },
   "workers": {
     "title": "Gestão de Trabalhadores",
