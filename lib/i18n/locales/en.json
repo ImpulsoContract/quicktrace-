@@ -1701,5 +1701,30 @@
     "cancel_edit": "Cancel edit",
     "success_updated": "Combined sale updated successfully.",
     "edit_combined_sale_title": "Edit Combined Sale #{id}"
+  },
+  "goods_for_sale": {
+    "btn_label": "Goods for sale",
+    "modal_title": "Goods for sale",
+    "modal_subtitle": "Manage the catalog of goods intended for sale with their unit price",
+    "add_title": "New good for sale",
+    "edit_title": "Edit good for sale",
+    "col_name": "Good / Product name",
+    "col_unit": "Unit of measurement",
+    "col_sale_price": "Sale price per unit",
+    "name_placeholder": "E.g.: Extra Virgin Olive Oil 5L",
+    "unit_placeholder": "E.g.: kg, unit, box...",
+    "save_btn": "Add to sale",
+    "update_btn": "Save changes",
+    "cancel_edit": "Cancel",
+    "list_title": "List of goods for sale",
+    "empty_msg": "You don't have any goods for sale registered yet.",
+    "empty_hint": "Use the form above to add your first good with its unit price.",
+    "no_results": "No goods found matching that search.",
+    "delete_confirm": "Are you sure you want to delete the good for sale '{name}'?",
+    "name_required": "Please enter the name of the good.",
+    "unit_required": "Please enter the unit of measurement.",
+    "price_invalid": "Please enter a valid sale price greater than or equal to 0.",
+    "success_created": "Good for sale added successfully.",
+    "success_updated": "Good for sale updated successfully."
   }
 }

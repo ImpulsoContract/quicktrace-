@@ -1696,5 +1696,30 @@
     "cancel_edit": "Annulla modifica",
     "success_updated": "Vendita combinata aggiornata con successo.",
     "edit_combined_sale_title": "Modifica vendita combinata #{id}"
+  },
+  "goods_for_sale": {
+    "btn_label": "Merci in vendita",
+    "modal_title": "Merci in vendita",
+    "modal_subtitle": "Gestisci il catalogo delle merci destinate alla vendita con il relativo prezzo unitario",
+    "add_title": "Nuova merce in vendita",
+    "edit_title": "Modifica merce in vendita",
+    "col_name": "Nome della merce",
+    "col_unit": "Unità di misura",
+    "col_sale_price": "Prezzo di vendita per unità",
+    "name_placeholder": "Es: Olio d'oliva 5L",
+    "unit_placeholder": "Es: kg, unità, scatola...",
+    "save_btn": "Aggiungi alla vendita",
+    "update_btn": "Salva modifiche",
+    "cancel_edit": "Annulla",
+    "list_title": "Elenco merci in vendita",
+    "empty_msg": "Non hai ancora merci in vendita registrate.",
+    "empty_hint": "Utilizza il modulo in alto per aggiungere la tua prima merce con il suo prezzo unitario.",
+    "no_results": "Nessuna merce trovata con questi criteri.",
+    "delete_confirm": "Sei sicuro di voler eliminare la merce in vendita '{name}'?",
+    "name_required": "Inserisci il nome della merce.",
+    "unit_required": "Inserisci l'unità di misura.",
+    "price_invalid": "Inserisci un prezzo di vendita valido maggiore o uguale a 0.",
+    "success_created": "Merce in vendita aggiunta con successo.",
+    "success_updated": "Merce in vendita aggiornata con successo."
   }
 }

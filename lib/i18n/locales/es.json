@@ -1701,5 +1701,30 @@
     "cancel_edit": "Cancelar edición",
     "success_updated": "Venta combinada actualizada correctamente.",
     "edit_combined_sale_title": "Editar Venta Combinada #{id}"
+  },
+  "goods_for_sale": {
+    "btn_label": "Mercancías en venta",
+    "modal_title": "Mercancías en venta",
+    "modal_subtitle": "Gestiona el catálogo de mercancías destinadas a la venta con su precio unitario",
+    "add_title": "Nueva mercancía en venta",
+    "edit_title": "Editar mercancía en venta",
+    "col_name": "Nombre de la mercancía",
+    "col_unit": "Unidad de medida",
+    "col_sale_price": "Precio de venta por unidad",
+    "name_placeholder": "Ej: Aceite de Oliva 5L",
+    "unit_placeholder": "Ej: kg, ud, caja...",
+    "save_btn": "Añadir a la venta",
+    "update_btn": "Guardar cambios",
+    "cancel_edit": "Cancelar",
+    "list_title": "Listado de mercancías en venta",
+    "empty_msg": "No tienes mercancías en venta registradas todavía.",
+    "empty_hint": "Utiliza el formulario superior para añadir tu primera mercancía con su precio por unidad.",
+    "no_results": "No se encontraron mercancías con ese criterio.",
+    "delete_confirm": "¿Estás seguro de que deseas eliminar la mercancía en venta '{name}'?",
+    "name_required": "Por favor, introduce el nombre de la mercancía.",
+    "unit_required": "Por favor, introduce la unidad de medida.",
+    "price_invalid": "Por favor, introduce un precio de venta válido mayor o igual a 0.",
+    "success_created": "Mercancía en venta añadida correctamente.",
+    "success_updated": "Mercancía en venta actualizada correctamente."
   }
 }

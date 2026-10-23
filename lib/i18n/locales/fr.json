@@ -1696,5 +1696,30 @@
     "cancel_edit": "Annuler la modification",
     "success_updated": "Vente combinée mise à jour avec succès.",
     "edit_combined_sale_title": "Modifier la vente combinée #{id}"
+  },
+  "goods_for_sale": {
+    "btn_label": "Marchandises en vente",
+    "modal_title": "Marchandises en vente",
+    "modal_subtitle": "Gérez le catalogue des marchandises destinées à la vente avec leur prix unitaire",
+    "add_title": "Nouvelle marchandise en vente",
+    "edit_title": "Modifier la marchandise en vente",
+    "col_name": "Nom de la marchandise",
+    "col_unit": "Unité de mesure",
+    "col_sale_price": "Prix de vente par unité",
+    "name_placeholder": "Ex: Huile d'olive 5L",
+    "unit_placeholder": "Ex: kg, unité, boîte...",
+    "save_btn": "Ajouter à la vente",
+    "update_btn": "Enregistrer les modifications",
+    "cancel_edit": "Annuler",
+    "list_title": "Liste des marchandises en vente",
+    "empty_msg": "Vous n'avez pas encore de marchandises en vente enregistrées.",
+    "empty_hint": "Utilisez le formulaire ci-dessus pour ajouter votre première marchandise avec son prix unitaire.",
+    "no_results": "Aucune marchandise trouvée correspondant à ce critère.",
+    "delete_confirm": "Êtes-vous sûr de vouloir supprimer la marchandise en vente '{name}' ?",
+    "name_required": "Veuillez saisir le nom de la marchandise.",
+    "unit_required": "Veuillez saisir l'unité de mesure.",
+    "price_invalid": "Veuillez saisir un prix de vente valide supérieur ou égal à 0.",
+    "success_created": "Marchandise en vente ajoutée avec succès.",
+    "success_updated": "Marchandise en vente mise à jour avec succès."
   }
 }

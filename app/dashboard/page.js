@@ -15,7 +15,8 @@ import {
   Key, Copy, EyeOff, RefreshCw, BookOpen, Scissors, Image as ImageIcon, Upload, Layers, Ban, Download,
   Salad, FileSpreadsheet, MessageCircle, Send,
   GitMerge,
-  ShoppingCart
+  ShoppingCart,
+  Tag
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -29,6 +30,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CustomerImportModal from "@/components/CustomerImportModal";
 import MergeIngredientsModal from "@/components/MergeIngredientsModal";
 import CombinedSalesModal from "@/components/CombinedSalesModal";
+import GoodsForSaleModal from "@/components/GoodsForSaleModal";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -698,6 +700,7 @@ export default function ClientDashboard() {
   const [isWaterExportModalOpen, setIsWaterExportModalOpen] = useState(false);
   const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState(false);
   const [isIngredientCostsModalOpen, setIsIngredientCostsModalOpen] = useState(false);
+  const [isGoodsForSaleModalOpen, setIsGoodsForSaleModalOpen] = useState(false);
   const [selectedElaborationForCosts, setSelectedElaborationForCosts] = useState(null);
   const [costModalSingleIngredient, setCostModalSingleIngredient] = useState(null);
   const [isManageMerchantTypesModalOpen, setIsManageMerchantTypesModalOpen] = useState(false);
@@ -8560,6 +8563,15 @@ export default function ClientDashboard() {
                         <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
                       </button>
                     )}
+                    {session?.user?.role !== "WORKER" && (
+                      <button 
+                        onClick={() => setIsGoodsForSaleModalOpen(true)}
+                        className="btn-secondary"
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                      >
+                        <Tag size={18} /> {t('goods_for_sale.btn_label') || "Mercancías en venta"}
+                      </button>
+                    )}
                     <button 
                       onClick={() => setIsInventoryModalOpen(true)}
                       className="btn-secondary"
@@ -10776,6 +10788,15 @@ export default function ClientDashboard() {
             if (window.innerWidth <= 1024) setIsSidebarOpen(false);
             scrollToTop();
           }}
+        />
+      )}
+
+      {isGoodsForSaleModalOpen && (
+        <GoodsForSaleModal
+          isOpen={isGoodsForSaleModalOpen}
+          onClose={() => setIsGoodsForSaleModalOpen(false)}
+          profile={profile}
+          goodsReceipts={goodsReceipts}
         />
       )}
 
