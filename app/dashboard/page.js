@@ -14541,14 +14541,17 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               </div>
             </div>
             <div className="form-group">
-              <label className="label">{t('modals.ing_amount')}</label>
+              <label className="label">{t('goods_receipt_form.quantity') || t('modals.ing_amount') || "Cantidad"}</label>
               <input 
                 type="text" 
                 className="input-field" 
                 value={formData.quantity} 
                 onChange={(e) => setFormData({...formData, quantity: e.target.value})} 
-                placeholder={t('modals.ing_amount')}
+                placeholder={t('goods_receipt_form.quantity') || t('modals.ing_amount') || "Cantidad"}
               />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem', lineHeight: '1.3' }}>
+                {t('goods_receipt_form.quantity_help') || "Este campo solo es informativo para el registro de mercancías pero no afecta a la cantidad de stock."}
+              </p>
             </div>
             <div className="form-group">
               <label className="label">{t('goods_receipt_form.invoice_number')}</label>
@@ -20553,7 +20556,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                       />
                     </div>
 
-                    <div style={{ flex: 1, minWidth: '100px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <div style={{ flex: 1, minWidth: '160px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                       <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
                         {t('goods_receipt_form.quantity') || "Cantidad"}
                       </label>
@@ -20565,6 +20568,9 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                         disabled={row.saved || row.saving}
                         style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
                       />
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.25' }}>
+                        {t('goods_receipt_form.quantity_help') || "Este campo solo es informativo para el registro de mercancías pero no afecta a la cantidad de stock."}
+                      </p>
                     </div>
                   </div>
 
@@ -21587,7 +21593,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                       />
                     </div>
 
-                    <div style={{ flex: 1, minWidth: '100px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <div style={{ flex: 1, minWidth: '160px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                       <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
                         {t('goods_receipt_form.quantity') || "Cantidad"}
                       </label>
@@ -21599,6 +21605,9 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                         disabled={row.saved || row.saving}
                         style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
                       />
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.25' }}>
+                        {t('goods_receipt_form.quantity_help') || "Este campo solo es informativo para el registro de mercancías pero no afecta a la cantidad de stock."}
+                      </p>
                     </div>
                   </div>
 

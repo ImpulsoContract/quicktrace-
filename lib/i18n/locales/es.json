@@ -825,6 +825,7 @@
     "end_date": "Fecha de finalización",
     "type_and_origin": "Tipo y procedencia",
     "quantity": "Cantidad",
+    "quantity_help": "Este campo solo es informativo para el registro de mercancías pero no afecta a la cantidad de stock.",
     "upload_file": "Subir imagen...",
     "link_ingredients_title": "Relacionar esta entrada con ingredientes",
     "search_ingredients_placeholder": "Buscar ingrediente...",

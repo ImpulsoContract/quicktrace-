@@ -817,6 +817,7 @@
     "end_date": "Data de finalização",
     "type_and_origin": "Tipo e procedência",
     "quantity": "Quantidade",
+    "quantity_help": "Este campo é apenas informativo para o registo de mercadorias e não afeta a quantidade de stock.",
     "upload_file": "Carregar imagem...",
     "link_ingredients_btn": "Relacionar este lote com alguns ingredientes para usar na rastreabilidade",
     "link_ingredients_title": "Relacionar esta entrada com ingredientes",

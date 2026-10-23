@@ -825,6 +825,7 @@
     "end_date": "End Date",
     "type_and_origin": "Type and origin",
     "quantity": "Quantity",
+    "quantity_help": "This field is for informational purposes only for the goods receipt record and does not affect the stock quantity.",
     "upload_file": "Upload image...",
     "link_ingredients_title": "Link this entry with ingredients",
     "search_ingredients_placeholder": "Search ingredient...",

@@ -820,6 +820,7 @@
     "end_date": "Date de fin",
     "type_and_origin": "Type et provenance",
     "quantity": "Quantité",
+    "quantity_help": "Ce champ est uniquement informatif pour l'enregistrement des marchandises et n'affecte pas la quantité en stock.",
     "upload_file": "Télécharger l'image...",
     "link_ingredients_title": "Associer cette entrée à des ingrédients",
     "search_ingredients_placeholder": "Rechercher un ingrédient...",
