@@ -843,8 +843,20 @@
     "goods_saved": "Entrata merci salvata con successo",
     "save_this_entry": "Salva questa voce",
     "ia_error_saving": "Errore durante il salvataggio: ",
-    "relate_entry_with_ingredients": "Collega questa voce agli ingredienti",
-    "ia_ingredients_info_alert": "Se colleghi questa entrata merci a uno o più ingredienti, quando crei una produzione e la sua tracciabilità, questo lotto apparirà in quegli ingredienti."
+    "relate_entry_with_ingredients": "Collega questa voce a un ingrediente o a una merce in vendita",
+    "ia_ingredients_info_alert": "Se colleghi questa entrata merci a uno o più ingredienti, quando crei una produzione e la sua tracciabilità, questo lotto apparirà in quegli ingredienti.",
+    "tab_ingredients": "Ingredienti",
+    "tab_goods_for_sale": "Merci in vendita",
+    "search_goods_for_sale_placeholder": "Cerca merce in vendita...",
+    "btn_add_goods_for_sale": "+ Aggiungi merce in vendita",
+    "empty_goods_for_sale": "Non hai ancora creato merci in vendita.",
+    "no_goods_for_sale_match": "Nessuna merce trovata con questo nome.",
+    "goods_for_sale_selected_title": "Dati di stock e costo per la merce selezionata",
+    "stock_quantity_added": "Quantità aggiunta allo stock",
+    "cost_price_per_unit": "Prezzo di costo per unità",
+    "clear_selection": "Rimuovi selezione",
+    "selected_good_help": "Al salvataggio di questa voce di merce, lo stock di questa merce aumenterà e questo prezzo di costo verrà assegnato.",
+    "modal_add_gfs_title": "Nuova merce in vendita"
   },
   "plans": {
     "title": "Piani di Prezzo",
@@ -1721,6 +1733,8 @@
     "unit_required": "Inserisci l'unità di misura.",
     "price_invalid": "Inserisci un prezzo di vendita valido maggiore o uguale a 0.",
     "success_created": "Merce in vendita aggiunta con successo.",
-    "success_updated": "Merce in vendita aggiornata con successo."
+    "success_updated": "Merce in vendita aggiornata con successo.",
+    "col_stock": "Stock",
+    "col_cost_price": "Prezzo di costo / ud"
   }
 }

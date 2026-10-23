@@ -482,6 +482,11 @@ model GoodsReceipt {
   relatedIngredients String[] @default([])
   relatedQuantities  Json?    @default("{}")
 
+  goodsForSaleId        Int?
+  goodsForSale          GoodsForSale? @relation(fields: [goodsForSaleId], references: [id], onDelete: SetNull)
+  goodsForSaleQuantity  Float?
+  goodsForSaleCostPrice Float?
+
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
@@ -700,6 +705,10 @@ model GoodsForSale {
   name      String
   unit      String
   salePrice Float         @default(0)
+  costPrice Float?
+  stock     Float         @default(0)
+
+  goodsReceipts GoodsReceipt[]
 
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt

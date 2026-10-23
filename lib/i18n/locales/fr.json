@@ -843,8 +843,20 @@
     "goods_saved": "Entrée de marchandises enregistrée avec succès",
     "save_this_entry": "Enregistrer cette entrée",
     "ia_error_saving": "Erreur lors de l'enregistrement : ",
-    "relate_entry_with_ingredients": "Associer cette entrée à des ingrédients",
-    "ia_ingredients_info_alert": "Si vous liez cette entrée de marchandises à un ou plusieurs ingrédients, lorsque vous créerez une fabrication et sa traçabilité, ce lot apparaîtra dans ces ingrédients."
+    "relate_entry_with_ingredients": "Associer cette entrée à un ingrédient ou à une marchandise en vente",
+    "ia_ingredients_info_alert": "Si vous liez cette entrée de marchandises à un ou plusieurs ingrédients, lorsque vous créerez une fabrication et sa traçabilité, ce lot apparaîtra dans ces ingrédients.",
+    "tab_ingredients": "Ingrédients",
+    "tab_goods_for_sale": "Marchandises en vente",
+    "search_goods_for_sale_placeholder": "Rechercher une marchandise en vente...",
+    "btn_add_goods_for_sale": "+ Ajouter marchandise en vente",
+    "empty_goods_for_sale": "Vous n'avez pas encore créé de marchandises en vente.",
+    "no_goods_for_sale_match": "Aucune marchandise trouvée avec ce nom.",
+    "goods_for_sale_selected_title": "Données de stock et de coût pour la marchandise sélectionnée",
+    "stock_quantity_added": "Quantité ajoutée au stock",
+    "cost_price_per_unit": "Prix de revient par unité",
+    "clear_selection": "Effacer la sélection",
+    "selected_good_help": "En enregistrant cette entrée de marchandise, le stock de cette marchandise sera augmenté et ce prix de revient sera attribué.",
+    "modal_add_gfs_title": "Nouvelle marchandise en vente"
   },
   "plans": {
     "title": "Plans de Tarification",
@@ -1721,6 +1733,8 @@
     "unit_required": "Veuillez saisir l'unité de mesure.",
     "price_invalid": "Veuillez saisir un prix de vente valide supérieur ou égal à 0.",
     "success_created": "Marchandise en vente ajoutée avec succès.",
-    "success_updated": "Marchandise en vente mise à jour avec succès."
+    "success_updated": "Marchandise en vente mise à jour avec succès.",
+    "col_stock": "Stock",
+    "col_cost_price": "Prix de revient / ud"
   }
 }

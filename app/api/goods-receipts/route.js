@@ -6,7 +6,10 @@ import { isRecipeLimitExceeded } from "@/lib/planLimits";
 import { 
   processNewGoodsReceiptStock, 
   processUpdatedGoodsReceiptStock, 
-  processDeletedGoodsReceiptsStock 
+  processDeletedGoodsReceiptsStock,
+  processNewGoodsReceiptGfsStock,
+  processUpdatedGoodsReceiptGfsStock,
+  processDeletedGoodsReceiptsGfsStock
 } from "@/lib/stock-utils";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
@@ -80,7 +83,8 @@ export async function GET(req) {
     const receipts = await prisma.goodsReceipt.findMany({
       where,
       orderBy: { date: 'desc' },
-      take: take
+      take: take,
+      include: { goodsForSale: true }
     });
 
     const totalCount = await prisma.goodsReceipt.count({
@@ -152,7 +156,10 @@ export async function POST(req) {
       relatedIngredients,
       relatedQuantities,
       scannedDeliveryNoteId,
-      scannedItemId
+      scannedItemId,
+      goodsForSaleId,
+      goodsForSaleQuantity,
+      goodsForSaleCostPrice
     } = body;
 
     if (!productName || !date) {
@@ -186,9 +193,15 @@ export async function POST(req) {
         merchantTypes: merchantTypes || [],
         relatedIngredients: relatedIngredients || [],
         relatedQuantities: relatedQuantities || {},
+        goodsForSaleId: goodsForSaleId ? parseInt(goodsForSaleId, 10) : null,
+        goodsForSaleQuantity: (goodsForSaleQuantity !== null && goodsForSaleQuantity !== undefined && goodsForSaleQuantity !== "") ? parseFloat(goodsForSaleQuantity.toString().replace(',', '.')) : null,
+        goodsForSaleCostPrice: (goodsForSaleCostPrice !== null && goodsForSaleCostPrice !== undefined && goodsForSaleCostPrice !== "") ? parseFloat(goodsForSaleCostPrice.toString().replace(',', '.')) : null,
         providerId: resolvedProviderId,
         clientProfileId: profile.id,
         scannedDeliveryNoteId: scannedDeliveryNoteId ? parseInt(scannedDeliveryNoteId) : null
+      },
+      include: {
+        goodsForSale: true
       }
     });
 
@@ -227,6 +240,11 @@ export async function POST(req) {
 
     // Update stock levels
     await processNewGoodsReceiptStock(profile.id, relatedQuantities);
+    await processNewGoodsReceiptGfsStock(
+      goodsForSaleId ? parseInt(goodsForSaleId, 10) : null,
+      goodsForSaleQuantity,
+      goodsForSaleCostPrice
+    );
 
     return NextResponse.json({ success: true, receipt });
   } catch (error) {
@@ -263,7 +281,10 @@ export async function PATCH(req) {
       providerId,
       merchantTypes,
       relatedIngredients,
-      relatedQuantities
+      relatedQuantities,
+      goodsForSaleId,
+      goodsForSaleQuantity,
+      goodsForSaleCostPrice
     } = body;
 
     if (!id || !productName || !date) {
@@ -313,13 +334,30 @@ export async function PATCH(req) {
         merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
         relatedIngredients: relatedIngredients !== undefined ? relatedIngredients : undefined,
         relatedQuantities: relatedQuantities !== undefined ? relatedQuantities : undefined,
+        goodsForSaleId: goodsForSaleId !== undefined ? (goodsForSaleId ? parseInt(goodsForSaleId, 10) : null) : undefined,
+        goodsForSaleQuantity: goodsForSaleQuantity !== undefined ? ((goodsForSaleQuantity !== null && goodsForSaleQuantity !== "") ? parseFloat(goodsForSaleQuantity.toString().replace(',', '.')) : null) : undefined,
+        goodsForSaleCostPrice: goodsForSaleCostPrice !== undefined ? ((goodsForSaleCostPrice !== null && goodsForSaleCostPrice !== "") ? parseFloat(goodsForSaleCostPrice.toString().replace(',', '.')) : null) : undefined,
         providerId: resolvedProviderId
+      },
+      include: {
+        goodsForSale: true
       }
     });
 
     // Update stock levels
     const finalNewQuantities = relatedQuantities !== undefined ? relatedQuantities : existing.relatedQuantities;
     await processUpdatedGoodsReceiptStock(profileId, existing.relatedQuantities, finalNewQuantities);
+
+    const finalNewGfsId = goodsForSaleId !== undefined ? (goodsForSaleId ? parseInt(goodsForSaleId, 10) : null) : existing.goodsForSaleId;
+    const finalNewGfsQty = goodsForSaleQuantity !== undefined ? goodsForSaleQuantity : existing.goodsForSaleQuantity;
+    const finalNewGfsCost = goodsForSaleCostPrice !== undefined ? goodsForSaleCostPrice : existing.goodsForSaleCostPrice;
+    await processUpdatedGoodsReceiptGfsStock(
+      existing.goodsForSaleId,
+      existing.goodsForSaleQuantity,
+      finalNewGfsId,
+      finalNewGfsQty,
+      finalNewGfsCost
+    );
 
     return NextResponse.json({ success: true, receipt });
   } catch (error) {
@@ -380,6 +418,7 @@ export async function DELETE(req) {
 
     // Subtract from stock
     await processDeletedGoodsReceiptsStock(profileId, receiptsToDelete);
+    await processDeletedGoodsReceiptsGfsStock(receiptsToDelete);
 
     // Unlink any deleted receipts from ScannedDeliveryNote items
     for (const r of receiptsToDelete) {

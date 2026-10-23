@@ -31,6 +31,7 @@ import CustomerImportModal from "@/components/CustomerImportModal";
 import MergeIngredientsModal from "@/components/MergeIngredientsModal";
 import CombinedSalesModal from "@/components/CombinedSalesModal";
 import GoodsForSaleModal from "@/components/GoodsForSaleModal";
+import RelateGoodsReceiptModal from "@/components/RelateGoodsReceiptModal";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -674,7 +675,11 @@ export default function ClientDashboard() {
     typeAndOrigin: "",
     merchantTypes: [],
     relatedIngredients: [],
-    relatedQuantities: {}
+    relatedQuantities: {},
+    goodsForSaleId: null,
+    goodsForSaleQuantity: "",
+    goodsForSaleCostPrice: "",
+    goodsForSale: null
   });
   const [waterForm, setWaterForm] = useState({
     date: new Date().toISOString().slice(0, 16),
@@ -1914,7 +1919,11 @@ export default function ClientDashboard() {
           typeAndOrigin: "",
           merchantTypes: [],
           relatedIngredients: [],
-          relatedQuantities: {}
+          relatedQuantities: {},
+          goodsForSaleId: null,
+          goodsForSaleQuantity: "",
+          goodsForSaleCostPrice: "",
+          goodsForSale: null
         });
         fetchGoodsReceipts(goodsFilters);
       } else {
@@ -1952,7 +1961,11 @@ export default function ClientDashboard() {
       typeAndOrigin: receipt.typeAndOrigin || "",
       merchantTypes: receipt.merchantTypes || [],
       relatedIngredients: receipt.relatedIngredients || [],
-      relatedQuantities: receipt.relatedQuantities || {}
+      relatedQuantities: receipt.relatedQuantities || {},
+      goodsForSaleId: receipt.goodsForSaleId || null,
+      goodsForSaleQuantity: receipt.goodsForSaleQuantity != null ? receipt.goodsForSaleQuantity.toString() : "",
+      goodsForSaleCostPrice: receipt.goodsForSaleCostPrice != null ? receipt.goodsForSaleCostPrice.toString() : "",
+      goodsForSale: receipt.goodsForSale || null
     });
     setIsGoodsModalOpen(true);
   };
@@ -8637,7 +8650,17 @@ export default function ClientDashboard() {
                           invoiceNumber: "",
                           quantity: "",
                           date: new Date().toISOString().slice(0, 16),
-                          deliveryNoteImage: ""
+                          deliveryNoteImage: "",
+                          manufacturingTemp: "",
+                          endDate: "",
+                          typeAndOrigin: "",
+                          merchantTypes: [],
+                          relatedIngredients: [],
+                          relatedQuantities: {},
+                          goodsForSaleId: null,
+                          goodsForSaleQuantity: "",
+                          goodsForSaleCostPrice: "",
+                          goodsForSale: null
                         });
                         setIsGoodsModalOpen(true);
                       }}
@@ -10597,6 +10620,7 @@ export default function ClientDashboard() {
           providers={providers}
           allMerchantTypes={profile?.merchantTypes || []}
           recipes={recipes}
+          profile={profile}
           onGoToConfig={() => {
             setActiveTab("configuracion");
             setIsGoodsModalOpen(false);
@@ -12898,6 +12922,19 @@ export default function ClientDashboard() {
                   </p>
                 </div>
               )}
+
+              {goodsReceiptDetailModalData.goodsForSale && (
+                <div style={{ background: '#ecfdf5', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid #a7f3d0' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#047857', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.03em' }}>
+                    {t('goods_receipt_form.tab_goods_for_sale') || "Mercancía en venta"}
+                  </span>
+                  <p style={{ margin: '0.25rem 0 0 0', fontWeight: '700', fontSize: '0.95rem', color: '#065f46' }}>
+                    {goodsReceiptDetailModalData.goodsForSale.name}
+                    {goodsReceiptDetailModalData.goodsForSaleQuantity != null && ` (${goodsReceiptDetailModalData.goodsForSaleQuantity} ${goodsReceiptDetailModalData.goodsForSale.unit})`}
+                    {goodsReceiptDetailModalData.goodsForSaleCostPrice != null && ` — Coste: ${goodsReceiptDetailModalData.goodsForSaleCostPrice} ${currencySymbol}/${goodsReceiptDetailModalData.goodsForSale.unit}`}
+                  </p>
+                </div>
+              )}
             </div>
 
             {goodsReceiptDetailModalData.merchantTypes && goodsReceiptDetailModalData.merchantTypes.length > 0 && (
@@ -14392,49 +14429,9 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
   );
 }
 
-function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers, allMerchantTypes = [], onGoToConfig, recipes = [] }) {
+function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onImageChange, providers, allMerchantTypes = [], onGoToConfig, recipes = [], profile }) {
   const { t } = useI18n();
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  const [ingSearchTerm, setIngSearchTerm] = useState("");
-  const [rowIngredients, setRowIngredients] = useState([]);
-  const [rowQuantities, setRowQuantities] = useState({});
-
-  const allIngredients = (() => {
-    if (!recipes) return [];
-    const names = new Set();
-    recipes.forEach(r => {
-      r.ingredients?.forEach(ing => {
-        if (ing.name && ing.name.trim()) {
-          names.add(ing.name.trim());
-        }
-      });
-    });
-    return Array.from(names).sort((a, b) => a.localeCompare(b));
-  })();
-  
-  const getIngredientsWithUnits = (selectedIngs) => {
-    const list = [];
-    if (!selectedIngs || !recipes) return list;
-    selectedIngs.forEach(ingName => {
-      const units = new Set();
-      recipes.forEach(recipe => {
-        recipe.ingredients?.forEach(ing => {
-          if (ing && ing.name === ingName && ing.unit) {
-            units.add(String(ing.unit).trim());
-          }
-        });
-      });
-      const sortedUnits = Array.from(units).sort();
-      if (sortedUnits.length === 0) {
-        list.push({ name: ingName, unit: "kg" });
-      } else {
-        sortedUnits.forEach(unit => {
-          list.push({ name: ingName, unit });
-        });
-      }
-    });
-    return list;
-  };
 
   return (
     <div className="modal-overlay">
@@ -14509,35 +14506,34 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                     style={{ paddingLeft: '3rem' }}
                   />
                 </div>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setRowIngredients(formData.relatedIngredients || []);
-                    setRowQuantities(formData.relatedQuantities || {});
-                    setIsLinkModalOpen(true);
-                  }}
-                  style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    color: 'var(--corp-green)', 
-                    fontSize: '0.8rem', 
-                    fontWeight: '700', 
-                    textDecoration: 'underline', 
-                    cursor: 'pointer',
-                    padding: 0,
-                    marginTop: '0.4rem',
-                    alignSelf: 'start',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
-                  }}
-                >
-                  <PlusCircle size={12} />
-                  {formData.relatedIngredients?.length > 0 
-                    ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${formData.relatedIngredients.length})` 
-                    : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")
-                  }
-                </button>
+                {(() => {
+                  const relCount = (formData.relatedIngredients?.length || 0) + (formData.goodsForSaleId ? 1 : 0);
+                  return (
+                    <button 
+                      type="button"
+                      onClick={() => setIsLinkModalOpen(true)}
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: relCount > 0 ? 'var(--corp-green)' : '#64748b', 
+                        fontSize: '0.8rem', 
+                        fontWeight: '700', 
+                        textDecoration: 'underline', 
+                        cursor: 'pointer',
+                        padding: 0,
+                        marginTop: '0.4rem',
+                        alignSelf: 'start',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      <PlusCircle size={12} />
+                      {t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con un ingrediente o una mercancía en venta"}
+                      {relCount > 0 ? ` (${relCount})` : ''}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
             <div className="form-group">
@@ -14705,166 +14701,30 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
       </div>
 
       {isLinkModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 1150 }}>
-          <div className="modal-content glass-card" style={{ maxWidth: '650px', width: '92%', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '90vh', overflow: 'hidden' }}>
-            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexShrink: 0 }}>
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
-                  {t('goods_receipt_form.link_ingredients_title') || "Relacionar esta entrada con ingredientes"}
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
-                  {formData.productName || t('goods_receipt_form.product')}
-                </p>
-              </div>
-              <button 
-                type="button"
-                onClick={() => {
-                  setIsLinkModalOpen(false);
-                  setIngSearchTerm("");
-                }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
-              >
-                <X size={20} />
-              </button>
-            </header>
-
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem', minHeight: 0 }}>
-              <div className="form-group" style={{ margin: 0, flexShrink: 0 }}>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  placeholder={t('goods_receipt_form.search_ingredients_placeholder') || "Buscar ingrediente..."}
-                  value={ingSearchTerm}
-                  onChange={(e) => setIngSearchTerm(e.target.value)}
-                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
-                />
-              </div>
-
-              <div style={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: '0.5rem', 
-                maxHeight: '200px', 
-                minHeight: '130px', 
-                flexShrink: 0, 
-                overflowY: 'auto', 
-                padding: '0.75rem', 
-                background: '#f8fafc', 
-                borderRadius: '0.75rem', 
-                border: '1px solid var(--border)',
-                alignContent: 'flex-start'
-              }}>
-                {allIngredients
-                  .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
-                  .map((ing, idx) => {
-                    const isSelected = rowIngredients.includes(ing);
-                    return (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => {
-                          if (isSelected) {
-                            setRowIngredients(rowIngredients.filter(i => i !== ing));
-                          } else {
-                            setRowIngredients([...rowIngredients, ing]);
-                          }
-                        }}
-                        style={{
-                          padding: '0.35rem 0.75rem',
-                          borderRadius: '1rem',
-                          fontSize: '0.8rem',
-                          fontWeight: '600',
-                          border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
-                          background: isSelected ? 'var(--corp-green)' : 'white',
-                          color: isSelected ? 'white' : 'var(--text-main)',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {ing}
-                      </button>
-                    );
-                  })}
-              </div>
-
-              {rowIngredients.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', flexShrink: 0 }}>
-                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-                    {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
-                  </h4>
-                  <p style={{ margin: '0.35rem 0 0.75rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                    {t('goods_receipt_form.stock_control_important') || "IMPORTANTE. Si ves que sale varios campos de un mismo ingrediente es porque lo has puesto en diferentes recetas con diferentes unidades de medida y por eso aparece en varias unidades de medida."}
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                    {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
-                      const key = `${item.name}:${item.unit}`;
-                      const val = rowQuantities[key] || "";
-                      return (
-                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`}>
-                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                            {`Cantidad de ${item.name} (${item.unit})`}
-                          </label>
-                          <input 
-                            type="number" 
-                            step="any" 
-                            className="input-field" 
-                            value={val} 
-                            onChange={(e) => {
-                              setRowQuantities({
-                                ...rowQuantities,
-                                [key]: e.target.value
-                              });
-                            }}
-                            placeholder={formData.quantity || ""}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem', flexShrink: 0 }}>
-              <button 
-                type="button" 
-                className="btn-secondary" 
-                onClick={() => {
-                  setIsLinkModalOpen(false);
-                  setIngSearchTerm("");
-                }} 
-                style={{ flex: 1, padding: '0.85rem' }}
-              >
-                {t('common.cancel')}
-              </button>
-              <button 
-                type="button" 
-                className="btn-primary" 
-                onClick={() => {
-                  const activeWithUnits = getIngredientsWithUnits(rowIngredients);
-                  const validKeys = new Set(activeWithUnits.map(item => `${item.name}:${item.unit}`));
-                  const cleanedQuantities = {};
-                  for (const key of validKeys) {
-                    if (rowQuantities[key] !== undefined && rowQuantities[key] !== "") {
-                      cleanedQuantities[key] = rowQuantities[key];
-                    }
-                  }
-                  setFormData({
-                    ...formData,
-                    relatedIngredients: rowIngredients,
-                    relatedQuantities: cleanedQuantities
-                  });
-                  setIsLinkModalOpen(false);
-                  setIngSearchTerm("");
-                }} 
-                style={{ flex: 2, padding: '0.85rem', fontSize: '0.85rem', lineHeight: '1.3', textAlign: 'center' }}
-              >
-                {t('goods_receipt_form.link_popup_save')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <RelateGoodsReceiptModal
+          isOpen={isLinkModalOpen}
+          onClose={() => setIsLinkModalOpen(false)}
+          productName={formData.productName}
+          defaultQuantity={formData.quantity}
+          initialIngredients={formData.relatedIngredients || []}
+          initialQuantities={formData.relatedQuantities || {}}
+          initialGoodsForSaleId={formData.goodsForSaleId}
+          initialGoodsForSaleQuantity={formData.goodsForSaleQuantity}
+          initialGoodsForSaleCostPrice={formData.goodsForSaleCostPrice}
+          recipes={recipes}
+          profile={profile}
+          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale }) => {
+            setFormData({
+              ...formData,
+              relatedIngredients,
+              relatedQuantities,
+              goodsForSaleId,
+              goodsForSaleQuantity,
+              goodsForSaleCostPrice,
+              goodsForSale
+            });
+          }}
+        />
       )}
     </div>
   );
@@ -20149,46 +20009,6 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
   const [aiRows, setAiRows] = useState([]); 
   
   const [linkRowIndex, setLinkRowIndex] = useState(null);
-  const [ingSearchTerm, setIngSearchTerm] = useState("");
-  const [rowIngredients, setRowIngredients] = useState([]); 
-  const [rowQuantities, setRowQuantities] = useState({}); 
-
-  const allIngredients = (() => {
-    if (!recipes) return [];
-    const names = new Set();
-    recipes.forEach(r => {
-      r.ingredients?.forEach(ing => {
-        if (ing.name && ing.name.trim()) {
-          names.add(ing.name.trim());
-        }
-      });
-    });
-    return Array.from(names).sort((a, b) => a.localeCompare(b));
-  })();
-
-  const getIngredientsWithUnits = (selectedIngs) => {
-    const list = [];
-    if (!selectedIngs || !recipes) return list;
-    selectedIngs.forEach(ingName => {
-      const units = new Set();
-      recipes.forEach(recipe => {
-        recipe.ingredients?.forEach(ing => {
-          if (ing && ing.name === ingName && ing.unit) {
-            units.add(String(ing.unit).trim());
-          }
-        });
-      });
-      const sortedUnits = Array.from(units).sort();
-      if (sortedUnits.length === 0) {
-        list.push({ name: ingName, unit: "kg" });
-      } else {
-        sortedUnits.forEach(unit => {
-          list.push({ name: ingName, unit });
-        });
-      }
-    });
-    return list;
-  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -20246,6 +20066,10 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
         typeAndOrigin: "",
         relatedIngredients: [],
         relatedQuantities: {},
+        goodsForSaleId: null,
+        goodsForSaleQuantity: "",
+        goodsForSaleCostPrice: "",
+        goodsForSale: null,
         saving: false,
         saved: false
       }));
@@ -20275,35 +20099,6 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
     }));
   };
 
-  const openLinkModal = (index) => {
-    const row = aiRows[index];
-    setLinkRowIndex(index);
-    setRowIngredients(row.relatedIngredients || []);
-    setRowQuantities(row.relatedQuantities || {});
-  };
-
-  const saveLinkDetails = () => {
-    const activeWithUnits = getIngredientsWithUnits(rowIngredients);
-    const validKeys = new Set(activeWithUnits.map(item => `${item.name}:${item.unit}`));
-    const cleanedQuantities = {};
-    for (const key of validKeys) {
-      if (rowQuantities[key] !== undefined && rowQuantities[key] !== "") {
-        cleanedQuantities[key] = rowQuantities[key];
-      }
-    }
-    setAiRows(prev => prev.map((row, idx) => {
-      if (idx === linkRowIndex) {
-        return {
-          ...row,
-          relatedIngredients: rowIngredients,
-          relatedQuantities: cleanedQuantities
-        };
-      }
-      return row;
-    }));
-    setLinkRowIndex(null);
-    setIngSearchTerm("");
-  };
 
   const handleSaveRow = async (index) => {
     const row = aiRows[index];
@@ -20338,6 +20133,9 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
         merchantTypes: [],
         relatedIngredients: row.relatedIngredients,
         relatedQuantities: row.relatedQuantities,
+        goodsForSaleId: row.goodsForSaleId,
+        goodsForSaleQuantity: row.goodsForSaleQuantity,
+        goodsForSaleCostPrice: row.goodsForSaleCostPrice,
         scannedDeliveryNoteId: extractedData?.scannedDeliveryNoteId || null,
         scannedItemId: row.id
       };
@@ -20575,36 +20373,40 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                   </div>
 
                   {/* Row 2: Relate with ingredients link + Info icon */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => openLinkModal(idx)}
-                      disabled={row.saved || row.saving}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
-                        fontSize: '0.85rem',
-                        fontWeight: '700',
-                        textDecoration: 'underline',
-                        cursor: row.saved ? 'default' : 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                        padding: 0
-                      }}
-                    >
-                      <PlusCircle size={16} />
-                      {row.relatedIngredients?.length > 0 
-                        ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${row.relatedIngredients.length})` 
-                        : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")}
-                    </button>
-                    <Info 
-                      size={16} 
-                      style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
-                      onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
-                    />
-                  </div>
+                  {(() => {
+                    const relCount = (row.relatedIngredients?.length || 0) + (row.goodsForSaleId ? 1 : 0);
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => setLinkRowIndex(idx)}
+                          disabled={row.saved || row.saving}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: relCount > 0 ? 'var(--corp-green)' : '#64748b',
+                            fontSize: '0.85rem',
+                            fontWeight: '700',
+                            textDecoration: 'underline',
+                            cursor: row.saved ? 'default' : 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            padding: 0
+                          }}
+                        >
+                          <PlusCircle size={16} />
+                          {t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con un ingrediente o una mercancía en venta"}
+                          {relCount > 0 ? ` (${relCount})` : ''}
+                        </button>
+                        <Info 
+                          size={16} 
+                          style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
+                          onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
+                        />
+                      </div>
+                    );
+                  })()}
 
                   {/* Row 3: Factura Nº, Temp. Transp/Fab, Fecha Fin, Tipo/Procedencia */}
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -20738,150 +20540,30 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
       </div>
 
       {linkRowIndex !== null && (
-        <div className="modal-overlay" style={{ zIndex: 1150 }}>
-          <div className="modal-content glass-card" style={{ maxWidth: '650px', width: '92%', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '90vh', overflow: 'hidden' }}>
-            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexShrink: 0 }}>
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
-                  {t('goods_receipt_form.link_ingredients_title') || "Relacionar esta entrada con ingredientes"}
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
-                  {aiRows[linkRowIndex]?.productName}
-                </p>
-              </div>
-              <button 
-                type="button"
-                onClick={() => {
-                  setLinkRowIndex(null);
-                  setIngSearchTerm("");
-                }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
-              >
-                <X size={20} />
-              </button>
-            </header>
-
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem', minHeight: 0 }}>
-              <div className="form-group" style={{ margin: 0, flexShrink: 0 }}>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  placeholder={t('goods_receipt_form.search_ingredients_placeholder') || "Buscar ingrediente..."}
-                  value={ingSearchTerm}
-                  onChange={(e) => setIngSearchTerm(e.target.value)}
-                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
-                />
-              </div>
-
-              <div style={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: '0.5rem', 
-                maxHeight: '200px', 
-                minHeight: '130px', 
-                flexShrink: 0, 
-                overflowY: 'auto', 
-                padding: '0.75rem', 
-                background: '#f8fafc', 
-                borderRadius: '0.75rem', 
-                border: '1px solid var(--border)',
-                alignContent: 'flex-start'
-              }}>
-                {allIngredients
-                  .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
-                  .map((ing, idx) => {
-                    const isSelected = rowIngredients.includes(ing);
-                    return (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => {
-                          if (isSelected) {
-                            setRowIngredients(rowIngredients.filter(i => i !== ing));
-                          } else {
-                            setRowIngredients([...rowIngredients, ing]);
-                          }
-                        }}
-                        style={{
-                          padding: '0.35rem 0.75rem',
-                          borderRadius: '1rem',
-                          fontSize: '0.8rem',
-                          fontWeight: '600',
-                          border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
-                          background: isSelected ? 'var(--corp-green)' : 'white',
-                          color: isSelected ? 'white' : 'var(--text-main)',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {ing}
-                      </button>
-                    );
-                  })}
-              </div>
-
-              {rowIngredients.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', flexShrink: 0 }}>
-                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-                    {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
-                  </h4>
-                  <p style={{ margin: '0.35rem 0 0.75rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                    {t('goods_receipt_form.stock_control_important') || "IMPORTANTE. Si ves que sale varios campos de un mismo ingrediente es porque lo has puesto en diferentes recetas con diferentes unidades de medida y por eso aparece en varias unidades de medida."}
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                    {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
-                      const key = `${item.name}:${item.unit}`;
-                      const val = rowQuantities[key] || "";
-                      return (
-                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`}>
-                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                            {`Cantidad de ${item.name} (${item.unit})`}
-                          </label>
-                          <input 
-                            type="number" 
-                            step="any" 
-                            className="input-field" 
-                            value={val} 
-                            onChange={(e) => {
-                              setRowQuantities({
-                                ...rowQuantities,
-                                [key]: e.target.value
-                              });
-                            }}
-                            placeholder={aiRows[linkRowIndex]?.quantity || ""}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem', flexShrink: 0 }}>
-              <button 
-                type="button" 
-                className="btn-secondary" 
-                onClick={() => {
-                  setLinkRowIndex(null);
-                  setIngSearchTerm("");
-                }} 
-                style={{ flex: 1, padding: '0.85rem' }}
-              >
-                {t('common.cancel')}
-              </button>
-              <button 
-                type="button" 
-                className="btn-primary" 
-                onClick={saveLinkDetails} 
-                style={{ flex: 2, padding: '0.85rem', fontSize: '0.85rem', lineHeight: '1.3', textAlign: 'center' }}
-              >
-                {t('goods_receipt_form.link_popup_save')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <RelateGoodsReceiptModal
+          isOpen={linkRowIndex !== null}
+          onClose={() => setLinkRowIndex(null)}
+          productName={aiRows[linkRowIndex]?.productName}
+          defaultQuantity={aiRows[linkRowIndex]?.quantity}
+          initialIngredients={aiRows[linkRowIndex]?.relatedIngredients || []}
+          initialQuantities={aiRows[linkRowIndex]?.relatedQuantities || {}}
+          initialGoodsForSaleId={aiRows[linkRowIndex]?.goodsForSaleId}
+          initialGoodsForSaleQuantity={aiRows[linkRowIndex]?.goodsForSaleQuantity}
+          initialGoodsForSaleCostPrice={aiRows[linkRowIndex]?.goodsForSaleCostPrice}
+          recipes={recipes}
+          profile={profile}
+          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale }) => {
+            setAiRows(prev => prev.map((r, i) => i === linkRowIndex ? {
+              ...r,
+              relatedIngredients,
+              relatedQuantities,
+              goodsForSaleId,
+              goodsForSaleQuantity,
+              goodsForSaleCostPrice,
+              goodsForSale
+            } : r));
+          }}
+        />
       )}
     </div>
   );
@@ -21008,46 +20690,6 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
 
   // State for raw ingredient linking modal
   const [linkRowIndex, setLinkRowIndex] = useState(null);
-  const [ingSearchTerm, setIngSearchTerm] = useState("");
-  const [rowIngredients, setRowIngredients] = useState([]);
-  const [rowQuantities, setRowQuantities] = useState({});
-
-  const allIngredients = (() => {
-    if (!recipes) return [];
-    const names = new Set();
-    recipes.forEach(r => {
-      r.ingredients?.forEach(ing => {
-        if (ing.name && ing.name.trim()) {
-          names.add(ing.name.trim());
-        }
-      });
-    });
-    return Array.from(names).sort((a, b) => a.localeCompare(b));
-  })();
-
-  const getIngredientsWithUnits = (selectedIngs) => {
-    const list = [];
-    if (!selectedIngs || !recipes) return list;
-    selectedIngs.forEach(ingName => {
-      const units = new Set();
-      recipes.forEach(recipe => {
-        recipe.ingredients?.forEach(ing => {
-          if (ing && ing.name === ingName && ing.unit) {
-            units.add(String(ing.unit).trim());
-          }
-        });
-      });
-      const sortedUnits = Array.from(units).sort();
-      if (sortedUnits.length === 0) {
-        list.push({ name: ingName, unit: "kg" });
-      } else {
-        sortedUnits.forEach(unit => {
-          list.push({ name: ingName, unit });
-        });
-      }
-    });
-    return list;
-  };
 
   const fetchNotes = async () => {
     setLoading(true);
@@ -21103,6 +20745,10 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
           merchantTypes: matchingReceipt.merchantTypes || [],
           relatedIngredients: matchingReceipt.relatedIngredients || [],
           relatedQuantities: matchingReceipt.relatedQuantities || {},
+          goodsForSaleId: matchingReceipt.goodsForSaleId || null,
+          goodsForSaleQuantity: matchingReceipt.goodsForSaleQuantity != null ? matchingReceipt.goodsForSaleQuantity.toString() : "",
+          goodsForSaleCostPrice: matchingReceipt.goodsForSaleCostPrice != null ? matchingReceipt.goodsForSaleCostPrice.toString() : "",
+          goodsForSale: matchingReceipt.goodsForSale || null,
           saved: true,
           saving: false
         };
@@ -21123,6 +20769,10 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
         merchantTypes: [],
         relatedIngredients: [],
         relatedQuantities: {},
+        goodsForSaleId: null,
+        goodsForSaleQuantity: "",
+        goodsForSaleCostPrice: "",
+        goodsForSale: null,
         saved: !!it.saved,
         saving: false
       };
@@ -21151,37 +20801,6 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
     }));
   };
 
-  const openLinkModal = (index) => {
-    const row = editableRows[index];
-    setLinkRowIndex(index);
-    setRowIngredients(row.relatedIngredients || []);
-    setRowQuantities(row.relatedQuantities || {});
-  };
-
-  const saveLinkDetails = () => {
-    // Clean up quantities for deselected ingredients
-    const activeWithUnits = getIngredientsWithUnits(rowIngredients);
-    const validKeys = new Set(activeWithUnits.map(item => `${item.name}:${item.unit}`));
-    const cleanedQuantities = {};
-    Object.entries(rowQuantities).forEach(([k, v]) => {
-      if (validKeys.has(k) && v !== "" && v !== null && v !== undefined) {
-        cleanedQuantities[k] = v;
-      }
-    });
-
-    setEditableRows(prev => prev.map((row, idx) => {
-      if (idx === linkRowIndex) {
-        return {
-          ...row,
-          relatedIngredients: rowIngredients,
-          relatedQuantities: cleanedQuantities
-        };
-      }
-      return row;
-    }));
-    setLinkRowIndex(null);
-    setIngSearchTerm("");
-  };
 
   const handleSaveRow = async (index) => {
     const row = editableRows[index];
@@ -21216,6 +20835,9 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
         merchantTypes: row.merchantTypes || [],
         relatedIngredients: row.relatedIngredients,
         relatedQuantities: row.relatedQuantities,
+        goodsForSaleId: row.goodsForSaleId,
+        goodsForSaleQuantity: row.goodsForSaleQuantity,
+        goodsForSaleCostPrice: row.goodsForSaleCostPrice,
         scannedDeliveryNoteId: selectedNote.id,
         scannedItemId: row.id
       };
@@ -21612,38 +21234,40 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                   </div>
 
                   {/* Row 2: Relate with ingredients link + Info icon (only if not yet saved) */}
-                  {!row.saved && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => openLinkModal(idx)}
-                        disabled={row.saving}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: row.relatedIngredients?.length > 0 ? 'var(--corp-green)' : '#64748b',
-                          fontSize: '0.85rem',
-                          fontWeight: '700',
-                          textDecoration: 'underline',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          padding: 0
-                        }}
-                      >
-                        <PlusCircle size={16} />
-                        {row.relatedIngredients?.length > 0 
-                          ? `${t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes"} (${row.relatedIngredients.length})` 
-                          : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con ingredientes")}
-                      </button>
-                      <Info 
-                        size={16} 
-                        style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
-                        onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
-                      />
-                    </div>
-                  )}
+                  {!row.saved && (() => {
+                    const relCount = (row.relatedIngredients?.length || 0) + (row.goodsForSaleId ? 1 : 0);
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => setLinkRowIndex(idx)}
+                          disabled={row.saving}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: relCount > 0 ? 'var(--corp-green)' : '#64748b',
+                            fontSize: '0.85rem',
+                            fontWeight: '700',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            padding: 0
+                          }}
+                        >
+                          <PlusCircle size={16} />
+                          {t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con un ingrediente o una mercancía en venta"}
+                          {relCount > 0 ? ` (${relCount})` : ''}
+                        </button>
+                        <Info 
+                          size={16} 
+                          style={{ cursor: 'pointer', color: 'var(--corp-green)' }} 
+                          onClick={() => alert(t('goods_receipt_form.ia_ingredients_info_alert') || "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.")}
+                        />
+                      </div>
+                    );
+                  })()}
 
                   {/* Row 3: Factura Nº, Temp. Transp/Fab, Fecha Fin, Tipo/Procedencia */}
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -21821,152 +21445,32 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
         </div>
       )}
 
-      {/* Raw Ingredients Link Submodal */}
+      {/* Relate Goods Receipt Submodal */}
       {linkRowIndex !== null && (
-        <div className="modal-overlay" style={{ zIndex: 1150 }}>
-          <div className="modal-content glass-card" style={{ maxWidth: '650px', width: '92%', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '90vh', overflow: 'hidden' }}>
-            <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexShrink: 0 }}>
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
-                  {t('goods_receipt_form.link_ingredients_title') || "Vincular a materias primas"}
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
-                  {editableRows[linkRowIndex]?.productName}
-                </p>
-              </div>
-              <button 
-                type="button" 
-                onClick={() => {
-                  setLinkRowIndex(null);
-                  setIngSearchTerm("");
-                }} 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
-              >
-                <X size={20} />
-              </button>
-            </header>
-
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem', minHeight: 0 }}>
-              <div className="form-group" style={{ margin: 0, flexShrink: 0 }}>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  placeholder={t('goods_receipt_form.search_ingredients_placeholder') || "Buscar ingrediente..."}
-                  value={ingSearchTerm}
-                  onChange={(e) => setIngSearchTerm(e.target.value)}
-                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
-                />
-              </div>
-
-              <div style={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: '0.5rem', 
-                maxHeight: '200px', 
-                minHeight: '130px', 
-                flexShrink: 0, 
-                overflowY: 'auto', 
-                padding: '0.75rem', 
-                background: '#f8fafc', 
-                borderRadius: '0.75rem', 
-                border: '1px solid var(--border)',
-                alignContent: 'flex-start'
-              }}>
-                {allIngredients
-                  .filter(ing => ing.toLowerCase().includes(ingSearchTerm.toLowerCase()))
-                  .map((ing, idx) => {
-                    const isSelected = rowIngredients.includes(ing);
-                    return (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => {
-                          if (isSelected) {
-                            setRowIngredients(rowIngredients.filter(i => i !== ing));
-                          } else {
-                            setRowIngredients([...rowIngredients, ing]);
-                          }
-                        }}
-                        style={{
-                          padding: '0.35rem 0.75rem',
-                          borderRadius: '1rem',
-                          fontSize: '0.8rem',
-                          fontWeight: '600',
-                          border: isSelected ? '1px solid var(--corp-green)' : '1px solid var(--border)',
-                          background: isSelected ? 'var(--corp-green)' : 'white',
-                          color: isSelected ? 'white' : 'var(--text-main)',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {ing}
-                      </button>
-                    );
-                  })}
-              </div>
-
-              {rowIngredients.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', flexShrink: 0 }}>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.25rem' }}>
-                    {t('goods_receipt_form.stock_control_title')}
-                  </h4>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', lineHeight: '1.4' }}>
-                    {t('goods_receipt_form.stock_control_important')}
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                    {getIngredientsWithUnits(rowIngredients).map((item, idx) => {
-                      const key = `${item.name}:${item.unit}`;
-                      const val = rowQuantities[key] || "";
-                      return (
-                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`}>
-                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                            {`Cantidad de ${item.name} (${item.unit})`}
-                          </label>
-                          <input 
-                            type="number"
-                            step="any"
-                            className="input-field"
-                            value={val}
-                            onChange={(e) => {
-                              setRowQuantities({
-                                ...rowQuantities,
-                                [key]: e.target.value
-                              });
-                            }}
-                            placeholder={editableRows[linkRowIndex]?.quantity || ""}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', gap: '1rem', flexShrink: 0 }}>
-              <button 
-                type="button" 
-                className="btn-secondary" 
-                onClick={() => {
-                  setLinkRowIndex(null);
-                  setIngSearchTerm("");
-                }} 
-                style={{ flex: 1, padding: '0.85rem' }}
-              >
-                {t('common.cancel')}
-              </button>
-              <button 
-                type="button" 
-                className="btn-primary" 
-                onClick={saveLinkDetails} 
-                style={{ flex: 2, padding: '0.85rem', fontSize: '0.85rem', lineHeight: '1.3', textAlign: 'center' }}
-              >
-                {t('goods_receipt_form.link_popup_save')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <RelateGoodsReceiptModal
+          isOpen={linkRowIndex !== null}
+          onClose={() => setLinkRowIndex(null)}
+          productName={editableRows[linkRowIndex]?.productName}
+          defaultQuantity={editableRows[linkRowIndex]?.quantity}
+          initialIngredients={editableRows[linkRowIndex]?.relatedIngredients || []}
+          initialQuantities={editableRows[linkRowIndex]?.relatedQuantities || {}}
+          initialGoodsForSaleId={editableRows[linkRowIndex]?.goodsForSaleId}
+          initialGoodsForSaleQuantity={editableRows[linkRowIndex]?.goodsForSaleQuantity}
+          initialGoodsForSaleCostPrice={editableRows[linkRowIndex]?.goodsForSaleCostPrice}
+          recipes={recipes}
+          profile={profile}
+          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale }) => {
+            setEditableRows(prev => prev.map((r, i) => i === linkRowIndex ? {
+              ...r,
+              relatedIngredients,
+              relatedQuantities,
+              goodsForSaleId,
+              goodsForSaleQuantity,
+              goodsForSaleCostPrice,
+              goodsForSale
+            } : r));
+          }}
+        />
       )}
     </div>
   );

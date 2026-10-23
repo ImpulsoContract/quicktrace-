@@ -841,8 +841,20 @@
     "goods_saved": "Entrada de mercadorias salva com sucesso",
     "save_this_entry": "Salvar esta entrada",
     "ia_error_saving": "Erro ao salvar: ",
-    "relate_entry_with_ingredients": "Relacionar esta entrada com ingredientes",
-    "ia_ingredients_info_alert": "Se você associar esta entrada de mercadoria com um ou mais ingredientes, quando criar uma produção e a sua rastreabilidade, este lote aparecerá nesses ingredientes."
+    "relate_entry_with_ingredients": "Relacionar esta entrada com um ingrediente ou mercadoria à venda",
+    "ia_ingredients_info_alert": "Se você associar esta entrada de mercadoria com um ou mais ingredientes, quando criar uma produção e a sua rastreabilidade, este lote aparecerá nesses ingredientes.",
+    "tab_ingredients": "Ingredientes",
+    "tab_goods_for_sale": "Mercadorias à venda",
+    "search_goods_for_sale_placeholder": "Pesquisar mercadoria à venda...",
+    "btn_add_goods_for_sale": "+ Adicionar mercadoria à venda",
+    "empty_goods_for_sale": "Ainda não tem mercadorias à venda criadas.",
+    "no_goods_for_sale_match": "Nenhuma mercadoria encontrada com esse nome.",
+    "goods_for_sale_selected_title": "Dados de stock e custo para a mercadoria selecionada",
+    "stock_quantity_added": "Quantidade adicionada ao stock",
+    "cost_price_per_unit": "Preço de custo por unidade",
+    "clear_selection": "Remover seleção",
+    "selected_good_help": "Ao guardar esta entrada de mercadoria, o stock desta mercadoria será incrementado e este preço de custo será atribuído.",
+    "modal_add_gfs_title": "Nova mercadoria à venda"
   },
   "plans": {
     "title": "Planos de Preços",
@@ -1719,6 +1731,8 @@
     "unit_required": "Por favor, introduza a unidade de medida.",
     "price_invalid": "Por favor, introduza um preço de venda válido maior ou igual a 0.",
     "success_created": "Mercadoria à venda adicionada com sucesso.",
-    "success_updated": "Mercadoria à venda atualizada com sucesso."
+    "success_updated": "Mercadoria à venda atualizada com sucesso.",
+    "col_stock": "Stock",
+    "col_cost_price": "Preço de custo / ud"
   }
 }

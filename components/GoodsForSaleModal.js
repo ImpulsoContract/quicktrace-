@@ -390,10 +390,16 @@ export default function GoodsForSaleModal({
                       <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b' }}>
                         {t('goods_for_sale.col_name') || "Nombre de la mercancía"}
                       </th>
-                      <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', width: '140px' }}>
+                      <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', width: '120px' }}>
                         {t('goods_for_sale.col_unit') || "Unidad"}
                       </th>
-                      <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', textAlign: 'right', width: '180px' }}>
+                      <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', textAlign: 'right', width: '130px' }}>
+                        {t('goods_for_sale.col_stock') || "Stock"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', textAlign: 'right', width: '150px' }}>
+                        {t('goods_for_sale.col_cost_price') || "Precio coste / ud"}
+                      </th>
+                      <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', textAlign: 'right', width: '160px' }}>
                         {t('goods_for_sale.col_sale_price') || "Precio venta / ud"}
                       </th>
                       <th style={{ padding: '0.75rem 1rem', fontWeight: '800', color: '#64748b', textAlign: 'center', width: '110px' }}>
@@ -423,6 +429,12 @@ export default function GoodsForSaleModal({
                             }}>
                               {item.unit}
                             </span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: '700', color: 'var(--text-main)' }}>
+                            {(item.stock || 0).toLocaleString()} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.unit}</span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)' }}>
+                            {item.costPrice != null ? `${Number(item.costPrice).toFixed(2)} ${currencySymbol}` : "-"}
                           </td>
                           <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.95rem' }}>
                             {Number(item.salePrice).toFixed(2)} {currencySymbol}

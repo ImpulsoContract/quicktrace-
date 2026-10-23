@@ -848,8 +848,20 @@
     "goods_saved": "Entrada de mercancías guardada correctamente",
     "save_this_entry": "Guardar esta entrada",
     "ia_error_saving": "Error al guardar: ",
-    "relate_entry_with_ingredients": "Relacionar esta entrada con ingredientes",
-    "ia_ingredients_info_alert": "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes."
+    "relate_entry_with_ingredients": "Relacionar esta entrada con un ingrediente o una mercancía en venta",
+    "ia_ingredients_info_alert": "Si relacionas esta entrada de mercancía con uno o varios ingredientes, cuando crees una elaboración y su trazabilidad, te aparecerá este lote en esos ingredientes.",
+    "tab_ingredients": "Ingredientes",
+    "tab_goods_for_sale": "Mercancías en venta",
+    "search_goods_for_sale_placeholder": "Buscar mercancía en venta...",
+    "btn_add_goods_for_sale": "+ Añadir mercancía en venta",
+    "empty_goods_for_sale": "No tienes mercancías en venta creadas todavía.",
+    "no_goods_for_sale_match": "No se encontraron mercancías con ese nombre.",
+    "goods_for_sale_selected_title": "Datos de stock y coste para la mercancía en venta seleccionada",
+    "stock_quantity_added": "Cantidad añadida al stock",
+    "cost_price_per_unit": "Precio de coste por unidad",
+    "clear_selection": "Quitar selección",
+    "selected_good_help": "Al guardar esta entrada de mercancía, se incrementará el stock de esta mercancía en venta y se le asignará este precio de coste.",
+    "modal_add_gfs_title": "Nueva mercancía en venta"
   },
   "plans": {
     "title": "Planes de Precios",
@@ -1726,6 +1738,8 @@
     "unit_required": "Por favor, introduce la unidad de medida.",
     "price_invalid": "Por favor, introduce un precio de venta válido mayor o igual a 0.",
     "success_created": "Mercancía en venta añadida correctamente.",
-    "success_updated": "Mercancía en venta actualizada correctamente."
+    "success_updated": "Mercancía en venta actualizada correctamente.",
+    "col_stock": "Stock",
+    "col_cost_price": "Precio coste / ud"
   }
 }

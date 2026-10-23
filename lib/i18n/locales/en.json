@@ -848,8 +848,20 @@
     "goods_saved": "Goods receipt saved successfully",
     "save_this_entry": "Save this entry",
     "ia_error_saving": "Error saving: ",
-    "relate_entry_with_ingredients": "Relate this entry with ingredients",
-    "ia_ingredients_info_alert": "If you link this goods receipt with one or more ingredients, when you create a production and its traceability, this batch will appear in those ingredients."
+    "relate_entry_with_ingredients": "Relate this entry with an ingredient or goods for sale",
+    "ia_ingredients_info_alert": "If you link this goods receipt with one or more ingredients, when you create a production and its traceability, this batch will appear in those ingredients.",
+    "tab_ingredients": "Ingredients",
+    "tab_goods_for_sale": "Goods for sale",
+    "search_goods_for_sale_placeholder": "Search goods for sale...",
+    "btn_add_goods_for_sale": "+ Add goods for sale",
+    "empty_goods_for_sale": "You don't have any goods for sale created yet.",
+    "no_goods_for_sale_match": "No goods found matching that name.",
+    "goods_for_sale_selected_title": "Stock and cost data for selected goods for sale",
+    "stock_quantity_added": "Quantity added to stock",
+    "cost_price_per_unit": "Cost price per unit",
+    "clear_selection": "Clear selection",
+    "selected_good_help": "When saving this goods receipt, the stock of this good will be increased and this cost price will be assigned.",
+    "modal_add_gfs_title": "New goods for sale"
   },
   "plans": {
     "title": "Pricing Plans",
@@ -1726,6 +1738,8 @@
     "unit_required": "Please enter the unit of measurement.",
     "price_invalid": "Please enter a valid sale price greater than or equal to 0.",
     "success_created": "Good for sale added successfully.",
-    "success_updated": "Good for sale updated successfully."
+    "success_updated": "Good for sale updated successfully.",
+    "col_stock": "Stock",
+    "col_cost_price": "Cost price / unit"
   }
 }
