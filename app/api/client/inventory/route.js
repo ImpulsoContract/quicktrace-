@@ -28,6 +28,35 @@ export async function GET(req) {
       where: { clientProfileId: profileId }
     });
 
+    // Fetch linked goods for sale
+    const linkedGoodsList = await prisma.goodsForSale.findMany({
+      where: {
+        clientProfileId: profileId,
+        linkedIngredientName: { not: null }
+      },
+      select: {
+        id: true,
+        name: true,
+        unit: true,
+        stock: true,
+        costPrice: true,
+        linkedIngredientName: true
+      }
+    });
+
+    const linkedGoodsByIngName = {};
+    linkedGoodsList.forEach(g => {
+      if (g.linkedIngredientName) {
+        linkedGoodsByIngName[g.linkedIngredientName.trim().toLowerCase()] = {
+          id: g.id,
+          name: g.name,
+          unit: g.unit,
+          stock: g.stock,
+          costPrice: g.costPrice
+        };
+      }
+    });
+
     // Group ingredients by Name and Unit
     const inventoryMap = {};
 
@@ -41,7 +70,8 @@ export async function GET(req) {
         name: nameKey,
         unit: unitKey,
         recipes: [],
-        stock: stockRecord.stock
+        stock: stockRecord.stock,
+        linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null
       };
     });
 
@@ -57,7 +87,8 @@ export async function GET(req) {
             name: nameKey,
             unit: unitKey,
             recipes: [],
-            stock: 0
+            stock: 0,
+            linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null
           };
         }
         if (!inventoryMap[lookupKey].recipes.includes(recipe.name)) {
@@ -115,6 +146,20 @@ export async function POST(req) {
           stock: clampedStock
         }
       });
+
+      // Synchronize with linked GoodsForSale if exists
+      const linkedGoods = await prisma.goodsForSale.findFirst({
+        where: {
+          clientProfileId: profileId,
+          linkedIngredientName: { equals: item.name.trim(), mode: "insensitive" }
+        }
+      });
+      if (linkedGoods) {
+        await prisma.goodsForSale.update({
+          where: { id: linkedGoods.id },
+          data: { stock: clampedStock }
+        });
+      }
     }
 
     return NextResponse.json({ success: true });

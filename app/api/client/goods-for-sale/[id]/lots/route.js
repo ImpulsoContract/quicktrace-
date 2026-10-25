@@ -220,6 +220,46 @@ export async function PUT(req, { params }) {
         where: { id: goodsForSaleId },
         data: goodsForSaleUpdates
       });
+
+      if (updatedGoodsForSale.linkedIngredientName) {
+        if (hasQuantityUpdate) {
+          await prisma.ingredientStock.upsert({
+            where: {
+              clientProfileId_name_unit: {
+                clientProfileId: updatedGoodsForSale.clientProfileId,
+                name: updatedGoodsForSale.linkedIngredientName.trim(),
+                unit: updatedGoodsForSale.unit.trim()
+              }
+            },
+            update: { stock: updatedGoodsForSale.stock },
+            create: {
+              clientProfileId: updatedGoodsForSale.clientProfileId,
+              name: updatedGoodsForSale.linkedIngredientName.trim(),
+              unit: updatedGoodsForSale.unit.trim(),
+              stock: updatedGoodsForSale.stock
+            }
+          });
+        }
+
+        if (hasCostPriceUpdate) {
+          await prisma.ingredientPrice.upsert({
+            where: {
+              clientProfileId_name_unit: {
+                clientProfileId: updatedGoodsForSale.clientProfileId,
+                name: updatedGoodsForSale.linkedIngredientName.trim(),
+                unit: updatedGoodsForSale.unit.trim()
+              }
+            },
+            update: { price: updatedGoodsForSale.costPrice || 0 },
+            create: {
+              clientProfileId: updatedGoodsForSale.clientProfileId,
+              name: updatedGoodsForSale.linkedIngredientName.trim(),
+              unit: updatedGoodsForSale.unit.trim(),
+              price: updatedGoodsForSale.costPrice || 0
+            }
+          });
+        }
+      }
     }
 
     return NextResponse.json({

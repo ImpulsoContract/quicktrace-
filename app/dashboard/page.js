@@ -17,8 +17,10 @@ import {
   GitMerge,
   ShoppingCart,
   Tag,
-  Store
+  Store,
+  Link2
 } from "lucide-react";
+import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import JsBarcode from "jsbarcode";
@@ -14313,6 +14315,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
   const [lotCostEditingValues, setLotCostEditingValues] = useState({});
   const [savingLotId, setSavingLotId] = useState(null);
   const [savedLotId, setSavedLotId] = useState(null);
+  const [linkingTarget, setLinkingTarget] = useState(null);
 
   const currSymbol = ALL_CURRENCIES.find(c => c.code === (currency || "EUR"))?.symbol || "€";
   const showTabs = true;
@@ -14674,6 +14677,9 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                     <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                       {t('modals.recipes_column') || "Recetas"}
                     </th>
+                    <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '170px' }}>
+                      {t('goods_ingredient_link.col_linked') || "Enlazado con"}
+                    </th>
                     <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '180px' }}>
                       {t('modals.cost_price_column') || "Precio"}
                     </th>
@@ -14706,6 +14712,50 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                             </div>
                           ) : (
                             <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                          {item.linkedGoods ? (
+                            <button
+                              type="button"
+                              onClick={() => setLinkingTarget({ item, type: "ingredient" })}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                background: '#ecfdf5',
+                                color: '#047857',
+                                border: '1px solid #a7f3d0',
+                                padding: '0.3rem 0.55rem',
+                                borderRadius: '6px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                              title={t('goods_ingredient_link.badge_linked_with', { name: item.linkedGoods.name }) || ('Enlazado con: ' + item.linkedGoods.name)}
+                            >
+                              <Link2 size={13} />
+                              <span>{item.linkedGoods.name}</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setLinkingTarget({ item, type: "ingredient" })}
+                              className="btn-secondary"
+                              style={{
+                                padding: '0.3rem 0.55rem',
+                                fontSize: '0.78rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                borderRadius: '6px',
+                                fontWeight: 600
+                              }}
+                              title={t('goods_ingredient_link.btn_link_goods') || "Enlazar con mercancía"}
+                            >
+                              <Link2 size={13} style={{ color: 'var(--corp-green)' }} />
+                              <span>{t('goods_ingredient_link.btn_link_goods') || "Enlazar"}</span>
+                            </button>
                           )}
                         </td>
                         <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
@@ -14768,6 +14818,9 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '140px' }}>
                         {t('modals.gfs_cost_col_unit') || "Unidad de medida"}
                       </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '170px' }}>
+                        {t('goods_ingredient_link.col_linked') || "Enlazado con"}
+                      </th>
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '190px' }}>
                         {t('modals.gfs_cost_col_unit_price') || "Precio de coste por unidad"}
                       </th>
@@ -14791,6 +14844,50 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                               <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
                                 {item.unit || "-"}
                               </span>
+                            </td>
+                            <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                              {item.linkedIngredientName ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setLinkingTarget({ item, type: "goods" })}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem',
+                                    background: '#ecfdf5',
+                                    color: '#047857',
+                                    border: '1px solid #a7f3d0',
+                                    padding: '0.3rem 0.55rem',
+                                    borderRadius: '6px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                  title={t('goods_ingredient_link.badge_linked_with', { name: item.linkedIngredientName }) || ('Enlazado con: ' + item.linkedIngredientName)}
+                                >
+                                  <Link2 size={13} />
+                                  <span>{item.linkedIngredientName}</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setLinkingTarget({ item, type: "goods" })}
+                                  className="btn-secondary"
+                                  style={{
+                                    padding: '0.3rem 0.55rem',
+                                    fontSize: '0.78rem',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem',
+                                    borderRadius: '6px',
+                                    fontWeight: 600
+                                  }}
+                                  title={t('goods_ingredient_link.btn_link') || "Enlazar con ingrediente"}
+                                >
+                                  <Link2 size={13} style={{ color: 'var(--corp-green)' }} />
+                                  <span>{t('goods_ingredient_link.btn_link') || "Enlazar"}</span>
+                                </button>
+                              )}
                             </td>
                             <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem' }}>
@@ -14838,7 +14935,7 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                           {/* Expanded Lots Section */}
                           {isExpanded && (
                             <tr style={{ borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
-                              <td colSpan={4} style={{ padding: '0.75rem 1.25rem 1.25rem 1.25rem' }}>
+                              <td colSpan={5} style={{ padding: '0.75rem 1.25rem 1.25rem 1.25rem' }}>
                                 <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                                     <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -15004,6 +15101,25 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
             )}
           </div>
         </div>
+
+        {linkingTarget && (
+          <LinkGoodsIngredientModal
+            isOpen={Boolean(linkingTarget)}
+            onClose={() => setLinkingTarget(null)}
+            sourceType={linkingTarget.type}
+            targetItem={linkingTarget.item}
+            currency={currency}
+            onSuccess={() => {
+              fetchGoodsForSale();
+              fetch('/api/ingredient-prices')
+                .then(r => r.json())
+                .then(data => {
+                  if (Array.isArray(data)) setLocalPrices(data);
+                })
+                .catch(() => {});
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -22101,6 +22217,7 @@ function InventoryModal({ isOpen, onClose }) {
   const [lotEditingValues, setLotEditingValues] = useState({});
   const [savingLotId, setSavingLotId] = useState(null);
   const [savedLotId, setSavedLotId] = useState(null);
+  const [linkingTarget, setLinkingTarget] = useState(null);
 
   const fetchInventory = async () => {
     try {
@@ -22464,6 +22581,9 @@ function InventoryModal({ isOpen, onClose }) {
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                         {t('inventory.col_recipes') || "Recetas Relacionadas"}
                       </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '170px' }}>
+                        {t('goods_ingredient_link.col_linked') || "Enlazado con"}
+                      </th>
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '180px' }}>
                         {t('inventory.col_lot') || "Stock por lote"}
                       </th>
@@ -22494,6 +22614,50 @@ function InventoryModal({ isOpen, onClose }) {
                             </div>
                           ) : (
                             <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                          {item.linkedGoods ? (
+                            <button
+                              type="button"
+                              onClick={() => setLinkingTarget({ item, type: "ingredient" })}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                background: '#ecfdf5',
+                                color: '#047857',
+                                border: '1px solid #a7f3d0',
+                                padding: '0.3rem 0.55rem',
+                                borderRadius: '6px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                              title={t('goods_ingredient_link.badge_linked_with', { name: item.linkedGoods.name }) || ('Enlazado con: ' + item.linkedGoods.name)}
+                            >
+                              <Link2 size={13} />
+                              <span>{item.linkedGoods.name}</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setLinkingTarget({ item, type: "ingredient" })}
+                              className="btn-secondary"
+                              style={{
+                                padding: '0.3rem 0.55rem',
+                                fontSize: '0.78rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                borderRadius: '6px',
+                                fontWeight: 600
+                              }}
+                              title={t('goods_ingredient_link.btn_link_goods') || "Enlazar con mercancía"}
+                            >
+                              <Link2 size={13} style={{ color: 'var(--corp-green)' }} />
+                              <span>{t('goods_ingredient_link.btn_link_goods') || "Enlazar"}</span>
+                            </button>
                           )}
                         </td>
                         <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
@@ -22579,6 +22743,9 @@ function InventoryModal({ isOpen, onClose }) {
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '140px' }}>
                         {t('inventory.col_gfs_unit') || "Unidad de medida"}
                       </th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '170px' }}>
+                        {t('goods_ingredient_link.col_linked') || "Enlazado con"}
+                      </th>
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '230px' }}>
                         {t('inventory.col_gfs_lot_stock') || "Ver/modificar el stock de cada lote"}
                       </th>
@@ -22602,6 +22769,50 @@ function InventoryModal({ isOpen, onClose }) {
                               <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
                                 {item.unit || "-"}
                               </span>
+                            </td>
+                            <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                              {item.linkedIngredientName ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setLinkingTarget({ item, type: "goods" })}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem',
+                                    background: '#ecfdf5',
+                                    color: '#047857',
+                                    border: '1px solid #a7f3d0',
+                                    padding: '0.3rem 0.55rem',
+                                    borderRadius: '6px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                  title={t('goods_ingredient_link.badge_linked_with', { name: item.linkedIngredientName }) || ('Enlazado con: ' + item.linkedIngredientName)}
+                                >
+                                  <Link2 size={13} />
+                                  <span>{item.linkedIngredientName}</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setLinkingTarget({ item, type: "goods" })}
+                                  className="btn-secondary"
+                                  style={{
+                                    padding: '0.3rem 0.55rem',
+                                    fontSize: '0.78rem',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem',
+                                    borderRadius: '6px',
+                                    fontWeight: 600
+                                  }}
+                                  title={t('goods_ingredient_link.btn_link') || "Enlazar con ingrediente"}
+                                >
+                                  <Link2 size={13} style={{ color: 'var(--corp-green)' }} />
+                                  <span>{t('goods_ingredient_link.btn_link') || "Enlazar"}</span>
+                                </button>
+                              )}
                             </td>
                             <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
                               <button
@@ -22647,7 +22858,7 @@ function InventoryModal({ isOpen, onClose }) {
                           {/* Expanded Lots Section */}
                           {isExpanded && (
                             <tr style={{ borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
-                              <td colSpan={4} style={{ padding: '0.75rem 1.25rem 1.25rem 1.25rem' }}>
+                              <td colSpan={5} style={{ padding: '0.75rem 1.25rem 1.25rem 1.25rem' }}>
                                 <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                                     <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -22820,6 +23031,19 @@ function InventoryModal({ isOpen, onClose }) {
           <IngredientLotStockModal 
             ingredient={selectedLotIngredient} 
             onClose={() => setSelectedLotIngredient(null)} 
+          />
+        )}
+
+        {linkingTarget && (
+          <LinkGoodsIngredientModal
+            isOpen={Boolean(linkingTarget)}
+            onClose={() => setLinkingTarget(null)}
+            sourceType={linkingTarget.type}
+            targetItem={linkingTarget.item}
+            onSuccess={() => {
+              fetchInventory();
+              fetchGoodsForSale();
+            }}
           />
         )}
       </div>

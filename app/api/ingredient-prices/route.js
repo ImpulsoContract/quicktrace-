@@ -10,7 +10,14 @@ export async function GET(req) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const profileId = session.user.profileId;
+    let profileId = session.user.profileId;
+    if (!profileId && session.user.role === "ADMIN") {
+      const firstProfile = await prisma.clientProfile.findFirst({
+        orderBy: { id: "asc" }
+      });
+      profileId = firstProfile?.id;
+    }
+
     if (!profileId) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
 
     // Fetch all recipes with their ingredients
@@ -22,6 +29,35 @@ export async function GET(req) {
     // Fetch existing prices
     const existingPrices = await prisma.ingredientPrice.findMany({
       where: { clientProfileId: profileId }
+    });
+
+    // Fetch linked goods for sale
+    const linkedGoodsList = await prisma.goodsForSale.findMany({
+      where: {
+        clientProfileId: profileId,
+        linkedIngredientName: { not: null }
+      },
+      select: {
+        id: true,
+        name: true,
+        unit: true,
+        stock: true,
+        costPrice: true,
+        linkedIngredientName: true
+      }
+    });
+
+    const linkedGoodsByIngName = {};
+    linkedGoodsList.forEach(g => {
+      if (g.linkedIngredientName) {
+        linkedGoodsByIngName[g.linkedIngredientName.trim().toLowerCase()] = {
+          id: g.id,
+          name: g.name,
+          unit: g.unit,
+          stock: g.stock,
+          costPrice: g.costPrice
+        };
+      }
     });
 
     // Group ingredients by Name and Unit
@@ -38,7 +74,8 @@ export async function GET(req) {
             name: nameKey,
             unit: unitKey,
             recipes: [],
-            price: 0
+            price: 0,
+            linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null
           };
         }
         if (!ingredientGroups[lookupKey].recipes.includes(recipe.name)) {
@@ -49,9 +86,19 @@ export async function GET(req) {
 
     // Merge with existing prices
     existingPrices.forEach(priceRecord => {
-      const lookupKey = `${priceRecord.name.trim().toLowerCase()}_${priceRecord.unit.trim().toLowerCase()}`;
+      const nameKey = priceRecord.name.trim();
+      const unitKey = priceRecord.unit.trim();
+      const lookupKey = `${nameKey.toLowerCase()}_${unitKey.toLowerCase()}`;
       if (ingredientGroups[lookupKey]) {
         ingredientGroups[lookupKey].price = priceRecord.price;
+      } else {
+        ingredientGroups[lookupKey] = {
+          name: nameKey,
+          unit: unitKey,
+          recipes: [],
+          price: priceRecord.price,
+          linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null
+        };
       }
     });
 
@@ -71,7 +118,14 @@ export async function POST(req) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const profileId = session.user.profileId;
+    let profileId = session.user.profileId;
+    if (!profileId && session.user.role === "ADMIN") {
+      const firstProfile = await prisma.clientProfile.findFirst({
+        orderBy: { id: "asc" }
+      });
+      profileId = firstProfile?.id;
+    }
+
     if (!profileId) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
 
     const body = await req.json();
@@ -105,6 +159,20 @@ export async function POST(req) {
         }
       });
       savedPrices.push(updatedPrice);
+
+      // Synchronize with linked GoodsForSale if exists
+      const linkedGoods = await prisma.goodsForSale.findFirst({
+        where: {
+          clientProfileId: profileId,
+          linkedIngredientName: { equals: ing.name.trim(), mode: "insensitive" }
+        }
+      });
+      if (linkedGoods) {
+        await prisma.goodsForSale.update({
+          where: { id: linkedGoods.id },
+          data: { costPrice: priceVal }
+        });
+      }
     }
 
     // Recalculate elaborations

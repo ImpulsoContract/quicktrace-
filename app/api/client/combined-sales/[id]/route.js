@@ -303,10 +303,28 @@ export async function PUT(req, { params }) {
               }
             }
           }
-          await tx.goodsForSale.update({
+          const restockedGfs = await tx.goodsForSale.update({
             where: { id: gItem.goodsForSaleId },
             data: { stock: { increment: gItem.quantity } }
-          }).catch(() => {});
+          }).catch(() => null);
+          if (restockedGfs && restockedGfs.linkedIngredientName) {
+            await tx.ingredientStock.upsert({
+              where: {
+                clientProfileId_name_unit: {
+                  clientProfileId: restockedGfs.clientProfileId,
+                  name: restockedGfs.linkedIngredientName.trim(),
+                  unit: restockedGfs.unit.trim()
+                }
+              },
+              update: { stock: restockedGfs.stock },
+              create: {
+                clientProfileId: restockedGfs.clientProfileId,
+                name: restockedGfs.linkedIngredientName.trim(),
+                unit: restockedGfs.unit.trim(),
+                stock: restockedGfs.stock
+              }
+            });
+          }
         }
       }
 
@@ -386,10 +404,28 @@ export async function PUT(req, { params }) {
           });
           const currentStock = currentGfs?.stock || 0;
           const newStock = Math.max(0, Math.round((currentStock - item.quantity) * 10000) / 10000);
-          await tx.goodsForSale.update({
+          const updatedGfs = await tx.goodsForSale.update({
             where: { id: item.goodsForSaleId },
             data: { stock: newStock }
           });
+          if (updatedGfs && updatedGfs.linkedIngredientName) {
+            await tx.ingredientStock.upsert({
+              where: {
+                clientProfileId_name_unit: {
+                  clientProfileId: updatedGfs.clientProfileId,
+                  name: updatedGfs.linkedIngredientName.trim(),
+                  unit: updatedGfs.unit.trim()
+                }
+              },
+              update: { stock: newStock },
+              create: {
+                clientProfileId: updatedGfs.clientProfileId,
+                name: updatedGfs.linkedIngredientName.trim(),
+                unit: updatedGfs.unit.trim(),
+                stock: newStock
+              }
+            });
+          }
         }
 
         await tx.combinedSaleGoodsItem.create({
@@ -482,10 +518,28 @@ export async function DELETE(req, { params }) {
               }
             }
           }
-          await tx.goodsForSale.update({
+          const restockedGfs = await tx.goodsForSale.update({
             where: { id: gItem.goodsForSaleId },
             data: { stock: { increment: gItem.quantity } }
-          }).catch(() => {});
+          }).catch(() => null);
+          if (restockedGfs && restockedGfs.linkedIngredientName) {
+            await tx.ingredientStock.upsert({
+              where: {
+                clientProfileId_name_unit: {
+                  clientProfileId: restockedGfs.clientProfileId,
+                  name: restockedGfs.linkedIngredientName.trim(),
+                  unit: restockedGfs.unit.trim()
+                }
+              },
+              update: { stock: restockedGfs.stock },
+              create: {
+                clientProfileId: restockedGfs.clientProfileId,
+                name: restockedGfs.linkedIngredientName.trim(),
+                unit: restockedGfs.unit.trim(),
+                stock: restockedGfs.stock
+              }
+            });
+          }
         }
       }
 

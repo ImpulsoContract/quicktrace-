@@ -718,6 +718,7 @@ model GoodsForSale {
   costPrice Float?
   stock     Float         @default(0)
   isArchived Boolean       @default(false)
+  linkedIngredientName String?
 
   goodsReceipts GoodsReceipt[]
   combinedSaleItems CombinedSaleGoodsItem[]
@@ -728,6 +729,7 @@ model GoodsForSale {
   @@unique([clientProfileId, name, unit])
   @@index([clientProfileId])
   @@index([clientProfileId, isArchived])
+  @@index([clientProfileId, linkedIngredientName])
 }
 
 

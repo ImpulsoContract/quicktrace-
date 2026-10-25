@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { 
   X, Plus, Edit, Trash2, Tag, Loader2, Search, CheckCircle, 
   AlertCircle, DollarSign, Package, ShoppingBag, Layers,
-  Archive, ArchiveRestore, ChevronDown, ChevronUp, Save, Check
+  Archive, ArchiveRestore, ChevronDown, ChevronUp, Save, Check, Link2
 } from "lucide-react";
+import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export default function GoodsForSaleModal({
@@ -36,6 +37,7 @@ export default function GoodsForSaleModal({
   const [receiptEdits, setReceiptEdits] = useState({});
   const [savingReceiptId, setSavingReceiptId] = useState(null);
   const [savedReceiptId, setSavedReceiptId] = useState(null);
+  const [linkingItem, setLinkingItem] = useState(null);
 
   const currencySymbol = useMemo(() => {
     const cur = profile?.currency || "EUR";
@@ -677,6 +679,12 @@ export default function GoodsForSaleModal({
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <Package size={16} color="var(--corp-green)" />
                                 <span>{item.name}</span>
+                                {item.linkedIngredientName && (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0", padding: "0.1rem 0.45rem", borderRadius: "4px", fontSize: "0.72rem", fontWeight: 700 }} title={t("goods_ingredient_link.badge_linked_with", { name: item.linkedIngredientName }) || ("Enlazado con: " + item.linkedIngredientName)}>
+                                    <Link2 size={12} />
+                                    {item.linkedIngredientName}
+                                  </span>
+                                )}
                                 {item.isArchived && (
                                   <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', borderRadius: '0.25rem', background: '#f1f5f9', color: '#64748b', fontWeight: '700' }}>
                                     {t('goods_for_sale.tab_archived') || "Archivada"}
@@ -732,6 +740,27 @@ export default function GoodsForSaleModal({
                                 >
                                   <Layers size={16} />
                                   {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </button>
+
+                                {/* Link with Ingredient Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => setLinkingItem(item)}
+                                  style={{
+                                    background: item.linkedIngredientName ? '#ecfdf5' : 'none',
+                                    border: item.linkedIngredientName ? '1px solid #a7f3d0' : 'none',
+                                    color: item.linkedIngredientName ? '#047857' : '#64748b',
+                                    cursor: 'pointer',
+                                    padding: '0.3rem',
+                                    borderRadius: '0.3rem',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                  }}
+                                  title={item.linkedIngredientName 
+                                    ? (t('goods_ingredient_link.badge_linked_with', { name: item.linkedIngredientName }) || ('Enlazado con: ' + item.linkedIngredientName)) 
+                                    : (t('goods_ingredient_link.btn_link') || 'Enlazar con ingrediente')}
+                                >
+                                  <Link2 size={16} />
                                 </button>
 
                                 {/* Edit Button (Only in active tab) */}
@@ -971,6 +1000,15 @@ export default function GoodsForSaleModal({
           </button>
         </div>
       </div>
+      {/* Link Goods with Ingredient Modal */}
+      <LinkGoodsIngredientModal
+        isOpen={Boolean(linkingItem)}
+        onClose={() => setLinkingItem(null)}
+        sourceType="goods"
+        targetItem={linkingItem}
+        currency={profile?.currency}
+        onSuccess={() => fetchItems()}
+      />
     </div>
   );
 }
