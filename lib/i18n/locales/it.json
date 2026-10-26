@@ -894,7 +894,10 @@
     "cost_price_per_unit": "Prezzo di costo per unità",
     "clear_selection": "Rimuovi selezione",
     "selected_good_help": "Al salvataggio di questa voce di merce, lo stock di questa merce aumenterà e questo prezzo di costo verrà assegnato.",
-    "modal_add_gfs_title": "Nuova merce in vendita"
+    "modal_add_gfs_title": "Nuova merce in vendita",
+    "stock_quantity_invalid": "La quantità aggiunta alla giacenza deve essere un numero valido maggiore o uguale a 0.",
+    "cost_price_invalid": "Il prezzo di costo deve essere un numero valido maggiore o uguale a 0.",
+    "no_ingredients_found": "Nessun ingrediente trovato."
   },
   "plans": {
     "title": "Piani di Prezzo",
@@ -1822,7 +1825,8 @@
     "col_receipt_stock": "Giacenza disponibile",
     "col_receipt_cost_price": "Prezzo di costo / unità",
     "save_receipt_changes": "Salva",
-    "receipt_saved_success": "Entrata aggiornata con successo."
+    "receipt_saved_success": "Entrata aggiornata con successo.",
+    "badge_archived": "Archiviata"
   },
   "sellers": {
     "manage_btn": "Gestisci venditori",
@@ -1892,6 +1896,12 @@
     "link_success": "Collegamento e unificazione completati con successo.",
     "err_select_counterpart": "Seleziona un elemento da collegare.",
     "err_manual_unit": "Inserisci l'unità di misura.",
-    "err_manual_stock": "Inserisci una giacenza valida maggiore o uguale a 0."
+    "err_manual_stock": "Inserisci una giacenza valida maggiore o uguale a 0.",
+    "col_linked": "Collegato con",
+    "selected_goods": "Merce selezionata",
+    "selected_ingredient": "Ingrediente selezionato",
+    "label_unit": "Unità",
+    "label_stock": "Giacenza",
+    "label_cost": "Costo"
   }
 }

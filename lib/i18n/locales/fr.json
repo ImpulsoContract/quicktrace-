@@ -894,7 +894,10 @@
     "cost_price_per_unit": "Prix de revient par unité",
     "clear_selection": "Effacer la sélection",
     "selected_good_help": "En enregistrant cette entrée de marchandise, le stock de cette marchandise sera augmenté et ce prix de revient sera attribué.",
-    "modal_add_gfs_title": "Nouvelle marchandise en vente"
+    "modal_add_gfs_title": "Nouvelle marchandise en vente",
+    "stock_quantity_invalid": "La quantité ajoutée au stock doit être un nombre valide supérieur ou égal à 0.",
+    "cost_price_invalid": "Le prix de revient doit être un nombre valide supérieur ou égal à 0.",
+    "no_ingredients_found": "Aucun ingrédient trouvé."
   },
   "plans": {
     "title": "Plans de Tarification",
@@ -1822,7 +1825,8 @@
     "col_receipt_stock": "Stock disponible",
     "col_receipt_cost_price": "Prix de revient / unité",
     "save_receipt_changes": "Enregistrer",
-    "receipt_saved_success": "Entrée mise à jour avec succès."
+    "receipt_saved_success": "Entrée mise à jour avec succès.",
+    "badge_archived": "Archivée"
   },
   "sellers": {
     "manage_btn": "Gérer les vendeurs",
@@ -1892,6 +1896,12 @@
     "link_success": "Liaison et unification terminées avec succès.",
     "err_select_counterpart": "Veuillez sélectionner un élément à lier.",
     "err_manual_unit": "Veuillez saisir l'unité de mesure.",
-    "err_manual_stock": "Veuillez saisir un stock valide supérieur ou égal à 0."
+    "err_manual_stock": "Veuillez saisir un stock valide supérieur ou égal à 0.",
+    "col_linked": "Lié à",
+    "selected_goods": "Marchandise sélectionnée",
+    "selected_ingredient": "Ingrédient sélectionné",
+    "label_unit": "Unité",
+    "label_stock": "Stock",
+    "label_cost": "Coût"
   }
 }

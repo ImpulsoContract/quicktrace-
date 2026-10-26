@@ -356,7 +356,9 @@ export default function LinkGoodsIngredientModal({
               {sourceType === "goods" ? <Tag size={18} style={{ color: 'var(--corp-green)' }} /> : <Package size={18} style={{ color: 'var(--corp-green)' }} />}
               <div>
                 <span style={{ fontSize: '0.78rem', textTransform: 'uppercase', fontWeight: 700, color: 'var(--text-muted)' }}>
-                  {sourceType === "goods" ? "Mercancía seleccionada" : "Ingrediente seleccionado"}:
+                  {sourceType === "goods"
+                    ? (t('goods_ingredient_link.selected_goods') || "Mercancía seleccionada")
+                    : (t('goods_ingredient_link.selected_ingredient') || "Ingrediente seleccionado")}:
                 </span>
                 <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginLeft: '0.4rem' }}>
                   {sourceName}
@@ -366,15 +368,15 @@ export default function LinkGoodsIngredientModal({
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.83rem' }}>
               <div>
-                <span style={{ color: 'var(--text-muted)' }}>Unidad: </span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('goods_ingredient_link.label_unit') || "Unidad"}: </span>
                 <span style={{ fontWeight: 700, color: '#334155' }}>{sourceUnit || "-"}</span>
               </div>
               <div>
-                <span style={{ color: 'var(--text-muted)' }}>Stock: </span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('goods_ingredient_link.label_stock') || "Stock"}: </span>
                 <span style={{ fontWeight: 800, color: 'var(--corp-green)' }}>{sourceStock}</span>
               </div>
               <div>
-                <span style={{ color: 'var(--text-muted)' }}>Coste: </span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('goods_ingredient_link.label_cost') || "Coste"}: </span>
                 <span style={{ fontWeight: 700, color: '#334155' }}>{sourceCost}</span>
               </div>
             </div>
@@ -497,11 +499,11 @@ export default function LinkGoodsIngredientModal({
                         )}
 
                         <span style={{ color: 'var(--text-muted)' }}>
-                          Stock: <strong style={{ color: item.stock > 0 ? 'var(--corp-green)' : '#64748b' }}>{item.stock}</strong>
+                          {t('goods_ingredient_link.label_stock') || "Stock"}: <strong style={{ color: item.stock > 0 ? 'var(--corp-green)' : '#64748b' }}>{item.stock}</strong>
                         </span>
 
                         <span style={{ color: 'var(--text-muted)' }}>
-                          Coste: <strong style={{ color: '#334155' }}>
+                          {t('goods_ingredient_link.label_cost') || "Coste"}: <strong style={{ color: '#334155' }}>
                             {item.costPrice !== null && item.costPrice !== undefined ? `${item.costPrice} ${currencySymbol}` : "-"}
                           </strong>
                         </span>

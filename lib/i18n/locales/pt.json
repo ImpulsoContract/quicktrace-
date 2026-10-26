@@ -893,7 +893,10 @@
     "cost_price_per_unit": "Preço de custo por unidade",
     "clear_selection": "Remover seleção",
     "selected_good_help": "Ao guardar esta entrada de mercadoria, o stock desta mercadoria será incrementado e este preço de custo será atribuído.",
-    "modal_add_gfs_title": "Nova mercadoria à venda"
+    "modal_add_gfs_title": "Nova mercadoria à venda",
+    "stock_quantity_invalid": "A quantidade adicionada ao estoque deve ser um número válido maior ou igual a 0.",
+    "cost_price_invalid": "O preço de custo deve ser um número válido maior ou igual a 0.",
+    "no_ingredients_found": "Nenhum ingrediente encontrado."
   },
   "plans": {
     "title": "Planos de Preços",
@@ -1821,7 +1824,8 @@
     "col_receipt_stock": "Stock disponível",
     "col_receipt_cost_price": "Preço de custo / unidade",
     "save_receipt_changes": "Guardar",
-    "receipt_saved_success": "Entrada atualizada com sucesso."
+    "receipt_saved_success": "Entrada atualizada com sucesso.",
+    "badge_archived": "Arquivada"
   },
   "sellers": {
     "manage_btn": "Gerir vendedores",
@@ -1891,6 +1895,12 @@
     "link_success": "Vínculo e unificação concluídos com sucesso.",
     "err_select_counterpart": "Por favor, selecione um item para vincular.",
     "err_manual_unit": "Por favor, insira a unidade de medida.",
-    "err_manual_stock": "Por favor, insira um estoque válido maior ou igual a 0."
+    "err_manual_stock": "Por favor, insira um estoque válido maior ou igual a 0.",
+    "col_linked": "Vinculado com",
+    "selected_goods": "Mercadoria selecionada",
+    "selected_ingredient": "Ingrediente selecionado",
+    "label_unit": "Unidade",
+    "label_stock": "Estoque",
+    "label_cost": "Custo"
   }
 }

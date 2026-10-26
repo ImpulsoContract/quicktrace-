@@ -687,7 +687,7 @@ export default function GoodsForSaleModal({
                                 )}
                                 {item.isArchived && (
                                   <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', borderRadius: '0.25rem', background: '#f1f5f9', color: '#64748b', fontWeight: '700' }}>
-                                    {t('goods_for_sale.tab_archived') || "Archivada"}
+                                    {t('goods_for_sale.badge_archived') || "Archivada"}
                                   </span>
                                 )}
                               </div>

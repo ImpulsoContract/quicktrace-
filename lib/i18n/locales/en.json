@@ -899,7 +899,10 @@
     "cost_price_per_unit": "Cost price per unit",
     "clear_selection": "Clear selection",
     "selected_good_help": "When saving this goods receipt, the stock of this good will be increased and this cost price will be assigned.",
-    "modal_add_gfs_title": "New goods for sale"
+    "modal_add_gfs_title": "New goods for sale",
+    "stock_quantity_invalid": "The quantity added to stock must be a valid number greater than or equal to 0.",
+    "cost_price_invalid": "The cost price must be a valid number greater than or equal to 0.",
+    "no_ingredients_found": "No ingredients found."
   },
   "plans": {
     "title": "Pricing Plans",
@@ -1827,7 +1830,8 @@
     "col_receipt_stock": "Available stock",
     "col_receipt_cost_price": "Cost price / unit",
     "save_receipt_changes": "Save",
-    "receipt_saved_success": "Receipt updated successfully."
+    "receipt_saved_success": "Receipt updated successfully.",
+    "badge_archived": "Archived"
   },
   "sellers": {
     "manage_btn": "Manage salespeople",
@@ -1897,6 +1901,12 @@
     "link_success": "Link and unification completed successfully.",
     "err_select_counterpart": "Please select an item to link.",
     "err_manual_unit": "Please enter the unit of measure.",
-    "err_manual_stock": "Please enter a valid stock greater than or equal to 0."
+    "err_manual_stock": "Please enter a valid stock greater than or equal to 0.",
+    "col_linked": "Linked with",
+    "selected_goods": "Selected goods",
+    "selected_ingredient": "Selected ingredient",
+    "label_unit": "Unit",
+    "label_stock": "Stock",
+    "label_cost": "Cost"
   }
 }

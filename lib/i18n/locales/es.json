@@ -899,7 +899,10 @@
     "cost_price_per_unit": "Precio de coste por unidad",
     "clear_selection": "Quitar selección",
     "selected_good_help": "Al guardar esta entrada de mercancía, se incrementará el stock de esta mercancía en venta y se le asignará este precio de coste.",
-    "modal_add_gfs_title": "Nueva mercancía en venta"
+    "modal_add_gfs_title": "Nueva mercancía en venta",
+    "stock_quantity_invalid": "La cantidad añadida al stock debe ser un número válido mayor o igual a 0.",
+    "cost_price_invalid": "El precio de coste debe ser un número válido mayor o igual a 0.",
+    "no_ingredients_found": "No se encontraron ingredientes."
   },
   "plans": {
     "title": "Planes de Precios",
@@ -1827,7 +1830,8 @@
     "col_receipt_stock": "Stock disponible",
     "col_receipt_cost_price": "Precio coste / ud",
     "save_receipt_changes": "Guardar",
-    "receipt_saved_success": "Entrada actualizada correctamente."
+    "receipt_saved_success": "Entrada actualizada correctamente.",
+    "badge_archived": "Archivada"
   },
   "sellers": {
     "manage_btn": "Gestionar vendedores",
@@ -1897,6 +1901,12 @@
     "link_success": "Enlace y unificación completados correctamente.",
     "err_select_counterpart": "Por favor, selecciona un elemento para enlazar.",
     "err_manual_unit": "Por favor, introduce la unidad de medida.",
-    "err_manual_stock": "Por favor, introduce un stock válido mayor o igual a 0."
+    "err_manual_stock": "Por favor, introduce un stock válido mayor o igual a 0.",
+    "col_linked": "Enlazado con",
+    "selected_goods": "Mercancía seleccionada",
+    "selected_ingredient": "Ingrediente seleccionado",
+    "label_unit": "Unidad",
+    "label_stock": "Stock",
+    "label_cost": "Coste"
   }
 }
