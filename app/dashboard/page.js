@@ -40,6 +40,7 @@ import GoodsForSaleModal from "@/components/GoodsForSaleModal";
 import RelateGoodsReceiptModal from "@/components/RelateGoodsReceiptModal";
 import DeliveryNoteModal from "@/components/DeliveryNoteModal";
 import { generateDeliveryNotePDF } from "@/lib/deliveryNoteGenerator";
+import ProductFamiliesView from "@/components/ProductFamiliesView";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -5561,6 +5562,14 @@ export default function ClientDashboard() {
                     onClick={() => { setActiveTab("ventas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                   />
                 )}
+                {profile?.hasPosMode && session?.user?.role !== "WORKER" && (
+                  <SidebarBtn 
+                    icon={<Boxes size={20} />} 
+                    label={t('sidebar.product_families') || "Familias de productos"} 
+                    active={activeTab === "familias-productos"} 
+                    onClick={() => { setActiveTab("familias-productos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                  />
+                )}
               </>
             )}
 
@@ -8020,6 +8029,15 @@ export default function ClientDashboard() {
                   setSelectedRecords([]);
                   if (window.innerWidth <= 1024) setIsSidebarOpen(false);
                   scrollToTop();
+                }}
+              />
+            </div>
+          ) : activeTab === 'familias-productos' && profile?.hasPosMode ? (
+            <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <ProductFamiliesView
+                profile={profile}
+                onUpdate={() => {
+                  fetchRecipes();
                 }}
               />
             </div>

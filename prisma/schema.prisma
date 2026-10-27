@@ -126,6 +126,7 @@ model ClientProfile {
   goodsForSale               GoodsForSale[]
   sellers                    Seller[]
   hasPosMode                 Boolean           @default(false)
+  productFamilies            ProductFamily[]
 
   holdedApiKey               String?
   holdedTax                  Float?            @default(10)
@@ -277,8 +278,13 @@ model Recipe {
 
   allergens String[] @default([])
 
+  productFamilyId Int?
+  productFamily   ProductFamily? @relation(fields: [productFamilyId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([productFamilyId])
 }
 
 model Ingredient {
@@ -731,6 +737,9 @@ model GoodsForSale {
   goodsReceipts GoodsReceipt[]
   combinedSaleItems CombinedSaleGoodsItem[]
 
+  productFamilyId Int?
+  productFamily   ProductFamily? @relation(fields: [productFamilyId], references: [id], onDelete: SetNull)
+
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
@@ -738,6 +747,23 @@ model GoodsForSale {
   @@index([clientProfileId])
   @@index([clientProfileId, isArchived])
   @@index([clientProfileId, linkedIngredientName])
+  @@index([productFamilyId])
+}
+
+model ProductFamily {
+  id              Int           @id @default(autoincrement())
+  name            String
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  recipes         Recipe[]
+  goodsForSale    GoodsForSale[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([clientProfileId, name])
+  @@index([clientProfileId])
 }
 
 
