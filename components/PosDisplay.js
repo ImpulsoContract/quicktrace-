@@ -1,9 +1,11 @@
+"use client";
+
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { 
-  X, Plus, Trash2, ShoppingCart, Loader2, FileText, CheckCircle,
-  AlertCircle, DollarSign, Calendar, User, Layers, ChevronRight, Eye, Edit,
-  Search, Tag, Package, ChevronDown, Clock, Users, Store, LayoutDashboard,
-  Check, ArrowLeft, RefreshCw, CloudCheck
+  Store, MonitorX, ArrowLeft, Search, Plus, Minus, Trash2, Check,
+  CheckCircle2, AlertCircle, ShoppingCart, User, Users, FileText,
+  Loader2, RefreshCw, X, Tag, Package, CreditCard, Banknote, 
+  Layers, ChevronRight, Hash
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -13,45 +15,77 @@ export default function PosDisplay({
   onExitPos,
   onSaleCreated
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
 
-  // POS Sellers state
+  // 1. SCREEN SIZE CONSTRAINT (< 768px shows error)
+  const [isScreenTooSmall, setIsScreenTooSmall] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsScreenTooSmall(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // 2. SELLERS & ACTIVE SELLER
   const [sellers, setSellers] = useState([]);
   const [loadingSellers, setLoadingSellers] = useState(false);
-  const [selectedSeller, setSelectedSeller] = useState({ id: "anonymous", name: t('pos.seller_anonymous') || "Anónimo" });
+  const [activeSellerId, setActiveSellerId] = useState("anonymous");
 
-  // Navigation tab in POS: "ticket" (venta actual) or "history" (consultar ventas)
-  const [posTab, setPosTab] = useState("ticket");
+  // All sellers list with Anonymous always first
+  const allSellers = useMemo(() => {
+    return [
+      { id: "anonymous", name: t('pos.seller_anonymous') || "Anónimo" },
+      ...sellers
+    ];
+  }, [sellers, t]);
 
-  // Available stock data
+  const activeSeller = useMemo(() => {
+    return allSellers.find(s => s.id === activeSellerId) || allSellers[0];
+  }, [allSellers, activeSellerId]);
+
+  // 3. PRODUCTS DATA (Elaborations & Goods for sale)
   const [availableElaborations, setAvailableElaborations] = useState([]);
   const [availableGoods, setAvailableGoods] = useState([]);
-  const [loadingAvailable, setLoadingAvailable] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+  const [productCategory, setProductCategory] = useState("all"); // "all" | "elaborations" | "goods"
 
-  // Current Ticket Form State
-  const [currentDraftId, setCurrentDraftId] = useState(null);
-  const [formCustomer, setFormCustomer] = useState("");
-  const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
-  const [formNotes, setFormNotes] = useState("");
-  const [saleItems, setSaleItems] = useState([]);
-  const [activeSearchIdx, setActiveSearchIdx] = useState(null);
+  // 4. TOP BAR SCALE INDICATOR & SELECTION STATE
+  const [weightInput, setWeightInput] = useState(""); // User editable kg input (or scale)
+  const [selectedProduct, setSelectedProduct] = useState(null); // Selected product from Column 2
+  const [quantityUnits, setQuantityUnits] = useState(1); // Quantity multiplier from Column 3
 
-  // Auto-save state
+  // 5. DRAFTS MAP BY SELLER: { [sellerId]: { draftId, customerId, date, notes, items: [] } }
+  const [draftsBySeller, setDraftsBySeller] = useState({
+    anonymous: {
+      draftId: null,
+      sellerId: null,
+      sellerName: t('pos.seller_anonymous') || "Anónimo",
+      customerId: null,
+      date: new Date().toISOString().slice(0, 10),
+      notes: "",
+      items: []
+    }
+  });
+
+  // Autosave status indicator
   const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // "idle" | "saving" | "saved" | "error"
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const isInitialLoadRef = useRef(true);
   const autoSaveTimerRef = useRef(null);
+  const isInitialLoadRef = useRef(true);
 
-  // Finalizing / submitting state
+  // 6. MODALS
+  const [isViewSalesModalOpen, setIsViewSalesModalOpen] = useState(false);
+  const [checkoutSeller, setCheckoutSeller] = useState(null); // When reviewing a seller's sale to finalize
+  const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState("cash");
+  const [checkoutAmountPaid, setCheckoutAmountPaid] = useState("");
+  const [checkoutCustomer, setCheckoutCustomer] = useState("");
+  const [checkoutNotes, setCheckoutNotes] = useState("");
   const [finalizing, setFinalizing] = useState(false);
-  const [successSaleMsg, setSuccessSaleMsg] = useState("");
-
-  // History tab state
-  const [combinedSales, setCombinedSales] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [expandedSaleId, setExpandedSaleId] = useState(null);
-  const [invoicingId, setInvoicingId] = useState(null);
-  const [historySearch, setHistorySearch] = useState("");
+  const [successToast, setSuccessToast] = useState("");
 
   const currencySymbol = useMemo(() => {
     const cur = profile?.currency || "EUR";
@@ -59,7 +93,7 @@ export default function PosDisplay({
     return map[cur] || cur;
   }, [profile?.currency]);
 
-  // Fetch sellers
+  // Fetch Sellers
   const fetchSellers = async () => {
     try {
       setLoadingSellers(true);
@@ -75,10 +109,10 @@ export default function PosDisplay({
     }
   };
 
-  // Fetch available elaborations
+  // Fetch Available Elaborations
   const fetchAvailableElaborations = async () => {
     try {
-      setLoadingAvailable(true);
+      setLoadingProducts(true);
       const res = await fetch(`/api/client/elaborations/available?t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
@@ -90,11 +124,11 @@ export default function PosDisplay({
       console.error("Error fetching available elaborations:", err);
       return [];
     } finally {
-      setLoadingAvailable(false);
+      setLoadingProducts(false);
     }
   };
 
-  // Fetch available goods
+  // Fetch Available Goods
   const fetchAvailableGoods = async () => {
     try {
       const res = await fetch(`/api/client/goods-for-sale?t=${Date.now()}`);
@@ -110,98 +144,74 @@ export default function PosDisplay({
     }
   };
 
-  // Fetch sales history
-  const fetchSalesHistory = async () => {
+  // Fetch all existing drafts from server
+  const fetchAllDrafts = async (currentElabs, currentGoods) => {
     try {
-      setLoadingHistory(true);
-      const res = await fetch(`/api/client/combined-sales?t=${Date.now()}`);
+      const res = await fetch(`/api/client/combined-sales?isDraft=true&t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
-        setCombinedSales(data.data);
-      }
-    } catch (err) {
-      console.error("Error fetching sales history:", err);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
+        const initialMap = {
+          anonymous: {
+            draftId: null,
+            sellerId: null,
+            sellerName: t('pos.seller_anonymous') || "Anónimo",
+            customerId: null,
+            date: new Date().toISOString().slice(0, 10),
+            notes: "",
+            items: []
+          }
+        };
 
-  // Fetch draft sale for a seller
-  const loadDraftForSeller = async (seller, currentElabs = availableElaborations, currentGfs = availableGoods) => {
-    try {
-      setAutoSaveStatus("saving");
-      let url = `/api/client/combined-sales?isDraft=true&t=${Date.now()}`;
-      if (seller.id === "anonymous") {
-        url += `&sellerName=Anónimo`;
-      } else {
-        url += `&sellerId=${seller.id}`;
-      }
+        data.data.forEach(draft => {
+          const sKey = draft.sellerId ? draft.sellerId.toString() : "anonymous";
+          const elabItems = (draft.sales || []).map(s => {
+            const found = (currentElabs || []).find(ae => ae.id === s.elaborationId);
+            return {
+              id: `elab-${s.id}-${Math.random()}`,
+              type: 'elaboration',
+              elaborationId: s.elaborationId,
+              goodsForSaleId: null,
+              name: s.elaboration?.name || "Lote",
+              recipeName: s.elaboration?.recipe?.name || "",
+              unit: s.elaboration?.quantityUnit || "kg",
+              unitPrice: s.price && s.quantity ? Math.round((s.price / s.quantity) * 100) / 100 : (found?.unitPrice || 0),
+              quantity: s.quantity || 1,
+              price: s.price || 0
+            };
+          });
 
-      const res = await fetch(url);
-      const data = await res.json();
+          const goodsItems = (draft.goodsSales || []).map(gs => {
+            const gfs = gs.goodsForSale;
+            const found = (currentGoods || []).find(g => g.id === gs.goodsForSaleId);
+            return {
+              id: `gfs-${gs.id}-${Math.random()}`,
+              type: 'goods_for_sale',
+              elaborationId: null,
+              goodsForSaleId: gs.goodsForSaleId,
+              name: gfs?.name || "Mercancía",
+              recipeName: "",
+              unit: gfs?.unit || "ud",
+              unitPrice: gs.price && gs.quantity ? Math.round((gs.price / gs.quantity) * 100) / 100 : (found?.salePrice || 0),
+              quantity: gs.quantity || 1,
+              price: gs.price || 0
+            };
+          });
 
-      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-        // Load the most recent draft for this seller
-        const draft = data.data[0];
-        setCurrentDraftId(draft.id);
-        setFormCustomer(draft.customerId ? draft.customerId.toString() : "");
-        setFormDate(draft.date ? new Date(draft.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
-        setFormNotes(draft.notes || "");
-
-        // Map draft items with available stock
-        const elabItems = (draft.sales || []).map(s => {
-          const elab = s.elaboration;
-          const found = (currentElabs || []).find(ae => ae.id === s.elaborationId);
-          return {
-            id: `elab-${s.id}-${Math.random()}`,
-            type: 'elaboration',
-            elaborationId: s.elaborationId,
-            goodsForSaleId: null,
-            name: elab?.name || "Lote",
-            recipeName: elab?.recipe?.name || "Receta",
-            availableStock: found ? found.availableStock : 0,
-            unit: elab?.quantityUnit || "unidades",
-            unitPrice: found?.unitPrice || elab?.unitPrice || 0,
-            quantity: s.quantity != null ? s.quantity.toString() : "",
-            price: s.price != null ? s.price.toString() : "",
-            searchQuery: ''
+          initialMap[sKey] = {
+            draftId: draft.id,
+            sellerId: draft.sellerId || null,
+            sellerName: draft.seller?.name || draft.sellerName || "Anónimo",
+            customerId: draft.customerId || null,
+            date: draft.date ? new Date(draft.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+            notes: draft.notes || "",
+            items: [...elabItems, ...goodsItems]
           };
         });
 
-        const goodsItems = (draft.goodsSales || []).map(gs => {
-          const gfs = gs.goodsForSale;
-          const found = (currentGfs || []).find(g => g.id === gs.goodsForSaleId);
-          return {
-            id: `gfs-${gs.id}-${Math.random()}`,
-            type: 'goods_for_sale',
-            elaborationId: null,
-            goodsForSaleId: gs.goodsForSaleId,
-            name: gfs?.name || "Mercancía",
-            recipeName: '',
-            availableStock: found ? found.stock : (gfs?.stock || 0),
-            unit: gfs?.unit || "unidades",
-            unitPrice: found?.salePrice || gfs?.salePrice || 0,
-            quantity: gs.quantity != null ? gs.quantity.toString() : "",
-            price: gs.price != null ? gs.price.toString() : "",
-            searchQuery: ''
-          };
-        });
-
-        setSaleItems([...elabItems, ...goodsItems]);
-        setAutoSaveStatus("saved");
-        setLastSavedAt(new Date().toLocaleTimeString());
-      } else {
-        // No draft for this seller: start empty ticket
-        setCurrentDraftId(null);
-        setFormCustomer("");
-        setFormDate(new Date().toISOString().slice(0, 10));
-        setFormNotes("");
-        setSaleItems([]);
-        setAutoSaveStatus("idle");
+        setDraftsBySeller(prev => ({ ...prev, ...initialMap }));
       }
     } catch (err) {
-      console.error("Error loading draft for seller:", err);
-      setAutoSaveStatus("error");
+      console.error("Error loading drafts:", err);
     }
   };
 
@@ -213,306 +223,119 @@ export default function PosDisplay({
         fetchAvailableElaborations(),
         fetchAvailableGoods()
       ]);
-      await loadDraftForSeller({ id: "anonymous", name: t('pos.seller_anonymous') || "Anónimo" }, elabs, gfs);
+      await fetchAllDrafts(elabs, gfs);
       isInitialLoadRef.current = false;
     };
     init();
   }, []);
 
-  // Close search suggestions on outside click
-  useEffect(() => {
-    const handleDocumentClick = (e) => {
-      if (activeSearchIdx !== null && !e.target.closest?.('.pos-combobox-container')) {
-        setActiveSearchIdx(null);
-      }
-    };
-    document.addEventListener('mousedown', handleDocumentClick);
-    return () => document.removeEventListener('mousedown', handleDocumentClick);
-  }, [activeSearchIdx]);
+  // Filtered Products for Column 2
+  const filteredProducts = useMemo(() => {
+    const searchClean = productSearch.trim().toLowerCase();
+    const result = [];
 
-  // When switching seller: save current draft if needed and load target seller's draft
-  const handleSelectSeller = async (seller) => {
-    if (selectedSeller.id === seller.id) return;
-    setSelectedSeller(seller);
-    setActiveSearchIdx(null);
-    await loadDraftForSeller(seller);
-  };
-
-  // Add items
-  const handleAddElaborationRow = () => {
-    setSaleItems(prev => {
-      const newItems = [
-        ...prev,
-        {
-          id: `new-${Date.now()}-${Math.random()}`,
-          type: 'elaboration',
-          elaborationId: null,
-          goodsForSaleId: null,
-          name: '',
-          recipeName: '',
-          availableStock: 0,
-          unit: '',
-          unitPrice: 0,
-          quantity: '',
-          price: '',
-          searchQuery: ''
+    // Elaborations
+    if (productCategory === "all" || productCategory === "elaborations") {
+      availableElaborations.forEach(e => {
+        const fullTxt = `${e.recipeName || ''} ${e.name || ''}`.toLowerCase();
+        if (!searchClean || fullTxt.includes(searchClean)) {
+          result.push({
+            id: `elab_${e.id}`,
+            rawId: e.id,
+            type: 'elaboration',
+            elaborationId: e.id,
+            goodsForSaleId: null,
+            name: e.name,
+            recipeName: e.recipeName,
+            displayName: e.recipeName ? `${e.recipeName} (${e.name})` : e.name,
+            unitPrice: e.unitPrice || 0,
+            unit: e.quantityUnit || "kg",
+            availableStock: e.availableStock || 0
+          });
         }
-      ];
-      setActiveSearchIdx(newItems.length - 1);
-      return newItems;
-    });
-  };
-
-  const handleAddGoodsRow = () => {
-    setSaleItems(prev => {
-      const newItems = [
-        ...prev,
-        {
-          id: `new-${Date.now()}-${Math.random()}`,
-          type: 'goods_for_sale',
-          elaborationId: null,
-          goodsForSaleId: null,
-          name: '',
-          recipeName: '',
-          availableStock: 0,
-          unit: '',
-          unitPrice: 0,
-          quantity: '',
-          price: '',
-          searchQuery: ''
-        }
-      ];
-      setActiveSearchIdx(newItems.length - 1);
-      return newItems;
-    });
-  };
-
-  const handleSelectElaboration = (index, elab) => {
-    setSaleItems(prev => {
-      const updated = [...prev];
-      const item = { ...updated[index] };
-      item.type = 'elaboration';
-      item.elaborationId = elab.id;
-      item.name = elab.name;
-      item.recipeName = elab.recipeName;
-      item.availableStock = elab.availableStock;
-      item.unit = elab.quantityUnit;
-      item.unitPrice = elab.unitPrice || 0;
-      item.searchQuery = `${elab.recipeName} - ${elab.name}`;
-
-      if (item.quantity) {
-        const qtyNum = parseFloat(item.quantity.toString().replace(',', '.'));
-        if (!isNaN(qtyNum) && qtyNum > 0 && item.unitPrice > 0) {
-          item.price = (Math.round(qtyNum * item.unitPrice * 100) / 100).toFixed(2);
-        }
-      }
-      updated[index] = item;
-      return updated;
-    });
-    setActiveSearchIdx(null);
-  };
-
-  const handleSelectGoods = (index, gfs) => {
-    setSaleItems(prev => {
-      const updated = [...prev];
-      const item = { ...updated[index] };
-      item.type = 'goods_for_sale';
-      item.goodsForSaleId = gfs.id;
-      item.name = gfs.name;
-      item.recipeName = '';
-      item.availableStock = gfs.stock || 0;
-      item.unit = gfs.unit;
-      item.unitPrice = gfs.salePrice || 0;
-      item.searchQuery = gfs.name;
-
-      if (item.quantity) {
-        const qtyNum = parseFloat(item.quantity.toString().replace(',', '.'));
-        if (!isNaN(qtyNum) && qtyNum > 0 && item.unitPrice > 0) {
-          item.price = (Math.round(qtyNum * item.unitPrice * 100) / 100).toFixed(2);
-        }
-      }
-      updated[index] = item;
-      return updated;
-    });
-    setActiveSearchIdx(null);
-  };
-
-  const handleUpdateItem = (index, field, value) => {
-    setSaleItems(prev => {
-      const updated = [...prev];
-      const item = { ...updated[index], [field]: value };
-
-      if (field === "quantity") {
-        const qtyNum = parseFloat(value.toString().replace(',', '.'));
-        const unitP = parseFloat(item.unitPrice);
-        if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP > 0) {
-          item.price = (Math.round(qtyNum * unitP * 100) / 100).toFixed(2);
-        }
-      }
-
-      updated[index] = item;
-      return updated;
-    });
-  };
-
-  const handleRemoveItem = (index) => {
-    setSaleItems(prev => prev.filter((_, i) => i !== index));
-    if (activeSearchIdx === index) setActiveSearchIdx(null);
-  };
-
-  // Compute total
-  const totalPrice = useMemo(() => {
-    return saleItems.reduce((sum, item) => {
-      const p = parseFloat(item.price?.toString().replace(',', '.')) || 0;
-      return sum + p;
-    }, 0);
-  }, [saleItems]);
-
-  // Validation
-  const isDraftValid = useMemo(() => {
-    if (saleItems.length === 0) return false;
-    for (const item of saleItems) {
-      if (item.type === 'elaboration' && !item.elaborationId) return false;
-      if (item.type === 'goods_for_sale' && !item.goodsForSaleId) return false;
-      const qty = parseFloat(item.quantity?.toString().replace(',', '.'));
-      const prc = parseFloat(item.price?.toString().replace(',', '.'));
-      if (isNaN(qty) || qty <= 0) return false;
-      if (isNaN(prc) || prc < 0) return false;
-    }
-    return true;
-  }, [saleItems]);
-
-  const formErrors = useMemo(() => {
-    const errors = {};
-    saleItems.forEach((item, idx) => {
-      if (item.type === 'elaboration' && !item.elaborationId) return;
-      if (item.type === 'goods_for_sale' && !item.goodsForSaleId) return;
-      const qty = parseFloat(item.quantity?.toString().replace(',', '.'));
-      if (qty > (item.availableStock || 0) + 0.0001) {
-        errors[idx] = `La cantidad supera el stock disponible (${item.availableStock} ${item.unit}).`;
-      }
-    });
-    return errors;
-  }, [saleItems]);
-
-  const isConfirmedValid = useMemo(() => {
-    if (!isDraftValid) return false;
-    if (Object.keys(formErrors).length > 0) return false;
-    return true;
-  }, [isDraftValid, formErrors]);
-
-  // AUTO-SAVE EFFECT
-  useEffect(() => {
-    if (isInitialLoadRef.current) return;
-
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
+      });
     }
 
-    if (!isDraftValid) {
-      return;
-    }
-
-    autoSaveTimerRef.current = setTimeout(async () => {
-      try {
-        setAutoSaveStatus("saving");
-        const payload = {
-          customerId: formCustomer ? parseInt(formCustomer) : null,
-          date: formDate,
-          notes: formNotes,
-          isDraft: true,
-          sellerId: selectedSeller.id !== "anonymous" ? selectedSeller.id : null,
-          sellerName: selectedSeller.name,
-          items: saleItems.map(it => ({
-            type: it.type,
-            elaborationId: it.type === 'elaboration' ? it.elaborationId : null,
-            goodsForSaleId: it.type === 'goods_for_sale' ? it.goodsForSaleId : null,
-            quantity: parseFloat(it.quantity.toString().replace(',', '.')),
-            price: parseFloat(it.price.toString().replace(',', '.'))
-          }))
-        };
-
-        const url = currentDraftId 
-          ? `/api/client/combined-sales/${currentDraftId}`
-          : `/api/client/combined-sales`;
-        const method = currentDraftId ? "PUT" : "POST";
-
-        const res = await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-          if (!currentDraftId && data.data?.id) {
-            setCurrentDraftId(data.data.id);
-          }
-          setAutoSaveStatus("saved");
-          setLastSavedAt(new Date().toLocaleTimeString());
-        } else {
-          setAutoSaveStatus("error");
+    // Goods for sale
+    if (productCategory === "all" || productCategory === "goods") {
+      availableGoods.forEach(g => {
+        const fullTxt = (g.name || '').toLowerCase();
+        if (!searchClean || fullTxt.includes(searchClean)) {
+          result.push({
+            id: `gfs_${g.id}`,
+            rawId: g.id,
+            type: 'goods_for_sale',
+            elaborationId: null,
+            goodsForSaleId: g.id,
+            name: g.name,
+            recipeName: '',
+            displayName: g.name,
+            unitPrice: g.salePrice || 0,
+            unit: g.unit || "ud",
+            availableStock: g.stock || 0
+          });
         }
-      } catch (err) {
-        console.error("Auto-save error in POS:", err);
-        setAutoSaveStatus("error");
-      }
-    }, 700);
-
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-    };
-  }, [saleItems, formCustomer, formDate, formNotes, isDraftValid]);
-
-  // Discard current ticket
-  const handleDiscardTicket = async () => {
-    if (saleItems.length === 0 && !currentDraftId) return;
-
-    if (!confirm(t('pos.discard_confirm') || "¿Estás seguro de que deseas descartar la venta actual? Se eliminará el borrador en curso.")) {
-      return;
+      });
     }
 
-    if (currentDraftId) {
-      try {
-        await fetch(`/api/client/combined-sales/${currentDraftId}`, { method: "DELETE" });
-      } catch (err) {
-        console.error("Error deleting draft ticket:", err);
-      }
+    return result;
+  }, [availableElaborations, availableGoods, productSearch, productCategory]);
+
+  // TOP BAR CALCULATIONS
+  const parsedWeight = useMemo(() => {
+    if (!weightInput) return 0;
+    const p = parseFloat(weightInput.toString().replace(',', '.'));
+    return isNaN(p) || p < 0 ? 0 : p;
+  }, [weightInput]);
+
+  const parsedQtyMultiplier = useMemo(() => {
+    const q = parseFloat(quantityUnits?.toString().replace(',', '.'));
+    return isNaN(q) || q <= 0 ? 1 : q;
+  }, [quantityUnits]);
+
+  // Price per kg (or unit) display
+  const pricePerKgDisplay = useMemo(() => {
+    if (!selectedProduct) return 0;
+    return selectedProduct.unitPrice || 0;
+  }, [selectedProduct]);
+
+  // Total price calculated
+  const totalPriceCalculated = useMemo(() => {
+    if (!selectedProduct) return 0;
+    const unitPrice = selectedProduct.unitPrice || 0;
+    if (unitPrice <= 0) return 0;
+
+    // If weight was specified (> 0), use weight * (qty if > 1)
+    if (parsedWeight > 0) {
+      const effectiveWeight = parsedWeight * parsedQtyMultiplier;
+      return Math.round(effectiveWeight * unitPrice * 100) / 100;
     }
+    // Otherwise use units quantity * unit price
+    return Math.round(parsedQtyMultiplier * unitPrice * 100) / 100;
+  }, [selectedProduct, parsedWeight, parsedQtyMultiplier]);
 
-    setCurrentDraftId(null);
-    setFormCustomer("");
-    setFormDate(new Date().toISOString().slice(0, 10));
-    setFormNotes("");
-    setSaleItems([]);
-    setActiveSearchIdx(null);
-    setAutoSaveStatus("idle");
-    setLastSavedAt(null);
-  };
-
-  // Finalize / Charge sale
-  const handleFinalizeSale = async () => {
-    if (!isConfirmedValid) {
-      if (Object.keys(formErrors).length > 0) {
-        alert("No se puede finalizar la venta: hay productos que superan el stock disponible.");
-      } else {
-        alert("Completa todos los productos y cantidades antes de finalizar la venta.");
-      }
-      return;
+  // Effective quantity that will be added
+  const effectiveQuantityToAdd = useMemo(() => {
+    if (parsedWeight > 0) {
+      return Math.round(parsedWeight * parsedQtyMultiplier * 1000) / 1000;
     }
+    return Math.round(parsedQtyMultiplier * 1000) / 1000;
+  }, [parsedWeight, parsedQtyMultiplier]);
 
-    setFinalizing(true);
+  // Auto-save a draft for a specific seller
+  const autoSaveDraftForSeller = async (sId, sellerDraft) => {
     try {
+      setAutoSaveStatus("saving");
+      const itemsToSave = (sellerDraft.items || []).filter(it => it.quantity > 0 && it.price >= 0);
+
       const payload = {
-        customerId: formCustomer ? parseInt(formCustomer) : null,
-        date: formDate,
-        notes: formNotes,
-        isDraft: false,
-        sellerId: selectedSeller.id !== "anonymous" ? selectedSeller.id : null,
-        sellerName: selectedSeller.name,
-        items: saleItems.map(it => ({
+        customerId: sellerDraft.customerId || null,
+        date: sellerDraft.date || new Date().toISOString().slice(0, 10),
+        notes: sellerDraft.notes || "",
+        isDraft: true,
+        sellerId: sId !== "anonymous" ? parseInt(sId) : null,
+        sellerName: sellerDraft.sellerName || "Anónimo",
+        items: itemsToSave.map(it => ({
           type: it.type,
           elaborationId: it.type === 'elaboration' ? it.elaborationId : null,
           goodsForSaleId: it.type === 'goods_for_sale' ? it.goodsForSaleId : null,
@@ -521,10 +344,10 @@ export default function PosDisplay({
         }))
       };
 
-      const url = currentDraftId 
-        ? `/api/client/combined-sales/${currentDraftId}`
+      const url = sellerDraft.draftId
+        ? `/api/client/combined-sales/${sellerDraft.draftId}`
         : `/api/client/combined-sales`;
-      const method = currentDraftId ? "PUT" : "POST";
+      const method = sellerDraft.draftId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -534,26 +357,217 @@ export default function PosDisplay({
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setSuccessSaleMsg(`${t('pos.sale_completed') || "¡Venta completada con éxito!"} (${totalPrice.toFixed(2)} ${currencySymbol})`);
-        
-        // Reset current ticket for this seller
-        setCurrentDraftId(null);
-        setFormCustomer("");
-        setFormDate(new Date().toISOString().slice(0, 10));
-        setFormNotes("");
-        setSaleItems([]);
-        setActiveSearchIdx(null);
-        setAutoSaveStatus("idle");
-        setLastSavedAt(null);
+        if (!sellerDraft.draftId && data.data?.id) {
+          setDraftsBySeller(prev => ({
+            ...prev,
+            [sId]: {
+              ...prev[sId],
+              draftId: data.data.id
+            }
+          }));
+        }
+        setAutoSaveStatus("saved");
+        setLastSavedAt(new Date().toLocaleTimeString());
+      } else {
+        setAutoSaveStatus("error");
+      }
+    } catch (err) {
+      console.error("Error auto-saving seller draft:", err);
+      setAutoSaveStatus("error");
+    }
+  };
+
+  // ACTION: Click on Seller button in Column 3
+  const handleSellerClick = (seller) => {
+    const sId = seller.id.toString();
+
+    // IF A PRODUCT IS SELECTED: add it to this seller's draft sale!
+    if (selectedProduct) {
+      const lineTotal = totalPriceCalculated;
+      const lineQty = effectiveQuantityToAdd;
+
+      const newItem = {
+        id: `line-${Date.now()}-${Math.random()}`,
+        type: selectedProduct.type,
+        elaborationId: selectedProduct.elaborationId,
+        goodsForSaleId: selectedProduct.goodsForSaleId,
+        name: selectedProduct.displayName || selectedProduct.name,
+        recipeName: selectedProduct.recipeName || '',
+        unit: selectedProduct.unit || (parsedWeight > 0 ? 'kg' : 'ud'),
+        unitPrice: selectedProduct.unitPrice,
+        quantity: lineQty,
+        price: lineTotal
+      };
+
+      const currentSellerDraft = draftsBySeller[sId] || {
+        draftId: null,
+        sellerId: seller.id !== "anonymous" ? seller.id : null,
+        sellerName: seller.name,
+        customerId: null,
+        date: new Date().toISOString().slice(0, 10),
+        notes: "",
+        items: []
+      };
+
+      const updatedDraft = {
+        ...currentSellerDraft,
+        sellerName: seller.name,
+        items: [...currentSellerDraft.items, newItem]
+      };
+
+      setDraftsBySeller(prev => ({
+        ...prev,
+        [sId]: updatedDraft
+      }));
+
+      // Switch active view in Column 1 to this seller
+      setActiveSellerId(sId);
+
+      // Auto-save this seller's draft
+      autoSaveDraftForSeller(sId, updatedDraft);
+
+      // Feedback toast
+      setSuccessToast(
+        (t('pos.added_to_seller', { seller: seller.name }) || `Añadido a ${seller.name}`) +
+        `: ${newItem.name} (${lineQty} ${newItem.unit} · ${lineTotal.toFixed(2)} ${currencySymbol})`
+      );
+      setTimeout(() => setSuccessToast(""), 3000);
+
+      // Reset selection and inputs
+      setSelectedProduct(null);
+      setWeightInput("");
+      setQuantityUnits(1);
+    } 
+    // IF NO PRODUCT IS SELECTED: simply switch Column 1 to inspect this seller's ticket
+    else {
+      setActiveSellerId(sId);
+    }
+  };
+
+  // Remove an item from the active seller's ticket
+  const handleRemoveActiveItem = (itemId) => {
+    const sId = activeSellerId;
+    const currentDraft = draftsBySeller[sId];
+    if (!currentDraft) return;
+
+    const updatedItems = currentDraft.items.filter(it => it.id !== itemId);
+    const updatedDraft = { ...currentDraft, items: updatedItems };
+
+    setDraftsBySeller(prev => ({
+      ...prev,
+      [sId]: updatedDraft
+    }));
+
+    autoSaveDraftForSeller(sId, updatedDraft);
+  };
+
+  // Clear all items from the active seller's ticket
+  const handleClearActiveTicket = async () => {
+    const sId = activeSellerId;
+    const currentDraft = draftsBySeller[sId];
+    if (!currentDraft || currentDraft.items.length === 0) return;
+
+    if (!confirm(t('pos.discard_confirm') || "¿Estás seguro de que deseas vaciar este ticket?")) return;
+
+    if (currentDraft.draftId) {
+      try {
+        await fetch(`/api/client/combined-sales/${currentDraft.draftId}`, { method: "DELETE" });
+      } catch (e) {
+        console.error("Error deleting draft:", e);
+      }
+    }
+
+    setDraftsBySeller(prev => ({
+      ...prev,
+      [sId]: {
+        ...currentDraft,
+        draftId: null,
+        items: []
+      }
+    }));
+    setAutoSaveStatus("idle");
+  };
+
+  // Open checkout dialog for a specific seller
+  const handleOpenCheckout = (seller) => {
+    const sId = seller.id.toString();
+    const draft = draftsBySeller[sId];
+    if (!draft || draft.items.length === 0) {
+      alert("Este vendedor no tiene ningún producto en su venta.");
+      return;
+    }
+    setCheckoutSeller(seller);
+    setCheckoutCustomer(draft.customerId ? draft.customerId.toString() : "");
+    setCheckoutNotes(draft.notes || "");
+    setCheckoutPaymentMethod("cash");
+    setCheckoutAmountPaid("");
+  };
+
+  // Finalize / Close the sale
+  const handleFinalizeSale = async () => {
+    if (!checkoutSeller) return;
+    const sId = checkoutSeller.id.toString();
+    const draft = draftsBySeller[sId];
+    if (!draft || draft.items.length === 0) return;
+
+    setFinalizing(true);
+    try {
+      const payload = {
+        customerId: checkoutCustomer ? parseInt(checkoutCustomer) : null,
+        date: draft.date || new Date().toISOString().slice(0, 10),
+        notes: checkoutNotes || "",
+        isDraft: false,
+        sellerId: checkoutSeller.id !== "anonymous" ? checkoutSeller.id : null,
+        sellerName: checkoutSeller.name,
+        paymentMethod: checkoutPaymentMethod,
+        items: draft.items.map(it => ({
+          type: it.type,
+          elaborationId: it.type === 'elaboration' ? it.elaborationId : null,
+          goodsForSaleId: it.type === 'goods_for_sale' ? it.goodsForSaleId : null,
+          quantity: parseFloat(it.quantity.toString().replace(',', '.')),
+          price: parseFloat(it.price.toString().replace(',', '.'))
+        }))
+      };
+
+      const url = draft.draftId
+        ? `/api/client/combined-sales/${draft.draftId}`
+        : `/api/client/combined-sales`;
+      const method = draft.draftId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setSuccessToast(`¡Venta cerrada con éxito para ${checkoutSeller.name}!`);
+        setTimeout(() => setSuccessToast(""), 4000);
+
+        // Clear seller's draft locally
+        setDraftsBySeller(prev => ({
+          ...prev,
+          [sId]: {
+            draftId: null,
+            sellerId: checkoutSeller.id !== "anonymous" ? checkoutSeller.id : null,
+            sellerName: checkoutSeller.name,
+            customerId: null,
+            date: new Date().toISOString().slice(0, 10),
+            notes: "",
+            items: []
+          }
+        }));
+
+        setCheckoutSeller(null);
+        setIsViewSalesModalOpen(false);
 
         // Refresh available stock
         await fetchAvailableElaborations();
         await fetchAvailableGoods();
         if (onSaleCreated) onSaleCreated();
-
-        setTimeout(() => setSuccessSaleMsg(""), 4000);
       } else {
-        alert(data.error || "Error al finalizar la venta");
+        alert(data.error || "Error al cerrar la venta");
       }
     } catch (err) {
       console.error("Error finalizing POS sale:", err);
@@ -563,953 +577,1533 @@ export default function PosDisplay({
     }
   };
 
-  // Invoicing for history tab
-  const handleDownloadInvoice = (cs) => {
-    window.open(`/api/client/combined-sales/${cs.id}/invoice/pdf`, '_blank');
-  };
+  // Active Seller Ticket Data
+  const currentActiveDraft = draftsBySeller[activeSellerId] || { items: [] };
+  const currentActiveItems = currentActiveDraft.items || [];
+  const currentActiveTotal = currentActiveItems.reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
 
-  // All sellers list including Anónimo as first
-  const allSellersList = useMemo(() => {
-    return [
-      { id: "anonymous", name: t('pos.seller_anonymous') || "Anónimo" },
-      ...sellers
-    ];
-  }, [sellers, t]);
+  // SCREEN TOO SMALL ERROR SCREEN (< 768px)
+  if (isScreenTooSmall) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#090d16',
+        color: '#f8fafc',
+        zIndex: 999999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1.5px solid rgba(239, 68, 68, 0.35)',
+          borderRadius: '50%',
+          padding: '1.5rem',
+          marginBottom: '1.5rem',
+          color: '#ef4444'
+        }}>
+          <MonitorX size={52} />
+        </div>
+        <h2 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>
+          {t('pos.screen_too_small_title') || "Pantalla no compatible"}
+        </h2>
+        <p style={{ maxWidth: '440px', color: '#94a3b8', fontSize: '1.05rem', lineHeight: '1.5', marginBottom: '2rem' }}>
+          {t('pos.screen_too_small_desc') || "El modo TPV requiere una resolución de pantalla más grande (ancho mínimo de 768px) para operar correctamente."}
+        </p>
+        <button
+          type="button"
+          onClick={onExitPos}
+          className="btn-primary"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.85rem 1.85rem',
+            fontSize: '1rem',
+            fontWeight: 800,
+            background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+            border: 'none',
+            borderRadius: '0.75rem',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          <ArrowLeft size={18} />
+          <span>{t('pos.exit_btn') || "Volver al modo gestión"}</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc', color: 'var(--text-main)' }}>
-      {/* Top POS Navigation Bar */}
-      <header style={{
-        background: '#ffffff',
-        borderBottom: '1.5px solid var(--border)',
-        padding: '0.75rem 1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
-      }}>
-        {/* Left: TPV Brand badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
-            color: 'white',
-            padding: '0.55rem',
-            borderRadius: '0.65rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(22, 101, 52, 0.25)'
-          }}>
-            <Store size={22} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--corp-green)', letterSpacing: '-0.02em' }}>QuickTrace</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: '900', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', padding: '0.15rem 0.5rem', borderRadius: '1rem' }}>TPV</span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-              {profile?.razonSocial || profile?.personName || "Terminal Punto de Venta"}
-            </div>
-          </div>
-        </div>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      width: '100vw',
+      height: '100vh',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#090d16',
+      color: '#f8fafc',
+      userSelect: 'none',
+      zIndex: 99999
+    }}>
 
-        {/* Center: Sellers Pills (Always visible at top, including Anónimo first) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', maxWidth: '600px', justifyContent: 'center' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.25rem' }}>
-            {t('pos.seller_label') || "Vendedor"}:
-          </span>
-          {allSellersList.map(s => {
-            const isSelected = selectedSeller.id === s.id;
-            return (
+      {/* ============================================================== */}
+      {/* 1. TOP SCALE DISPLAY BAND (FRANJA SUPERIOR BÁSCULA)           */}
+      {/* ============================================================== */}
+      <header style={{
+        height: '92px',
+        minHeight: '92px',
+        maxHeight: '92px',
+        background: '#020617',
+        borderBottom: '2px solid #1e293b',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr 1.2fr auto',
+        gap: '1rem',
+        alignItems: 'center',
+        padding: '0 1.25rem',
+        boxSizing: 'border-box'
+      }}>
+        {/* BOX 1: PESO (KG) - Editable by keyboard */}
+        <div style={{
+          background: '#0a0f1d',
+          border: '1.5px solid #1e293b',
+          borderRadius: '8px',
+          padding: '0.4rem 0.85rem',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          height: '74px',
+          justifyContent: 'center'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.08em' }}>
+              {t('pos.scale_weight') || "PESO (KG)"}
+            </span>
+            {weightInput && (
               <button
-                key={s.id}
                 type="button"
-                onClick={() => handleSelectSeller(s)}
+                onClick={() => setWeightInput("")}
+                title="Borrar peso"
                 style={{
-                  padding: '0.4rem 0.85rem',
-                  borderRadius: '2rem',
-                  fontSize: '0.82rem',
-                  fontWeight: '800',
-                  border: isSelected ? '1.5px solid var(--corp-green)' : '1px solid var(--border)',
-                  background: isSelected ? 'var(--corp-green)' : '#ffffff',
-                  color: isSelected ? '#ffffff' : 'var(--text-main)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  transition: 'all 0.15s ease',
-                  boxShadow: isSelected ? '0 2px 8px rgba(66, 98, 22, 0.25)' : 'none'
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '0.1rem 0.4rem',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
                 }}
               >
-                <User size={13} />
-                <span>{s.name}</span>
-                {isSelected && currentDraftId && (
-                  <span style={{
-                    width: '7px',
-                    height: '7px',
-                    borderRadius: '50%',
-                    background: '#fef08a'
-                  }} title="Tiene borrador activo" />
-                )}
+                C
               </button>
-            );
-          })}
-        </div>
-
-        {/* Right: Auto-save status and Exit to Management Mode button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {/* Auto-save indicator */}
-          <div style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            {autoSaveStatus === "saving" && (
-              <span style={{ color: '#d97706', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: '700' }}>
-                <Loader2 size={13} className="animate-spin" />
-                {t('pos.auto_saving') || "Guardando..."}
-              </span>
-            )}
-            {autoSaveStatus === "saved" && (
-              <span style={{ color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: '700' }}>
-                <CheckCircle size={13} />
-                {t('pos.auto_saved') || "Autoguardado"} {lastSavedAt && `(${lastSavedAt})`}
-              </span>
-            )}
-            {autoSaveStatus === "error" && (
-              <span style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: '700' }}>
-                <AlertCircle size={13} />
-                Error al guardar
-              </span>
             )}
           </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={weightInput}
+              onChange={(e) => {
+                // allow only numbers and decimal dots/commas
+                const val = e.target.value.replace(/[^0-9.,]/g, '');
+                setWeightInput(val);
+              }}
+              placeholder="0.000"
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                color: '#38bdf8',
+                fontSize: '2.1rem',
+                fontFamily: 'monospace, monospace',
+                fontWeight: 900,
+                outline: 'none',
+                padding: 0,
+                letterSpacing: '-0.02em',
+                lineHeight: 1
+              }}
+            />
+            <span style={{ fontSize: '1rem', color: '#64748b', fontWeight: 800 }}>kg</span>
+          </div>
+        </div>
 
-          {/* Switch to Management Mode Button */}
-          <button
-            type="button"
-            onClick={onExitPos}
-            className="btn-secondary"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.6rem 1.15rem',
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              borderRadius: '0.65rem',
-              background: '#f1f5f9',
-              border: '1px solid #cbd5e1',
-              color: '#334155',
-              cursor: 'pointer'
-            }}
-          >
-            <LayoutDashboard size={16} />
-            <span>{t('pos.exit_btn') || "Modo gestión"}</span>
-          </button>
+        {/* BOX 2: PRECIO (€/KG) - Read-only calculated on product selection */}
+        <div style={{
+          background: '#0a0f1d',
+          border: '1.5px solid #1e293b',
+          borderRadius: '8px',
+          padding: '0.4rem 0.85rem',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '74px',
+          justifyContent: 'center'
+        }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#f59e0b', letterSpacing: '0.08em' }}>
+            {t('pos.scale_price_kg') || "PRECIO (€/KG)"}
+          </span>
+          <div style={{
+            color: pricePerKgDisplay > 0 ? '#f59e0b' : '#475569',
+            fontSize: '2.1rem',
+            fontFamily: 'monospace, monospace',
+            fontWeight: 900,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {pricePerKgDisplay.toFixed(2)}
+            <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 700, marginLeft: '0.3rem' }}>
+              {currencySymbol}/{selectedProduct?.unit || 'kg'}
+            </span>
+          </div>
+        </div>
+
+        {/* BOX 3: IMPORTE TOTAL (€) - Calculated automatically */}
+        <div style={{
+          background: '#0a0f1d',
+          border: '1.5px solid #10b981',
+          borderRadius: '8px',
+          padding: '0.4rem 0.85rem',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '74px',
+          justifyContent: 'center',
+          boxShadow: totalPriceCalculated > 0 ? '0 0 15px rgba(16, 185, 129, 0.15)' : 'none'
+        }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#10b981', letterSpacing: '0.08em' }}>
+            {t('pos.scale_total') || "IMPORTE TOTAL (€)"}
+          </span>
+          <div style={{
+            color: totalPriceCalculated > 0 ? '#10b981' : '#475569',
+            fontSize: '2.3rem',
+            fontFamily: 'monospace, monospace',
+            fontWeight: 900,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+            whiteSpace: 'nowrap'
+          }}>
+            {totalPriceCalculated.toFixed(2)}
+            <span style={{ fontSize: '1.1rem', color: '#10b981', fontWeight: 800, marginLeft: '0.35rem' }}>
+              {currencySymbol}
+            </span>
+          </div>
+        </div>
+
+        {/* SELECTED PRODUCT BADGE / QUICK INFO */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'flex-end',
+          minWidth: '170px'
+        }}>
+          {selectedProduct ? (
+            <div style={{
+              background: 'rgba(66, 98, 22, 0.25)',
+              border: '1px solid #16a34a',
+              borderRadius: '8px',
+              padding: '0.4rem 0.75rem',
+              textAlign: 'right',
+              maxWidth: '220px'
+            }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#86efac', textTransform: 'uppercase' }}>
+                ✓ {selectedProduct.type === 'elaboration' ? 'Elaborado' : 'Mercancía'}
+              </div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selectedProduct.displayName}
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              fontSize: '0.78rem',
+              color: '#64748b',
+              textAlign: 'right',
+              fontStyle: 'italic'
+            }}>
+              Selecciona un producto...
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Success sale banner */}
-      {successSaleMsg && (
+      {/* TOAST NOTIFICATION */}
+      {successToast && (
         <div style={{
-          background: '#dcfce7',
-          color: '#15803d',
-          borderBottom: '1px solid #bbf7d0',
-          padding: '0.75rem 1.5rem',
-          fontSize: '0.95rem',
-          fontWeight: '800',
+          position: 'fixed',
+          top: '100px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#15803d',
+          color: 'white',
+          padding: '0.55rem 1.25rem',
+          borderRadius: '2rem',
+          fontSize: '0.85rem',
+          fontWeight: 800,
+          zIndex: 100000,
+          boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
           gap: '0.5rem',
           animation: 'fadeIn 0.2s ease'
         }}>
-          <CheckCircle size={18} />
-          <span>{successSaleMsg}</span>
+          <CheckCircle2 size={16} />
+          <span>{successToast}</span>
         </div>
       )}
 
-      {/* POS Navigation Tabs: Ticket vs History */}
-      <div style={{ maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '1rem 1.5rem 0', display: 'flex', gap: '0.5rem' }}>
-        <button
-          type="button"
-          onClick={() => setPosTab("ticket")}
-          style={{
-            padding: '0.65rem 1.4rem',
-            borderRadius: '0.65rem 0.65rem 0 0',
-            border: 'none',
-            background: posTab === "ticket" ? '#ffffff' : '#e2e8f0',
-            color: posTab === "ticket" ? 'var(--corp-green)' : '#64748b',
-            fontWeight: '800',
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            borderTop: posTab === "ticket" ? '3px solid var(--corp-green)' : '3px solid transparent'
-          }}
-        >
-          <ShoppingCart size={16} />
-          <span>{t('pos.tab_ticket') || "Venta actual"}</span>
-          {saleItems.length > 0 && (
-            <span style={{
-              background: posTab === "ticket" ? 'var(--corp-green)' : '#94a3b8',
-              color: 'white',
-              fontSize: '0.72rem',
-              padding: '0.1rem 0.45rem',
-              borderRadius: '1rem',
-              fontWeight: '800'
-            }}>
-              {saleItems.length}
-            </span>
-          )}
-        </button>
+      {/* ============================================================== */}
+      {/* 2. MAIN 3-COLUMN BAND (FRANJA PRINCIPAL 3 COLUMNAS)           */}
+      {/* ============================================================== */}
+      <main style={{
+        flex: 1,
+        minHeight: 0,
+        display: 'grid',
+        gridTemplateColumns: '330px 1fr 280px',
+        gap: '0.75rem',
+        padding: '0.75rem 1rem',
+        boxSizing: 'border-box',
+        overflow: 'hidden'
+      }}>
 
-        <button
-          type="button"
-          onClick={() => {
-            setPosTab("history");
-            fetchSalesHistory();
-          }}
-          style={{
-            padding: '0.65rem 1.4rem',
-            borderRadius: '0.65rem 0.65rem 0 0',
-            border: 'none',
-            background: posTab === "history" ? '#ffffff' : '#e2e8f0',
-            color: posTab === "history" ? 'var(--corp-green)' : '#64748b',
-            fontWeight: '800',
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            borderTop: posTab === "history" ? '3px solid var(--corp-green)' : '3px solid transparent'
-          }}
-        >
-          <Layers size={16} />
-          <span>{t('pos.tab_history') || "Historial de ventas"}</span>
-        </button>
-      </div>
-
-      {/* Main POS Container */}
-      <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '0 1.5rem 2rem', display: 'flex', flexDirection: 'column' }}>
-        {posTab === "ticket" ? (
+        {/* ------------------------------------------------------------ */}
+        {/* COLUMNA 1 (IZQUIERDA): LISTADO DE ITEMS AÑADIDOS A LA VENTA  */}
+        {/* ------------------------------------------------------------ */}
+        <section style={{
+          background: '#0f172a',
+          borderRadius: '10px',
+          border: '1.5px solid #1e293b',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          height: '100%'
+        }}>
+          {/* Header */}
           <div style={{
-            background: '#ffffff',
-            borderRadius: '0 1rem 1rem 1rem',
-            border: '1px solid var(--border)',
-            padding: '1.75rem',
-            boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)',
+            padding: '0.75rem 0.9rem',
+            background: '#1e293b',
+            borderBottom: '1px solid #334155',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+              <ShoppingCart size={17} style={{ color: '#10b981', flexShrink: 0 }} />
+              <div style={{ minWidth: 0 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'white', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                  {t('pos.col_ticket_title') || "Ticket actual"}
+                </span>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {t('pos.seller_label') || "Vendedor"}: <strong style={{ color: '#38bdf8' }}>{activeSeller.name}</strong>
+                </div>
+              </div>
+            </div>
+
+            {currentActiveItems.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearActiveTicket}
+                title={t('pos.clear_ticket') || "Vaciar ticket"}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#f87171',
+                  borderRadius: '6px',
+                  padding: '0.25rem 0.5rem',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
+          </div>
+
+          {/* Items List (Scrollable internally) */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '0.5rem',
             display: 'flex',
             flexDirection: 'column',
-            flex: 1
+            gap: '0.45rem'
           }}>
-            {/* Ticket Header Inputs: Customer, Date, Notes with inline labels */}
+            {currentActiveItems.length === 0 ? (
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                textAlign: 'center',
+                padding: '1.5rem'
+              }}>
+                <ShoppingCart size={36} style={{ marginBottom: '0.65rem', opacity: 0.4 }} />
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                  {t('pos.col_ticket_empty') || "Ticket vacío"}
+                </div>
+                <div style={{ fontSize: '0.75rem', lineHeight: '1.4' }}>
+                  {t('pos.col_ticket_hint') || "Selecciona un producto y pulsa en un vendedor para añadirlo a su venta."}
+                </div>
+              </div>
+            ) : (
+              currentActiveItems.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  style={{
+                    background: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    padding: '0.55rem 0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.15rem' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.82rem', color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.name}
+                      </span>
+                      <span style={{
+                        fontSize: '0.58rem',
+                        fontWeight: 800,
+                        padding: '0.05rem 0.3rem',
+                        borderRadius: '3px',
+                        background: item.type === 'elaboration' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                        color: item.type === 'elaboration' ? '#4ade80' : '#38bdf8',
+                        textTransform: 'uppercase',
+                        flexShrink: 0
+                      }}>
+                        {item.type === 'elaboration' ? 'Elab' : 'Merc'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                      <strong style={{ color: '#cbd5e1' }}>{item.quantity} {item.unit}</strong> × {item.unitPrice ? item.unitPrice.toFixed(2) : "0.00"} {currencySymbol}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <span style={{
+                      fontFamily: 'monospace, monospace',
+                      fontSize: '0.98rem',
+                      fontWeight: 900,
+                      color: '#10b981'
+                    }}>
+                      {parseFloat(item.price).toFixed(2)} {currencySymbol}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveActiveItem(item.id)}
+                      title="Eliminar línea"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        padding: '0.2rem'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Footer of Column 1: Total */}
+          <div style={{
+            padding: '0.75rem 0.9rem',
+            background: '#020617',
+            borderTop: '1.5px solid #1e293b',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                TOTAL {activeSeller.name} ({currentActiveItems.length} líneas)
+              </div>
+              <div style={{
+                fontSize: '1.8rem',
+                fontFamily: 'monospace, monospace',
+                fontWeight: 900,
+                color: '#10b981',
+                lineHeight: 1
+              }}>
+                {currentActiveTotal.toFixed(2)} {currencySymbol}
+              </div>
+            </div>
+
+            {currentActiveItems.length > 0 && (
+              <button
+                type="button"
+                onClick={() => handleOpenCheckout(activeSeller)}
+                className="btn-primary"
+                style={{
+                  background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.55rem 0.9rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <span>Cobrar</span>
+                <ChevronRight size={15} />
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------ */}
+        {/* COLUMNA 2 (CENTRO): ELABORACIONES Y MERCANCÍAS EN VENTA      */}
+        {/* ------------------------------------------------------------ */}
+        <section style={{
+          background: '#0f172a',
+          borderRadius: '10px',
+          border: '1.5px solid #1e293b',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          height: '100%'
+        }}>
+          {/* Header with Search and Category filters */}
+          <div style={{
+            padding: '0.65rem 0.85rem',
+            background: '#1e293b',
+            borderBottom: '1px solid #334155',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            flexWrap: 'wrap'
+          }}>
+            {/* Search Input */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '1rem',
-              marginBottom: '1.5rem',
-              background: '#f8fafc',
-              padding: '1rem 1.25rem',
-              borderRadius: '0.75rem',
-              border: '1px solid var(--border)'
+              flex: 1,
+              minWidth: '180px',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center'
             }}>
-              {/* Cliente */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', minWidth: 'fit-content' }}>
-                  {t('combined_sales.col_customer') || "Cliente"}:
+              <Search size={15} style={{ position: 'absolute', left: '0.65rem', color: '#64748b' }} />
+              <input
+                type="text"
+                placeholder={t('pos.col_products_search') || "Buscar elaboración o mercancía..."}
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: '#090d16',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '0.45rem 0.65rem 0.45rem 2.1rem',
+                  color: 'white',
+                  fontSize: '0.82rem',
+                  outline: 'none'
+                }}
+              />
+              {productSearch && (
+                <button
+                  type="button"
+                  onClick={() => setProductSearch("")}
+                  style={{
+                    position: 'absolute',
+                    right: '0.5rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Filter pills */}
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              <button
+                type="button"
+                onClick={() => setProductCategory("all")}
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  border: productCategory === "all" ? '1.5px solid #10b981' : '1px solid #334155',
+                  background: productCategory === "all" ? 'rgba(16, 185, 129, 0.2)' : '#090d16',
+                  color: productCategory === "all" ? '#34d399' : '#94a3b8'
+                }}
+              >
+                {t('pos.filter_all') || "Todos"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductCategory("elaborations")}
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  border: productCategory === "elaborations" ? '1.5px solid #10b981' : '1px solid #334155',
+                  background: productCategory === "elaborations" ? 'rgba(16, 185, 129, 0.2)' : '#090d16',
+                  color: productCategory === "elaborations" ? '#34d399' : '#94a3b8'
+                }}
+              >
+                {t('pos.filter_elaborations') || "Elaboraciones"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductCategory("goods")}
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  border: productCategory === "goods" ? '1.5px solid #10b981' : '1px solid #334155',
+                  background: productCategory === "goods" ? 'rgba(16, 185, 129, 0.2)' : '#090d16',
+                  color: productCategory === "goods" ? '#34d399' : '#94a3b8'
+                }}
+              >
+                {t('pos.filter_goods') || "Mercancías"}
+              </button>
+            </div>
+          </div>
+
+          {/* Products Grid (Scrollable internally) */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '0.75rem',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+            gridAutoRows: 'max-content',
+            gap: '0.65rem'
+          }}>
+            {loadingProducts ? (
+              <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                <Loader2 size={32} className="animate-spin" style={{ margin: '0 auto 0.5rem' }} />
+                <span>Cargando productos...</span>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                <Package size={36} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
+                <p style={{ margin: 0, fontWeight: 700 }}>No se encontraron productos disponibles con stock.</p>
+              </div>
+            ) : (
+              filteredProducts.map(p => {
+                const isSelected = selectedProduct?.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedProduct(null);
+                      } else {
+                        setSelectedProduct(p);
+                      }
+                    }}
+                    style={{
+                      background: isSelected ? 'rgba(21, 128, 61, 0.35)' : '#1e293b',
+                      border: isSelected ? '2px solid #22c55e' : '1px solid #334155',
+                      borderRadius: '8px',
+                      padding: '0.65rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      height: '92px',
+                      transition: 'all 0.12s ease',
+                      boxShadow: isSelected ? '0 0 12px rgba(34, 197, 94, 0.35)' : 'none',
+                      position: 'relative'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+                        <span style={{
+                          fontSize: '0.6rem',
+                          fontWeight: 800,
+                          padding: '0.05rem 0.35rem',
+                          borderRadius: '3px',
+                          background: p.type === 'elaboration' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+                          color: p.type === 'elaboration' ? '#4ade80' : '#38bdf8',
+                          textTransform: 'uppercase'
+                        }}>
+                          {p.type === 'elaboration' ? 'Elab' : 'Merc'}
+                        </span>
+                        {isSelected && (
+                          <span style={{
+                            background: '#22c55e',
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: '16px',
+                            height: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.65rem',
+                            fontWeight: 900
+                          }}>
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <div style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        color: isSelected ? '#ffffff' : '#f1f5f9',
+                        lineHeight: '1.2',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {p.displayName}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '0.35rem' }}>
+                      <span style={{
+                        fontSize: '0.92rem',
+                        fontFamily: 'monospace, monospace',
+                        fontWeight: 900,
+                        color: isSelected ? '#4ade80' : '#fbbf24'
+                      }}>
+                        {p.unitPrice ? p.unitPrice.toFixed(2) : "0.00"} {currencySymbol}
+                      </span>
+                      <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700 }}>
+                        {p.availableStock} {p.unit}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------ */}
+        {/* COLUMNA 3 (DERECHA): SELECTOR CANTIDAD Y LISTADO VENDEDORES  */}
+        {/* ------------------------------------------------------------ */}
+        <section style={{
+          background: '#0f172a',
+          borderRadius: '10px',
+          border: '1.5px solid #1e293b',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          height: '100%'
+        }}>
+          {/* SECTION A: QUANTITY / UNITS SELECTOR */}
+          <div style={{
+            padding: '0.75rem 0.9rem',
+            background: '#1e293b',
+            borderBottom: '1.5px solid #334155',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.05em' }}>
+                {t('pos.qty_selector_title') || "CANTIDAD (UDS)"}
+              </span>
+              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                {parsedWeight > 0 ? "Multiplicador de peso" : "Unidades directas"}
+              </span>
+            </div>
+
+            {/* Stepper + Display */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                type="button"
+                onClick={() => setQuantityUnits(prev => Math.max(1, prev - 1))}
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  background: '#090d16',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.1rem',
+                  fontWeight: 900
+                }}
+              >
+                <Minus size={16} />
+              </button>
+
+              <input
+                type="number"
+                min="1"
+                step="any"
+                value={quantityUnits}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setQuantityUnits(isNaN(val) || val < 1 ? 1 : val);
+                }}
+                style={{
+                  flex: 1,
+                  height: '38px',
+                  background: '#090d16',
+                  border: '1.5px solid #38bdf8',
+                  borderRadius: '6px',
+                  color: '#38bdf8',
+                  textAlign: 'center',
+                  fontFamily: 'monospace, monospace',
+                  fontSize: '1.35rem',
+                  fontWeight: 900,
+                  outline: 'none'
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={() => setQuantityUnits(prev => prev + 1)}
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  background: '#090d16',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.1rem',
+                  fontWeight: 900
+                }}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+
+            {/* Preset buttons */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem' }}>
+              {[1, 2, 3, 4, 5, 10].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setQuantityUnits(n)}
+                  style={{
+                    padding: '0.3rem 0',
+                    borderRadius: '4px',
+                    fontSize: '0.78rem',
+                    fontWeight: 900,
+                    border: quantityUnits === n ? '1.5px solid #38bdf8' : '1px solid #334155',
+                    background: quantityUnits === n ? 'rgba(56, 189, 248, 0.25)' : '#090d16',
+                    color: quantityUnits === n ? '#38bdf8' : '#cbd5e1',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* SECTION B: SELLERS LIST (Tap to add to seller's sale) */}
+          <div style={{
+            padding: '0.55rem 0.85rem',
+            background: '#131d31',
+            borderBottom: '1px solid #1e293b'
+          }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#f8fafc', textTransform: 'uppercase' }}>
+              {t('pos.col_sellers_title') || "VENDEDORES"}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: selectedProduct ? '#86efac' : '#94a3b8', fontWeight: 700 }}>
+              {selectedProduct 
+                ? "👉 Pulsa en un vendedor para añadir el producto a su venta:"
+                : "Pulsa para consultar o gestionar el ticket de un vendedor:"}
+            </div>
+          </div>
+
+          {/* Sellers Buttons List */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '0.65rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem'
+          }}>
+            {allSellers.map((s, index) => {
+              const sId = s.id.toString();
+              const sDraft = draftsBySeller[sId];
+              const sItemsCount = sDraft?.items?.length || 0;
+              const sTotal = (sDraft?.items || []).reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
+              const isActive = activeSellerId === sId;
+
+              // Color accents per seller
+              const colorPalettes = [
+                { bg: 'rgba(56, 189, 248, 0.1)', border: '#0284c7', text: '#38bdf8', badge: '#0369a1' },
+                { bg: 'rgba(16, 185, 129, 0.1)', border: '#059669', text: '#34d399', badge: '#047857' },
+                { bg: 'rgba(245, 158, 11, 0.1)', border: '#d97706', text: '#fbbf24', badge: '#b45309' },
+                { bg: 'rgba(168, 85, 247, 0.1)', border: '#9333ea', text: '#c084fc', badge: '#7e22ce' },
+                { bg: 'rgba(236, 72, 153, 0.1)', border: '#db2777', text: '#f472b6', badge: '#be185d' }
+              ];
+              const pal = colorPalettes[index % colorPalettes.length];
+
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => handleSellerClick(s)}
+                  style={{
+                    background: isActive ? pal.bg : '#1e293b',
+                    border: selectedProduct 
+                      ? `2px solid ${pal.border}` 
+                      : (isActive ? `2px solid ${pal.border}` : '1px solid #334155'),
+                    borderRadius: '8px',
+                    padding: '0.65rem 0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    boxShadow: (selectedProduct || isActive) ? `0 2px 10px ${pal.bg}` : 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: pal.badge,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 900,
+                      fontSize: '0.85rem',
+                      flexShrink: 0
+                    }}>
+                      {s.name[0]?.toUpperCase() || 'V'}
+                    </div>
+
+                    <div style={{ textAlign: 'left', minWidth: 0 }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {s.name}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: sItemsCount > 0 ? '#34d399' : '#64748b', fontWeight: 700 }}>
+                        {sItemsCount > 0 ? `${sItemsCount} líneas · ${sTotal.toFixed(2)} ${currencySymbol}` : "Sin líneas"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedProduct ? (
+                    <div style={{
+                      background: pal.badge,
+                      color: 'white',
+                      borderRadius: '4px',
+                      padding: '0.25rem 0.55rem',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      flexShrink: 0
+                    }}>
+                      <Plus size={13} />
+                      <span>Añadir</span>
+                    </div>
+                  ) : (
+                    <ChevronRight size={16} style={{ color: '#64748b' }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+      </main>
+
+      {/* ============================================================== */}
+      {/* 3. BOTTOM BAR (FRANJA DE ABAJO)                               */}
+      {/* ============================================================== */}
+      <footer style={{
+        height: '64px',
+        minHeight: '64px',
+        maxHeight: '64px',
+        background: '#020617',
+        borderTop: '1.5px solid #1e293b',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 1.25rem',
+        boxSizing: 'border-box'
+      }}>
+        {/* Left: Volver a Modo Gestión */}
+        <button
+          type="button"
+          onClick={onExitPos}
+          className="btn-secondary"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.55rem 1.15rem',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+            fontWeight: 800,
+            background: '#1e293b',
+            border: '1px solid #334155',
+            color: '#f8fafc',
+            cursor: 'pointer'
+          }}
+        >
+          <ArrowLeft size={16} />
+          <span>{t('pos.exit_btn') || "Modo gestión"}</span>
+        </button>
+
+        {/* Center: Autosave status info */}
+        <div style={{ fontSize: '0.78rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          {autoSaveStatus === "saving" && (
+            <span style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Loader2 size={13} className="animate-spin" />
+              {t('pos.auto_saving') || "Guardando..."}
+            </span>
+          )}
+          {autoSaveStatus === "saved" && (
+            <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <CheckCircle2 size={13} />
+              {t('pos.auto_saved') || "Autoguardado"} {lastSavedAt && `(${lastSavedAt})`}
+            </span>
+          )}
+          {autoSaveStatus === "error" && (
+            <span style={{ color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <AlertCircle size={13} />
+              Error en autoguardado
+            </span>
+          )}
+        </div>
+
+        {/* Right: VER VENTA Button */}
+        <button
+          type="button"
+          onClick={() => setIsViewSalesModalOpen(true)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.55rem',
+            padding: '0.6rem 1.45rem',
+            borderRadius: '6px',
+            fontSize: '0.9rem',
+            fontWeight: 900,
+            background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            boxShadow: '0 2px 10px rgba(22, 101, 52, 0.35)'
+          }}
+        >
+          <FileText size={17} />
+          <span>{t('pos.btn_view_sales') || "Ver venta"}</span>
+        </button>
+      </footer>
+
+      {/* ============================================================== */}
+      {/* 4. MODAL "VER VENTA" (TODOS LOS VENDEDORES)                     */}
+      {/* ============================================================== */}
+      {isViewSalesModalOpen && !checkoutSeller && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100000,
+          padding: '1.5rem'
+        }}>
+          <div style={{
+            background: '#0f172a',
+            border: '1.5px solid #1e293b',
+            borderRadius: '12px',
+            width: '100%',
+            maxWidth: '560px',
+            maxHeight: '85vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+            animation: 'fadeIn 0.15s ease'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '1rem 1.25rem',
+              background: '#1e293b',
+              borderBottom: '1px solid #334155',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: 'white' }}>
+                  {t('pos.modal_sales_title') || "Ventas de vendedores"}
+                </h3>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                  {t('pos.modal_sales_desc') || "Selecciona un vendedor para consultar su venta o cerrarla:"}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsViewSalesModalOpen(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.3rem' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body: List of Sellers and their sales */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem'
+            }}>
+              {allSellers.map(s => {
+                const sId = s.id.toString();
+                const sDraft = draftsBySeller[sId];
+                const sItems = sDraft?.items || [];
+                const sTotal = sItems.reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
+                const hasItems = sItems.length > 0;
+
+                return (
+                  <div
+                    key={s.id}
+                    style={{
+                      background: hasItems ? 'rgba(34, 197, 94, 0.08)' : '#1e293b',
+                      border: hasItems ? '1.5px solid #16a34a' : '1px solid #334155',
+                      borderRadius: '8px',
+                      padding: '0.85rem 1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '1rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: hasItems ? '#15803d' : '#334155',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: '0.9rem'
+                      }}>
+                        {s.name[0]?.toUpperCase() || 'V'}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'white' }}>
+                          {s.name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: hasItems ? '#4ade80' : '#64748b', fontWeight: 700 }}>
+                          {hasItems ? `${sItems.length} líneas acumuladas` : "Sin venta en curso"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{
+                          fontFamily: 'monospace, monospace',
+                          fontSize: '1.25rem',
+                          fontWeight: 900,
+                          color: hasItems ? '#10b981' : '#64748b'
+                        }}>
+                          {sTotal.toFixed(2)} {currencySymbol}
+                        </div>
+                      </div>
+
+                      {hasItems ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenCheckout(s)}
+                          style={{
+                            background: '#15803d',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '0.5rem 0.9rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem'
+                          }}
+                        >
+                          <span>{t('pos.btn_checkout_seller') || "Ver / Cobrar"}</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveSellerId(sId);
+                            setIsViewSalesModalOpen(false);
+                          }}
+                          style={{
+                            background: '#334155',
+                            color: '#cbd5e1',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '0.5rem 0.85rem',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Ir al ticket
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 5. CHECKOUT / CERRAR VENTA DIALOG                              */}
+      {/* ============================================================== */}
+      {checkoutSeller && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(5px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100001,
+          padding: '1.5rem'
+        }}>
+          <div style={{
+            background: '#0f172a',
+            border: '2px solid #16a34a',
+            borderRadius: '12px',
+            width: '100%',
+            maxWidth: '620px',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+            animation: 'fadeIn 0.15s ease'
+          }}>
+            {/* Checkout Header */}
+            <div style={{
+              padding: '1rem 1.25rem',
+              background: '#1e293b',
+              borderBottom: '1px solid #334155',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: 'white' }}>
+                  {t('pos.checkout_title') || "Cobrar y Cerrar Venta"}
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 700 }}>
+                  Vendedor: {checkoutSeller.name}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCheckoutSeller(null)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.3rem' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Checkout Body */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}>
+              {/* Items Summary Table */}
+              <div style={{
+                background: '#090d16',
+                border: '1px solid #1e293b',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                maxHeight: '180px',
+                overflowY: 'auto'
+              }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+                  Líneas de la venta:
+                </div>
+                {(draftsBySeller[checkoutSeller.id.toString()]?.items || []).map((it, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.35rem 0',
+                      borderBottom: '1px solid #1e293b',
+                      fontSize: '0.82rem'
+                    }}
+                  >
+                    <span style={{ color: '#f8fafc', fontWeight: 700 }}>
+                      {it.quantity} {it.unit} × {it.name}
+                    </span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 900, color: '#10b981' }}>
+                      {parseFloat(it.price).toFixed(2)} {currencySymbol}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total Display */}
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1.5px solid #10b981',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc' }}>
+                  TOTAL A COBRAR:
+                </span>
+                <span style={{
+                  fontSize: '2rem',
+                  fontFamily: 'monospace',
+                  fontWeight: 900,
+                  color: '#10b981'
+                }}>
+                  {(draftsBySeller[checkoutSeller.id.toString()]?.items || []).reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0).toFixed(2)} {currencySymbol}
+                </span>
+              </div>
+
+              {/* Customer Selector (Optional) */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: '#94a3b8', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
+                  Cliente (opcional)
                 </label>
                 <select
-                  value={formCustomer}
-                  onChange={(e) => setFormCustomer(e.target.value)}
+                  value={checkoutCustomer}
+                  onChange={(e) => setCheckoutCustomer(e.target.value)}
                   style={{
-                    flex: 1,
-                    padding: '0.55rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border)',
-                    fontSize: '0.88rem',
-                    background: 'white',
+                    width: '100%',
+                    background: '#090d16',
+                    border: '1px solid #334155',
+                    borderRadius: '6px',
+                    padding: '0.6rem 0.75rem',
+                    color: 'white',
+                    fontSize: '0.85rem',
                     outline: 'none'
                   }}
                 >
-                  <option value="">{t('combined_sales.select_customer') || "Seleccionar cliente"}</option>
+                  <option value="">Cliente genérico / Mostrador</option>
                   {customers.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.commercialName || c.fiscalName} {c.nif ? `(${c.nif})` : ""}
+                      {c.name} {c.nif ? `(${c.nif})` : ''}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Fecha */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', minWidth: 'fit-content' }}>
-                  {t('common.date') || "Fecha"}:
+              {/* Payment Method Selector */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: '#94a3b8', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
+                  {t('pos.payment_method') || "Forma de pago"}
                 </label>
-                <input
-                  type="date"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '0.55rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border)',
-                    fontSize: '0.88rem',
-                    background: 'white',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-
-              {/* Notas */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', minWidth: 'fit-content' }}>
-                  {t('combined_sales.notes_label') || "Notas"}:
-                </label>
-                <input
-                  type="text"
-                  placeholder={t('combined_sales.notes_placeholder') || "Observaciones..."}
-                  value={formNotes}
-                  onChange={(e) => setFormNotes(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '0.55rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border)',
-                    fontSize: '0.88rem',
-                    background: 'white',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Items Table / Section */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '0.85rem',
-                flexWrap: 'wrap',
-                gap: '0.75rem'
-              }}>
-                <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>{t('combined_sales.included_lots') || "Lotes incluidos en la venta"}</span>
-                  <span style={{
-                    padding: '0.15rem 0.55rem',
-                    background: 'rgba(66, 98, 22, 0.1)',
-                    color: 'var(--corp-green)',
-                    borderRadius: '1rem',
-                    fontSize: '0.8rem',
-                    fontWeight: '800'
-                  }}>
-                    {saleItems.length}
-                  </span>
-                </div>
-
-                {/* Add item buttons placed ABOVE items */}
-                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={handleAddElaborationRow}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      padding: '0.55rem 0.95rem',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      color: '#1d4ed8',
-                      background: '#eff6ff',
-                      border: '1.5px solid #bfdbfe',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <Plus size={15} />
-                    <span>{t('combined_sales.btn_add_elaboration') || "Añadir elaborado"}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleAddGoodsRow}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      padding: '0.55rem 0.95rem',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      color: '#15803d',
-                      background: '#f0fdf4',
-                      border: '1.5px solid #bbf7d0',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <Plus size={15} />
-                    <span>{t('combined_sales.btn_add_goods') || "Añadir mercancía en venta"}</span>
-                  </button>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                  {[
+                    { id: 'cash', label: t('pos.payment_cash') || "Efectivo", icon: Banknote },
+                    { id: 'card', label: t('pos.payment_card') || "Tarjeta", icon: CreditCard },
+                    { id: 'bizum', label: t('pos.payment_bizum') || "Bizum", icon: Hash },
+                    { id: 'transfer', label: t('pos.payment_transfer') || "Transferencia", icon: FileText }
+                  ].map(pm => {
+                    const isSelected = checkoutPaymentMethod === pm.id;
+                    const IconComp = pm.icon;
+                    return (
+                      <button
+                        key={pm.id}
+                        type="button"
+                        onClick={() => setCheckoutPaymentMethod(pm.id)}
+                        style={{
+                          background: isSelected ? 'rgba(34, 197, 94, 0.2)' : '#090d16',
+                          border: isSelected ? '1.5px solid #16a34a' : '1px solid #334155',
+                          borderRadius: '6px',
+                          padding: '0.65rem 0.4rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          color: isSelected ? '#4ade80' : '#cbd5e1',
+                          fontWeight: 800,
+                          fontSize: '0.78rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <IconComp size={18} />
+                        <span>{pm.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {saleItems.length === 0 ? (
+              {/* Cash change calculator */}
+              {checkoutPaymentMethod === 'cash' && (
                 <div style={{
-                  padding: '3rem 2rem',
-                  textAlign: 'center',
-                  background: '#f8fafc',
-                  borderRadius: '0.75rem',
-                  border: '1px dashed var(--border)',
-                  color: 'var(--text-muted)'
+                  background: '#090d16',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '0.75rem',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.75rem',
+                  alignItems: 'center'
                 }}>
-                  <ShoppingCart size={40} style={{ margin: '0 auto 0.75rem', color: '#94a3b8' }} />
-                  <p style={{ margin: 0, fontWeight: '700', fontSize: '0.95rem' }}>
-                    El ticket actual está vacío.
-                  </p>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.82rem' }}>
-                    Pulsa en los botones superiores para añadir elaborados o mercancías en venta.
-                  </p>
-                </div>
-              ) : (
-                <div style={{
-                  position: 'relative',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.75rem',
-                  minHeight: activeSearchIdx !== null ? '300px' : 'auto',
-                  background: '#ffffff'
-                }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                    <thead>
-                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)', fontWeight: '700' }}>
-                        <th style={{ padding: '0.75rem 1rem' }}>{t('combined_sales.col_product') || "Producto / Lote"}</th>
-                        <th style={{ padding: '0.75rem 1rem', width: '150px' }}>{t('combined_sales.col_quantity') || "Cantidad"}</th>
-                        <th style={{ padding: '0.75rem 1rem', width: '160px' }}>{t('combined_sales.col_price') || "Precio"} ({currencySymbol})</th>
-                        <th style={{ padding: '0.75rem 1rem', width: '50px' }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {saleItems.map((item, idx) => {
-                        const hasProduct = (item.type === 'elaboration' && item.elaborationId) ||
-                                           (item.type === 'goods_for_sale' && item.goodsForSaleId);
-                        const isSearchOpen = activeSearchIdx === idx;
-                        const error = formErrors[idx];
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', marginBottom: '0.25rem', textTransform: 'uppercase' }}>
+                      {t('pos.amount_paid') || "Importe entregado"}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="0.00"
+                      value={checkoutAmountPaid}
+                      onChange={(e) => setCheckoutAmountPaid(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: '#0f172a',
+                        border: '1px solid #334155',
+                        borderRadius: '4px',
+                        padding: '0.45rem',
+                        color: 'white',
+                        fontFamily: 'monospace',
+                        fontSize: '1.1rem',
+                        fontWeight: 900,
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
 
-                        return (
-                          <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 0 ? '#ffffff' : '#fafafa' }}>
-                            {/* Product column */}
-                            <td style={{ padding: '0.75rem 1rem', position: 'relative', zIndex: isSearchOpen ? 60 : 1 }}>
-                              {!hasProduct || isSearchOpen ? (
-                                <div className="pos-combobox-container" style={{ position: 'relative' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                    <span style={{
-                                      fontSize: '0.7rem',
-                                      fontWeight: '800',
-                                      padding: '0.15rem 0.45rem',
-                                      borderRadius: '0.35rem',
-                                      background: item.type === 'elaboration' ? '#eff6ff' : '#f0fdf4',
-                                      color: item.type === 'elaboration' ? '#1d4ed8' : '#15803d',
-                                      border: item.type === 'elaboration' ? '1px solid #bfdbfe' : '1px solid #bbf7d0',
-                                      whiteSpace: 'nowrap'
-                                    }}>
-                                      {item.type === 'elaboration' ? (t('combined_sales.badge_elaboration') || "[Elaborado]") : (t('combined_sales.badge_goods') || "[Mercancía]")}
-                                    </span>
-                                    <input
-                                      type="text"
-                                      autoFocus
-                                      placeholder={item.type === 'elaboration' ? (t('combined_sales.search_elaboration_placeholder') || "Buscar lote elaborado...") : (t('combined_sales.search_goods_placeholder') || "Buscar mercancía...")}
-                                      value={item.searchQuery || ""}
-                                      onChange={(e) => handleUpdateItem(idx, "searchQuery", e.target.value)}
-                                      onFocus={() => setActiveSearchIdx(idx)}
-                                      style={{
-                                        width: '100%',
-                                        padding: '0.5rem 0.75rem',
-                                        fontSize: '0.85rem',
-                                        borderRadius: '0.4rem',
-                                        border: '1.5px solid var(--corp-green)',
-                                        outline: 'none',
-                                        background: 'white'
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (!hasProduct) {
-                                          handleRemoveItem(idx);
-                                        } else {
-                                          setActiveSearchIdx(null);
-                                        }
-                                      }}
-                                      style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#64748b',
-                                        cursor: 'pointer',
-                                        padding: '0.25rem',
-                                        display: 'flex',
-                                        alignItems: 'center'
-                                      }}
-                                      title={t('common.cancel') || "Cancelar"}
-                                    >
-                                      <X size={16} />
-                                    </button>
-                                  </div>
-
-                                  {/* Dropdown suggestions */}
-                                  {isSearchOpen && (
-                                    <div style={{
-                                      position: 'absolute',
-                                      top: 'calc(100% + 4px)',
-                                      left: 0,
-                                      minWidth: '340px',
-                                      width: '100%',
-                                      maxWidth: '520px',
-                                      background: '#ffffff',
-                                      border: '1.5px solid var(--corp-green)',
-                                      borderRadius: '0.6rem',
-                                      boxShadow: '0 12px 30px -4px rgba(0,0,0,0.2), 0 4px 8px -2px rgba(0,0,0,0.08)',
-                                      maxHeight: '260px',
-                                      overflowY: 'auto',
-                                      zIndex: 9999,
-                                      marginTop: '0.25rem'
-                                    }}>
-                                      {item.type === 'elaboration' ? (
-                                        (() => {
-                                          const q = (item.searchQuery || "").toLowerCase();
-                                          const matches = availableElaborations.filter(e => !q || e.name.toLowerCase().includes(q) || (e.recipeName || "").toLowerCase().includes(q));
-                                          if (matches.length === 0) {
-                                            return (
-                                              <div style={{ padding: '0.85rem', color: '#94a3b8', fontSize: '0.82rem', textAlign: 'center' }}>
-                                                {t('combined_sales.no_elabs_match') || "No se encontraron elaboraciones con stock disponible"}
-                                              </div>
-                                            );
-                                          }
-                                          return matches.map(elab => (
-                                            <div
-                                              key={elab.id}
-                                              onClick={() => handleSelectElaboration(idx, elab)}
-                                              style={{
-                                                padding: '0.65rem 0.85rem',
-                                                borderBottom: '1px solid #f1f5f9',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center'
-                                              }}
-                                              onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                                              onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                                            >
-                                              <div>
-                                                <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.86rem' }}>{elab.recipeName}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lote: {elab.name}</div>
-                                              </div>
-                                              <div style={{ textAlign: 'right' }}>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: '800', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', padding: '0.15rem 0.45rem', borderRadius: '1rem' }}>
-                                                  {elab.availableStock} {elab.quantityUnit}
-                                                </span>
-                                                {elab.unitPrice > 0 && (
-                                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{elab.unitPrice.toFixed(2)} {currencySymbol}/ud</div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          ));
-                                        })()
-                                      ) : (
-                                        (() => {
-                                          const q = (item.searchQuery || "").toLowerCase();
-                                          const matches = availableGoods.filter(g => !q || g.name.toLowerCase().includes(q));
-                                          if (matches.length === 0) {
-                                            return (
-                                              <div style={{ padding: '0.85rem', color: '#94a3b8', fontSize: '0.82rem', textAlign: 'center' }}>
-                                                {t('combined_sales.no_goods_match') || "No se encontraron mercancías con stock disponible"}
-                                              </div>
-                                            );
-                                          }
-                                          return matches.map(gfs => (
-                                            <div
-                                              key={gfs.id}
-                                              onClick={() => handleSelectGoods(idx, gfs)}
-                                              style={{
-                                                padding: '0.65rem 0.85rem',
-                                                borderBottom: '1px solid #f1f5f9',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center'
-                                              }}
-                                              onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                                              onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                                            >
-                                              <div>
-                                                <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.86rem' }}>{gfs.name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{gfs.unit}</div>
-                                              </div>
-                                              <div style={{ textAlign: 'right' }}>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: '800', background: 'rgba(66, 98, 22, 0.1)', color: 'var(--corp-green)', padding: '0.15rem 0.45rem', borderRadius: '1rem' }}>
-                                                  {gfs.stock} {gfs.unit}
-                                                </span>
-                                                {gfs.salePrice > 0 && (
-                                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{gfs.salePrice.toFixed(2)} {currencySymbol}/{gfs.unit}</div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          ));
-                                        })()
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span style={{
-                                      fontSize: '0.7rem',
-                                      fontWeight: '800',
-                                      padding: '0.15rem 0.45rem',
-                                      borderRadius: '0.35rem',
-                                      background: item.type === 'elaboration' ? '#eff6ff' : '#f0fdf4',
-                                      color: item.type === 'elaboration' ? '#1d4ed8' : '#15803d',
-                                      border: item.type === 'elaboration' ? '1px solid #bfdbfe' : '1px solid #bbf7d0',
-                                      whiteSpace: 'nowrap'
-                                    }}>
-                                      {item.type === 'elaboration' ? (t('combined_sales.badge_elaboration') || "[Elaborado]") : (t('combined_sales.badge_goods') || "[Mercancía]")}
-                                    </span>
-                                    <div>
-                                      <div style={{ fontWeight: '800', color: 'var(--text-main)' }}>
-                                        {item.type === 'elaboration' ? item.recipeName : item.name}
-                                      </div>
-                                      {item.type === 'elaboration' && (
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lote: {item.name}</div>
-                                      )}
-                                      <div style={{ fontSize: '0.72rem', color: 'var(--corp-green)', fontWeight: '700' }}>
-                                        Stock: {item.availableStock} {item.unit}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => setActiveSearchIdx(idx)}
-                                    style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '700' }}
-                                  >
-                                    {t('common.edit') || "Cambiar"}
-                                  </button>
-                                </div>
-                              )}
-                              {error && (
-                                <div style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: '700' }}>
-                                  {error}
-                                </div>
-                              )}
-                            </td>
-
-                            {/* Quantity column */}
-                            <td style={{ padding: '0.75rem 1rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                <input
-                                  type="number"
-                                  step="any"
-                                  min="0"
-                                  placeholder="0"
-                                  disabled={!hasProduct}
-                                  value={item.quantity}
-                                  onChange={(e) => handleUpdateItem(idx, "quantity", e.target.value)}
-                                  style={{
-                                    width: '80px',
-                                    padding: '0.5rem',
-                                    borderRadius: '0.4rem',
-                                    border: error ? '1.5px solid #ef4444' : '1px solid var(--border)',
-                                    fontSize: '0.88rem',
-                                    fontWeight: '700',
-                                    textAlign: 'right',
-                                    outline: 'none',
-                                    background: hasProduct ? 'white' : '#f1f5f9'
-                                  }}
-                                />
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.unit}</span>
-                              </div>
-                            </td>
-
-                            {/* Price column */}
-                            <td style={{ padding: '0.75rem 1rem' }}>
-                              <input
-                                type="number"
-                                step="any"
-                                min="0"
-                                placeholder="0.00"
-                                disabled={!hasProduct}
-                                value={item.price}
-                                onChange={(e) => handleUpdateItem(idx, "price", e.target.value)}
-                                style={{
-                                  width: '100px',
-                                  padding: '0.5rem',
-                                  borderRadius: '0.4rem',
-                                  border: '1px solid var(--border)',
-                                  fontSize: '0.88rem',
-                                  fontWeight: '800',
-                                  color: 'var(--corp-green)',
-                                  textAlign: 'right',
-                                  outline: 'none',
-                                  background: hasProduct ? 'white' : '#f1f5f9'
-                                }}
-                              />
-                            </td>
-
-                            {/* Remove action */}
-                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveItem(idx)}
-                                style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.35rem', borderRadius: '0.35rem', cursor: 'pointer' }}
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', marginBottom: '0.25rem', textTransform: 'uppercase' }}>
+                      {t('pos.change') || "Cambio a devolver"}
+                    </span>
+                    <div style={{
+                      fontFamily: 'monospace',
+                      fontSize: '1.25rem',
+                      fontWeight: 900,
+                      color: '#f59e0b'
+                    }}>
+                      {(() => {
+                        const paid = parseFloat(checkoutAmountPaid) || 0;
+                        const total = (draftsBySeller[checkoutSeller.id.toString()]?.items || []).reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
+                        const change = paid > total ? paid - total : 0;
+                        return `${change.toFixed(2)} ${currencySymbol}`;
+                      })()}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Bottom Checkout & Action Area */}
+            {/* Checkout Footer */}
             <div style={{
-              marginTop: 'auto',
-              padding: '1.5rem',
-              background: '#f8fafc',
-              borderRadius: '0.85rem',
-              border: '1px solid var(--border)',
+              padding: '1rem 1.25rem',
+              background: '#1e293b',
+              borderTop: '1px solid #334155',
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1.25rem'
+              justifyContent: 'space-between'
             }}>
-              <div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block' }}>
-                  {t('combined_sales.total_price') || "Total de la venta"}
-                </span>
-                <span style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--corp-green)', letterSpacing: '-0.02em' }}>
-                  {totalPrice.toFixed(2)} {currencySymbol}
-                </span>
-              </div>
+              <button
+                type="button"
+                onClick={() => setCheckoutSeller(null)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #475569',
+                  borderRadius: '6px',
+                  padding: '0.6rem 1rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  color: '#94a3b8',
+                  cursor: 'pointer'
+                }}
+              >
+                Volver
+              </button>
 
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                {saleItems.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleDiscardTicket}
-                    style={{
-                      background: '#fef2f2',
-                      border: '1px solid #fee2e2',
-                      color: '#ef4444',
-                      fontSize: '0.88rem',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      padding: '0.85rem 1.25rem',
-                      borderRadius: '0.75rem'
-                    }}
-                  >
-                    <Trash2 size={16} />
-                    <span>{t('pos.discard_btn') || "Descartar venta"}</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  disabled={!isConfirmedValid || finalizing}
-                  onClick={handleFinalizeSale}
-                  className="btn-primary"
-                  style={{
-                    padding: '0.9rem 2.5rem',
-                    fontSize: '1.05rem',
-                    fontWeight: '900',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                    borderRadius: '0.75rem',
-                    boxShadow: '0 4px 14px rgba(66, 98, 22, 0.3)',
-                    cursor: !isConfirmedValid || finalizing ? 'not-allowed' : 'pointer',
-                    opacity: !isConfirmedValid || finalizing ? 0.6 : 1
-                  }}
-                >
-                  {finalizing ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />
-                      <span>Procesando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle size={20} />
-                      <span>{t('pos.finalize_btn') || "Cobrar / Finalizar venta"}</span>
-                    </>
-                  )}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleFinalizeSale}
+                disabled={finalizing}
+                style={{
+                  background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.75rem 1.75rem',
+                  fontSize: '0.95rem',
+                  fontWeight: 900,
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 14px rgba(22, 101, 52, 0.4)'
+                }}
+              >
+                {finalizing ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                <span>{t('pos.btn_finalize_close') || "Cobrar y Finalizar Venta"}</span>
+              </button>
             </div>
           </div>
-        ) : (
-          /* History Tab in POS */
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '0 1rem 1rem 1rem',
-            border: '1px solid var(--border)',
-            padding: '1.75rem',
-            boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800' }}>
-                {t('pos.tab_history') || "Historial de ventas"}
-              </h3>
-              <div style={{ position: 'relative', minWidth: '220px' }}>
-                <Search size={15} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input
-                  type="text"
-                  placeholder={t('common.search') || "Buscar por cliente o nº..."}
-                  value={historySearch}
-                  onChange={(e) => setHistorySearch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.45rem 0.65rem 0.45rem 2rem',
-                    fontSize: '0.85rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border)',
-                    outline: 'none',
-                    background: 'white'
-                  }}
-                />
-              </div>
-            </div>
+        </div>
+      )}
 
-            {loadingHistory ? (
-              <div style={{ textAlign: 'center', padding: '3rem' }}>
-                <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto', color: 'var(--corp-green)' }} />
-              </div>
-            ) : combinedSales.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                No hay ventas registradas.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {combinedSales
-                  .filter(cs => {
-                    if (!historySearch.trim()) return true;
-                    const term = historySearch.toLowerCase();
-                    const cust = (cs.customer?.commercialName || cs.customer?.fiscalName || "").toLowerCase();
-                    const sName = (cs.sellerName || "").toLowerCase();
-                    return cust.includes(term) || sName.includes(term) || `#${cs.id}`.includes(term);
-                  })
-                  .map(cs => {
-                    const isExpanded = expandedSaleId === cs.id;
-                    const totalLines = (cs.sales?.length || 0) + (cs.goodsSales?.length || 0);
-
-                    return (
-                      <div key={cs.id} style={{ border: '1px solid var(--border)', borderRadius: '0.75rem', overflow: 'hidden' }}>
-                        <div style={{ padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isExpanded ? '#f8fafc' : '#ffffff', flexWrap: 'wrap', gap: '0.75rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: '800', color: 'var(--corp-green)', fontSize: '0.85rem' }}>
-                              #{cs.id}
-                            </span>
-                            {/* Seller Badge */}
-                            <span style={{
-                              padding: '0.15rem 0.55rem',
-                              borderRadius: '1rem',
-                              fontSize: '0.72rem',
-                              fontWeight: '800',
-                              background: '#f1f5f9',
-                              color: '#334155',
-                              border: '1px solid #cbd5e1',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.25rem'
-                            }}>
-                              <User size={11} />
-                              {cs.sellerName || "Gestión"}
-                            </span>
-                            {/* Draft or confirmed badge */}
-                            {cs.isDraft ? (
-                              <span style={{ padding: '0.15rem 0.55rem', borderRadius: '1rem', fontSize: '0.72rem', fontWeight: '800', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
-                                Borrador
-                              </span>
-                            ) : (
-                              <span style={{ padding: '0.15rem 0.55rem', borderRadius: '1rem', fontSize: '0.72rem', fontWeight: '800', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0' }}>
-                                Confirmada
-                              </span>
-                            )}
-                            <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>
-                              {cs.customer?.commercialName || cs.customer?.fiscalName || "Venta directa"}
-                            </span>
-                            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                              {new Date(cs.date).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES')} ({totalLines} líneas)
-                            </span>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <span style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--corp-green)' }}>
-                              {cs.totalPrice.toFixed(2)} {currencySymbol}
-                            </span>
-
-                            {cs.holdedInvoiceId && (
-                              <button
-                                type="button"
-                                onClick={() => handleDownloadInvoice(cs)}
-                                style={{ padding: '0.35rem 0.65rem', background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', borderRadius: '0.4rem', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                              >
-                                <FileText size={13} /> PDF
-                              </button>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() => setExpandedSaleId(isExpanded ? null : cs.id)}
-                              style={{ padding: '0.35rem', background: '#f1f5f9', border: 'none', borderRadius: '0.4rem', cursor: 'pointer' }}
-                            >
-                              <Eye size={15} />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Details row */}
-                        {isExpanded && (
-                          <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid var(--border)', background: '#fafafa', fontSize: '0.82rem' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                              {(cs.sales || []).map(s => (
-                                <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
-                                  <span>[Elaborado] {s.elaboration?.recipe?.name || 'Receta'} (Lote: {s.elaboration?.name}) × {s.quantity} {s.elaboration?.quantityUnit}</span>
-                                  <span style={{ fontWeight: '700' }}>{s.price.toFixed(2)} {currencySymbol}</span>
-                                </div>
-                              ))}
-                              {(cs.goodsSales || []).map(gs => (
-                                <div key={gs.id} style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
-                                  <span>[Mercancía] {gs.goodsForSale?.name} × {gs.quantity} {gs.goodsForSale?.unit}</span>
-                                  <span style={{ fontWeight: '700' }}>{gs.price.toFixed(2)} {currencySymbol}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
-        )}
-      </main>
     </div>
   );
 }
