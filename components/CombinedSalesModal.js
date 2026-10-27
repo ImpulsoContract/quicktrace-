@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { 
   X, Plus, Trash2, ShoppingCart, Loader2, FileText, CheckCircle,
   AlertCircle, DollarSign, Calendar, User, Layers, ChevronRight, Eye, Edit,
-  Search, Tag, Package, ChevronDown, Clock, Users
+  Search, Tag, Package, ChevronDown, Clock, Users, Truck
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import ManageSellersModal from "@/components/ManageSellersModal";
+import DeliveryNoteModal from "@/components/DeliveryNoteModal";
+import { generateDeliveryNotePDF } from "@/lib/deliveryNoteGenerator";
 
 export default function CombinedSalesModal({
   isOpen,
@@ -603,6 +605,31 @@ export default function CombinedSalesModal({
     window.open(`/api/client/combined-sales/${cs.id}/invoice/pdf`, '_blank');
   };
 
+  // Delivery Note (Albarán) state
+  const [deliveryNoteSale, setDeliveryNoteSale] = useState(null);
+  const [generatingDeliveryNote, setGeneratingDeliveryNote] = useState(false);
+
+  const handleConfirmDeliveryNote = async (withPrices) => {
+    if (!deliveryNoteSale) return;
+    setGeneratingDeliveryNote(true);
+    try {
+      await generateDeliveryNotePDF({
+        sale: deliveryNoteSale,
+        customer: deliveryNoteSale.customer,
+        profile,
+        withPrices,
+        locale,
+        t
+      });
+      setDeliveryNoteSale(null);
+    } catch (err) {
+      console.error("Error generating delivery note:", err);
+      alert(t('alerts.connection_error') || "Error al generar el albarán");
+    } finally {
+      setGeneratingDeliveryNote(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const confirmedCount = combinedSales.filter(cs => !cs.isDraft).length;
@@ -1087,6 +1114,29 @@ export default function CombinedSalesModal({
                               {t('combined_sales.generate_invoice') || "Facturar"}
                             </button>
                           )}
+
+                          {/* Delivery note button */}
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryNoteSale(cs)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              padding: '0.4rem 0.75rem',
+                              background: '#f0fdf4',
+                              border: '1px solid #bbf7d0',
+                              color: '#166534',
+                              borderRadius: '0.4rem',
+                              fontSize: '0.78rem',
+                              fontWeight: '700',
+                              cursor: 'pointer'
+                            }}
+                            title={t('delivery_note.btn_generate_full') || "Generar albarán (PDF)"}
+                          >
+                            <Truck size={14} />
+                            <span>{t('delivery_note.btn_generate') || "Albarán"}</span>
+                          </button>
 
                           {/* Toggle Details button */}
                           <button
@@ -1854,6 +1904,14 @@ export default function CombinedSalesModal({
         <ManageSellersModal
           isOpen={isSellersModalOpen}
           onClose={() => setIsSellersModalOpen(false)}
+        />
+
+        <DeliveryNoteModal
+          isOpen={Boolean(deliveryNoteSale)}
+          onClose={() => setDeliveryNoteSale(null)}
+          onConfirm={handleConfirmDeliveryNote}
+          saleSummary={deliveryNoteSale ? `${deliveryNoteSale.customer?.commercialName || t('delivery_note.direct_sale') || 'Venta directa'} • #${deliveryNoteSale.id} • ${new Date(deliveryNoteSale.date).toLocaleDateString()}` : null}
+          isGenerating={generatingDeliveryNote}
         />
       </div>
     );

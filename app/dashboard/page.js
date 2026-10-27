@@ -38,6 +38,8 @@ import CombinedSalesModal from "@/components/CombinedSalesModal";
 import PosDisplay from "@/components/PosDisplay";
 import GoodsForSaleModal from "@/components/GoodsForSaleModal";
 import RelateGoodsReceiptModal from "@/components/RelateGoodsReceiptModal";
+import DeliveryNoteModal from "@/components/DeliveryNoteModal";
+import { generateDeliveryNotePDF } from "@/lib/deliveryNoteGenerator";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -19288,6 +19290,32 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
     window.open(`/api/client/sales/${sale.id}/invoice/pdf`, '_blank');
   };
 
+  // Delivery Note (Albarán) state for CustomerSalesModal
+  const [deliveryNoteSale, setDeliveryNoteSale] = useState(null);
+  const [generatingDeliveryNote, setGeneratingDeliveryNote] = useState(false);
+
+  const handleConfirmCustomerDeliveryNote = async (withPrices) => {
+    if (!deliveryNoteSale) return;
+    setGeneratingDeliveryNote(true);
+    try {
+      await generateDeliveryNotePDF({
+        sale: deliveryNoteSale,
+        elaboration: deliveryNoteSale.elaboration,
+        customer: deliveryNoteSale.customer || customer,
+        profile: currentProfile,
+        withPrices,
+        locale,
+        t
+      });
+      setDeliveryNoteSale(null);
+    } catch (err) {
+      console.error("Error generating delivery note:", err);
+      alert(t('alerts.connection_error') || "Error al generar el albarán");
+    } finally {
+      setGeneratingDeliveryNote(false);
+    }
+  };
+
   // Filtros de búsqueda
   const [amountQuery, setAmountQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -19669,6 +19697,28 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
 
                         <button
                           type="button"
+                          onClick={() => setDeliveryNoteSale(sale)}
+                          title={t('delivery_note.btn_generate_full') || "Generar albarán (PDF)"}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            background: '#f0fdf4',
+                            color: '#166534',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '0.45rem',
+                            padding: '0.35rem 0.65rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Truck size={13} />
+                          <span>{t('delivery_note.btn_generate') || "Albarán"}</span>
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => {
                             if (onViewSaleDetails && sale.elaboration) {
                               onViewSaleDetails(sale);
@@ -19760,6 +19810,14 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
           }}
         />
 
+        <DeliveryNoteModal
+          isOpen={Boolean(deliveryNoteSale)}
+          onClose={() => setDeliveryNoteSale(null)}
+          onConfirm={handleConfirmCustomerDeliveryNote}
+          saleSummary={deliveryNoteSale ? `${customer?.commercialName || ''} • ${deliveryNoteSale.elaboration?.name || ''} • ${formatDateDDMMYYYY(deliveryNoteSale.date || deliveryNoteSale.createdAt)}` : null}
+          isGenerating={generatingDeliveryNote}
+        />
+
         {/* Pie del modal */}
         <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
           <button
@@ -19844,6 +19902,32 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
 
   const handleDownloadInvoice = (sale) => {
     window.open(`/api/client/sales/${sale.id}/invoice/pdf`, '_blank');
+  };
+
+  // Delivery Note (Albarán) state for ElaborationSaleModal
+  const [deliveryNoteSale, setDeliveryNoteSale] = useState(null);
+  const [generatingDeliveryNote, setGeneratingDeliveryNote] = useState(false);
+
+  const handleConfirmElaborationDeliveryNote = async (withPrices) => {
+    if (!deliveryNoteSale) return;
+    setGeneratingDeliveryNote(true);
+    try {
+      await generateDeliveryNotePDF({
+        sale: deliveryNoteSale,
+        elaboration: currentElab,
+        customer: deliveryNoteSale.customer,
+        profile: currentProfile,
+        withPrices,
+        locale,
+        t
+      });
+      setDeliveryNoteSale(null);
+    } catch (err) {
+      console.error("Error generating delivery note:", err);
+      alert(t('alerts.connection_error') || "Error al generar el albarán");
+    } finally {
+      setGeneratingDeliveryNote(false);
+    }
   };
 
   // Initial stock setup form
@@ -20528,6 +20612,28 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
 
                           <button
                             type="button"
+                            onClick={() => setDeliveryNoteSale(s)}
+                            title={t('delivery_note.btn_generate_full') || "Generar albarán (PDF)"}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              background: '#f0fdf4',
+                              color: '#166534',
+                              border: '1px solid #bbf7d0',
+                              borderRadius: '0.4rem',
+                              padding: '0.3rem 0.6rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Truck size={13} />
+                            <span>{t('delivery_note.btn_generate') || "Albarán"}</span>
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => handleStartEdit(s)}
                             style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', padding: '0.35rem' }}
                             title={s.combinedSaleId ? (t('combined_sales.tab_edit') || "Editar venta combinada") : (t('elaboration_sales.edit_sale') || "Editar venta")}
@@ -20608,6 +20714,14 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
             setCurrentProfile(updated);
             if (onProfileUpdated) onProfileUpdated(updated);
           }}
+        />
+
+        <DeliveryNoteModal
+          isOpen={Boolean(deliveryNoteSale)}
+          onClose={() => setDeliveryNoteSale(null)}
+          onConfirm={handleConfirmElaborationDeliveryNote}
+          saleSummary={deliveryNoteSale ? `${deliveryNoteSale.customer?.commercialName || t('delivery_note.direct_sale') || 'Venta directa'} • ${currentElab?.name || ''} • ${formatDateDDMMYYYY(deliveryNoteSale.date)}` : null}
+          isGenerating={generatingDeliveryNote}
         />
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
