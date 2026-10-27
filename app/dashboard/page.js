@@ -5447,11 +5447,7 @@ export default function ClientDashboard() {
       <NotificationsBell 
         profile={profile} 
         onOpenGoodsModal={() => setIsGoodsForSaleModalOpen(true)} 
-        onOpenInventory={() => {
-          setActiveTab("inventario");
-          setSelectedRecipe(null);
-          setSelectedRecords([]);
-        }}
+        onOpenInventory={() => setIsInventoryModalOpen(true)}
       />
       {/* Mobile Top Header */}
       <div className="mobile-header" style={{ padding: '0.75rem 1.25rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>

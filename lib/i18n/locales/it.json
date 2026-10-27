@@ -1925,7 +1925,7 @@
     "tag_ingredient": "Ingrediente",
     "low_stock_alert_ingredient": "Scorte basse di ingrediente",
     "out_of_stock_alert_ingredient": "Ingrediente esaurito",
-    "btn_view_inventory": "Visualizza inventario materie prime"
+    "btn_view_inventory": "Visualizza inventario ingredienti"
   },
   "low_stock_email": {
     "subject": "⚠️ Avviso: Giacenza bassa per {name} - QuickTrace",

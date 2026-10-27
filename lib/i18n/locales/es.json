@@ -1930,7 +1930,7 @@
     "tag_ingredient": "Ingrediente",
     "low_stock_alert_ingredient": "Stock bajo de ingrediente",
     "out_of_stock_alert_ingredient": "Ingrediente agotado",
-    "btn_view_inventory": "Ver inventario de materias primas"
+    "btn_view_inventory": "Ver inventario de ingredientes"
   },
   "low_stock_email": {
     "subject": "⚠️ Alerta: Stock bajo en {name} - QuickTrace",
