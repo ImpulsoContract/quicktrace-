@@ -30,6 +30,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import NotificationsBell from "@/components/NotificationsBell";
 import CustomerImportModal from "@/components/CustomerImportModal";
 import MergeIngredientsModal from "@/components/MergeIngredientsModal";
 import CombinedSalesModal from "@/components/CombinedSalesModal";
@@ -2548,7 +2549,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.holdedApiKey !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -5441,6 +5442,8 @@ export default function ClientDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
+      <LanguageSwitcher />
+      <NotificationsBell profile={profile} onOpenGoodsModal={() => setIsGoodsForSaleModalOpen(true)} />
       {/* Mobile Top Header */}
       <div className="mobile-header" style={{ padding: '0.75rem 1.25rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -5641,9 +5644,7 @@ export default function ClientDashboard() {
             )}
           </nav>
 
-          <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
-            <LanguageSwitcher />
-          </div>
+          
 
           <div 
             onClick={() => setIsProfileOpen(true)}
@@ -13315,6 +13316,10 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [hasOilCollection, setHasOilCollection] = useState(profile?.hasOilCollection || false);
   const [hasVegetableDisinfection, setHasVegetableDisinfection] = useState(profile?.hasVegetableDisinfection || false);
   const [blockOutOfStockLots, setBlockOutOfStockLots] = useState(profile?.blockOutOfStockLots || false);
+  const [goodsLowStockAlertEnabled, setGoodsLowStockAlertEnabled] = useState(profile?.goodsLowStockAlertEnabled || false);
+  const [goodsLowStockThreshold, setGoodsLowStockThreshold] = useState(profile?.goodsLowStockThreshold ?? 2);
+  const [goodsLowStockInApp, setGoodsLowStockInApp] = useState(profile?.goodsLowStockInApp ?? true);
+  const [goodsLowStockEmail, setGoodsLowStockEmail] = useState(profile?.goodsLowStockEmail || false);
 
   // Holded state
   const [holdedApiKey, setHoldedApiKey] = useState(profile?.holdedApiKey || "");
@@ -13342,6 +13347,10 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setHasOilCollection(profile.hasOilCollection || false);
       setHasVegetableDisinfection(profile.hasVegetableDisinfection || false);
       setBlockOutOfStockLots(profile.blockOutOfStockLots || false);
+      setGoodsLowStockAlertEnabled(profile.goodsLowStockAlertEnabled || false);
+      setGoodsLowStockThreshold(profile.goodsLowStockThreshold ?? 2);
+      setGoodsLowStockInApp(profile.goodsLowStockInApp ?? true);
+      setGoodsLowStockEmail(profile.goodsLowStockEmail || false);
       setHoldedApiKey(profile.holdedApiKey || "");
       setHoldedTax(profile.holdedTax !== undefined && profile.holdedTax !== null ? profile.holdedTax : 10);
       setHoldedSeriesId(profile.holdedSeriesId || "");
@@ -13424,6 +13433,10 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       hasOilCollection,
       hasVegetableDisinfection,
       blockOutOfStockLots,
+      goodsLowStockAlertEnabled,
+      goodsLowStockThreshold: parseFloat(goodsLowStockThreshold) >= 0 ? parseFloat(goodsLowStockThreshold) : 2,
+      goodsLowStockInApp,
+      goodsLowStockEmail,
       holdedApiKey: holdedApiKey.trim() || null,
       holdedTax: parseFloat(holdedTax) || 0,
       holdedSeriesId: holdedSeriesId || null,
@@ -13502,6 +13515,10 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     hasOilCollection !== (profile?.hasOilCollection || false) ||
                     hasVegetableDisinfection !== (profile?.hasVegetableDisinfection || false) ||
                     blockOutOfStockLots !== (profile?.blockOutOfStockLots || false) ||
+                    goodsLowStockAlertEnabled !== (profile?.goodsLowStockAlertEnabled || false) ||
+                    parseFloat(goodsLowStockThreshold) !== (profile?.goodsLowStockThreshold ?? 2) ||
+                    goodsLowStockInApp !== (profile?.goodsLowStockInApp ?? true) ||
+                    goodsLowStockEmail !== (profile?.goodsLowStockEmail || false) ||
                     (holdedApiKey.trim() || "") !== (profile?.holdedApiKey || "") ||
                     holdedTax !== (profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10) ||
                     (holdedSeriesId || "") !== (profile?.holdedSeriesId || "");
@@ -14086,6 +14103,138 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               </span>
             </div>
           </label>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+              <AlertCircle size={16} /> {t('business_config.save_reminder')}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+            <button 
+              onClick={handleSave}
+              className="btn-primary" 
+              disabled={loading || !hasChanges}
+              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save')}</>}
+            </button>
+          </div>
+        </section>
+
+        
+        {/* Goods Low Stock Alert Configuration */}
+        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            <Bell size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
+              {t('business_config.goods_low_stock_section_title') || "Avisos de stock escaso de mercancías"}
+            </h3>
+          </div>
+
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+            {t('business_config.goods_low_stock_section_desc') || "Configura alertas automáticas cuando el stock total de cualquiera de tus mercancías en venta baje por debajo de una cantidad mínima."}
+          </p>
+
+          {/* Master Enable Switch */}
+          <label className="switch-container" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', cursor: 'pointer', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+            <div style={{ position: 'relative', width: '48px', height: '24px', minWidth: '48px', background: goodsLowStockAlertEnabled ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s', marginTop: '2px' }}>
+              <div style={{ position: 'absolute', left: goodsLowStockAlertEnabled ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+            </div>
+            <input 
+              type="checkbox" 
+              style={{ display: 'none' }}
+              checked={goodsLowStockAlertEnabled} 
+              onChange={(e) => setGoodsLowStockAlertEnabled(e.target.checked)} 
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <span style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                {t('business_config.goods_low_stock_enable') || "Activar avisos de stock escaso de mercancías"}
+              </span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                {t('business_config.goods_low_stock_enable_help') || "Genera advertencias cuando el stock total de una mercancía en venta descienda del umbral establecido."}
+              </span>
+            </div>
+          </label>
+
+          {goodsLowStockAlertEnabled && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
+              {/* Threshold input */}
+              <div style={{ background: '#ffffff', padding: '1.25rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                  {t('business_config.goods_low_stock_threshold_label') || "Cantidad mínima de stock (umbral de alerta)"}
+                </label>
+                <div style={{ maxWidth: '240px' }}>
+                  <input 
+                    type="number"
+                    min="0"
+                    step="any"
+                    className="input-field"
+                    value={goodsLowStockThreshold}
+                    onChange={(e) => setGoodsLowStockThreshold(e.target.value)}
+                    placeholder="2"
+                    style={{ fontSize: '1.1rem', fontWeight: '700' }}
+                  />
+                </div>
+                <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>
+                  {t('business_config.goods_low_stock_threshold_help') || "Si el stock total de una mercancía baja por debajo de este valor, se generará una alerta."}
+                </p>
+              </div>
+
+              {/* Notification channels (In-app and Email) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+                {/* In-app checkbox */}
+                <label style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.85rem', 
+                  cursor: 'pointer', 
+                  padding: '1.1rem', 
+                  background: goodsLowStockInApp ? 'rgba(66, 98, 22, 0.05)' : '#f8fafc', 
+                  borderRadius: '0.75rem', 
+                  border: goodsLowStockInApp ? '1.5px solid var(--corp-green)' : '1px solid var(--border)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <input 
+                    type="checkbox"
+                    checked={goodsLowStockInApp}
+                    onChange={(e) => setGoodsLowStockInApp(e.target.checked)}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                      {t('business_config.goods_low_stock_in_app') || "Recibir notificaciones en la aplicación"}
+                    </span>
+                  </div>
+                </label>
+
+                {/* Email checkbox */}
+                <label style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.85rem', 
+                  cursor: 'pointer', 
+                  padding: '1.1rem', 
+                  background: goodsLowStockEmail ? 'rgba(66, 98, 22, 0.05)' : '#f8fafc', 
+                  borderRadius: '0.75rem', 
+                  border: goodsLowStockEmail ? '1.5px solid var(--corp-green)' : '1px solid var(--border)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <input 
+                    type="checkbox"
+                    checked={goodsLowStockEmail}
+                    onChange={(e) => setGoodsLowStockEmail(e.target.checked)}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                      {t('business_config.goods_low_stock_email') || "Recibir notificaciones por correo electrónico"}
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>

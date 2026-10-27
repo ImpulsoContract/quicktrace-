@@ -277,7 +277,15 @@
     "holded_series_label": "Invoicing series",
     "holded_series_default": "Holded default",
     "holded_series_help": "Choose the series to issue invoices from QuickTrace.",
-    "holded_disconnect_btn": "Disconnect Holded"
+    "holded_disconnect_btn": "Disconnect Holded",
+    "goods_low_stock_section_title": "Low stock alerts for goods for sale",
+    "goods_low_stock_section_desc": "Set up alerts when the total stock of goods drops below a specific threshold, both in-app and by email.",
+    "goods_low_stock_enable": "Enable alerts when goods stock is low",
+    "goods_low_stock_enable_help": "The system will automatically monitor the total stock of each active goods for sale.",
+    "goods_low_stock_threshold_label": "Quantity considered low stock:",
+    "goods_low_stock_threshold_help": "If the total stock of goods drops below this quantity, an alert will be triggered (e.g., 2).",
+    "goods_low_stock_in_app": "Receive notifications in the app (top right icon)",
+    "goods_low_stock_email": "Receive notifications by email"
   },
   "dashboard": {
     "welcome": "Hello",
@@ -1908,5 +1916,25 @@
     "label_unit": "Unit",
     "label_stock": "Stock",
     "label_cost": "Cost"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty_title": "All caught up",
+    "empty_desc": "No pending notifications. Your goods stock is in good order.",
+    "low_stock_alert": "Low goods stock",
+    "out_of_stock_alert": "Goods out of stock",
+    "current_stock_info": "Current stock: {stock} {unit} (Threshold: {threshold} {unit})",
+    "btn_view_goods": "View goods for sale",
+    "tooltip": "Stock notifications"
+  },
+  "low_stock_email": {
+    "subject": "⚠️ Alert: Low stock on {name} - QuickTrace",
+    "greeting": "Hello {personName},",
+    "message_intro": "We inform you that the total stock of one of your goods for sale has fallen below your configured minimum threshold.",
+    "goods_label": "Goods:",
+    "current_stock_label": "Current stock:",
+    "threshold_label": "Configured threshold:",
+    "call_to_action": "We recommend restocking or registering new goods receipts as soon as possible.",
+    "footer": "This notice was generated automatically according to your notification settings in QuickTrace."
   }
 }

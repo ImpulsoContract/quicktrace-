@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { checkAndNotifyGoodsLowStock } from "@/lib/goodsLowStockAlert";
 
 export const dynamic = "force-dynamic";
 
@@ -462,6 +463,21 @@ export async function PUT(req, { params }) {
       });
     });
 
+    const affectedGfsIds = new Set();
+    if (existingCombinedSale?.goodsSales) {
+      existingCombinedSale.goodsSales.forEach(gs => affectedGfsIds.add(gs.goodsForSaleId));
+    }
+    if (validatedGoodsItems) {
+      validatedGoodsItems.forEach(it => affectedGfsIds.add(it.goodsForSaleId));
+    }
+    for (const gId of affectedGfsIds) {
+      try {
+        await checkAndNotifyGoodsLowStock(profileId, gId);
+      } catch (e) {
+        console.error("Error in checkAndNotifyGoodsLowStock:", e);
+      }
+    }
+
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error("Error updating combined sale:", error);
@@ -547,6 +563,16 @@ export async function DELETE(req, { params }) {
         where: { id }
       });
     });
+
+    if (!combinedSale.isDraft && combinedSale.goodsSales) {
+      for (const gs of combinedSale.goodsSales) {
+        try {
+          await checkAndNotifyGoodsLowStock(combinedSale.clientProfileId, gs.goodsForSaleId);
+        } catch (e) {
+          console.error("Error in checkAndNotifyGoodsLowStock:", e);
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, message: "Venta combinada eliminada correctamente." });
   } catch (error) {

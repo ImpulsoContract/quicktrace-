@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { checkAndNotifyGoodsLowStock } from "@/lib/goodsLowStockAlert";
 
 export async function GET(req) {
   try {
@@ -159,6 +160,11 @@ export async function POST(req) {
           where: { id: linkedGoods.id },
           data: { stock: clampedStock }
         });
+        try {
+          await checkAndNotifyGoodsLowStock(profileId, linkedGoods.id);
+        } catch (e) {
+          console.error("Error in checkAndNotifyGoodsLowStock:", e);
+        }
       }
     }
 

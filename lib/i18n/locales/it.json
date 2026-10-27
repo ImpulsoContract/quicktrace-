@@ -277,7 +277,15 @@
     "holded_series_label": "Serie di fatturazione",
     "holded_series_default": "Predefinita di Holded",
     "holded_series_help": "Scegli la serie con cui emettere le fatture da QuickTrace.",
-    "holded_disconnect_btn": "Disconnetti Holded"
+    "holded_disconnect_btn": "Disconnetti Holded",
+    "goods_low_stock_section_title": "Avvisi di giacenza bassa per merci in vendita",
+    "goods_low_stock_section_desc": "Configura avvisi quando la giacenza totale di una merce scende sotto una soglia specifica, nell'app e via email.",
+    "goods_low_stock_enable": "Attiva avvisi quando la giacenza di una merce è scarsa",
+    "goods_low_stock_enable_help": "Il sistema monitorerà automaticamente la giacenza totale di ogni merce in vendita attiva.",
+    "goods_low_stock_threshold_label": "Quantità considerata giacenza bassa:",
+    "goods_low_stock_threshold_help": "Se la giacenza totale di una merce scende sotto questa quantità, verrà generato un avviso (es: 2).",
+    "goods_low_stock_in_app": "Ricevi notifiche nell'applicazione (icona in alto a destra)",
+    "goods_low_stock_email": "Ricevi notifiche via e-mail"
   },
   "dashboard": {
     "welcome": "Ciao",
@@ -1903,5 +1911,25 @@
     "label_unit": "Unità",
     "label_stock": "Giacenza",
     "label_cost": "Costo"
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "empty_title": "Tutto aggiornato",
+    "empty_desc": "Nessuna notifica in sospeso. La giacenza delle tue merci è in ordine.",
+    "low_stock_alert": "Giacenza merce bassa",
+    "out_of_stock_alert": "Merce esaurita",
+    "current_stock_info": "Giacenza attuale: {stock} {unit} (Soglia: {threshold} {unit})",
+    "btn_view_goods": "Visualizza merci in vendita",
+    "tooltip": "Notifiche di giacenza"
+  },
+  "low_stock_email": {
+    "subject": "⚠️ Avviso: Giacenza bassa per {name} - QuickTrace",
+    "greeting": "Ciao {personName},",
+    "message_intro": "Ti informiamo che la giacenza totale di una delle tue merci in vendita è scesa al di sotto della soglia minima configurata.",
+    "goods_label": "Merce:",
+    "current_stock_label": "Giacenza attuale:",
+    "threshold_label": "Soglia configurata:",
+    "call_to_action": "Ti consigliamo di rifornire le scorte o registrare nuovi carichi merci il prima possibile.",
+    "footer": "Questo avviso è stato generato automaticamente in base alle tue preferenze di notifica in QuickTrace."
   }
 }

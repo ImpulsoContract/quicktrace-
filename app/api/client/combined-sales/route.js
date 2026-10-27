@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { checkAndNotifyGoodsLowStock } from "@/lib/goodsLowStockAlert";
 
 export const dynamic = "force-dynamic";
 
@@ -401,6 +402,17 @@ export async function POST(req) {
         }
       });
     });
+
+    if (!isDraftSale && validatedGoodsItems.length > 0) {
+      const gfsIds = [...new Set(validatedGoodsItems.map(it => it.goodsForSaleId))];
+      for (const gId of gfsIds) {
+        try {
+          await checkAndNotifyGoodsLowStock(profileId, gId);
+        } catch (e) {
+          console.error("Error in checkAndNotifyGoodsLowStock:", e);
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

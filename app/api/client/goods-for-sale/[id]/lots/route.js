@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { checkAndNotifyGoodsLowStock } from "@/lib/goodsLowStockAlert";
 
 export const dynamic = "force-dynamic";
 
@@ -259,6 +260,14 @@ export async function PUT(req, { params }) {
             }
           });
         }
+      }
+    }
+
+    if (hasQuantityUpdate && updatedGoodsForSale) {
+      try {
+        await checkAndNotifyGoodsLowStock(updatedGoodsForSale.clientProfileId, updatedGoodsForSale.id);
+      } catch (e) {
+        console.error("Error in checkAndNotifyGoodsLowStock:", e);
       }
     }
 

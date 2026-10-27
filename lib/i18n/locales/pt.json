@@ -277,7 +277,15 @@
     "holded_series_label": "Série de faturação",
     "holded_series_default": "Padrão do Holded",
     "holded_series_help": "Escolha a série com a qual serão emitidas as faturas a partir do QuickTrace.",
-    "holded_disconnect_btn": "Desconectar Holded"
+    "holded_disconnect_btn": "Desconectar Holded",
+    "goods_low_stock_section_title": "Avisos de estoque baixo para mercadorias à venda",
+    "goods_low_stock_section_desc": "Configure avisos quando o estoque total de uma mercadoria cair abaixo de um limite específico, no app e por e-mail.",
+    "goods_low_stock_enable": "Ativar avisos quando o estoque de uma mercadoria estiver baixo",
+    "goods_low_stock_enable_help": "O sistema monitorará automaticamente o estoque total de cada mercadoria à venda ativa.",
+    "goods_low_stock_threshold_label": "Quantidade considerada estoque baixo:",
+    "goods_low_stock_threshold_help": "Se o estoque total de uma mercadoria cair abaixo desta quantidade, um alerta será gerado (ex: 2).",
+    "goods_low_stock_in_app": "Receber notificações no aplicativo (ícone no canto superior direito)",
+    "goods_low_stock_email": "Receber notificações por e-mail"
   },
   "dashboard": {
     "welcome": "Olá",
@@ -1902,5 +1910,25 @@
     "label_unit": "Unidade",
     "label_stock": "Estoque",
     "label_cost": "Custo"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "empty_title": "Tudo em dia",
+    "empty_desc": "Sem notificações pendentes. O estoque das suas mercadorias está em ordem.",
+    "low_stock_alert": "Estoque baixo de mercadoria",
+    "out_of_stock_alert": "Mercadoria esgotada",
+    "current_stock_info": "Estoque atual: {stock} {unit} (Limite: {threshold} {unit})",
+    "btn_view_goods": "Ver mercadorias à venda",
+    "tooltip": "Notificações de estoque"
+  },
+  "low_stock_email": {
+    "subject": "⚠️ Alerta: Estoque baixo em {name} - QuickTrace",
+    "greeting": "Olá {personName},",
+    "message_intro": "Informamos que o estoque total de uma de suas mercadorias à venda caiu abaixo do limite mínimo configurado.",
+    "goods_label": "Mercadoria:",
+    "current_stock_label": "Estoque atual:",
+    "threshold_label": "Limite configurado:",
+    "call_to_action": "Recomendamos repor o estoque ou registrar novas entradas de mercadoria o quanto antes.",
+    "footer": "Este aviso foi gerado automaticamente de acordo com suas preferências de notificação no QuickTrace."
   }
 }

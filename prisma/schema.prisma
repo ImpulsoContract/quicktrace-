@@ -131,6 +131,12 @@ model ClientProfile {
   holdedTax                  Float?            @default(10)
   holdedSeriesId             String?
   holdedSeriesName           String?
+
+  // Low stock alerts for goods for sale
+  goodsLowStockAlertEnabled   Boolean           @default(false)
+  goodsLowStockThreshold      Float?            @default(2)
+  goodsLowStockInApp          Boolean           @default(true)
+  goodsLowStockEmail          Boolean           @default(false)
 }
 
 model Customer {
@@ -719,6 +725,7 @@ model GoodsForSale {
   stock     Float         @default(0)
   isArchived Boolean       @default(false)
   linkedIngredientName String?
+  lowStockAlertSent    Boolean           @default(false)
 
   goodsReceipts GoodsReceipt[]
   combinedSaleItems CombinedSaleGoodsItem[]
