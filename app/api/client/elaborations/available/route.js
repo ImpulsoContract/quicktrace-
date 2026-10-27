@@ -36,7 +36,8 @@ export async function GET(req) {
         recipe: {
           select: {
             id: true,
-            name: true
+            name: true,
+            productFamilyId: true
           }
         },
         sales: {
@@ -69,6 +70,7 @@ export async function GET(req) {
         expirationDate: el.expirationDate,
         recipeName: el.recipe?.name || "Sin receta",
         recipeId: el.recipeId,
+        productFamilyId: el.recipe?.productFamilyId || null,
         quantityProduced: totalProduced,
         quantityUnit: unit,
         unitPrice: el.unitPrice || 0,

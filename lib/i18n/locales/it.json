@@ -1906,7 +1906,10 @@
     "select_product_first": "Seleziona prima un prodotto da aggiungere alla vendita.",
     "col_sellers_view_hint": "Tocca per consultare o gestire il suo scontrino:",
     "qty_weight_mult": "Moltiplicatore peso",
-    "qty_direct_units": "Unità dirette"
+    "qty_direct_units": "Unità dirette",
+    "families_title": "Famiglie di prodotti",
+    "filter_all_families": "Tutte le famiglie",
+    "products_count": "prodotti"
   },
   "goods_ingredient_link": {
     "btn_link": "Collega a ingrediente",

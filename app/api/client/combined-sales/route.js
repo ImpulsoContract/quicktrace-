@@ -145,9 +145,11 @@ export async function POST(req) {
         return NextResponse.json({ error: "IDs de elaboración inválidos." }, { status: 400 });
       }
 
+      const uniqueElabIds = [...new Set(elaborationIds)];
+
       const elaborations = await prisma.elaboration.findMany({
         where: {
-          id: { in: elaborationIds },
+          id: { in: uniqueElabIds },
           recipe: session.user.role === "ADMIN" ? {} : { clientProfileId: profileId }
         },
         include: {
@@ -156,12 +158,19 @@ export async function POST(req) {
         }
       });
 
-      if (elaborations.length !== elaborationIds.length) {
+      if (elaborations.length !== uniqueElabIds.length) {
         return NextResponse.json({ error: "Una o más elaboraciones no fueron encontradas o no pertenecen a tu cuenta." }, { status: 400 });
       }
 
       const elabMap = new Map();
       elaborations.forEach(e => elabMap.set(e.id, e));
+
+      const totalRequestedElab = new Map();
+      for (const item of elabRawItems) {
+        const elabId = parseInt(item.elaborationId);
+        const qty = parseFloat(item.quantity?.toString().replace(',', '.')) || 0;
+        totalRequestedElab.set(elabId, (totalRequestedElab.get(elabId) || 0) + qty);
+      }
 
       for (const item of elabRawItems) {
         const elabId = parseInt(item.elaborationId);
@@ -188,10 +197,11 @@ export async function POST(req) {
         }, 0);
 
         const availableStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
+        const totalQtyForElab = totalRequestedElab.get(elabId) || 0;
 
-        if (!isDraftSale && totalProduced > 0 && qty > availableStock + 0.0001) {
+        if (!isDraftSale && totalProduced > 0 && totalQtyForElab > availableStock + 0.0001) {
           return NextResponse.json({
-            error: `Stock insuficiente para "${elabName}". Intentas vender ${qty} ${unit}, pero solo hay ${availableStock} ${unit} disponibles.`
+            error: `Stock insuficiente para "${elabName}". Intentas vender ${totalQtyForElab} ${unit}, pero solo hay ${availableStock} ${unit} disponibles.`
           }, { status: 400 });
         }
 
@@ -214,19 +224,28 @@ export async function POST(req) {
         return NextResponse.json({ error: "IDs de mercancía en venta inválidos." }, { status: 400 });
       }
 
+      const uniqueGfsIds = [...new Set(gfsIds)];
+
       const goodsList = await prisma.goodsForSale.findMany({
         where: {
-          id: { in: gfsIds },
+          id: { in: uniqueGfsIds },
           ...(session.user.role === "ADMIN" && !profileId ? {} : { clientProfileId: profileId })
         }
       });
 
-      if (goodsList.length !== gfsIds.length) {
+      if (goodsList.length !== uniqueGfsIds.length) {
         return NextResponse.json({ error: "Una o más mercancías en venta no fueron encontradas." }, { status: 400 });
       }
 
       const gfsMap = new Map();
       goodsList.forEach(g => gfsMap.set(g.id, g));
+
+      const totalRequestedGoods = new Map();
+      for (const item of goodsRawItems) {
+        const gfsId = parseInt(item.goodsForSaleId);
+        const qty = parseFloat(item.quantity?.toString().replace(',', '.')) || 0;
+        totalRequestedGoods.set(gfsId, (totalRequestedGoods.get(gfsId) || 0) + qty);
+      }
 
       for (const item of goodsRawItems) {
         const gfsId = parseInt(item.goodsForSaleId);
@@ -243,9 +262,11 @@ export async function POST(req) {
         }
 
         const availableStock = gfs.stock || 0;
-        if (!isDraftSale && qty > availableStock + 0.0001) {
+        const totalQtyForGoods = totalRequestedGoods.get(gfsId) || 0;
+
+        if (!isDraftSale && totalQtyForGoods > availableStock + 0.0001) {
           return NextResponse.json({
-            error: `Stock insuficiente para "${gfs.name}". Intentas vender ${qty} ${gfs.unit}, pero solo hay ${availableStock} ${gfs.unit} disponibles.`
+            error: `Stock insuficiente para "${gfs.name}". Intentas vender ${totalQtyForGoods} ${gfs.unit}, pero solo hay ${availableStock} ${gfs.unit} disponibles.`
           }, { status: 400 });
         }
 

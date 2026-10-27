@@ -1905,7 +1905,10 @@
     "select_product_first": "Selecione primeiro um produto para adicionar à venda.",
     "col_sellers_view_hint": "Toque para consultar ou gerir o seu talão:",
     "qty_weight_mult": "Multiplicador peso",
-    "qty_direct_units": "Unidades diretas"
+    "qty_direct_units": "Unidades diretas",
+    "families_title": "Famílias de produtos",
+    "filter_all_families": "Todas as famílias",
+    "products_count": "produtos"
   },
   "goods_ingredient_link": {
     "btn_link": "Vincular com ingrediente",

@@ -52,6 +52,8 @@ export default function PosDisplay({
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [productCategory, setProductCategory] = useState("all"); // "all" | "elaborations" | "goods"
+  const [families, setFamilies] = useState([]);
+  const [selectedFamilyId, setSelectedFamilyId] = useState(null); // null means all families
 
   // 4. TOP BAR SCALE INDICATOR & SELECTION STATE
   const [weightInput, setWeightInput] = useState(""); // User editable kg input (or scale)
@@ -178,6 +180,22 @@ export default function PosDisplay({
     }
   };
 
+  // Fetch Product Families
+  const fetchProductFamilies = async () => {
+    try {
+      const res = await fetch(`/api/client/product-families?t=${Date.now()}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.families)) {
+        setFamilies(data.families);
+        return data.families;
+      }
+      return [];
+    } catch (err) {
+      console.error("Error fetching product families in POS:", err);
+      return [];
+    }
+  };
+
   // Fetch all existing drafts from server
   const fetchAllDrafts = async (currentElabs, currentGoods) => {
     try {
@@ -253,6 +271,7 @@ export default function PosDisplay({
   useEffect(() => {
     const init = async () => {
       fetchSellers();
+      fetchProductFamilies();
       const [elabs, gfs] = await Promise.all([
         fetchAvailableElaborations(),
         fetchAvailableGoods()
@@ -266,7 +285,7 @@ export default function PosDisplay({
   // Filtered Products for Column 2
   const filteredProducts = useMemo(() => {
     const searchClean = productSearch.trim().toLowerCase();
-    const result = [];
+    let result = [];
 
     // Elaborations
     if (productCategory === "all" || productCategory === "elaborations") {
@@ -284,7 +303,8 @@ export default function PosDisplay({
             displayName: e.recipeName ? `${e.recipeName} (${e.name})` : e.name,
             unitPrice: e.unitPrice || 0,
             unit: e.quantityUnit || "kg",
-            availableStock: e.availableStock || 0
+            availableStock: e.availableStock || 0,
+            productFamilyId: e.productFamilyId || null
           });
         }
       });
@@ -306,14 +326,20 @@ export default function PosDisplay({
             displayName: g.name,
             unitPrice: g.salePrice || 0,
             unit: g.unit || "ud",
-            availableStock: g.stock || 0
+            availableStock: g.stock || 0,
+            productFamilyId: g.productFamilyId || null
           });
         }
       });
     }
 
+    // Filter by selected family if one is selected
+    if (selectedFamilyId !== null && selectedFamilyId !== 'all') {
+      result = result.filter(p => p.productFamilyId === selectedFamilyId);
+    }
+
     return result;
-  }, [availableElaborations, availableGoods, productSearch, productCategory]);
+  }, [availableElaborations, availableGoods, productSearch, productCategory, selectedFamilyId]);
 
   // TOP BAR CALCULATIONS
   const parsedWeight = useMemo(() => {
@@ -1340,10 +1366,89 @@ export default function PosDisplay({
               })
             )}
           </div>
+
+          {/* BOTTOM BLOCK: PRODUCT FAMILIES */}
+          <div style={{
+            background: '#131d31',
+            borderTop: '1.5px solid #334155',
+            padding: '0.55rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.4rem',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Layers size={14} style={{ color: '#38bdf8' }} />
+                <span style={{ fontSize: '0.72rem', fontWeight: 900, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {t('pos.families_title') || "Familias de productos"}
+                </span>
+              </div>
+              {selectedFamilyId !== null && (
+                <span style={{ fontSize: '0.68rem', color: '#4ade80', fontWeight: 800 }}>
+                  {filteredProducts.length} {t('pos.products_count') || "productos"}
+                </span>
+              )}
+            </div>
+
+            {/* Families horizontal scroll list */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              overflowX: 'auto',
+              paddingBottom: '0.2rem'
+            }}>
+              <button
+                type="button"
+                onClick={() => setSelectedFamilyId(null)}
+                style={{
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  border: selectedFamilyId === null ? '1.5px solid #38bdf8' : '1px solid #334155',
+                  background: selectedFamilyId === null ? 'rgba(56, 189, 248, 0.2)' : '#090d16',
+                  color: selectedFamilyId === null ? '#38bdf8' : '#cbd5e1',
+                  transition: 'all 0.1s ease'
+                }}
+              >
+                {t('pos.filter_all_families') || "Todas las familias"}
+              </button>
+
+              {families.map(f => {
+                const isSelected = selectedFamilyId === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setSelectedFamilyId(isSelected ? null : f.id)}
+                    style={{
+                      padding: '0.45rem 0.85rem',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      border: isSelected ? '1.5px solid #22c55e' : '1px solid #334155',
+                      background: isSelected ? 'rgba(34, 197, 94, 0.25)' : '#090d16',
+                      color: isSelected ? '#4ade80' : '#cbd5e1',
+                      transition: 'all 0.1s ease',
+                      boxShadow: isSelected ? '0 0 10px rgba(34, 197, 94, 0.25)' : 'none'
+                    }}
+                  >
+                    <span>{f.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* ------------------------------------------------------------ */}
-        {/* COLUMNA 3 (DERECHA): SELECTOR CANTIDAD Y LISTADO VENDEDORES  */}
+        {/* COLUMNA 3 (DERECHA): LISTADO VENDEDORES Y TECLADO CANTIDAD   */}
         {/* ------------------------------------------------------------ */}
         <section style={{
           background: '#0f172a',

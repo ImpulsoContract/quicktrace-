@@ -1906,7 +1906,10 @@
     "select_product_first": "Sélectionnez d'abord un produit pour l'ajouter à la vente.",
     "col_sellers_view_hint": "Appuyez pour consulter ou gérer son ticket :",
     "qty_weight_mult": "Multiplicateur poids",
-    "qty_direct_units": "Unités directes"
+    "qty_direct_units": "Unités directes",
+    "families_title": "Familles de produits",
+    "filter_all_families": "Toutes les familles",
+    "products_count": "produits"
   },
   "goods_ingredient_link": {
     "btn_link": "Lier avec ingrédient",
