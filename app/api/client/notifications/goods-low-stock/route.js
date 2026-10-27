@@ -45,6 +45,7 @@ export async function GET(req) {
       ? profile.goodsLowStockThreshold
       : 2;
 
+    // 1. Fetch low stock active goods for sale
     const lowStockGoods = await prisma.goodsForSale.findMany({
       where: {
         clientProfileId: profileId,
@@ -56,17 +57,79 @@ export async function GET(req) {
         name: true,
         unit: true,
         stock: true,
-        salePrice: true,
-        costPrice: true
+        costPrice: true,
+        linkedIngredientName: true
       },
       orderBy: { stock: "asc" }
     });
 
+    // All active goods for sale with links to avoid duplicating items
+    const allLinkedGoods = await prisma.goodsForSale.findMany({
+      where: {
+        clientProfileId: profileId,
+        isArchived: false,
+        linkedIngredientName: { not: null }
+      },
+      select: {
+        linkedIngredientName: true
+      }
+    });
+    const allLinkedIngNames = new Set(
+      allLinkedGoods
+        .map(g => g.linkedIngredientName?.trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    // 2. Fetch low stock ingredients
+    const lowStockIngredients = await prisma.ingredientStock.findMany({
+      where: {
+        clientProfileId: profileId,
+        stock: { lt: threshold }
+      },
+      select: {
+        id: true,
+        name: true,
+        unit: true,
+        stock: true
+      },
+      orderBy: { stock: "asc" }
+    });
+
+    // Exclude ingredients that are already represented as a linked goods for sale
+    const unlinkedLowStockIngredients = lowStockIngredients.filter(ing => {
+      return !allLinkedIngNames.has(ing.name.trim().toLowerCase());
+    });
+
+    const items = [
+      ...lowStockGoods.map(g => ({
+        id: `gfs_${g.id}`,
+        rawId: g.id,
+        name: g.name,
+        unit: g.unit,
+        stock: g.stock,
+        type: 'goods',
+        isLinked: Boolean(g.linkedIngredientName)
+      })),
+      ...unlinkedLowStockIngredients.map(ing => ({
+        id: `ing_${ing.id}`,
+        rawId: ing.id,
+        name: ing.name,
+        unit: ing.unit,
+        stock: ing.stock,
+        type: 'ingredient',
+        isLinked: false
+      }))
+    ];
+
+    items.sort((a, b) => (a.stock || 0) - (b.stock || 0));
+
     return NextResponse.json({
       enabled: true,
       threshold,
-      count: lowStockGoods.length,
-      items: lowStockGoods
+      count: items.length,
+      items,
+      goodsCount: lowStockGoods.length,
+      ingredientsCount: unlinkedLowStockIngredients.length
     });
   } catch (error) {
     console.error("Error GET /api/client/notifications/goods-low-stock:", error);

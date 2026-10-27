@@ -278,12 +278,12 @@
     "holded_series_default": "Par défaut de Holded",
     "holded_series_help": "Choisissez la série avec laquelle les factures seront émises depuis QuickTrace.",
     "holded_disconnect_btn": "Déconnecter Holded",
-    "goods_low_stock_section_title": "Alertes de stock bas pour les marchandises",
-    "goods_low_stock_section_desc": "Configurez des alertes lorsque le stock total d'une marchandise passe sous un seuil spécifique, dans l'application et par e-mail.",
-    "goods_low_stock_enable": "Activer les alertes lorsque le stock d'une marchandise est bas",
-    "goods_low_stock_enable_help": "Le système surveillera automatiquement le stock total de chaque marchandise en vente active.",
+    "goods_low_stock_section_title": "Alertes de stock bas pour marchandises et ingrédients",
+    "goods_low_stock_section_desc": "Configurez des alertes lorsque le stock d'une marchandise ou d'un ingrédient passe sous un seuil spécifique, dans l'application et par e-mail.",
+    "goods_low_stock_enable": "Activer les alertes lorsque le stock d'une marchandise ou d'un ingrédient est bas",
+    "goods_low_stock_enable_help": "Le système surveillera automatiquement le stock de chaque marchandise en vente active et de chaque ingrédient.",
     "goods_low_stock_threshold_label": "Quantité considérée comme stock bas :",
-    "goods_low_stock_threshold_help": "Si le stock total d'une marchandise passe en dessous de cette quantité, une alerte sera déclenchée (ex : 2).",
+    "goods_low_stock_threshold_help": "Si le stock d'une marchandise ou d'un ingrédient passe sous cette quantité, une alerte sera déclenchée (ex : 2).",
     "goods_low_stock_in_app": "Recevoir les notifications dans l'application (icône en haut à droite)",
     "goods_low_stock_email": "Recevoir les notifications par e-mail"
   },
@@ -1920,7 +1920,12 @@
     "out_of_stock_alert": "Marchandise épuisée",
     "current_stock_info": "Stock actuel : {stock} {unit} (Seuil : {threshold} {unit})",
     "btn_view_goods": "Voir les marchandises en vente",
-    "tooltip": "Notifications de stock"
+    "tooltip": "Notifications de stock",
+    "tag_goods": "Marchandise",
+    "tag_ingredient": "Ingrédient",
+    "low_stock_alert_ingredient": "Stock bas d'ingrédient",
+    "out_of_stock_alert_ingredient": "Ingrédient épuisé",
+    "btn_view_inventory": "Voir l'inventaire des matières premières"
   },
   "low_stock_email": {
     "subject": "⚠️ Alerte : Stock bas pour {name} - QuickTrace",
@@ -1930,6 +1935,9 @@
     "current_stock_label": "Stock actuel :",
     "threshold_label": "Seuil configuré :",
     "call_to_action": "Nous vous recommandons de réapprovisionner vos stocks dès que possible.",
-    "footer": "Cet avis a été généré automatiquement selon vos préférences de notification dans QuickTrace."
+    "footer": "Cet avis a été généré automatiquement selon vos préférences de notification dans QuickTrace.",
+    "ingredient_label": "Ingrédient :",
+    "ingredient_message_intro": "Nous vous informons que le stock de l'un de vos ingrédients / matières premières est passé sous le seuil minimum configuré.",
+    "ingredient_call_to_action": "Nous vous recommandons de réapprovisionner vos stocks dès que possible."
   }
 }

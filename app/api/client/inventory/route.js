@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { checkAndNotifyGoodsLowStock } from "@/lib/goodsLowStockAlert";
+import { checkAndNotifyGoodsLowStock, checkAndNotifyIngredientLowStock } from "@/lib/goodsLowStockAlert";
 
 export async function GET(req) {
   try {
@@ -164,6 +164,12 @@ export async function POST(req) {
           await checkAndNotifyGoodsLowStock(profileId, linkedGoods.id);
         } catch (e) {
           console.error("Error in checkAndNotifyGoodsLowStock:", e);
+        }
+      } else {
+        try {
+          await checkAndNotifyIngredientLowStock(profileId, item.name.trim(), item.unit.trim());
+        } catch (e) {
+          console.error("Error in checkAndNotifyIngredientLowStock:", e);
         }
       }
     }

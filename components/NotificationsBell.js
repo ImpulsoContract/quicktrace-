@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, AlertTriangle, CheckCircle2, X, Package, ExternalLink } from "lucide-react";
+import { Bell, AlertTriangle, CheckCircle2, X, Package, Boxes, ExternalLink } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
-export default function NotificationsBell({ profile, onOpenGoodsModal }) {
+export default function NotificationsBell({ profile, onOpenGoodsModal, onOpenInventory }) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState({ enabled: false, count: 0, items: [], threshold: 2 });
@@ -207,9 +207,25 @@ export default function NotificationsBell({ profile, onOpenGoodsModal }) {
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                          <span style={{ fontWeight: 800, fontSize: '0.88rem', color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            {item.name}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0 }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                              {item.name}
+                            </span>
+                            <span style={{
+                              fontSize: '0.62rem',
+                              fontWeight: 800,
+                              padding: '0.05rem 0.35rem',
+                              borderRadius: '4px',
+                              background: item.type === 'ingredient' ? '#e0f2fe' : '#ecfdf5',
+                              color: item.type === 'ingredient' ? '#0369a1' : '#15803d',
+                              textTransform: 'uppercase',
+                              flexShrink: 0
+                            }}>
+                              {item.type === 'ingredient'
+                                ? (t('notifications.tag_ingredient') || "Ingrediente")
+                                : (t('notifications.tag_goods') || "Mercancía")}
+                            </span>
+                          </div>
                           <span style={{
                             fontSize: '0.68rem',
                             fontWeight: 700,
@@ -217,11 +233,16 @@ export default function NotificationsBell({ profile, onOpenGoodsModal }) {
                             borderRadius: '4px',
                             background: isZero ? '#fca5a5' : '#fde68a',
                             color: isZero ? '#7f1d1d' : '#78350f',
-                            textTransform: 'uppercase'
+                            textTransform: 'uppercase',
+                            flexShrink: 0
                           }}>
                             {isZero
-                              ? (t('notifications.out_of_stock_alert') || "Agotada")
-                              : (t('notifications.low_stock_alert') || "Stock bajo")}
+                              ? (item.type === 'ingredient'
+                                  ? (t('notifications.out_of_stock_alert_ingredient') || "Agotado")
+                                  : (t('notifications.out_of_stock_alert') || "Agotada"))
+                              : (item.type === 'ingredient'
+                                  ? (t('notifications.low_stock_alert_ingredient') || "Stock bajo")
+                                  : (t('notifications.low_stock_alert') || "Stock bajo"))}
                           </span>
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
@@ -240,34 +261,61 @@ export default function NotificationsBell({ profile, onOpenGoodsModal }) {
           </div>
 
           {/* Footer with action */}
-          {count > 0 && onOpenGoodsModal && (
+          {count > 0 && (
             <div style={{
               padding: '0.65rem 1rem',
               borderTop: '1px solid var(--border)',
               background: '#f8fafc',
-              textAlign: 'center'
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.45rem'
             }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  onOpenGoodsModal();
-                }}
-                className="btn-secondary"
-                style={{
-                  width: '100%',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.4rem',
-                  padding: '0.45rem 0.85rem',
-                  fontSize: '0.8rem',
-                  fontWeight: 700
-                }}
-              >
-                <Package size={14} style={{ color: 'var(--corp-green)' }} />
-                <span>{t('notifications.btn_view_goods') || "Ver mercancías en venta"}</span>
-              </button>
+              {Boolean(data.goodsCount > 0 || !data.ingredientsCount) && onOpenGoodsModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onOpenGoodsModal();
+                  }}
+                  className="btn-secondary"
+                  style={{
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    padding: '0.45rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 700
+                  }}
+                >
+                  <Package size={14} style={{ color: 'var(--corp-green)' }} />
+                  <span>{t('notifications.btn_view_goods') || "Ver mercancías en venta"}</span>
+                </button>
+              )}
+              {Boolean(data.ingredientsCount > 0) && onOpenInventory && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onOpenInventory();
+                  }}
+                  className="btn-secondary"
+                  style={{
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    padding: '0.45rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 700
+                  }}
+                >
+                  <Boxes size={14} style={{ color: 'var(--corp-green)' }} />
+                  <span>{t('notifications.btn_view_inventory') || "Ver inventario de ingredientes"}</span>
+                </button>
+              )}
             </div>
           )}
         </div>

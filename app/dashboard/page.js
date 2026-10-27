@@ -5444,7 +5444,15 @@ export default function ClientDashboard() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
       <LanguageSwitcher />
-      <NotificationsBell profile={profile} onOpenGoodsModal={() => setIsGoodsForSaleModalOpen(true)} />
+      <NotificationsBell 
+        profile={profile} 
+        onOpenGoodsModal={() => setIsGoodsForSaleModalOpen(true)} 
+        onOpenInventory={() => {
+          setActiveTab("inventario");
+          setSelectedRecipe(null);
+          setSelectedRecords([]);
+        }}
+      />
       {/* Mobile Top Header */}
       <div className="mobile-header" style={{ padding: '0.75rem 1.25rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -14129,12 +14137,12 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
             <Bell size={24} />
             <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-              {t('business_config.goods_low_stock_section_title') || "Avisos de stock escaso de mercancías"}
+              {t('business_config.goods_low_stock_section_title') || "Avisos de stock escaso (mercancías e ingredientes)"}
             </h3>
           </div>
 
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-            {t('business_config.goods_low_stock_section_desc') || "Configura alertas automáticas cuando el stock total de cualquiera de tus mercancías en venta baje por debajo de una cantidad mínima."}
+            {t('business_config.goods_low_stock_section_desc') || "Configura alertas automáticas cuando el stock de una mercancía en venta o de un ingrediente baje por debajo de una cantidad mínima."}
           </p>
 
           {/* Master Enable Switch */}
@@ -14150,10 +14158,10 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               <span style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                {t('business_config.goods_low_stock_enable') || "Activar avisos de stock escaso de mercancías"}
+                {t('business_config.goods_low_stock_enable') || "Activar avisos cuando el stock de una mercancía o ingrediente sea escaso"}
               </span>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                {t('business_config.goods_low_stock_enable_help') || "Genera advertencias cuando el stock total de una mercancía en venta descienda del umbral establecido."}
+                {t('business_config.goods_low_stock_enable_help') || "Genera advertencias cuando el stock de una mercancía en venta o ingrediente descienda del umbral establecido."}
               </span>
             </div>
           </label>
@@ -14178,7 +14186,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                   />
                 </div>
                 <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>
-                  {t('business_config.goods_low_stock_threshold_help') || "Si el stock total de una mercancía baja por debajo de este valor, se generará una alerta."}
+                  {t('business_config.goods_low_stock_threshold_help') || "Si el stock de una mercancía o ingrediente baja por debajo de este valor, se generará una alerta."}
                 </p>
               </div>
 

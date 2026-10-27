@@ -629,9 +629,10 @@ model IngredientStock {
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
-  name  String
-  unit  String
-  stock Float  @default(0)
+  name              String
+  unit              String
+  stock             Float         @default(0)
+  lowStockAlertSent Boolean       @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
