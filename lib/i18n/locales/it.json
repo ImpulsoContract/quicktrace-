@@ -1903,7 +1903,10 @@
     "btn_discard_sale": "Annulla vendita",
     "clear_ticket": "Svuota scontrino",
     "added_to_seller": "Aggiunto a {seller}",
-    "select_product_first": "Seleziona prima un prodotto da aggiungere alla vendita."
+    "select_product_first": "Seleziona prima un prodotto da aggiungere alla vendita.",
+    "col_sellers_view_hint": "Tocca per consultare o gestire il suo scontrino:",
+    "qty_weight_mult": "Moltiplicatore peso",
+    "qty_direct_units": "Unità dirette"
   },
   "goods_ingredient_link": {
     "btn_link": "Collega a ingrediente",

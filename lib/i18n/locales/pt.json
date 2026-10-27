@@ -1902,7 +1902,10 @@
     "btn_discard_sale": "Descartar venda",
     "clear_ticket": "Esvaziar cupom",
     "added_to_seller": "Adicionado a {seller}",
-    "select_product_first": "Selecione primeiro um produto para adicionar à venda."
+    "select_product_first": "Selecione primeiro um produto para adicionar à venda.",
+    "col_sellers_view_hint": "Toque para consultar ou gerir o seu talão:",
+    "qty_weight_mult": "Multiplicador peso",
+    "qty_direct_units": "Unidades diretas"
   },
   "goods_ingredient_link": {
     "btn_link": "Vincular com ingrediente",

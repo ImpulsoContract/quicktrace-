@@ -5,7 +5,7 @@ import {
   Store, MonitorX, ArrowLeft, Search, Plus, Minus, Trash2, Check,
   CheckCircle2, AlertCircle, ShoppingCart, User, Users, FileText,
   Loader2, RefreshCw, X, Tag, Package, CreditCard, Banknote, 
-  Layers, ChevronRight, Hash
+  Layers, ChevronRight, Hash, Delete
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -43,7 +43,7 @@ export default function PosDisplay({
   }, [sellers, t]);
 
   const activeSeller = useMemo(() => {
-    return allSellers.find(s => s.id === activeSellerId) || allSellers[0];
+    return allSellers.find(s => s.id?.toString() === activeSellerId?.toString()) || allSellers[0];
   }, [allSellers, activeSellerId]);
 
   // 3. PRODUCTS DATA (Elaborations & Goods for sale)
@@ -57,6 +57,41 @@ export default function PosDisplay({
   const [weightInput, setWeightInput] = useState(""); // User editable kg input (or scale)
   const [selectedProduct, setSelectedProduct] = useState(null); // Selected product from Column 2
   const [quantityUnits, setQuantityUnits] = useState(1); // Quantity multiplier from Column 3
+  const [quantityString, setQuantityString] = useState("1"); // Keypad display string
+  const [isQtyFresh, setIsQtyFresh] = useState(true); // Flag to overwrite "1" on initial number tap
+
+  // Sync quantityUnits whenever quantityString changes
+  useEffect(() => {
+    const val = parseFloat(quantityString);
+    setQuantityUnits(isNaN(val) || val <= 0 ? 1 : val);
+  }, [quantityString]);
+
+  const handleKeypadDigit = (digit) => {
+    setQuantityString(prev => {
+      if (isQtyFresh || prev === "1" || prev === "0" || !prev) {
+        setIsQtyFresh(false);
+        return digit.toString();
+      }
+      if (prev.length >= 4) return prev;
+      return prev + digit.toString();
+    });
+  };
+
+  const handleKeypadClear = () => {
+    setQuantityString("1");
+    setIsQtyFresh(true);
+  };
+
+  const handleKeypadBackspace = () => {
+    setQuantityString(prev => {
+      if (isQtyFresh || prev.length <= 1) {
+        setIsQtyFresh(true);
+        return "1";
+      }
+      const next = prev.slice(0, -1);
+      return next || "1";
+    });
+  };
 
   // 5. DRAFTS MAP BY SELLER: { [sellerId]: { draftId, customerId, date, notes, items: [] } }
   const [draftsBySeller, setDraftsBySeller] = useState({
@@ -78,7 +113,6 @@ export default function PosDisplay({
   const isInitialLoadRef = useRef(true);
 
   // 6. MODALS
-  const [isViewSalesModalOpen, setIsViewSalesModalOpen] = useState(false);
   const [checkoutSeller, setCheckoutSeller] = useState(null); // When reviewing a seller's sale to finalize
   const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState("cash");
   const [checkoutAmountPaid, setCheckoutAmountPaid] = useState("");
@@ -436,6 +470,8 @@ export default function PosDisplay({
       // Reset selection and inputs
       setSelectedProduct(null);
       setWeightInput("");
+      setQuantityString("1");
+      setIsQtyFresh(true);
       setQuantityUnits(1);
     } 
     // IF NO PRODUCT IS SELECTED: simply switch Column 1 to inspect this seller's ticket
@@ -446,7 +482,7 @@ export default function PosDisplay({
 
   // Remove an item from the active seller's ticket
   const handleRemoveActiveItem = (itemId) => {
-    const sId = activeSellerId;
+    const sId = activeSellerId?.toString();
     const currentDraft = draftsBySeller[sId];
     if (!currentDraft) return;
 
@@ -463,7 +499,7 @@ export default function PosDisplay({
 
   // Clear all items from the active seller's ticket
   const handleClearActiveTicket = async () => {
-    const sId = activeSellerId;
+    const sId = activeSellerId?.toString();
     const currentDraft = draftsBySeller[sId];
     if (!currentDraft || currentDraft.items.length === 0) return;
 
@@ -560,7 +596,6 @@ export default function PosDisplay({
         }));
 
         setCheckoutSeller(null);
-        setIsViewSalesModalOpen(false);
 
         // Refresh available stock
         await fetchAvailableElaborations();
@@ -578,7 +613,7 @@ export default function PosDisplay({
   };
 
   // Active Seller Ticket Data
-  const currentActiveDraft = draftsBySeller[activeSellerId] || { items: [] };
+  const currentActiveDraft = draftsBySeller[activeSellerId?.toString()] || { items: [] };
   const currentActiveItems = currentActiveDraft.items || [];
   const currentActiveTotal = currentActiveItems.reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
 
@@ -1319,228 +1354,254 @@ export default function PosDisplay({
           overflow: 'hidden',
           height: '100%'
         }}>
-          {/* SECTION A: QUANTITY / UNITS SELECTOR */}
+          {/* TOP BLOCK: LISTADO DE VENDEDORES */}
           <div style={{
-            padding: '0.75rem 0.9rem',
-            background: '#1e293b',
-            borderBottom: '1.5px solid #334155',
+            flex: 1,
+            minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.5rem'
+            overflow: 'hidden'
+          }}>
+            {/* Sellers Header */}
+            <div style={{
+              padding: '0.65rem 0.85rem',
+              background: '#131d31',
+              borderBottom: '1px solid #1e293b'
+            }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {t('pos.col_sellers_title') || "VENDEDORES"}
+              </div>
+              <div style={{ fontSize: '0.68rem', color: selectedProduct ? '#86efac' : '#94a3b8', fontWeight: 700, marginTop: '0.15rem' }}>
+                {selectedProduct 
+                  ? (t('pos.col_sellers_hint') || "👉 Pulsa en un vendedor para añadir el producto a su venta:")
+                  : (t('pos.col_sellers_view_hint') || "Pulsa para consultar o gestionar su ticket:")}
+              </div>
+            </div>
+
+            {/* Sellers Buttons List */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '0.55rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.45rem'
+            }}>
+              {allSellers.map((s, index) => {
+                const sId = s.id.toString();
+                const sDraft = draftsBySeller[sId];
+                const sItemsCount = sDraft?.items?.length || 0;
+                const sTotal = (sDraft?.items || []).reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
+                const isActive = activeSellerId?.toString() === sId;
+
+                // Color accents per seller
+                const colorPalettes = [
+                  { bg: 'rgba(56, 189, 248, 0.1)', border: '#0284c7', text: '#38bdf8', badge: '#0369a1' },
+                  { bg: 'rgba(16, 185, 129, 0.1)', border: '#059669', text: '#34d399', badge: '#047857' },
+                  { bg: 'rgba(245, 158, 11, 0.1)', border: '#d97706', text: '#fbbf24', badge: '#b45309' },
+                  { bg: 'rgba(168, 85, 247, 0.1)', border: '#9333ea', text: '#c084fc', badge: '#7e22ce' },
+                  { bg: 'rgba(236, 72, 153, 0.1)', border: '#db2777', text: '#f472b6', badge: '#be185d' }
+                ];
+                const pal = colorPalettes[index % colorPalettes.length];
+
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => handleSellerClick(s)}
+                    style={{
+                      background: isActive ? pal.bg : '#1e293b',
+                      border: selectedProduct 
+                        ? `2px solid ${pal.border}` 
+                        : (isActive ? `2px solid ${pal.border}` : '1px solid #334155'),
+                      borderRadius: '8px',
+                      padding: '0.55rem 0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'all 0.12s ease',
+                      boxShadow: (selectedProduct || isActive) ? `0 2px 8px ${pal.bg}` : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', minWidth: 0 }}>
+                      <div style={{
+                        width: '30px',
+                        height: '30px',
+                        borderRadius: '50%',
+                        background: pal.badge,
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: '0.8rem',
+                        flexShrink: 0
+                      }}>
+                        {s.name[0]?.toUpperCase() || 'V'}
+                      </div>
+
+                      <div style={{ textAlign: 'left', minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: '0.84rem', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {s.name}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: sItemsCount > 0 ? '#34d399' : '#64748b', fontWeight: 700 }}>
+                          {sItemsCount > 0 ? `${sItemsCount} líneas · ${sTotal.toFixed(2)} ${currencySymbol}` : "Sin líneas"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedProduct ? (
+                      <div style={{
+                        background: pal.badge,
+                        color: 'white',
+                        borderRadius: '4px',
+                        padding: '0.2rem 0.5rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.2rem',
+                        flexShrink: 0
+                      }}>
+                        <Plus size={12} />
+                        <span>Añadir</span>
+                      </div>
+                    ) : (
+                      isActive ? (
+                        <span style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 800,
+                          color: pal.text,
+                          background: pal.bg,
+                          padding: '0.15rem 0.4rem',
+                          borderRadius: '4px',
+                          border: `1px solid ${pal.border}`
+                        }}>
+                          Activo
+                        </span>
+                      ) : (
+                        <ChevronRight size={15} style={{ color: '#64748b' }} />
+                      )
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* BOTTOM BLOCK: SELECTOR CANTIDAD / TECLADO NUMÉRICO */}
+          <div style={{
+            background: '#131d31',
+            borderTop: '1.5px solid #334155',
+            padding: '0.65rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.45rem',
+            flexShrink: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.05em' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.05em' }}>
                 {t('pos.qty_selector_title') || "CANTIDAD (UDS)"}
               </span>
-              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                {parsedWeight > 0 ? "Multiplicador de peso" : "Unidades directas"}
+              <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                {parsedWeight > 0 ? (t('pos.qty_weight_mult') || "Multiplicador peso") : (t('pos.qty_direct_units') || "Unidades directas")}
               </span>
             </div>
 
-            {/* Stepper + Display */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <button
-                type="button"
-                onClick={() => setQuantityUnits(prev => Math.max(1, prev - 1))}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  background: '#090d16',
-                  border: '1px solid #334155',
-                  borderRadius: '6px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.1rem',
-                  fontWeight: 900
-                }}
-              >
-                <Minus size={16} />
-              </button>
-
+            {/* Display de Cantidad (Sin botones + y -) */}
+            <div style={{
+              background: '#090d16',
+              border: '1.5px solid #38bdf8',
+              borderRadius: '6px',
+              padding: '0.35rem 0.65rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                Cant.
+              </span>
               <input
-                type="number"
-                min="1"
-                step="any"
-                value={quantityUnits}
+                type="text"
+                inputMode="numeric"
+                value={quantityString}
                 onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  setQuantityUnits(isNaN(val) || val < 1 ? 1 : val);
+                  const cleaned = e.target.value.replace(/[^0-9]/g, '');
+                  if (!cleaned || cleaned === "0") {
+                    setQuantityString("1");
+                    setIsQtyFresh(true);
+                  } else {
+                    setQuantityString(cleaned.slice(0, 4));
+                    setIsQtyFresh(false);
+                  }
                 }}
                 style={{
-                  flex: 1,
-                  height: '38px',
-                  background: '#090d16',
-                  border: '1.5px solid #38bdf8',
-                  borderRadius: '6px',
+                  width: '100px',
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
                   color: '#38bdf8',
-                  textAlign: 'center',
                   fontFamily: 'monospace, monospace',
-                  fontSize: '1.35rem',
+                  fontSize: '1.45rem',
                   fontWeight: 900,
-                  outline: 'none'
+                  textAlign: 'right',
+                  padding: 0
                 }}
               />
-
-              <button
-                type="button"
-                onClick={() => setQuantityUnits(prev => prev + 1)}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  background: '#090d16',
-                  border: '1px solid #334155',
-                  borderRadius: '6px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.1rem',
-                  fontWeight: 900
-                }}
-              >
-                <Plus size={16} />
-              </button>
             </div>
 
-            {/* Preset buttons */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem' }}>
-              {[1, 2, 3, 4, 5, 10].map(n => (
+            {/* Teclado Numérico (0-9, C, ⌫) */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '0.35rem'
+            }}>
+              {[
+                { label: '1', action: () => handleKeypadDigit(1) },
+                { label: '2', action: () => handleKeypadDigit(2) },
+                { label: '3', action: () => handleKeypadDigit(3) },
+                { label: '4', action: () => handleKeypadDigit(4) },
+                { label: '5', action: () => handleKeypadDigit(5) },
+                { label: '6', action: () => handleKeypadDigit(6) },
+                { label: '7', action: () => handleKeypadDigit(7) },
+                { label: '8', action: () => handleKeypadDigit(8) },
+                { label: '9', action: () => handleKeypadDigit(9) },
+                { label: 'C', action: handleKeypadClear, isClear: true },
+                { label: '0', action: () => handleKeypadDigit(0) },
+                { label: '⌫', action: handleKeypadBackspace, isBackspace: true }
+              ].map((btn, idx) => (
                 <button
-                  key={n}
+                  key={idx}
                   type="button"
-                  onClick={() => setQuantityUnits(n)}
+                  onClick={btn.action}
                   style={{
-                    padding: '0.3rem 0',
-                    borderRadius: '4px',
-                    fontSize: '0.78rem',
+                    height: '35px',
+                    borderRadius: '6px',
+                    fontSize: btn.isBackspace ? '1.1rem' : (btn.isClear ? '0.95rem' : '1.15rem'),
                     fontWeight: 900,
-                    border: quantityUnits === n ? '1.5px solid #38bdf8' : '1px solid #334155',
-                    background: quantityUnits === n ? 'rgba(56, 189, 248, 0.25)' : '#090d16',
-                    color: quantityUnits === n ? '#38bdf8' : '#cbd5e1',
-                    cursor: 'pointer'
+                    fontFamily: btn.isBackspace || btn.isClear ? 'inherit' : 'monospace, monospace',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.1s ease',
+                    border: btn.isClear 
+                      ? '1px solid rgba(239, 68, 68, 0.4)' 
+                      : (btn.isBackspace ? '1px solid #475569' : '1px solid #334155'),
+                    background: btn.isClear 
+                      ? 'rgba(239, 68, 68, 0.15)' 
+                      : (btn.isBackspace ? '#1e293b' : '#090d16'),
+                    color: btn.isClear ? '#f87171' : (btn.isBackspace ? '#cbd5e1' : '#f8fafc')
                   }}
+                  onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
+                  onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  {n}
+                  {btn.isBackspace ? <Delete size={17} /> : btn.label}
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* SECTION B: SELLERS LIST (Tap to add to seller's sale) */}
-          <div style={{
-            padding: '0.55rem 0.85rem',
-            background: '#131d31',
-            borderBottom: '1px solid #1e293b'
-          }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#f8fafc', textTransform: 'uppercase' }}>
-              {t('pos.col_sellers_title') || "VENDEDORES"}
-            </div>
-            <div style={{ fontSize: '0.68rem', color: selectedProduct ? '#86efac' : '#94a3b8', fontWeight: 700 }}>
-              {selectedProduct 
-                ? "👉 Pulsa en un vendedor para añadir el producto a su venta:"
-                : "Pulsa para consultar o gestionar el ticket de un vendedor:"}
-            </div>
-          </div>
-
-          {/* Sellers Buttons List */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '0.65rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem'
-          }}>
-            {allSellers.map((s, index) => {
-              const sId = s.id.toString();
-              const sDraft = draftsBySeller[sId];
-              const sItemsCount = sDraft?.items?.length || 0;
-              const sTotal = (sDraft?.items || []).reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
-              const isActive = activeSellerId === sId;
-
-              // Color accents per seller
-              const colorPalettes = [
-                { bg: 'rgba(56, 189, 248, 0.1)', border: '#0284c7', text: '#38bdf8', badge: '#0369a1' },
-                { bg: 'rgba(16, 185, 129, 0.1)', border: '#059669', text: '#34d399', badge: '#047857' },
-                { bg: 'rgba(245, 158, 11, 0.1)', border: '#d97706', text: '#fbbf24', badge: '#b45309' },
-                { bg: 'rgba(168, 85, 247, 0.1)', border: '#9333ea', text: '#c084fc', badge: '#7e22ce' },
-                { bg: 'rgba(236, 72, 153, 0.1)', border: '#db2777', text: '#f472b6', badge: '#be185d' }
-              ];
-              const pal = colorPalettes[index % colorPalettes.length];
-
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => handleSellerClick(s)}
-                  style={{
-                    background: isActive ? pal.bg : '#1e293b',
-                    border: selectedProduct 
-                      ? `2px solid ${pal.border}` 
-                      : (isActive ? `2px solid ${pal.border}` : '1px solid #334155'),
-                    borderRadius: '8px',
-                    padding: '0.65rem 0.85rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    boxShadow: (selectedProduct || isActive) ? `0 2px 10px ${pal.bg}` : 'none'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: pal.badge,
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 900,
-                      fontSize: '0.85rem',
-                      flexShrink: 0
-                    }}>
-                      {s.name[0]?.toUpperCase() || 'V'}
-                    </div>
-
-                    <div style={{ textAlign: 'left', minWidth: 0 }}>
-                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {s.name}
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: sItemsCount > 0 ? '#34d399' : '#64748b', fontWeight: 700 }}>
-                        {sItemsCount > 0 ? `${sItemsCount} líneas · ${sTotal.toFixed(2)} ${currencySymbol}` : "Sin líneas"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedProduct ? (
-                    <div style={{
-                      background: pal.badge,
-                      color: 'white',
-                      borderRadius: '4px',
-                      padding: '0.25rem 0.55rem',
-                      fontSize: '0.72rem',
-                      fontWeight: 800,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      flexShrink: 0
-                    }}>
-                      <Plus size={13} />
-                      <span>Añadir</span>
-                    </div>
-                  ) : (
-                    <ChevronRight size={16} style={{ color: '#64748b' }} />
-                  )}
-                </button>
-              );
-            })}
           </div>
         </section>
 
@@ -1606,201 +1667,9 @@ export default function PosDisplay({
           )}
         </div>
 
-        {/* Right: VER VENTA Button */}
-        <button
-          type="button"
-          onClick={() => setIsViewSalesModalOpen(true)}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.55rem',
-            padding: '0.6rem 1.45rem',
-            borderRadius: '6px',
-            fontSize: '0.9rem',
-            fontWeight: 900,
-            background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            boxShadow: '0 2px 10px rgba(22, 101, 52, 0.35)'
-          }}
-        >
-          <FileText size={17} />
-          <span>{t('pos.btn_view_sales') || "Ver venta"}</span>
-        </button>
+        {/* Right: Empty spacer to balance layout */}
+        <div style={{ width: '130px' }} />
       </footer>
-
-      {/* ============================================================== */}
-      {/* 4. MODAL "VER VENTA" (TODOS LOS VENDEDORES)                     */}
-      {/* ============================================================== */}
-      {isViewSalesModalOpen && !checkoutSeller && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.7)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100000,
-          padding: '1.5rem'
-        }}>
-          <div style={{
-            background: '#0f172a',
-            border: '1.5px solid #1e293b',
-            borderRadius: '12px',
-            width: '100%',
-            maxWidth: '560px',
-            maxHeight: '85vh',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-            animation: 'fadeIn 0.15s ease'
-          }}>
-            {/* Modal Header */}
-            <div style={{
-              padding: '1rem 1.25rem',
-              background: '#1e293b',
-              borderBottom: '1px solid #334155',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: 'white' }}>
-                  {t('pos.modal_sales_title') || "Ventas de vendedores"}
-                </h3>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                  {t('pos.modal_sales_desc') || "Selecciona un vendedor para consultar su venta o cerrarla:"}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsViewSalesModalOpen(false)}
-                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.3rem' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body: List of Sellers and their sales */}
-            <div style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.65rem'
-            }}>
-              {allSellers.map(s => {
-                const sId = s.id.toString();
-                const sDraft = draftsBySeller[sId];
-                const sItems = sDraft?.items || [];
-                const sTotal = sItems.reduce((acc, it) => acc + (parseFloat(it.price) || 0), 0);
-                const hasItems = sItems.length > 0;
-
-                return (
-                  <div
-                    key={s.id}
-                    style={{
-                      background: hasItems ? 'rgba(34, 197, 94, 0.08)' : '#1e293b',
-                      border: hasItems ? '1.5px solid #16a34a' : '1px solid #334155',
-                      borderRadius: '8px',
-                      padding: '0.85rem 1rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '1rem'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '50%',
-                        background: hasItems ? '#15803d' : '#334155',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 900,
-                        fontSize: '0.9rem'
-                      }}>
-                        {s.name[0]?.toUpperCase() || 'V'}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'white' }}>
-                          {s.name}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: hasItems ? '#4ade80' : '#64748b', fontWeight: 700 }}>
-                          {hasItems ? `${sItems.length} líneas acumuladas` : "Sin venta en curso"}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{
-                          fontFamily: 'monospace, monospace',
-                          fontSize: '1.25rem',
-                          fontWeight: 900,
-                          color: hasItems ? '#10b981' : '#64748b'
-                        }}>
-                          {sTotal.toFixed(2)} {currencySymbol}
-                        </div>
-                      </div>
-
-                      {hasItems ? (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenCheckout(s)}
-                          style={{
-                            background: '#15803d',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '0.5rem 0.9rem',
-                            fontSize: '0.8rem',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem'
-                          }}
-                        >
-                          <span>{t('pos.btn_checkout_seller') || "Ver / Cobrar"}</span>
-                          <ChevronRight size={14} />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveSellerId(sId);
-                            setIsViewSalesModalOpen(false);
-                          }}
-                          style={{
-                            background: '#334155',
-                            color: '#cbd5e1',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '0.5rem 0.85rem',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Ir al ticket
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ============================================================== */}
       {/* 5. CHECKOUT / CERRAR VENTA DIALOG                              */}

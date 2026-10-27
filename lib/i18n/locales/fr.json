@@ -1903,7 +1903,10 @@
     "btn_discard_sale": "Supprimer la vente",
     "clear_ticket": "Vider le ticket",
     "added_to_seller": "Ajouté à {seller}",
-    "select_product_first": "Sélectionnez d'abord un produit pour l'ajouter à la vente."
+    "select_product_first": "Sélectionnez d'abord un produit pour l'ajouter à la vente.",
+    "col_sellers_view_hint": "Appuyez pour consulter ou gérer son ticket :",
+    "qty_weight_mult": "Multiplicateur poids",
+    "qty_direct_units": "Unités directes"
   },
   "goods_ingredient_link": {
     "btn_link": "Lier avec ingrédient",

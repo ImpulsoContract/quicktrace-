@@ -1908,7 +1908,10 @@
     "btn_discard_sale": "Discard sale",
     "clear_ticket": "Clear ticket",
     "added_to_seller": "Added to {seller}",
-    "select_product_first": "Select a product first to add it to the sale."
+    "select_product_first": "Select a product first to add it to the sale.",
+    "col_sellers_view_hint": "Tap to view or manage their ticket:",
+    "qty_weight_mult": "Weight multiplier",
+    "qty_direct_units": "Direct units"
   },
   "goods_ingredient_link": {
     "btn_link": "Link with ingredient",
