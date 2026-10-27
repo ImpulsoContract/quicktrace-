@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { 
+  Bell,
   ChefHat, History, LogOut, Calculator, RotateCcw,
   Search, ClipboardList, Clock,
   ArrowLeft, Save, Beaker, Menu,
