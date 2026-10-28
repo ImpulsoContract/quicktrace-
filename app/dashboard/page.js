@@ -14566,44 +14566,43 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                 )}
               </div>
 
-              {/* When Holded is verified: show VAT and Series */}
-              {holdedVerified && (
-                <div style={{ 
-                  animation: 'fadeIn 0.3s ease', 
-                  background: '#f8fafc', 
-                  padding: '1.5rem', 
-                  borderRadius: '0.85rem', 
-                  border: '1px solid var(--border)',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                  gap: '1.25rem'
-                }}>
-                  {/* Default VAT */}
-                  <div>
-                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                      {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
-                    </label>
-                    <select
-                      className="input-field"
-                      value={holdedTax}
-                      onChange={(e) => setHoldedTax(parseFloat(e.target.value))}
-                      style={{ background: 'white' }}
-                    >
-                      <option value={0}>0% (Exento / Sin IVA)</option>
-                      <option value={4}>4% (Superreducido - alimentos básicos)</option>
-                      <option value={10}>10% (Reducido - alimentos en general)</option>
-                      <option value={21}>21% (General)</option>
-                    </select>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                      {t('business_config.holded_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
-                    </span>
-                  </div>
+              {/* VAT and Series Configuration */}
+              <div style={{ 
+                background: '#f8fafc', 
+                padding: '1.5rem', 
+                borderRadius: '0.85rem', 
+                border: '1px solid var(--border)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '1.25rem'
+              }}>
+                {/* Default VAT */}
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                  </label>
+                  <select
+                    className="input-field"
+                    value={holdedTax}
+                    onChange={(e) => setHoldedTax(parseFloat(e.target.value))}
+                    style={{ background: 'white' }}
+                  >
+                    <option value={0}>0% (Exento / Sin IVA)</option>
+                    <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                    <option value={10}>10% (Reducido - alimentos en general)</option>
+                    <option value={21}>21% (General)</option>
+                  </select>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('business_config.holded_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
+                  </span>
+                </div>
 
-                  {/* Series */}
-                  <div>
-                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                      {t('business_config.holded_series_label') || "Serie de facturación"}
-                    </label>
+                {/* Series */}
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.holded_series_label') || "Serie de facturación"}
+                  </label>
+                  {holdedSeriesList.length > 0 ? (
                     <select
                       className="input-field"
                       value={holdedSeriesId}
@@ -14622,14 +14621,26 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                         </option>
                       ))}
                     </select>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                      {t('business_config.holded_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
-                    </span>
-                  </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ background: 'white' }}
+                      placeholder={t('business_config.holded_series_default') || "Predeterminada (ej: F24, V, etc.)"}
+                      value={holdedSeriesId}
+                      onChange={(e) => {
+                        setHoldedSeriesId(e.target.value);
+                        setHoldedSeriesName(e.target.value);
+                      }}
+                    />
+                  )}
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('business_config.holded_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
+                  </span>
                 </div>
-              )}
+              </div>
 
-              {holdedVerified && (
+              {(holdedApiKey || holdedVerified) && (
                 <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                   <button
                     type="button"
@@ -14725,84 +14736,81 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                 </span>
               </div>
 
-              {/* When Isbue is verified: show VAT and Series */}
-              {isbueVerified && (
-                <div style={{ 
-                  animation: 'fadeIn 0.3s ease', 
-                  background: '#f8fafc', 
-                  padding: '1.5rem', 
-                  borderRadius: '0.85rem', 
-                  border: '1px solid var(--border)',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                  gap: '1.25rem'
-                }}>
-                  {/* Default VAT */}
-                  <div>
-                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                      {t('business_config.isbue_tax_label') || "Tipo de IVA predeterminado para las facturas"}
-                    </label>
+              {/* VAT and Series Configuration */}
+              <div style={{ 
+                background: '#f8fafc', 
+                padding: '1.5rem', 
+                borderRadius: '0.85rem', 
+                border: '1px solid var(--border)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '1.25rem'
+              }}>
+                {/* Default VAT */}
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.isbue_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                  </label>
+                  <select
+                    className="input-field"
+                    value={isbueTax}
+                    onChange={(e) => setIsbueTax(parseFloat(e.target.value))}
+                    style={{ background: 'white' }}
+                  >
+                    <option value={0}>0% (Exento / Sin IVA)</option>
+                    <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                    <option value={10}>10% (Reducido - alimentos en general)</option>
+                    <option value={21}>21% (General)</option>
+                  </select>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('business_config.isbue_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
+                  </span>
+                </div>
+
+                {/* Series */}
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.isbue_series_label') || "Serie de facturación Isbue"}
+                  </label>
+                  {isbueSeriesList.length > 0 ? (
                     <select
                       className="input-field"
-                      value={isbueTax}
-                      onChange={(e) => setIsbueTax(parseFloat(e.target.value))}
+                      value={isbueSeriesId}
+                      onChange={(e) => {
+                        const selId = e.target.value;
+                        setIsbueSeriesId(selId);
+                        const found = isbueSeriesList.find(s => s.id === selId);
+                        setIsbueSeriesName(found ? found.name : "");
+                      }}
                       style={{ background: 'white' }}
                     >
-                      <option value={0}>0% (Exento / Sin IVA)</option>
-                      <option value={4}>4% (Superreducido - alimentos básicos)</option>
-                      <option value={10}>10% (Reducido - alimentos en general)</option>
-                      <option value={21}>21% (General)</option>
+                      <option value="">{t('business_config.isbue_series_default') || "Predeterminada de Isbue"}</option>
+                      {isbueSeriesList.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                        </option>
+                      ))}
                     </select>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                      {t('business_config.isbue_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
-                    </span>
-                  </div>
-
-                  {/* Series */}
-                  <div>
-                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                      {t('business_config.isbue_series_label') || "Serie de facturación Isbue"}
-                    </label>
-                    {isbueSeriesList.length > 0 ? (
-                      <select
-                        className="input-field"
-                        value={isbueSeriesId}
-                        onChange={(e) => {
-                          const selId = e.target.value;
-                          setIsbueSeriesId(selId);
-                          const found = isbueSeriesList.find(s => s.id === selId);
-                          setIsbueSeriesName(found ? found.name : "");
-                        }}
-                        style={{ background: 'white' }}
-                      >
-                        <option value="">{t('business_config.isbue_series_default') || "Predeterminada de Isbue"}</option>
-                        {isbueSeriesList.map(s => (
-                          <option key={s.id} value={s.id}>
-                            {s.name} {s.prefix ? `(${s.prefix})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        className="input-field"
-                        style={{ background: 'white' }}
-                        placeholder={t('business_config.isbue_series_default') || "Predeterminada (ej: F24, V, etc.)"}
-                        value={isbueSeriesId}
-                        onChange={(e) => {
-                          setIsbueSeriesId(e.target.value);
-                          setIsbueSeriesName(e.target.value);
-                        }}
-                      />
-                    )}
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                      {t('business_config.isbue_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
-                    </span>
-                  </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ background: 'white' }}
+                      placeholder={t('business_config.isbue_series_default') || "Predeterminada (ej: F24, V, etc.)"}
+                      value={isbueSeriesId}
+                      onChange={(e) => {
+                        setIsbueSeriesId(e.target.value);
+                        setIsbueSeriesName(e.target.value);
+                      }}
+                    />
+                  )}
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('business_config.isbue_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
+                  </span>
                 </div>
-              )}
+              </div>
 
-              {isbueVerified && (
+              {(isbueApiKey || isbueVerified) && (
                 <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                   <button
                     type="button"
@@ -19746,9 +19754,8 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated, initial
               )}
             </div>
 
-            {verified && (
+              {/* VAT and Series Configuration */}
               <div style={{ 
-                animation: 'fadeIn 0.3s ease', 
                 background: '#f8fafc', 
                 padding: '1.25rem', 
                 borderRadius: '0.85rem', 
@@ -19778,37 +19785,50 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated, initial
                   <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
                     {t('business_config.holded_series_label') || "Serie de facturación"}
                   </label>
-                  <select
-                    className="input-field"
-                    value={seriesId}
-                    onChange={(e) => {
-                      const selId = e.target.value;
-                      setSeriesId(selId);
-                      const found = seriesList.find(s => s.id === selId);
-                      setSeriesName(found ? found.name : "");
-                    }}
-                    style={{ background: 'white' }}
-                  >
-                    <option value="">{t('business_config.holded_series_default') || "Predeterminada de Holded"}</option>
-                    {seriesList.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} {s.prefix ? `(${s.prefix})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                  {seriesList.length > 0 ? (
+                    <select
+                      className="input-field"
+                      value={seriesId}
+                      onChange={(e) => {
+                        const selId = e.target.value;
+                        setSeriesId(selId);
+                        const found = seriesList.find(s => s.id === selId);
+                        setSeriesName(found ? found.name : "");
+                      }}
+                      style={{ background: 'white' }}
+                    >
+                      <option value="">{t('business_config.holded_series_default') || "Predeterminada de Holded"}</option>
+                      {seriesList.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ background: 'white' }}
+                      placeholder={t('business_config.holded_series_default') || "Predeterminada (ej: F24, V, etc.)"}
+                      value={seriesId}
+                      onChange={(e) => {
+                        setSeriesId(e.target.value);
+                        setSeriesName(e.target.value);
+                      }}
+                    />
+                  )}
                 </div>
               </div>
-            )}
 
-            {verified && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <button
-                  type="button"
-                  onClick={handleDisconnect}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
+              {(apiKey || verified) && (
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    onClick={handleDisconnect}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
                     fontSize: '0.85rem',
                     cursor: 'pointer',
                     display: 'flex',
@@ -19887,9 +19907,8 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated, initial
               />
             </div>
 
-            {isbueVerified && (
+              {/* VAT and Series Configuration */}
               <div style={{ 
-                animation: 'fadeIn 0.3s ease', 
                 background: '#f8fafc', 
                 padding: '1.25rem', 
                 borderRadius: '0.85rem', 
@@ -19953,17 +19972,16 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated, initial
                   )}
                 </div>
               </div>
-            )}
 
-            {isbueVerified && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <button
-                  type="button"
-                  onClick={handleDisconnectIsbue}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
+              {(isbueApiKey || isbueVerified) && (
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectIsbue}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
                     fontSize: '0.85rem',
                     cursor: 'pointer',
                     display: 'flex',
