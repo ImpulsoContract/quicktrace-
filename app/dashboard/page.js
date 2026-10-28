@@ -10728,6 +10728,7 @@ export default function ClientDashboard() {
           recipes={recipes}
           providers={providers}
           fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
+          fetchProviders={fetchProviders}
           profile={profile}
           onHelpVideoClick={(videoId) => setVideoModal({ isOpen: true, videoId })}
         />
@@ -10742,6 +10743,7 @@ export default function ClientDashboard() {
           goodsReceipts={goodsReceipts}
           onEditGoodsReceipt={handleEditGoods}
           fetchGoodsReceipts={() => fetchGoodsReceipts(goodsFilters)}
+          fetchProviders={fetchProviders}
           profile={profile}
         />
       )}
@@ -18766,10 +18768,10 @@ function TemperatureExportModal({ onClose, onGenerate, dates, setDates }) {
   );
 }
 
-function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, allMerchantTypes = [], onGoToConfig }) {
+function ProviderModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, allMerchantTypes = [], onGoToConfig, zIndex = 1000 }) {
   const { t } = useI18n();
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" style={{ zIndex }}>
       <div className="modal-content" style={{ maxWidth: '650px' }}>
         <header style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
           <div>
@@ -21783,8 +21785,25 @@ function WaterExportModal({ onClose, onGenerate, dates, setDates }) {
   );
 }
 
-function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoodsReceipts, profile, onHelpVideoClick }) {
+function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers: initialProviders = [], fetchGoodsReceipts, fetchProviders, profile, onHelpVideoClick }) {
   const { t, locale } = useI18n();
+  const [providers, setProviders] = useState(initialProviders);
+  useEffect(() => {
+    setProviders(initialProviders);
+  }, [initialProviders]);
+
+  const [isAddProviderModalOpen, setIsAddProviderModalOpen] = useState(false);
+  const [addProviderFormData, setAddProviderFormData] = useState({
+    name: "",
+    nif: "",
+    rgs: "",
+    phone: "",
+    address: "",
+    products: "",
+    merchantTypes: []
+  });
+  const [savingProvider, setSavingProvider] = useState(false);
+
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -21793,6 +21812,84 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
   const [aiRows, setAiRows] = useState([]); 
   
   const [linkRowIndex, setLinkRowIndex] = useState(null);
+
+  const handleOpenAddProvider = (prefillName) => {
+    const info = extractedData?.providerInfo || {};
+    setAddProviderFormData({
+      name: prefillName || info.name || extractedData?.provider || "",
+      nif: info.nif || "",
+      rgs: info.rgs || "",
+      phone: info.phone || "",
+      address: info.address || "",
+      products: "",
+      merchantTypes: []
+    });
+    setIsAddProviderModalOpen(true);
+  };
+
+  const handleSaveProviderFromAi = async (e) => {
+    e.preventDefault();
+    if (!addProviderFormData.name?.trim()) {
+      alert(t('alerts.name_required') || "El nombre es obligatorio");
+      return;
+    }
+    setSavingProvider(true);
+    try {
+      const res = await fetch("/api/client/providers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addProviderFormData)
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const createdProvider = data.data;
+        setProviders(prev => {
+          const exists = prev.some(p => p.id === createdProvider.id);
+          return exists ? prev : [...prev, createdProvider];
+        });
+        if (fetchProviders) {
+          fetchProviders();
+        }
+        setAiRows(prev => prev.map(row => {
+          const isMatch = !row.providerId || 
+            !row.providerName || 
+            matchProviderNames(row.providerName, createdProvider.name) ||
+            matchProviderNames(row.providerName, addProviderFormData.name);
+          if (isMatch) {
+            return {
+              ...row,
+              providerName: createdProvider.name,
+              providerId: createdProvider.id
+            };
+          }
+          return row;
+        }));
+
+        setExtractedData(prev => prev ? {
+          ...prev,
+          provider: createdProvider.name,
+          providerInfo: {
+            ...prev.providerInfo,
+            name: createdProvider.name,
+            nif: createdProvider.nif || prev.providerInfo?.nif || "",
+            rgs: createdProvider.rgs || prev.providerInfo?.rgs || "",
+            phone: createdProvider.phone || prev.providerInfo?.phone || "",
+            address: createdProvider.address || prev.providerInfo?.address || ""
+          }
+        } : prev);
+
+        setIsAddProviderModalOpen(false);
+        alert(t('alerts.provider_saved') || "Proveedor guardado correctamente");
+      } else {
+        alert(data.error || t('alerts.request_error') || "Error al guardar el proveedor");
+      }
+    } catch (err) {
+      console.error("Error creating provider:", err);
+      alert("Error de conexión al crear el proveedor");
+    } finally {
+      setSavingProvider(false);
+    }
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -22066,9 +22163,43 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
-            <div style={{ background: 'rgba(66, 98, 22, 0.05)', border: '1px solid rgba(66, 98, 22, 0.2)', padding: '1rem', borderRadius: '0.75rem', color: 'var(--corp-green)', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Check size={18} />
-              {t('goods_receipt_form.ia_success') || "Albarán procesado con éxito. Revisa y guarda las entradas."}
+            <div style={{ background: 'rgba(66, 98, 22, 0.05)', border: '1px solid rgba(66, 98, 22, 0.2)', padding: '1rem', borderRadius: '0.75rem', color: 'var(--corp-green)', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Check size={18} />
+                <span>{t('goods_receipt_form.ia_success') || "Albarán procesado con éxito. Revisa y guarda las entradas."}</span>
+              </div>
+              {extractedData?.provider && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('goods_receipt_form.provider_detected') || "Proveedor detectado:"}</span>
+                  <strong style={{ color: 'var(--text-main)' }}>{extractedData.provider}</strong>
+                  {providers.some(p => matchProviderNames(p.name, extractedData.provider)) ? (
+                    <span style={{ color: '#16a34a', fontSize: '0.75rem', fontWeight: '700', background: '#dcfce7', padding: '0.2rem 0.5rem', borderRadius: '0.35rem' }}>
+                      {t('goods_receipt_form.provider_registered') || "Registrado"}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAddProvider(extractedData.provider)}
+                      style={{
+                        background: 'var(--corp-green)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '0.3rem 0.65rem',
+                        borderRadius: '0.4rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      <Plus size={13} />
+                      {t('goods_receipt_form.add_provider') || "Añadir proveedor"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -22104,10 +22235,33 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
                       />
                     </div>
                     
-                    <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
-                        {t('goods_receipt_form.provider') || "Proveedor"}
-                      </label>
+                    <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                          {t('goods_receipt_form.provider') || "Proveedor"}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAddProvider(row.providerName)}
+                          disabled={row.saved || row.saving}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--corp-green)',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            cursor: (row.saved || row.saving) ? 'default' : 'pointer',
+                            padding: 0,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.2rem'
+                          }}
+                          title={t('goods_receipt_form.add_provider') || "Añadir proveedor"}
+                        >
+                          <Plus size={13} />
+                          {t('goods_receipt_form.add_provider') || "Añadir proveedor"}
+                        </button>
+                      </div>
                       <input 
                         type="text" 
                         list={`providers-list-ai-${idx}`}
@@ -22349,6 +22503,20 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers, fetchGoo
           }}
         />
       )}
+
+      {isAddProviderModalOpen && (
+        <ProviderModal
+          onClose={() => setIsAddProviderModalOpen(false)}
+          onSubmit={handleSaveProviderFromAi}
+          formData={addProviderFormData}
+          setFormData={setAddProviderFormData}
+          loading={savingProvider}
+          isEditing={false}
+          allMerchantTypes={profile?.merchantTypes || []}
+          onGoToConfig={() => setIsAddProviderModalOpen(false)}
+          zIndex={1150}
+        />
+      )}
     </div>
   );
 }
@@ -22462,8 +22630,25 @@ function ManageMerchantTypesModal({ merchantTypes, onClose, onUpdate }) {
   );
 }
 
-function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsReceipts, onEditGoodsReceipt, fetchGoodsReceipts, profile }) {
+function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initialProviders = [], goodsReceipts, onEditGoodsReceipt, fetchGoodsReceipts, fetchProviders, profile }) {
   const { t, locale } = useI18n();
+  const [providers, setProviders] = useState(initialProviders);
+  useEffect(() => {
+    setProviders(initialProviders);
+  }, [initialProviders]);
+
+  const [isAddProviderModalOpen, setIsAddProviderModalOpen] = useState(false);
+  const [addProviderFormData, setAddProviderFormData] = useState({
+    name: "",
+    nif: "",
+    rgs: "",
+    phone: "",
+    address: "",
+    products: "",
+    merchantTypes: []
+  });
+  const [savingProvider, setSavingProvider] = useState(false);
+
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedNote, setSelectedNote] = useState(null);
@@ -22474,6 +22659,69 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
 
   // State for raw ingredient linking modal
   const [linkRowIndex, setLinkRowIndex] = useState(null);
+
+  const handleOpenAddProvider = (prefillName) => {
+    setAddProviderFormData({
+      name: prefillName || selectedNote?.providerName || "",
+      nif: "",
+      rgs: "",
+      phone: "",
+      address: "",
+      products: "",
+      merchantTypes: []
+    });
+    setIsAddProviderModalOpen(true);
+  };
+
+  const handleSaveProviderFromScanned = async (e) => {
+    e.preventDefault();
+    if (!addProviderFormData.name?.trim()) {
+      alert(t('alerts.name_required') || "El nombre es obligatorio");
+      return;
+    }
+    setSavingProvider(true);
+    try {
+      const res = await fetch("/api/client/providers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addProviderFormData)
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const createdProvider = data.data;
+        setProviders(prev => {
+          const exists = prev.some(p => p.id === createdProvider.id);
+          return exists ? prev : [...prev, createdProvider];
+        });
+        if (fetchProviders) {
+          fetchProviders();
+        }
+        setEditableRows(prev => prev.map(row => {
+          const isMatch = !row.providerId || 
+            !row.providerName || 
+            matchProviderNames(row.providerName, createdProvider.name) ||
+            matchProviderNames(row.providerName, addProviderFormData.name);
+          if (isMatch) {
+            return {
+              ...row,
+              providerName: createdProvider.name,
+              providerId: createdProvider.id
+            };
+          }
+          return row;
+        }));
+        setIsAddProviderModalOpen(false);
+        alert(t('alerts.provider_saved') || "Proveedor guardado correctamente");
+      } else {
+        alert(data.error || t('alerts.request_error') || "Error al guardar el proveedor");
+      }
+    } catch (err) {
+      console.error("Error creating provider:", err);
+      alert("Error de conexión al crear el proveedor");
+    } finally {
+      setSavingProvider(false);
+    }
+  };
 
   const fetchNotes = async () => {
     setLoading(true);
@@ -22965,10 +23213,35 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
                       />
                     </div>
                     
-                    <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                      <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
-                        {t('goods_receipt_form.provider') || "Proveedor"}
-                      </label>
+                    <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label className="label" style={{ fontSize: '0.75rem', fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>
+                          {t('goods_receipt_form.provider') || "Proveedor"}
+                        </label>
+                        {!row.saved && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAddProvider(row.providerName)}
+                            disabled={row.saving}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--corp-green)',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              cursor: row.saving ? 'default' : 'pointer',
+                              padding: 0,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.2rem'
+                            }}
+                            title={t('goods_receipt_form.add_provider') || "Añadir proveedor"}
+                          >
+                            <Plus size={13} />
+                            {t('goods_receipt_form.add_provider') || "Añadir proveedor"}
+                          </button>
+                        )}
+                      </div>
                       <input 
                         type="text" 
                         list={`scanned-providers-list-${idx}`}
@@ -23254,6 +23527,20 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers, goodsR
               goodsForSale
             } : r));
           }}
+        />
+      )}
+
+      {isAddProviderModalOpen && (
+        <ProviderModal
+          onClose={() => setIsAddProviderModalOpen(false)}
+          onSubmit={handleSaveProviderFromScanned}
+          formData={addProviderFormData}
+          setFormData={setAddProviderFormData}
+          loading={savingProvider}
+          isEditing={false}
+          allMerchantTypes={profile?.merchantTypes || []}
+          onGoToConfig={() => setIsAddProviderModalOpen(false)}
+          zIndex={1150}
         />
       )}
     </div>

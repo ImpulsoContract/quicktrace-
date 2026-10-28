@@ -81,7 +81,15 @@ export async function POST(req) {
     // 3. Request analysis from Gemini 2.5 Flash with responseSchema
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     
-    const promptText = "Extract the provider name and all line items from this delivery note (albarán). The provider name should be the overall issuer/seller of the goods. For each line item, extract the product name, the lot number (lote, if visible), and the quantity (cantidad, if visible). Respond only with a JSON object matching the requested schema.";
+    const promptText = "Extract the provider information and all line items from this delivery note (albarán / invoice / delivery receipt).\n" +
+      "1. Provider Information: Extract the company/business details of the issuer or supplier delivering the goods (seller/vendor):\n" +
+      "   - name: Company or commercial name\n" +
+      "   - nif: Tax identification number (NIF, CIF, NIE, VAT number), or empty string if not found\n" +
+      "   - rgs: Sanitary registration number (RGS, RGSEAA, Registro Sanitario, RS), or empty string if not found\n" +
+      "   - phone: Contact phone number, or empty string if not found\n" +
+      "   - address: Full postal address (street, number, postal code, city, province), or empty string if not found\n" +
+      "2. Line Items: For each product or merchandise delivered, extract the product name, lot number (lote, if visible, else empty string), and quantity (cantidad, if visible, else empty string).\n" +
+      "Respond strictly with a JSON object matching the requested schema.";
 
     const geminiBody = {
       contents: [
@@ -103,6 +111,18 @@ export async function POST(req) {
           type: "OBJECT",
           properties: {
             provider: { type: "STRING", description: "Name of the provider / issuer of the delivery note" },
+            providerInfo: {
+              type: "OBJECT",
+              description: "Extracted details of the provider / supplier if present on the document",
+              properties: {
+                name: { type: "STRING", description: "Company or commercial name of the provider" },
+                nif: { type: "STRING", description: "Tax identification number (NIF / CIF / VAT), or empty string" },
+                rgs: { type: "STRING", description: "Sanitary registration number (RGS / RGSEAA), or empty string" },
+                phone: { type: "STRING", description: "Phone number, or empty string" },
+                address: { type: "STRING", description: "Full address, or empty string" }
+              },
+              required: ["name", "nif", "rgs", "phone", "address"]
+            },
             items: {
               type: "ARRAY",
               description: "List of goods / products delivered",
@@ -117,7 +137,7 @@ export async function POST(req) {
               }
             }
           },
-          required: ["provider", "items"]
+          required: ["provider", "providerInfo", "items"]
         }
       }
     };
@@ -157,12 +177,21 @@ export async function POST(req) {
       goodsReceiptId: null
     }));
 
+    const providerName = parsedData.provider || parsedData.providerInfo?.name || "";
+    const providerInfo = {
+      name: parsedData.providerInfo?.name || providerName || "",
+      nif: parsedData.providerInfo?.nif || "",
+      rgs: parsedData.providerInfo?.rgs || "",
+      phone: parsedData.providerInfo?.phone || "",
+      address: parsedData.providerInfo?.address || ""
+    };
+
     let scannedDoc = null;
     try {
       scannedDoc = await prisma.scannedDeliveryNote.create({
         data: {
           clientProfileId: profileId,
-          providerName: parsedData.provider || "",
+          providerName: providerName,
           imageUrl: blob.url,
           fileName: file.name || "albaran.jpg",
           items: initialItems,
@@ -177,7 +206,8 @@ export async function POST(req) {
       success: true,
       scannedDeliveryNoteId: scannedDoc ? scannedDoc.id : null,
       imageUrl: blob.url,
-      provider: parsedData.provider || "",
+      provider: providerName,
+      providerInfo,
       items: parsedData.items || []
     });
 
