@@ -1914,7 +1914,11 @@
     "qty_direct_units": "Unidades directas",
     "families_title": "Familias de productos",
     "filter_all_families": "Todas las familias",
-    "products_count": "productos"
+    "products_count": "productos",
+    "barcode_input_title": "CÓDIGO DE PRODUCTO",
+    "barcode_placeholder": "Escanear o escribir código...",
+    "barcode_not_found": "No se encontró elaboración con código: {code}",
+    "barcode_found": "Elaboración seleccionada"
   },
   "goods_ingredient_link": {
     "btn_link": "Enlazar con ingrediente",

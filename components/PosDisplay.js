@@ -5,7 +5,7 @@ import {
   Store, MonitorX, ArrowLeft, Search, Plus, Minus, Trash2, Check,
   CheckCircle2, AlertCircle, ShoppingCart, User, Users, FileText,
   Loader2, RefreshCw, X, Tag, Package, CreditCard, Banknote, 
-  Layers, ChevronRight, Hash, Delete
+  Layers, ChevronRight, Hash, Delete, ScanBarcode
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -95,7 +95,57 @@ export default function PosDisplay({
     });
   };
 
-  // 5. DRAFTS MAP BY SELLER: { [sellerId]: { draftId, customerId, date, notes, items: [] } }
+  // 5. BARCODE / PRODUCT CODE SEARCH
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [barcodeError, setBarcodeError] = useState("");
+  const barcodeInputRef = useRef(null);
+
+  const handleBarcodeSearch = (rawCode) => {
+    const code = (rawCode || "").trim();
+    if (!code) return;
+
+    // Search exclusively in availableElaborations as requested ("De momento solo con las elaboraciones")
+    const foundElab = availableElaborations.find(e => {
+      const eBarcode = (e.barcode || "").toString().trim();
+      const eName = (e.name || "").toString().trim().toLowerCase();
+      const eId = (e.id || "").toString();
+      const cleanCode = code.toLowerCase();
+
+      return (eBarcode && eBarcode === code) ||
+             (eId === code) ||
+             (eName === cleanCode);
+    });
+
+    if (foundElab) {
+      const productObj = {
+        id: `elab_${foundElab.id}`,
+        rawId: foundElab.id,
+        type: 'elaboration',
+        elaborationId: foundElab.id,
+        goodsForSaleId: null,
+        name: foundElab.name,
+        recipeName: foundElab.recipeName,
+        displayName: foundElab.recipeName ? `${foundElab.recipeName} (${foundElab.name})` : foundElab.name,
+        unitPrice: foundElab.unitPrice || 0,
+        unit: foundElab.quantityUnit || "kg",
+        availableStock: foundElab.availableStock || 0,
+        productFamilyId: foundElab.productFamilyId || null,
+        barcode: foundElab.barcode || null
+      };
+
+      setSelectedProduct(productObj);
+      setBarcodeInput("");
+      setBarcodeError("");
+      setSuccessToast(`✓ ${productObj.displayName}`);
+      setTimeout(() => setSuccessToast(""), 3000);
+    } else {
+      const notFoundMsg = t('pos.barcode_not_found', { code }) || `No se encontró elaboración con código: ${code}`;
+      setBarcodeError(notFoundMsg);
+      setTimeout(() => setBarcodeError(""), 3500);
+    }
+  };
+
+  // 6. DRAFTS MAP BY SELLER: { [sellerId]: { draftId, customerId, date, notes, items: [] } }
   const [draftsBySeller, setDraftsBySeller] = useState({
     anonymous: {
       draftId: null,
@@ -290,7 +340,7 @@ export default function PosDisplay({
     // Elaborations
     if (productCategory === "all" || productCategory === "elaborations") {
       availableElaborations.forEach(e => {
-        const fullTxt = `${e.recipeName || ''} ${e.name || ''}`.toLowerCase();
+        const fullTxt = `${e.recipeName || ''} ${e.name || ''} ${e.barcode || ''}`.toLowerCase();
         if (!searchClean || fullTxt.includes(searchClean)) {
           result.push({
             id: `elab_${e.id}`,
@@ -304,7 +354,8 @@ export default function PosDisplay({
             unitPrice: e.unitPrice || 0,
             unit: e.quantityUnit || "kg",
             availableStock: e.availableStock || 0,
-            productFamilyId: e.productFamilyId || null
+            productFamilyId: e.productFamilyId || null,
+            barcode: e.barcode || null
           });
         }
       });
@@ -1593,6 +1644,113 @@ export default function PosDisplay({
                 );
               })}
             </div>
+          </div>
+
+          {/* MIDDLE BLOCK: CÓDIGO DE PRODUCTO / CÓDIGO DE BARRAS */}
+          <div style={{
+            background: '#131d31',
+            borderTop: '1.5px solid #334155',
+            padding: '0.55rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.35rem',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <ScanBarcode size={14} style={{ color: '#38bdf8' }} />
+                <span style={{ fontSize: '0.72rem', fontWeight: 900, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {t('pos.barcode_input_title') || "CÓDIGO DE PRODUCTO"}
+                </span>
+              </div>
+              <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                Código / Barras
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                <input
+                  ref={barcodeInputRef}
+                  type="text"
+                  placeholder={t('pos.barcode_placeholder') || "Escanear o escribir código..."}
+                  value={barcodeInput}
+                  onChange={(e) => {
+                    setBarcodeInput(e.target.value);
+                    if (barcodeError) setBarcodeError("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleBarcodeSearch(barcodeInput);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    background: '#090d16',
+                    border: barcodeError ? '1.5px solid #ef4444' : '1.5px solid #334155',
+                    borderRadius: '6px',
+                    padding: '0.45rem 2rem 0.45rem 0.65rem',
+                    color: 'white',
+                    fontSize: '0.82rem',
+                    fontFamily: 'monospace, monospace',
+                    fontWeight: 700,
+                    outline: 'none'
+                  }}
+                />
+                {barcodeInput ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBarcodeInput("");
+                      setBarcodeError("");
+                      barcodeInputRef.current?.focus();
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: '0.45rem',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                ) : (
+                  <ScanBarcode size={15} style={{ position: 'absolute', right: '0.55rem', color: '#64748b', pointerEvents: 'none' }} />
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleBarcodeSearch(barcodeInput)}
+                title="Buscar producto por código"
+                style={{
+                  background: '#0ea5e9',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  padding: '0.5rem 0.65rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  transition: 'background 0.1s ease'
+                }}
+              >
+                <Search size={14} />
+              </button>
+            </div>
+
+            {barcodeError && (
+              <div style={{ fontSize: '0.68rem', color: '#f87171', fontWeight: 700, lineHeight: '1.2' }}>
+                {barcodeError}
+              </div>
+            )}
           </div>
 
           {/* BOTTOM BLOCK: SELECTOR CANTIDAD / TECLADO NUMÉRICO */}
