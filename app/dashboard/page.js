@@ -2553,7 +2553,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.invoicingProvider !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -13346,6 +13346,10 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [goodsLowStockInApp, setGoodsLowStockInApp] = useState(profile?.goodsLowStockInApp ?? true);
   const [goodsLowStockEmail, setGoodsLowStockEmail] = useState(profile?.goodsLowStockEmail || false);
 
+  // Invoicing program & provider state
+  const [invoicingTab, setInvoicingTab] = useState(profile?.invoicingProvider === "ISBUE" ? "isbue" : "holded");
+  const [invoicingProvider, setInvoicingProvider] = useState(profile?.invoicingProvider || "HOLDED");
+
   // Holded state
   const [holdedApiKey, setHoldedApiKey] = useState(profile?.holdedApiKey || "");
   const [holdedTax, setHoldedTax] = useState(profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10);
@@ -13356,6 +13360,18 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [holdedTesting, setHoldedTesting] = useState(false);
   const [holdedTestError, setHoldedTestError] = useState("");
   const [holdedTestSuccess, setHoldedTestSuccess] = useState(false);
+
+  // Isbue state
+  const [isbueApiKey, setIsbueApiKey] = useState(profile?.isbueApiKey || "");
+  const [isbueApiUrl, setIsbueApiUrl] = useState(profile?.isbueApiUrl || "");
+  const [isbueTax, setIsbueTax] = useState(profile?.isbueTax !== undefined && profile?.isbueTax !== null ? profile.isbueTax : 10);
+  const [isbueSeriesId, setIsbueSeriesId] = useState(profile?.isbueSeriesId || "");
+  const [isbueSeriesName, setIsbueSeriesName] = useState(profile?.isbueSeriesName || "");
+  const [isbueVerified, setIsbueVerified] = useState(!!profile?.isbueApiKey);
+  const [isbueSeriesList, setIsbueSeriesList] = useState([]);
+  const [isbueTesting, setIsbueTesting] = useState(false);
+  const [isbueTestError, setIsbueTestError] = useState("");
+  const [isbueTestSuccess, setIsbueTestSuccess] = useState(false);
 
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
@@ -13376,11 +13392,21 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setGoodsLowStockThreshold(profile.goodsLowStockThreshold ?? 2);
       setGoodsLowStockInApp(profile.goodsLowStockInApp ?? true);
       setGoodsLowStockEmail(profile.goodsLowStockEmail || false);
+      setInvoicingProvider(profile.invoicingProvider || "HOLDED");
+      if (profile.invoicingProvider === "ISBUE" && !profile.holdedApiKey) {
+        setInvoicingTab("isbue");
+      }
       setHoldedApiKey(profile.holdedApiKey || "");
       setHoldedTax(profile.holdedTax !== undefined && profile.holdedTax !== null ? profile.holdedTax : 10);
       setHoldedSeriesId(profile.holdedSeriesId || "");
       setHoldedSeriesName(profile.holdedSeriesName || "");
       setHoldedVerified(!!profile.holdedApiKey);
+      setIsbueApiKey(profile.isbueApiKey || "");
+      setIsbueApiUrl(profile.isbueApiUrl || "");
+      setIsbueTax(profile.isbueTax !== undefined && profile.isbueTax !== null ? profile.isbueTax : 10);
+      setIsbueSeriesId(profile.isbueSeriesId || "");
+      setIsbueSeriesName(profile.isbueSeriesName || "");
+      setIsbueVerified(!!profile.isbueApiKey);
     }
   }, [profile]);
 
@@ -13401,6 +13427,24 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       .catch(e => console.error("Error loading Holded series:", e));
     }
   }, [profile?.holdedApiKey]);
+
+  useEffect(() => {
+    if (profile?.isbueApiKey) {
+      fetch("/api/client/isbue/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: profile.isbueApiKey, apiUrl: profile.isbueApiUrl })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.series)) {
+          setIsbueSeriesList(data.series);
+          setIsbueVerified(true);
+        }
+      })
+      .catch(e => console.error("Error loading Isbue series:", e));
+    }
+  }, [profile?.isbueApiKey, profile?.isbueApiUrl]);
 
   const handleVerifyHolded = async () => {
     const key = holdedApiKey.trim();
@@ -13447,6 +13491,52 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     }
   };
 
+  const handleVerifyIsbue = async () => {
+    const key = isbueApiKey.trim();
+    if (!key) {
+      setIsbueTestError(t('business_config.isbue_invalid_key') || "Debes introducir una clave API o Token.");
+      return;
+    }
+    setIsbueTesting(true);
+    setIsbueTestError("");
+    setIsbueTestSuccess(false);
+    try {
+      const res = await fetch("/api/client/isbue/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key, apiUrl: isbueApiUrl.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsbueVerified(true);
+        setIsbueTestSuccess(true);
+        setIsbueSeriesList(data.series || []);
+      } else {
+        setIsbueVerified(false);
+        setIsbueTestError(data.error || t('business_config.isbue_invalid_key') || "API Key de Isbue inválida o error al conectar.");
+      }
+    } catch (err) {
+      console.error("Error testing Isbue connection:", err);
+      setIsbueVerified(false);
+      setIsbueTestError("Error de conexión al verificar con Isbue.");
+    } finally {
+      setIsbueTesting(false);
+    }
+  };
+
+  const handleDisconnectIsbue = () => {
+    if (confirm(t('business_config.isbue_disconnect_confirm') || "¿Estás seguro de que deseas desconectar la integración con Isbue?")) {
+      setIsbueApiKey("");
+      setIsbueApiUrl("");
+      setIsbueSeriesId("");
+      setIsbueSeriesName("");
+      setIsbueVerified(false);
+      setIsbueSeriesList([]);
+      setIsbueTestSuccess(false);
+      setIsbueTestError("");
+    }
+  };
+
   const handleSave = () => {
     onUpdate({ 
       currency: selectedCurrency,
@@ -13462,10 +13552,16 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       goodsLowStockThreshold: parseFloat(goodsLowStockThreshold) >= 0 ? parseFloat(goodsLowStockThreshold) : 2,
       goodsLowStockInApp,
       goodsLowStockEmail,
+      invoicingProvider,
       holdedApiKey: holdedApiKey.trim() || null,
       holdedTax: parseFloat(holdedTax) || 0,
       holdedSeriesId: holdedSeriesId || null,
-      holdedSeriesName: holdedSeriesName || null
+      holdedSeriesName: holdedSeriesName || null,
+      isbueApiKey: isbueApiKey.trim() || null,
+      isbueApiUrl: isbueApiUrl.trim() || null,
+      isbueTax: parseFloat(isbueTax) || 0,
+      isbueSeriesId: isbueSeriesId || null,
+      isbueSeriesName: isbueSeriesName || null
     });
   };
 
@@ -13544,9 +13640,14 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     parseFloat(goodsLowStockThreshold) !== (profile?.goodsLowStockThreshold ?? 2) ||
                     goodsLowStockInApp !== (profile?.goodsLowStockInApp ?? true) ||
                     goodsLowStockEmail !== (profile?.goodsLowStockEmail || false) ||
+                    (invoicingProvider || "HOLDED") !== (profile?.invoicingProvider || "HOLDED") ||
                     (holdedApiKey.trim() || "") !== (profile?.holdedApiKey || "") ||
                     holdedTax !== (profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10) ||
-                    (holdedSeriesId || "") !== (profile?.holdedSeriesId || "");
+                    (holdedSeriesId || "") !== (profile?.holdedSeriesId || "") ||
+                    (isbueApiKey.trim() || "") !== (profile?.isbueApiKey || "") ||
+                    (isbueApiUrl.trim() || "") !== (profile?.isbueApiUrl || "") ||
+                    isbueTax !== (profile?.isbueTax !== undefined && profile?.isbueTax !== null ? profile.isbueTax : 10) ||
+                    (isbueSeriesId || "") !== (profile?.isbueSeriesId || "");
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '800px', paddingBottom: '4rem' }}>
@@ -14279,165 +14380,452 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
           </div>
         </section>
 
-        {/* Holded Integration Section */}
+        {/* Invoicing Programs Integration Section */}
         <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)' }}>
               <FileText size={24} />
               <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-                {t('business_config.holded_section_title') || "Integración con Holded"}
+                {t('business_config.invoicing_programs_title') || "Programas de facturación"}
               </h3>
             </div>
-            {holdedVerified && (
-              <span style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '0.4rem', 
-                background: 'rgba(34, 197, 94, 0.1)', 
-                color: '#16a34a', 
-                padding: '0.4rem 0.85rem', 
-                borderRadius: '2rem', 
-                fontSize: '0.82rem', 
-                fontWeight: '700' 
-              }}>
-                <Check size={14} />
-                {t('business_config.holded_verified_badge') || "Conectado con Holded"}
+
+            {/* Active Provider Indicator / Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem' }}>
+              <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
+                {t('business_config.active_invoicing_provider') || "Programa activo:"}
               </span>
-            )}
+              <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '0.5rem', padding: '0.2rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setInvoicingProvider("HOLDED")}
+                  style={{
+                    border: 'none',
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: '0.4rem',
+                    fontSize: '0.82rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    background: invoicingProvider === "HOLDED" ? 'white' : 'transparent',
+                    color: invoicingProvider === "HOLDED" ? 'var(--corp-green)' : 'var(--text-muted)',
+                    boxShadow: invoicingProvider === "HOLDED" ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Holded {holdedVerified ? '✓' : ''}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInvoicingProvider("ISBUE")}
+                  style={{
+                    border: 'none',
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: '0.4rem',
+                    fontSize: '0.82rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    background: invoicingProvider === "ISBUE" ? 'white' : 'transparent',
+                    color: invoicingProvider === "ISBUE" ? 'var(--corp-green)' : 'var(--text-muted)',
+                    boxShadow: invoicingProvider === "ISBUE" ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Isbue {isbueVerified ? '✓' : ''}
+                </button>
+              </div>
+            </div>
           </div>
 
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: '1.5' }}>
-            {t('business_config.holded_section_desc') || "Conecta tu cuenta de Holded para generar facturas oficiales de tus ventas con un solo clic."}
+            {t('business_config.invoicing_programs_desc') || "Configura y conecta tus programas de facturación externa para emitir facturas oficiales de tus ventas con un solo clic."}
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div>
-              <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
-                {t('business_config.holded_api_key_label') || "API Key de Holded"}
-              </label>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <input 
-                  type="password"
-                  className="input-field"
-                  style={{ flex: 1, minWidth: '260px' }}
-                  placeholder={t('business_config.holded_api_key_placeholder') || "Pega aquí tu clave API de Holded"}
-                  value={holdedApiKey}
-                  onChange={(e) => {
-                    setHoldedApiKey(e.target.value);
-                    if (holdedVerified && e.target.value !== profile?.holdedApiKey) {
-                      setHoldedVerified(false);
-                      setHoldedTestSuccess(false);
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleVerifyHolded}
-                  disabled={holdedTesting || !holdedApiKey.trim()}
-                  className="btn-secondary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
-                >
-                  {holdedTesting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-                  {holdedTesting 
-                    ? (t('business_config.holded_verifying') || "Verificando...") 
-                    : (t('business_config.holded_verify_btn') || "Verificar conexión")}
-                </button>
+          {/* Program Tabs */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '0.5rem', 
+            borderBottom: '2px solid #e2e8f0', 
+            marginBottom: '1.75rem' 
+          }}>
+            <button
+              type="button"
+              onClick={() => setInvoicingTab("holded")}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderBottom: invoicingTab === "holded" ? '3px solid var(--corp-green)' : '3px solid transparent',
+                marginBottom: '-2px',
+                padding: '0.75rem 1.25rem',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                color: invoicingTab === "holded" ? 'var(--corp-green)' : 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <span>Holded</span>
+              {holdedVerified && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.25rem', 
+                  background: 'rgba(34, 197, 94, 0.12)', 
+                  color: '#16a34a', 
+                  padding: '0.15rem 0.5rem', 
+                  borderRadius: '1rem', 
+                  fontSize: '0.72rem', 
+                  fontWeight: '800' 
+                }}>
+                  <Check size={11} /> {t('business_config.connected_status') || "Conectado"}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setInvoicingTab("isbue")}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderBottom: invoicingTab === "isbue" ? '3px solid var(--corp-green)' : '3px solid transparent',
+                marginBottom: '-2px',
+                padding: '0.75rem 1.25rem',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                color: invoicingTab === "isbue" ? 'var(--corp-green)' : 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <span>Isbue</span>
+              {isbueVerified && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.25rem', 
+                  background: 'rgba(34, 197, 94, 0.12)', 
+                  color: '#16a34a', 
+                  padding: '0.15rem 0.5rem', 
+                  borderRadius: '1rem', 
+                  fontSize: '0.72rem', 
+                  fontWeight: '800' 
+                }}>
+                  <Check size={11} /> {t('business_config.connected_status') || "Conectado"}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Tab 1: Holded */}
+          {invoicingTab === "holded" && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.2s ease' }}>
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
+                  {t('business_config.holded_api_key_label') || "API Key de Holded"}
+                </label>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <input 
+                    type="password"
+                    className="input-field"
+                    style={{ flex: 1, minWidth: '260px' }}
+                    placeholder={t('business_config.holded_api_key_placeholder') || "Pega aquí tu clave API de Holded"}
+                    value={holdedApiKey}
+                    onChange={(e) => {
+                      setHoldedApiKey(e.target.value);
+                      if (holdedVerified && e.target.value !== profile?.holdedApiKey) {
+                        setHoldedVerified(false);
+                        setHoldedTestSuccess(false);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyHolded}
+                    disabled={holdedTesting || !holdedApiKey.trim()}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
+                  >
+                    {holdedTesting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                    {holdedTesting 
+                      ? (t('business_config.holded_verifying') || "Verificando...") 
+                      : (t('business_config.holded_verify_btn') || "Verificar conexión")}
+                  </button>
+                </div>
+
+                {holdedTestError && (
+                  <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <AlertCircle size={15} />
+                    <span>{holdedTestError}</span>
+                  </div>
+                )}
               </div>
 
-              {holdedTestError && (
-                <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <AlertCircle size={15} />
-                  <span>{holdedTestError}</span>
+              {/* When Holded is verified: show VAT and Series */}
+              {holdedVerified && (
+                <div style={{ 
+                  animation: 'fadeIn 0.3s ease', 
+                  background: '#f8fafc', 
+                  padding: '1.5rem', 
+                  borderRadius: '0.85rem', 
+                  border: '1px solid var(--border)',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                  gap: '1.25rem'
+                }}>
+                  {/* Default VAT */}
+                  <div>
+                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                      {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                    </label>
+                    <select
+                      className="input-field"
+                      value={holdedTax}
+                      onChange={(e) => setHoldedTax(parseFloat(e.target.value))}
+                      style={{ background: 'white' }}
+                    >
+                      <option value={0}>0% (Exento / Sin IVA)</option>
+                      <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                      <option value={10}>10% (Reducido - alimentos en general)</option>
+                      <option value={21}>21% (General)</option>
+                    </select>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                      {t('business_config.holded_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
+                    </span>
+                  </div>
+
+                  {/* Series */}
+                  <div>
+                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                      {t('business_config.holded_series_label') || "Serie de facturación"}
+                    </label>
+                    <select
+                      className="input-field"
+                      value={holdedSeriesId}
+                      onChange={(e) => {
+                        const selId = e.target.value;
+                        setHoldedSeriesId(selId);
+                        const found = holdedSeriesList.find(s => s.id === selId);
+                        setHoldedSeriesName(found ? found.name : "");
+                      }}
+                      style={{ background: 'white' }}
+                    >
+                      <option value="">{t('business_config.holded_series_default') || "Predeterminada de Holded"}</option>
+                      {holdedSeriesList.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                      {t('business_config.holded_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {holdedVerified && (
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectHolded}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: 0
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    {t('business_config.holded_disconnect_btn') || "Desconectar Holded"}
+                  </button>
                 </div>
               )}
             </div>
+          )}
 
-            {/* When Holded is verified: show VAT and Series */}
-            {holdedVerified && (
-              <div style={{ 
-                animation: 'fadeIn 0.3s ease', 
-                background: '#f8fafc', 
-                padding: '1.5rem', 
-                borderRadius: '0.85rem', 
-                border: '1px solid var(--border)',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '1.25rem'
-              }}>
-                {/* Default VAT */}
-                <div>
-                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                    {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
-                  </label>
-                  <select
-                    className="input-field"
-                    value={holdedTax}
-                    onChange={(e) => setHoldedTax(parseFloat(e.target.value))}
-                    style={{ background: 'white' }}
-                  >
-                    <option value={0}>0% (Exento / Sin IVA)</option>
-                    <option value={4}>4% (Superreducido - alimentos básicos)</option>
-                    <option value={10}>10% (Reducido - alimentos en general)</option>
-                    <option value={21}>21% (General)</option>
-                  </select>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                    {t('business_config.holded_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
-                  </span>
-                </div>
+          {/* Tab 2: Isbue */}
+          {invoicingTab === "isbue" && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.2s ease' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+                {t('business_config.isbue_section_desc') || "Conecta tu cuenta de Isbue ERP para generar facturas oficiales de tus ventas con un solo clic."}
+              </p>
 
-                {/* Series */}
-                <div>
-                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                    {t('business_config.holded_series_label') || "Serie de facturación"}
-                  </label>
-                  <select
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
+                  {t('business_config.isbue_api_key_label') || "API Key / Token de Isbue"}
+                </label>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <input 
+                    type="password"
                     className="input-field"
-                    value={holdedSeriesId}
+                    style={{ flex: 1, minWidth: '260px' }}
+                    placeholder={t('business_config.isbue_api_key_placeholder') || "Pega aquí tu clave API o Token de Isbue"}
+                    value={isbueApiKey}
                     onChange={(e) => {
-                      const selId = e.target.value;
-                      setHoldedSeriesId(selId);
-                      const found = holdedSeriesList.find(s => s.id === selId);
-                      setHoldedSeriesName(found ? found.name : "");
+                      setIsbueApiKey(e.target.value);
+                      if (isbueVerified && e.target.value !== profile?.isbueApiKey) {
+                        setIsbueVerified(false);
+                        setIsbueTestSuccess(false);
+                      }
                     }}
-                    style={{ background: 'white' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyIsbue}
+                    disabled={isbueTesting || !isbueApiKey.trim()}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
                   >
-                    <option value="">{t('business_config.holded_series_default') || "Predeterminada de Holded"}</option>
-                    {holdedSeriesList.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} {s.prefix ? `(${s.prefix})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                    {t('business_config.holded_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
-                  </span>
+                    {isbueTesting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                    {isbueTesting 
+                      ? (t('business_config.isbue_verifying') || "Verificando...") 
+                      : (t('business_config.isbue_verify_btn') || "Verificar conexión")}
+                  </button>
                 </div>
-              </div>
-            )}
 
-            {holdedVerified && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <button
-                  type="button"
-                  onClick={handleDisconnectHolded}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    padding: 0
-                  }}
-                >
-                  <Trash2 size={14} />
-                  {t('business_config.holded_disconnect_btn') || "Desconectar Holded"}
-                </button>
+                {isbueTestError && (
+                  <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <AlertCircle size={15} />
+                    <span>{isbueTestError}</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
+                  {t('business_config.isbue_api_url_label') || "URL de la API / Endpoint de empresa (opcional)"}
+                </label>
+                <input 
+                  type="text"
+                  className="input-field"
+                  style={{ width: '100%' }}
+                  placeholder={t('business_config.isbue_api_url_placeholder') || "https://api.isbue.io/v1 o URL personalizada"}
+                  value={isbueApiUrl}
+                  onChange={(e) => {
+                    setIsbueApiUrl(e.target.value);
+                    if (isbueVerified && e.target.value !== profile?.isbueApiUrl) {
+                      setIsbueVerified(false);
+                      setIsbueTestSuccess(false);
+                    }
+                  }}
+                />
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                  {t('business_config.isbue_api_url_help') || "Déjalo en blanco para usar la URL estándar de Isbue o especifica el endpoint de tu empresa."}
+                </span>
+              </div>
+
+              {/* When Isbue is verified: show VAT and Series */}
+              {isbueVerified && (
+                <div style={{ 
+                  animation: 'fadeIn 0.3s ease', 
+                  background: '#f8fafc', 
+                  padding: '1.5rem', 
+                  borderRadius: '0.85rem', 
+                  border: '1px solid var(--border)',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                  gap: '1.25rem'
+                }}>
+                  {/* Default VAT */}
+                  <div>
+                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                      {t('business_config.isbue_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                    </label>
+                    <select
+                      className="input-field"
+                      value={isbueTax}
+                      onChange={(e) => setIsbueTax(parseFloat(e.target.value))}
+                      style={{ background: 'white' }}
+                    >
+                      <option value={0}>0% (Exento / Sin IVA)</option>
+                      <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                      <option value={10}>10% (Reducido - alimentos en general)</option>
+                      <option value={21}>21% (General)</option>
+                    </select>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                      {t('business_config.isbue_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
+                    </span>
+                  </div>
+
+                  {/* Series */}
+                  <div>
+                    <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                      {t('business_config.isbue_series_label') || "Serie de facturación Isbue"}
+                    </label>
+                    {isbueSeriesList.length > 0 ? (
+                      <select
+                        className="input-field"
+                        value={isbueSeriesId}
+                        onChange={(e) => {
+                          const selId = e.target.value;
+                          setIsbueSeriesId(selId);
+                          const found = isbueSeriesList.find(s => s.id === selId);
+                          setIsbueSeriesName(found ? found.name : "");
+                        }}
+                        style={{ background: 'white' }}
+                      >
+                        <option value="">{t('business_config.isbue_series_default') || "Predeterminada de Isbue"}</option>
+                        {isbueSeriesList.map(s => (
+                          <option key={s.id} value={s.id}>
+                            {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        className="input-field"
+                        style={{ background: 'white' }}
+                        placeholder={t('business_config.isbue_series_default') || "Predeterminada (ej: F24, V, etc.)"}
+                        value={isbueSeriesId}
+                        onChange={(e) => {
+                          setIsbueSeriesId(e.target.value);
+                          setIsbueSeriesName(e.target.value);
+                        }}
+                      />
+                    )}
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                      {t('business_config.isbue_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {isbueVerified && (
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectIsbue}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: 0
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    {t('business_config.isbue_disconnect_btn') || "Desconectar Isbue"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
@@ -18838,6 +19226,65 @@ function HoldedPromoModal({ isOpen, onClose, onOpenHoldedConfig }) {
             </div>
           </div>
 
+          {/* Card: Isbue */}
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
+            border: '2px solid rgba(16, 185, 129, 0.2)',
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.85rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                {t('elaboration_sales.invoice_promo_isbue_title') || "¿Utilizas Isbue?"}
+              </span>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                background: 'rgba(34, 197, 94, 0.1)',
+                color: '#16a34a',
+                padding: '0.25rem 0.65rem',
+                borderRadius: '1rem',
+                fontSize: '0.75rem',
+                fontWeight: '700'
+              }}>
+                <Sparkles size={12} />
+                {t('elaboration_sales.invoice_promo_isbue_badge') || "Integración disponible"}
+              </span>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
+              {t('elaboration_sales.invoice_promo_isbue_desc') || "Conecta tu cuenta de Isbue ERP en pocos segundos introduciendo tu API Key y podrás emitir tus facturas con un solo clic."}
+            </p>
+
+            <div style={{ marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenHoldedConfig();
+                }}
+                className="btn-primary"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 1.25rem',
+                  fontSize: '0.88rem',
+                  fontWeight: '700',
+                  borderRadius: '0.65rem'
+                }}
+              >
+                <FileText size={16} />
+                {t('elaboration_sales.invoice_promo_isbue_btn') || "Integrar Isbue"}
+              </button>
+            </div>
+          </div>
+
           {/* Card 2: Other Invoicing Software request form */}
           <div style={{
             background: '#f8fafc',
@@ -18937,8 +19384,12 @@ function HoldedPromoModal({ isOpen, onClose, onOpenHoldedConfig }) {
   );
 }
 
-function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
+function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated, initialTab = "holded" }) {
   const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState(profile?.invoicingProvider === "ISBUE" ? "isbue" : initialTab);
+  const [invoicingProvider, setInvoicingProvider] = useState(profile?.invoicingProvider || "HOLDED");
+
+  // Holded state
   const [apiKey, setApiKey] = useState(profile?.holdedApiKey || "");
   const [tax, setTax] = useState(profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10);
   const [seriesId, setSeriesId] = useState(profile?.holdedSeriesId || "");
@@ -18947,16 +19398,39 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
   const [seriesList, setSeriesList] = useState([]);
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState("");
+
+  // Isbue state
+  const [isbueApiKey, setIsbueApiKey] = useState(profile?.isbueApiKey || "");
+  const [isbueApiUrl, setIsbueApiUrl] = useState(profile?.isbueApiUrl || "");
+  const [isbueTax, setIsbueTax] = useState(profile?.isbueTax !== undefined && profile?.isbueTax !== null ? profile.isbueTax : 10);
+  const [isbueSeriesId, setIsbueSeriesId] = useState(profile?.isbueSeriesId || "");
+  const [isbueSeriesName, setIsbueSeriesName] = useState(profile?.isbueSeriesName || "");
+  const [isbueVerified, setIsbueVerified] = useState(!!profile?.isbueApiKey);
+  const [isbueSeriesList, setIsbueSeriesList] = useState([]);
+  const [isbueTesting, setIsbueTesting] = useState(false);
+  const [isbueTestError, setIsbueTestError] = useState("");
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      setActiveTab(profile?.invoicingProvider === "ISBUE" ? "isbue" : (initialTab || "holded"));
+      setInvoicingProvider(profile?.invoicingProvider || "HOLDED");
+
       setApiKey(profile?.holdedApiKey || "");
       setTax(profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10);
       setSeriesId(profile?.holdedSeriesId || "");
       setSeriesName(profile?.holdedSeriesName || "");
       setVerified(!!profile?.holdedApiKey);
       setTestError("");
+
+      setIsbueApiKey(profile?.isbueApiKey || "");
+      setIsbueApiUrl(profile?.isbueApiUrl || "");
+      setIsbueTax(profile?.isbueTax !== undefined && profile?.isbueTax !== null ? profile.isbueTax : 10);
+      setIsbueSeriesId(profile?.isbueSeriesId || "");
+      setIsbueSeriesName(profile?.isbueSeriesName || "");
+      setIsbueVerified(!!profile?.isbueApiKey);
+      setIsbueTestError("");
       
       if (profile?.holdedApiKey) {
         fetch("/api/client/holded/test-connection", {
@@ -18973,8 +19447,24 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
         })
         .catch(e => console.error("Error loading Holded series:", e));
       }
+
+      if (profile?.isbueApiKey) {
+        fetch("/api/client/isbue/test-connection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey: profile.isbueApiKey, apiUrl: profile.isbueApiUrl })
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.series)) {
+            setIsbueSeriesList(data.series);
+            setIsbueVerified(true);
+          }
+        })
+        .catch(e => console.error("Error loading Isbue series:", e));
+      }
     }
-  }, [isOpen, profile]);
+  }, [isOpen, profile, initialTab]);
 
   if (!isOpen) return null;
 
@@ -19020,14 +19510,63 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
     }
   };
 
+  const handleVerifyIsbue = async () => {
+    const key = isbueApiKey.trim();
+    if (!key) {
+      setIsbueTestError(t('business_config.isbue_invalid_key') || "Debes introducir una clave API o Token.");
+      return;
+    }
+    setIsbueTesting(true);
+    setIsbueTestError("");
+    try {
+      const res = await fetch("/api/client/isbue/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key, apiUrl: isbueApiUrl.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsbueVerified(true);
+        setIsbueSeriesList(data.series || []);
+      } else {
+        setIsbueVerified(false);
+        setIsbueTestError(data.error || t('business_config.isbue_invalid_key') || "API Key inválida o error al conectar con Isbue.");
+      }
+    } catch (err) {
+      console.error("Error verifying Isbue:", err);
+      setIsbueVerified(false);
+      setIsbueTestError("Error de conexión al verificar con Isbue.");
+    } finally {
+      setIsbueTesting(false);
+    }
+  };
+
+  const handleDisconnectIsbue = () => {
+    if (confirm(t('business_config.isbue_disconnect_confirm') || "¿Estás seguro de que deseas desconectar la integración con Isbue?")) {
+      setIsbueApiKey("");
+      setIsbueApiUrl("");
+      setIsbueSeriesId("");
+      setIsbueSeriesName("");
+      setIsbueVerified(false);
+      setIsbueSeriesList([]);
+      setIsbueTestError("");
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       const updates = {
+        invoicingProvider,
         holdedApiKey: apiKey.trim() || null,
         holdedTax: parseFloat(tax) || 0,
         holdedSeriesId: seriesId || null,
-        holdedSeriesName: seriesName || null
+        holdedSeriesName: seriesName || null,
+        isbueApiKey: isbueApiKey.trim() || null,
+        isbueApiUrl: isbueApiUrl.trim() || null,
+        isbueTax: parseFloat(isbueTax) || 0,
+        isbueSeriesId: isbueSeriesId || null,
+        isbueSeriesName: isbueSeriesName || null
       };
       const res = await fetch("/api/client/profile", {
         method: "PATCH",
@@ -19037,13 +19576,13 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
       const data = await res.json();
       if (!data.error) {
         if (onProfileUpdated) onProfileUpdated(data);
-        alert(t('elaboration_sales.holded_modal_save_success') || "Configuración de Holded guardada correctamente");
+        alert(t('business_config.save_success') || "Configuración de facturación guardada correctamente");
         onClose();
       } else {
         alert(data.error || "Error al guardar la configuración");
       }
     } catch (err) {
-      console.error("Error saving Holded settings:", err);
+      console.error("Error saving invoicing settings:", err);
       alert("Error de conexión al guardar la configuración.");
     } finally {
       setSaving(false);
@@ -19054,33 +19593,17 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
     <div className="modal-overlay" style={{ zIndex: 410 }} onClick={onClose}>
       <div 
         className="modal-content" 
-        style={{ maxWidth: '600px', width: '92%', animation: 'scaleUp 0.2s ease', padding: '2rem' }}
+        style={{ maxWidth: '640px', width: '92%', animation: 'scaleUp 0.2s ease', padding: '2rem' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)' }}>
             <FileText size={22} />
             <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
-              {t('business_config.holded_section_title') || "Integración con Holded"}
+              {t('business_config.invoicing_programs_title') || "Programas de facturación"}
             </h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {verified && (
-              <span style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '0.4rem', 
-                background: 'rgba(34, 197, 94, 0.1)', 
-                color: '#16a34a', 
-                padding: '0.3rem 0.75rem', 
-                borderRadius: '2rem', 
-                fontSize: '0.8rem', 
-                fontWeight: '700' 
-              }}>
-                <Check size={14} />
-                {t('business_config.holded_verified_badge') || "Conectado"}
-              </span>
-            )}
             <button 
               type="button" 
               onClick={onClose}
@@ -19091,136 +19614,371 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
           </div>
         </div>
 
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: '1.5' }}>
-          {t('business_config.holded_section_desc') || "Conecta tu cuenta de Holded para generar facturas oficiales de tus ventas con un solo clic."}
-        </p>
+        {/* Active provider switch */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '0.75rem', marginBottom: '1.25rem', border: '1px solid var(--border)' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>
+            {t('business_config.active_invoicing_provider') || "Programa activo:"}
+          </span>
+          <div style={{ display: 'inline-flex', background: '#e2e8f0', borderRadius: '0.5rem', padding: '0.2rem' }}>
+            <button
+              type="button"
+              onClick={() => setInvoicingProvider("HOLDED")}
+              style={{
+                border: 'none',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '0.35rem',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                background: invoicingProvider === "HOLDED" ? 'white' : 'transparent',
+                color: invoicingProvider === "HOLDED" ? 'var(--corp-green)' : 'var(--text-muted)',
+                boxShadow: invoicingProvider === "HOLDED" ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              Holded {verified ? '✓' : ''}
+            </button>
+            <button
+              type="button"
+              onClick={() => setInvoicingProvider("ISBUE")}
+              style={{
+                border: 'none',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '0.35rem',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                background: invoicingProvider === "ISBUE" ? 'white' : 'transparent',
+                color: invoicingProvider === "ISBUE" ? 'var(--corp-green)' : 'var(--text-muted)',
+                boxShadow: invoicingProvider === "ISBUE" ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              Isbue {isbueVerified ? '✓' : ''}
+            </button>
+          </div>
+        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div>
-            <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
-              {t('business_config.holded_api_key_label') || "API Key de Holded"}
-            </label>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <input 
-                type="password"
-                className="input-field"
-                style={{ flex: 1, minWidth: '240px' }}
-                placeholder={t('business_config.holded_api_key_placeholder') || "Pega aquí tu clave API de Holded"}
-                value={apiKey}
-                onChange={(e) => {
-                  setApiKey(e.target.value);
-                  if (verified && e.target.value !== profile?.holdedApiKey) {
-                    setVerified(false);
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleVerify}
-                disabled={testing || !apiKey.trim()}
-                className="btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
-              >
-                {testing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-                {testing 
-                  ? (t('business_config.holded_verifying') || "Verificando...") 
-                  : (t('business_config.holded_verify_btn') || "Verificar conexión")}
-              </button>
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab("holded")}
+            style={{
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === "holded" ? '3px solid var(--corp-green)' : '3px solid transparent',
+              marginBottom: '-2px',
+              padding: '0.65rem 1rem',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              color: activeTab === "holded" ? 'var(--corp-green)' : 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem'
+            }}
+          >
+            <span>Holded</span>
+            {verified && <span style={{ color: '#16a34a', fontSize: '0.75rem' }}>●</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("isbue")}
+            style={{
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === "isbue" ? '3px solid var(--corp-green)' : '3px solid transparent',
+              marginBottom: '-2px',
+              padding: '0.65rem 1rem',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              color: activeTab === "isbue" ? 'var(--corp-green)' : 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem'
+            }}
+          >
+            <span>Isbue</span>
+            {isbueVerified && <span style={{ color: '#16a34a', fontSize: '0.75rem' }}>●</span>}
+          </button>
+        </div>
+
+        {/* Tab 1: Holded */}
+        {activeTab === "holded" && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeIn 0.2s ease' }}>
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
+                {t('business_config.holded_api_key_label') || "API Key de Holded"}
+              </label>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <input 
+                  type="password"
+                  className="input-field"
+                  style={{ flex: 1, minWidth: '240px' }}
+                  placeholder={t('business_config.holded_api_key_placeholder') || "Pega aquí tu clave API de Holded"}
+                  value={apiKey}
+                  onChange={(e) => {
+                    setApiKey(e.target.value);
+                    if (verified && e.target.value !== profile?.holdedApiKey) {
+                      setVerified(false);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleVerify}
+                  disabled={testing || !apiKey.trim()}
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
+                >
+                  {testing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  {testing 
+                    ? (t('business_config.holded_verifying') || "Verificando...") 
+                    : (t('business_config.holded_verify_btn') || "Verificar conexión")}
+                </button>
+              </div>
+
+              {testError && (
+                <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <AlertCircle size={15} />
+                  <span>{testError}</span>
+                </div>
+              )}
             </div>
 
-            {testError && (
-              <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <AlertCircle size={15} />
-                <span>{testError}</span>
+            {verified && (
+              <div style={{ 
+                animation: 'fadeIn 0.3s ease', 
+                background: '#f8fafc', 
+                padding: '1.25rem', 
+                borderRadius: '0.85rem', 
+                border: '1px solid var(--border)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '1.25rem'
+              }}>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                  </label>
+                  <select
+                    className="input-field"
+                    value={tax}
+                    onChange={(e) => setTax(parseFloat(e.target.value))}
+                    style={{ background: 'white' }}
+                  >
+                    <option value={0}>0% (Exento / Sin IVA)</option>
+                    <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                    <option value={10}>10% (Reducido - alimentos en general)</option>
+                    <option value={21}>21% (General)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.holded_series_label') || "Serie de facturación"}
+                  </label>
+                  <select
+                    className="input-field"
+                    value={seriesId}
+                    onChange={(e) => {
+                      const selId = e.target.value;
+                      setSeriesId(selId);
+                      const found = seriesList.find(s => s.id === selId);
+                      setSeriesName(found ? found.name : "");
+                    }}
+                    style={{ background: 'white' }}
+                  >
+                    <option value="">{t('business_config.holded_series_default') || "Predeterminada de Holded"}</option>
+                    {seriesList.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {verified && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <button
+                  type="button"
+                  onClick={handleDisconnect}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#ef4444',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: 0
+                  }}
+                >
+                  <Trash2 size={14} />
+                  {t('business_config.holded_disconnect_btn') || "Desconectar Holded"}
+                </button>
               </div>
             )}
           </div>
+        )}
 
-          {verified && (
-            <div style={{ 
-              animation: 'fadeIn 0.3s ease', 
-              background: '#f8fafc', 
-              padding: '1.5rem', 
-              borderRadius: '0.85rem', 
-              border: '1px solid var(--border)',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '1.25rem'
-            }}>
-              {/* Default VAT */}
-              <div>
-                <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                  {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
-                </label>
-                <select
+        {/* Tab 2: Isbue */}
+        {activeTab === "isbue" && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeIn 0.2s ease' }}>
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
+                {t('business_config.isbue_api_key_label') || "API Key / Token de Isbue"}
+              </label>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <input 
+                  type="password"
                   className="input-field"
-                  value={tax}
-                  onChange={(e) => setTax(parseFloat(e.target.value))}
-                  style={{ background: 'white' }}
-                >
-                  <option value={0}>0% (Exento / Sin IVA)</option>
-                  <option value={4}>4% (Superreducido - alimentos básicos)</option>
-                  <option value={10}>10% (Reducido - alimentos en general)</option>
-                  <option value={21}>21% (General)</option>
-                </select>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                  {t('business_config.holded_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
-                </span>
-              </div>
-
-              {/* Series */}
-              <div>
-                <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
-                  {t('business_config.holded_series_label') || "Serie de facturación"}
-                </label>
-                <select
-                  className="input-field"
-                  value={seriesId}
+                  style={{ flex: 1, minWidth: '240px' }}
+                  placeholder={t('business_config.isbue_api_key_placeholder') || "Pega aquí tu clave API o Token de Isbue"}
+                  value={isbueApiKey}
                   onChange={(e) => {
-                    const selId = e.target.value;
-                    setSeriesId(selId);
-                    const found = seriesList.find(s => s.id === selId);
-                    setSeriesName(found ? found.name : "");
+                    setIsbueApiKey(e.target.value);
+                    if (isbueVerified && e.target.value !== profile?.isbueApiKey) {
+                      setIsbueVerified(false);
+                    }
                   }}
-                  style={{ background: 'white' }}
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyIsbue}
+                  disabled={isbueTesting || !isbueApiKey.trim()}
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
                 >
-                  <option value="">{t('business_config.holded_series_default') || "Predeterminada de Holded"}</option>
-                  {seriesList.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} {s.prefix ? `(${s.prefix})` : ''}
-                    </option>
-                  ))}
-                </select>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                  {t('business_config.holded_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
-                </span>
+                  {isbueTesting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  {isbueTesting 
+                    ? (t('business_config.isbue_verifying') || "Verificando...") 
+                    : (t('business_config.isbue_verify_btn') || "Verificar conexión")}
+                </button>
               </div>
-            </div>
-          )}
 
-          {verified && (
-            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <button
-                type="button"
-                onClick={handleDisconnect}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#ef4444',
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  padding: 0
-                }}
-              >
-                <Trash2 size={14} />
-                {t('business_config.holded_disconnect_btn') || "Desconectar Holded"}
-              </button>
+              {isbueTestError && (
+                <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <AlertCircle size={15} />
+                  <span>{isbueTestError}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                {t('business_config.isbue_api_url_label') || "URL de la API / Endpoint (opcional)"}
+              </label>
+              <input 
+                type="text"
+                className="input-field"
+                style={{ width: '100%' }}
+                placeholder={t('business_config.isbue_api_url_placeholder') || "https://api.isbue.io/v1 o URL personalizada"}
+                value={isbueApiUrl}
+                onChange={(e) => {
+                  setIsbueApiUrl(e.target.value);
+                  if (isbueVerified && e.target.value !== profile?.isbueApiUrl) {
+                    setIsbueVerified(false);
+                  }
+                }}
+              />
+            </div>
+
+            {isbueVerified && (
+              <div style={{ 
+                animation: 'fadeIn 0.3s ease', 
+                background: '#f8fafc', 
+                padding: '1.25rem', 
+                borderRadius: '0.85rem', 
+                border: '1px solid var(--border)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '1.25rem'
+              }}>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.isbue_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                  </label>
+                  <select
+                    className="input-field"
+                    value={isbueTax}
+                    onChange={(e) => setIsbueTax(parseFloat(e.target.value))}
+                    style={{ background: 'white' }}
+                  >
+                    <option value={0}>0% (Exento / Sin IVA)</option>
+                    <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                    <option value={10}>10% (Reducido - alimentos en general)</option>
+                    <option value={21}>21% (General)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.isbue_series_label') || "Serie de facturación Isbue"}
+                  </label>
+                  {isbueSeriesList.length > 0 ? (
+                    <select
+                      className="input-field"
+                      value={isbueSeriesId}
+                      onChange={(e) => {
+                        const selId = e.target.value;
+                        setIsbueSeriesId(selId);
+                        const found = isbueSeriesList.find(s => s.id === selId);
+                        setIsbueSeriesName(found ? found.name : "");
+                      }}
+                      style={{ background: 'white' }}
+                    >
+                      <option value="">{t('business_config.isbue_series_default') || "Predeterminada de Isbue"}</option>
+                      {isbueSeriesList.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ background: 'white' }}
+                      placeholder={t('business_config.isbue_series_default') || "Predeterminada (ej: F24, V, etc.)"}
+                      value={isbueSeriesId}
+                      onChange={(e) => {
+                        setIsbueSeriesId(e.target.value);
+                        setIsbueSeriesName(e.target.value);
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {isbueVerified && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <button
+                  type="button"
+                  onClick={handleDisconnectIsbue}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#ef4444',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: 0
+                  }}
+                >
+                  <Trash2 size={14} />
+                  {t('business_config.isbue_disconnect_btn') || "Desconectar Isbue"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
           <button
@@ -19235,7 +19993,7 @@ function HoldedConfigModal({ isOpen, profile, onClose, onProfileUpdated }) {
             type="button"
             onClick={handleSave}
             className="btn-primary"
-            disabled={saving || (apiKey.trim() && !verified)}
+            disabled={saving}
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
@@ -19264,7 +20022,9 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
   const [showHoldedConfigModal, setShowHoldedConfigModal] = useState(false);
 
   const handleGenerateInvoice = async (sale, autoCreate = false) => {
-    if (!currentProfile?.holdedApiKey) {
+    const isIsbue = currentProfile?.invoicingProvider === "ISBUE";
+    const hasKey = isIsbue ? !!currentProfile?.isbueApiKey : (!!currentProfile?.holdedApiKey || !!currentProfile?.isbueApiKey);
+    if (!hasKey) {
       setShowHoldedPromoModal(true);
       return;
     }
@@ -19777,11 +20537,11 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)', marginBottom: '1rem' }}>
                 <FileText size={24} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-                  {t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded"}
+                  {(t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
                 </h3>
               </div>
               <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
-                {t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?"}
+                {(t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
               </p>
               <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
                 <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{holdedConfirmCustomer.customerName}</div>
@@ -19873,7 +20633,9 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   const [showHoldedConfigModal, setShowHoldedConfigModal] = useState(false);
 
   const handleGenerateInvoice = async (sale, autoCreate = false) => {
-    if (!currentProfile?.holdedApiKey) {
+    const isIsbue = currentProfile?.invoicingProvider === "ISBUE";
+    const hasKey = isIsbue ? !!currentProfile?.isbueApiKey : (!!currentProfile?.holdedApiKey || !!currentProfile?.isbueApiKey);
+    if (!hasKey) {
       setShowHoldedPromoModal(true);
       return;
     }
@@ -20683,11 +21445,11 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)', marginBottom: '1rem' }}>
                 <FileText size={24} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-                  {t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded"}
+                  {(t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
                 </h3>
               </div>
               <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
-                {t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?"}
+                {(t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
               </p>
               <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
                 <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{holdedConfirmCustomer.customerName}</div>

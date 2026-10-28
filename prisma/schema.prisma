@@ -133,6 +133,13 @@ model ClientProfile {
   holdedSeriesId             String?
   holdedSeriesName           String?
 
+  invoicingProvider          String?           @default("HOLDED")
+  isbueApiKey                String?
+  isbueApiUrl                String?
+  isbueTax                   Float?            @default(10)
+  isbueSeriesId              String?
+  isbueSeriesName            String?
+
   // Low stock alerts for goods for sale
   goodsLowStockAlertEnabled   Boolean           @default(false)
   goodsLowStockThreshold      Float?            @default(2)
@@ -350,8 +357,11 @@ model ElaborationSale {
   date            DateTime      @default(now())
   isDraft         Boolean       @default(false)
 
+  invoicingProvider String?
   holdedInvoiceId  String?
   holdedInvoiceNum String?
+  isbueInvoiceId   String?
+  isbueInvoiceNum  String?
   invoicedAt       DateTime?
 
   combinedSaleId   Int?
@@ -386,8 +396,11 @@ model CombinedSale {
   sales           ElaborationSale[]
   goodsSales      CombinedSaleGoodsItem[]
 
+  invoicingProvider String?
   holdedInvoiceId  String?
   holdedInvoiceNum String?
+  isbueInvoiceId   String?
+  isbueInvoiceNum  String?
   invoicedAt       DateTime?
 
   clientProfileId Int

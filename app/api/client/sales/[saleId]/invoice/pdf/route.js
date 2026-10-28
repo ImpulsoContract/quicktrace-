@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getIsbueInvoicePdf } from "@/lib/isbue";
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -30,8 +31,50 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    if (!sale.holdedInvoiceId) {
+    const invoiceId = sale.isbueInvoiceId || sale.holdedInvoiceId;
+    if (!invoiceId) {
       return NextResponse.json({ error: "Esta venta no tiene factura generada." }, { status: 400 });
+    }
+
+    const provider = sale.invoicingProvider || (sale.isbueInvoiceId ? "ISBUE" : "HOLDED");
+
+    if (provider === "ISBUE") {
+      const isbueRes = await getIsbueInvoicePdf({
+        profile: sale.clientProfile,
+        invoiceId
+      });
+
+      if (!isbueRes.ok || !isbueRes.response) {
+        return NextResponse.json({ 
+          error: isbueRes.error || "No se pudo descargar el PDF de la factura desde Isbue." 
+        }, { status: 400 });
+      }
+
+      const contentType = isbueRes.response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await isbueRes.response.json();
+        if (data.data || data.pdf) {
+          const base64Str = data.data || data.pdf;
+          const cleanBase64 = base64Str.replace(/^data:application\/pdf;base64,/, "");
+          const buffer = Buffer.from(cleanBase64, 'base64');
+          return new NextResponse(buffer, {
+            status: 200,
+            headers: {
+              "Content-Type": "application/pdf",
+              "Content-Disposition": `inline; filename="Factura_${sale.isbueInvoiceNum || sale.holdedInvoiceNum || sale.id}.pdf"`
+            }
+          });
+        }
+      }
+
+      const pdfBuffer = await isbueRes.response.arrayBuffer();
+      return new NextResponse(pdfBuffer, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="Factura_${sale.isbueInvoiceNum || sale.holdedInvoiceNum || sale.id}.pdf"`
+        }
+      });
     }
 
     const apiKey = sale.clientProfile?.holdedApiKey?.trim();

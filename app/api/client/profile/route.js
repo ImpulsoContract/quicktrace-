@@ -105,7 +105,13 @@ export async function PATCH(request) {
       holdedApiKey,
       holdedTax,
       holdedSeriesId,
-      holdedSeriesName
+      holdedSeriesName,
+      invoicingProvider,
+      isbueApiKey,
+      isbueApiUrl,
+      isbueTax,
+      isbueSeriesId,
+      isbueSeriesName
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -137,7 +143,13 @@ export async function PATCH(request) {
         holdedApiKey: holdedApiKey !== undefined ? holdedApiKey : undefined,
         holdedTax: holdedTax !== undefined ? (holdedTax === null ? null : parseFloat(holdedTax)) : undefined,
         holdedSeriesId: holdedSeriesId !== undefined ? holdedSeriesId : undefined,
-        holdedSeriesName: holdedSeriesName !== undefined ? holdedSeriesName : undefined
+        holdedSeriesName: holdedSeriesName !== undefined ? holdedSeriesName : undefined,
+        invoicingProvider: invoicingProvider !== undefined ? invoicingProvider : undefined,
+        isbueApiKey: isbueApiKey !== undefined ? isbueApiKey : undefined,
+        isbueApiUrl: isbueApiUrl !== undefined ? isbueApiUrl : undefined,
+        isbueTax: isbueTax !== undefined ? (isbueTax === null ? null : parseFloat(isbueTax)) : undefined,
+        isbueSeriesId: isbueSeriesId !== undefined ? isbueSeriesId : undefined,
+        isbueSeriesName: isbueSeriesName !== undefined ? isbueSeriesName : undefined
       },
       include: { plan: true }
     });

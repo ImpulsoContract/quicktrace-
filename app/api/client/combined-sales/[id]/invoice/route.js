@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { createIsbueInvoice } from "@/lib/isbue";
 
 export async function POST(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -25,11 +26,22 @@ export async function POST(request, { params }) {
       where: { id: profileId }
     });
 
-    const apiKey = profile?.holdedApiKey?.trim();
-    if (!apiKey) {
-      return NextResponse.json({ 
-        error: "Debes configurar tu API Key de Holded en la sección de 'Configuración del negocio' para poder emitir facturas." 
-      }, { status: 400 });
+    const provider = (profile?.invoicingProvider || (profile?.isbueApiKey && !profile?.holdedApiKey ? "ISBUE" : "HOLDED")).toUpperCase();
+
+    if (provider === "ISBUE") {
+      const isbueKey = profile?.isbueApiKey?.trim();
+      if (!isbueKey) {
+        return NextResponse.json({ 
+          error: "Debes configurar tu API Key o Token de Isbue en la sección de 'Configuración del negocio' para poder emitir facturas." 
+        }, { status: 400 });
+      }
+    } else {
+      const apiKey = profile?.holdedApiKey?.trim();
+      if (!apiKey) {
+        return NextResponse.json({ 
+          error: "Debes configurar tu API Key de Holded en la sección de 'Configuración del negocio' para poder emitir facturas." 
+        }, { status: 400 });
+      }
     }
 
     const combinedSale = await prisma.combinedSale.findUnique({
@@ -68,13 +80,14 @@ export async function POST(request, { params }) {
     }
 
     // Check if already invoiced
-    if (combinedSale.holdedInvoiceId) {
+    if (combinedSale.holdedInvoiceId || combinedSale.isbueInvoiceId) {
+      const invNum = combinedSale.holdedInvoiceNum || combinedSale.isbueInvoiceNum || combinedSale.holdedInvoiceId || combinedSale.isbueInvoiceId;
       return NextResponse.json({
         success: false,
         alreadyInvoiced: true,
-        invoiceNum: combinedSale.holdedInvoiceNum,
-        invoiceId: combinedSale.holdedInvoiceId,
-        error: `Esta venta combinada ya ha sido facturada previamente (${combinedSale.holdedInvoiceNum || combinedSale.holdedInvoiceId}).`
+        invoiceNum: invNum,
+        invoiceId: combinedSale.holdedInvoiceId || combinedSale.isbueInvoiceId,
+        error: `Esta venta combinada ya ha sido facturada previamente (${invNum}).`
       }, { status: 400 });
     }
 
@@ -102,6 +115,97 @@ export async function POST(request, { params }) {
     const autoCreateContact = !!body.autoCreateContact;
     const cleanNif = customerNif.toUpperCase().replace(/\s+/g, '');
 
+    if (provider === "ISBUE") {
+      const elabItems = (combinedSale.sales || []).map(s => {
+        const itemName = s.elaboration?.recipe?.name || s.elaboration?.name || "Elaboración";
+        const descParts = [];
+        if (s.elaboration?.name) descParts.push(`Lote: ${s.elaboration.name}`);
+        if (s.elaboration?.date) descParts.push(`Elab: ${new Date(s.elaboration.date).toLocaleDateString('es-ES')}`);
+        if (s.elaboration?.expirationDate) descParts.push(`Caducidad: ${new Date(s.elaboration.expirationDate).toLocaleDateString('es-ES')}`);
+        const itemDesc = descParts.length > 0 ? descParts.join(" | ") : "";
+
+        const units = s.quantity && s.quantity > 0 ? s.quantity : 1;
+        const subtotal = s.quantity && s.quantity > 0 
+          ? parseFloat((s.price / s.quantity).toFixed(4)) 
+          : parseFloat((s.price || 0).toFixed(4));
+
+        return {
+          name: itemName,
+          desc: itemDesc,
+          units,
+          price: subtotal,
+          tax: profile.isbueTax !== undefined && profile.isbueTax !== null ? profile.isbueTax : 10
+        };
+      });
+
+      const goodsItems = (combinedSale.goodsSales || []).map(gs => {
+        const itemName = gs.goodsForSale?.name || "Mercancía en venta";
+        const itemDesc = gs.goodsForSale?.unit ? `Unidad: ${gs.goodsForSale.unit}` : "";
+        const units = gs.quantity && gs.quantity > 0 ? gs.quantity : 1;
+        const subtotal = gs.quantity && gs.quantity > 0
+          ? parseFloat((gs.price / gs.quantity).toFixed(4))
+          : parseFloat((gs.price || 0).toFixed(4));
+
+        return {
+          name: itemName,
+          desc: itemDesc,
+          units,
+          price: subtotal,
+          tax: profile.isbueTax !== undefined && profile.isbueTax !== null ? profile.isbueTax : 10
+        };
+      });
+
+      const allItems = [...elabItems, ...goodsItems];
+
+      const isbueResult = await createIsbueInvoice({
+        profile,
+        customer: combinedSale.customer,
+        items: allItems,
+        notes: `Venta combinada registrada desde QuickTrace. ID: ${combinedSale.id}`,
+        autoCreateContact
+      });
+
+      if (!isbueResult.success) {
+        return NextResponse.json({
+          error: isbueResult.error || "Error al generar la factura en Isbue."
+        }, { status: 400 });
+      }
+
+      const now = new Date();
+      await prisma.combinedSale.update({
+        where: { id: combinedSale.id },
+        data: {
+          holdedInvoiceId: isbueResult.invoiceId,
+          holdedInvoiceNum: isbueResult.invoiceNum,
+          isbueInvoiceId: isbueResult.invoiceId,
+          isbueInvoiceNum: isbueResult.invoiceNum,
+          invoicingProvider: "ISBUE",
+          invoicedAt: now
+        }
+      });
+
+      await prisma.elaborationSale.updateMany({
+        where: { combinedSaleId: combinedSale.id },
+        data: {
+          holdedInvoiceId: isbueResult.invoiceId,
+          holdedInvoiceNum: isbueResult.invoiceNum,
+          isbueInvoiceId: isbueResult.invoiceId,
+          isbueInvoiceNum: isbueResult.invoiceNum,
+          invoicingProvider: "ISBUE",
+          invoicedAt: now
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        invoiceId: isbueResult.invoiceId,
+        invoiceNum: isbueResult.invoiceNum,
+        invoicedAt: now,
+        message: `Factura ${isbueResult.invoiceNum} generada con éxito en Isbue para la venta combinada.`
+      });
+    }
+
+    const apiKey = profile.holdedApiKey.trim();
     // 1. Fetch contacts: Try v1, fallback to v2
     let matchedContact = null;
     let isV2 = apiKey.startsWith("pat_") || apiKey.includes(".");
@@ -371,6 +475,7 @@ export async function POST(request, { params }) {
       data: {
         holdedInvoiceId: invoiceId,
         holdedInvoiceNum: invoiceNum,
+        invoicingProvider: "HOLDED",
         invoicedAt: now
       }
     });
@@ -381,6 +486,7 @@ export async function POST(request, { params }) {
       data: {
         holdedInvoiceId: invoiceId,
         holdedInvoiceNum: invoiceNum,
+        invoicingProvider: "HOLDED",
         invoicedAt: now
       }
     });
