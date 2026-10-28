@@ -91,7 +91,37 @@ export default function RelateGoodsReceiptModal({
       const res = await fetch("/api/client/goods-for-sale");
       const data = await res.json();
       if (res.ok && data.success) {
-        setGoodsForSaleList(data.data || []);
+        const list = data.data || [];
+        setGoodsForSaleList(list);
+
+        // Auto-link if initial selections were provided:
+        if (initialGoodsForSaleId) {
+          const gId = parseInt(initialGoodsForSaleId, 10);
+          const foundGood = list.find(g => g.id === gId);
+          if (foundGood) {
+            const linkedIng = findIngredientForGoods(foundGood);
+            if (linkedIng) {
+              setSelectedIngredients(prev => {
+                const exists = prev.some(i => i.toLowerCase() === linkedIng.toLowerCase());
+                return exists ? prev : [...prev, linkedIng];
+              });
+            }
+          }
+        } else if (Array.isArray(initialIngredients) && initialIngredients.length > 0) {
+          for (const ingName of initialIngredients) {
+            const matchedGood = findGoodsForIngredient(ingName, list);
+            if (matchedGood) {
+              setSelectedGfsId(matchedGood.id);
+              if (!initialGoodsForSaleCostPrice && matchedGood.costPrice != null) {
+                setGfsCostPrice(matchedGood.costPrice.toString());
+              }
+              if (!initialGoodsForSaleQuantity && defaultQuantity) {
+                setGfsQuantity(defaultQuantity.toString());
+              }
+              break;
+            }
+          }
+        }
       }
     } catch (err) {
       console.error("Error fetching goods for sale:", err);
@@ -110,6 +140,38 @@ export default function RelateGoodsReceiptModal({
     });
     return Array.from(set).sort();
   }, [recipes]);
+
+  const findGoodsForIngredient = (ingName, list = goodsForSaleList) => {
+    if (!ingName || !list.length) return null;
+    const clean = ingName.trim().toLowerCase();
+    const explicit = list.find(
+      g => g.linkedIngredientName && g.linkedIngredientName.trim().toLowerCase() === clean
+    );
+    if (explicit) return explicit;
+    return list.find(
+      g => g.name && g.name.trim().toLowerCase() === clean
+    ) || null;
+  };
+
+  const findIngredientForGoods = (good, ings = allIngredients) => {
+    if (!good || !ings.length) return null;
+    if (good.linkedIngredientName) {
+      const cleanLinked = good.linkedIngredientName.trim().toLowerCase();
+      const match = ings.find(i => i.trim().toLowerCase() === cleanLinked);
+      if (match) return match;
+    }
+    const cleanName = (good.name || "").trim().toLowerCase();
+    return ings.find(i => i.trim().toLowerCase() === cleanName) || null;
+  };
+
+  const isLinked = (good, ingName) => {
+    if (!good || !ingName) return false;
+    const clean = ingName.trim().toLowerCase();
+    return (
+      (good.linkedIngredientName && good.linkedIngredientName.trim().toLowerCase() === clean) ||
+      (good.name && good.name.trim().toLowerCase() === clean)
+    );
+  };
 
   const getIngredientsWithUnits = (ingNames) => {
     const results = [];
@@ -151,6 +213,116 @@ export default function RelateGoodsReceiptModal({
     return goodsForSaleList.find(g => g.id === selectedGfsId) || null;
   }, [goodsForSaleList, selectedGfsId]);
 
+  // Two-way toggle handlers
+  const handleToggleIngredient = (ing) => {
+    const isSelected = selectedIngredients.includes(ing);
+    let nextSelected;
+    if (isSelected) {
+      nextSelected = selectedIngredients.filter(i => i !== ing);
+    } else {
+      nextSelected = [...selectedIngredients, ing];
+    }
+    setSelectedIngredients(nextSelected);
+
+    const relatedGfs = findGoodsForIngredient(ing);
+    if (relatedGfs) {
+      if (!isSelected) {
+        // Selecting ingredient -> auto-select related Goods for sale
+        setSelectedGfsId(relatedGfs.id);
+        if (!gfsQuantity && defaultQuantity) {
+          setGfsQuantity(defaultQuantity.toString());
+        }
+        if (!gfsCostPrice && relatedGfs.costPrice != null) {
+          setGfsCostPrice(relatedGfs.costPrice.toString());
+        }
+      } else {
+        // Deselecting ingredient -> if this was the one that selected selectedGfsId, check if any remaining ingredient still relates
+        if (selectedGfsId === relatedGfs.id) {
+          const stillRelated = nextSelected.some(otherIng => {
+            const g = findGoodsForIngredient(otherIng);
+            return g && g.id === relatedGfs.id;
+          });
+          if (!stillRelated) {
+            setSelectedGfsId(null);
+            setGfsQuantity("");
+            setGfsCostPrice("");
+          }
+        }
+      }
+    }
+  };
+
+  const handleToggleGoodsForSale = (good) => {
+    const isSelected = selectedGfsId === good.id;
+    if (isSelected) {
+      // Deselecting goods for sale
+      setSelectedGfsId(null);
+      setGfsQuantity("");
+      setGfsCostPrice("");
+
+      const linkedIng = findIngredientForGoods(good);
+      if (linkedIng) {
+        setSelectedIngredients(prev => prev.filter(i => i.toLowerCase() !== linkedIng.toLowerCase()));
+      }
+    } else {
+      // Selecting goods for sale
+      setSelectedGfsId(good.id);
+      if (!gfsQuantity && defaultQuantity) {
+        setGfsQuantity(defaultQuantity.toString());
+      }
+      if (!gfsCostPrice && good.costPrice != null) {
+        setGfsCostPrice(good.costPrice.toString());
+      }
+
+      const linkedIng = findIngredientForGoods(good);
+      if (linkedIng) {
+        setSelectedIngredients(prev => {
+          const already = prev.some(i => i.toLowerCase() === linkedIng.toLowerCase());
+          return already ? prev : [...prev, linkedIng];
+        });
+        const units = getIngredientsWithUnits([linkedIng]);
+        if (units.length > 0) {
+          setQuantities(prev => {
+            const updated = { ...prev };
+            units.forEach(u => {
+              const k = `${u.name}:${u.unit}`;
+              if (!updated[k] && (gfsQuantity || defaultQuantity)) {
+                updated[k] = (gfsQuantity || defaultQuantity).toString();
+              }
+            });
+            return updated;
+          });
+        }
+      }
+    }
+  };
+
+  const handleGfsQuantityChange = (val) => {
+    setGfsQuantity(val);
+    if (selectedGood) {
+      const linkedIng = findIngredientForGoods(selectedGood);
+      if (linkedIng) {
+        const units = getIngredientsWithUnits([linkedIng]);
+        if (units.length > 0) {
+          setQuantities(prev => {
+            const next = { ...prev };
+            units.forEach(u => {
+              next[`${u.name}:${u.unit}`] = val;
+            });
+            return next;
+          });
+        }
+      }
+    }
+  };
+
+  const handleIngredientQuantityChange = (key, val, ingName) => {
+    setQuantities(prev => ({ ...prev, [key]: val }));
+    if (selectedGood && isLinked(selectedGood, ingName)) {
+      setGfsQuantity(val);
+    }
+  };
+
   // Handle Create New Goods For Sale
   const handleCreateNewGfs = async (e) => {
     e.preventDefault();
@@ -188,7 +360,14 @@ export default function RelateGoodsReceiptModal({
         setGoodsForSaleList(prev => [newItem, ...prev]);
         setSelectedGfsId(newItem.id);
         if (!gfsQuantity && defaultQuantity) {
-          setGfsQuantity(defaultQuantity);
+          setGfsQuantity(defaultQuantity.toString());
+        }
+        const linkedIng = findIngredientForGoods(newItem);
+        if (linkedIng) {
+          setSelectedIngredients(prev => {
+            const already = prev.some(i => i.toLowerCase() === linkedIng.toLowerCase());
+            return already ? prev : [...prev, linkedIng];
+          });
         }
         setIsAddGfsOpen(false);
         setNewGfsForm({ name: "", unit: "ud", salePrice: "" });
@@ -219,14 +398,30 @@ export default function RelateGoodsReceiptModal({
     let parsedGfsCost = null;
 
     if (selectedGfsId) {
-      if (gfsQuantity !== "" && gfsQuantity !== null && gfsQuantity !== undefined) {
-        const parsed = parseFloat(gfsQuantity.toString().replace(',', '.'));
+      let effectiveGfsQty = gfsQuantity;
+      if ((effectiveGfsQty === "" || effectiveGfsQty === null || effectiveGfsQty === undefined) && selectedGood) {
+        const linkedIng = findIngredientForGoods(selectedGood);
+        if (linkedIng) {
+          const units = getIngredientsWithUnits([linkedIng]);
+          for (const u of units) {
+            const k = `${u.name}:${u.unit}`;
+            if (cleanedQuantities[k]) {
+              effectiveGfsQty = cleanedQuantities[k];
+              break;
+            }
+          }
+        }
+      }
+
+      if (effectiveGfsQty !== "" && effectiveGfsQty !== null && effectiveGfsQty !== undefined) {
+        const parsed = parseFloat(effectiveGfsQty.toString().replace(',', '.'));
         if (isNaN(parsed) || parsed < 0) {
           alert(t('goods_receipt_form.stock_quantity_invalid') || "La cantidad añadida al stock debe ser un número válido mayor o igual a 0.");
           return;
         }
         parsedGfsQty = parsed;
       }
+
       if (gfsCostPrice !== "" && gfsCostPrice !== null && gfsCostPrice !== undefined) {
         const parsedCost = parseFloat(gfsCostPrice.toString().replace(',', '.'));
         if (isNaN(parsedCost) || parsedCost < 0) {
@@ -234,6 +429,20 @@ export default function RelateGoodsReceiptModal({
           return;
         }
         parsedGfsCost = parsedCost;
+      }
+
+      // Ensure that if parsedGfsQty is set, the linked ingredient in cleanedQuantities has it
+      if (selectedGood && parsedGfsQty !== null) {
+        const linkedIng = findIngredientForGoods(selectedGood);
+        if (linkedIng) {
+          const units = getIngredientsWithUnits([linkedIng]);
+          units.forEach(u => {
+            const k = `${u.name}:${u.unit}`;
+            if (!cleanedQuantities[k]) {
+              cleanedQuantities[k] = parsedGfsQty.toString();
+            }
+          });
+        }
       }
     }
 
@@ -389,8 +598,8 @@ export default function RelateGoodsReceiptModal({
                   display: 'flex',
                   flexWrap: 'wrap',
                   gap: '0.5rem',
-                  maxHeight: '190px',
-                  minHeight: '110px',
+                  maxHeight: '180px',
+                  minHeight: '100px',
                   flexShrink: 0,
                   overflowY: 'auto',
                   padding: '0.75rem',
@@ -407,17 +616,12 @@ export default function RelateGoodsReceiptModal({
                 ) : (
                   filteredIngredients.map((ing, idx) => {
                     const isSelected = selectedIngredients.includes(ing);
+                    const isLinkedToGood = Boolean(findGoodsForIngredient(ing));
                     return (
                       <button
                         type="button"
                         key={idx}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedIngredients(selectedIngredients.filter(i => i !== ing));
-                          } else {
-                            setSelectedIngredients([...selectedIngredients, ing]);
-                          }
-                        }}
+                        onClick={() => handleToggleIngredient(ing)}
                         style={{
                           padding: '0.35rem 0.75rem',
                           borderRadius: '1rem',
@@ -430,54 +634,18 @@ export default function RelateGoodsReceiptModal({
                           transition: 'all 0.15s ease',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '0.3rem'
+                          gap: '0.35rem'
                         }}
+                        title={isLinkedToGood ? "Relacionado con una mercancía en venta" : undefined}
                       >
                         {isSelected && <Check size={12} />}
+                        {isLinkedToGood && <Package size={12} color={isSelected ? 'white' : 'var(--corp-green)'} />}
                         <span>{ing}</span>
                       </button>
                     );
                   })
                 )}
               </div>
-
-              {selectedIngredients.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', flexShrink: 0 }}>
-                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-                    {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
-                  </h4>
-                  <p style={{ margin: '0.35rem 0 0.75rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                    {t('goods_receipt_form.stock_control_important') || "IMPORTANTE. Si ves que sale varios campos de un mismo ingrediente es porque lo has puesto en diferentes recetas con diferentes unidades de medida y por eso aparece en varias unidades de medida."}
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
-                    {getIngredientsWithUnits(selectedIngredients).map((item, idx) => {
-                      const key = `${item.name}:${item.unit}`;
-                      const val = quantities[key] || "";
-                      return (
-                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`} style={{ margin: 0 }}>
-                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', fontWeight: '700' }}>
-                            {`Cantidad de ${item.name} (${item.unit})`}
-                          </label>
-                          <input
-                            type="number"
-                            step="any"
-                            className="input-field"
-                            value={val}
-                            onChange={(e) => {
-                              setQuantities({
-                                ...quantities,
-                                [key]: e.target.value
-                              });
-                            }}
-                            placeholder={defaultQuantity || "0"}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </>
           )}
 
@@ -527,8 +695,8 @@ export default function RelateGoodsReceiptModal({
                   display: 'flex',
                   flexWrap: 'wrap',
                   gap: '0.5rem',
-                  maxHeight: '190px',
-                  minHeight: '110px',
+                  maxHeight: '180px',
+                  minHeight: '100px',
                   flexShrink: 0,
                   overflowY: 'auto',
                   padding: '0.75rem',
@@ -576,19 +744,7 @@ export default function RelateGoodsReceiptModal({
                       <button
                         type="button"
                         key={good.id}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedGfsId(null);
-                          } else {
-                            setSelectedGfsId(good.id);
-                            if (!gfsQuantity && defaultQuantity) {
-                              setGfsQuantity(defaultQuantity);
-                            }
-                            if (!gfsCostPrice && good.costPrice != null) {
-                              setGfsCostPrice(good.costPrice.toString());
-                            }
-                          }
-                        }}
+                        onClick={() => handleToggleGoodsForSale(good)}
                         style={{
                           padding: '0.45rem 0.85rem',
                           borderRadius: '0.75rem',
@@ -623,12 +779,15 @@ export default function RelateGoodsReceiptModal({
                   })
                 )}
               </div>
+            </>
+          )}
 
-              {/* Form when a Good is Selected */}
+          {/* PERSISTENT CONFIGURATION FORM - ALWAYS VISIBLE REGARDLESS OF TAB */}
+          {(selectedGood || selectedIngredients.length > 0) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+              {/* Goods for Sale section (shows stock quantity AND cost price!) */}
               {selectedGood && (
                 <div style={{
-                  borderTop: '1px solid var(--border)',
-                  paddingTop: '1rem',
                   background: '#f8fafc',
                   border: '1px solid #e2e8f0',
                   borderRadius: '0.75rem',
@@ -636,7 +795,7 @@ export default function RelateGoodsReceiptModal({
                   flexShrink: 0
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <Package size={18} color="var(--corp-green)" />
                       <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-main)' }}>
                         {selectedGood.name}
@@ -644,14 +803,23 @@ export default function RelateGoodsReceiptModal({
                       <span style={{ background: '#ecfdf5', color: '#047857', padding: '0.15rem 0.5rem', borderRadius: '0.35rem', fontSize: '0.75rem', fontWeight: '700' }}>
                         {selectedGood.unit}
                       </span>
+                      {selectedGood.linkedIngredientName && (
+                        <span style={{
+                          background: '#eff6ff',
+                          color: '#1d4ed8',
+                          border: '1px solid #bfdbfe',
+                          padding: '0.15rem 0.5rem',
+                          borderRadius: '0.35rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
+                        }}>
+                          {t('goods_ingredient_link.badge_linked_with', { name: selectedGood.linkedIngredientName }) || (`Enlazado con: ${selectedGood.linkedIngredientName}`)}
+                        </span>
+                      )}
                     </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedGfsId(null);
-                        setGfsQuantity("");
-                        setGfsCostPrice("");
-                      }}
+                      onClick={() => handleToggleGoodsForSale(selectedGood)}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -670,7 +838,7 @@ export default function RelateGoodsReceiptModal({
                     </button>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.35rem', fontWeight: '700' }}>
                         {t('goods_receipt_form.stock_quantity_added') || "Cantidad añadida al stock"} ({selectedGood.unit}) <span style={{ color: '#ef4444' }}>*</span>
@@ -681,7 +849,7 @@ export default function RelateGoodsReceiptModal({
                         min="0"
                         className="input-field"
                         value={gfsQuantity}
-                        onChange={(e) => setGfsQuantity(e.target.value)}
+                        onChange={(e) => handleGfsQuantityChange(e.target.value)}
                         placeholder={defaultQuantity || "0"}
                         style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
                         required
@@ -721,7 +889,47 @@ export default function RelateGoodsReceiptModal({
                   </p>
                 </div>
               )}
-            </>
+
+              {/* Ingredients section */}
+              {selectedIngredients.length > 0 && (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '0.75rem',
+                  padding: '1.25rem',
+                  flexShrink: 0
+                }}>
+                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+                    {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
+                  </h4>
+                  <p style={{ margin: '0.35rem 0 0.75rem 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                    {t('goods_receipt_form.stock_control_important') || "IMPORTANTE. Si ves que sale varios campos de un mismo ingrediente es porque lo has puesto en diferentes recetas con diferentes unidades de medida y por eso aparece en varias unidades de medida."}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
+                    {getIngredientsWithUnits(selectedIngredients).map((item, idx) => {
+                      const key = `${item.name}:${item.unit}`;
+                      const val = quantities[key] !== undefined ? quantities[key] : (selectedGood && isLinked(selectedGood, item.name) ? gfsQuantity : "");
+                      return (
+                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`} style={{ margin: 0 }}>
+                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', fontWeight: '700' }}>
+                            {`Cantidad de ${item.name} (${item.unit})`}
+                          </label>
+                          <input
+                            type="number"
+                            step="any"
+                            className="input-field"
+                            value={val}
+                            onChange={(e) => handleIngredientQuantityChange(key, e.target.value, item.name)}
+                            placeholder={defaultQuantity || "0"}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
