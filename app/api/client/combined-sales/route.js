@@ -339,7 +339,7 @@ export async function POST(req) {
 
       // 2. Create GoodsSales (deduct stock only if NOT draft)
       for (const item of validatedGoodsItems) {
-        let lotAllocations = Array.isArray(item.lotAllocations) ? item.lotAllocations : [];
+        let finalLotAllocations = [];
 
         if (!isDraftSale) {
           if (Array.isArray(item.lotAllocations) && item.lotAllocations.length > 0) {
@@ -357,20 +357,20 @@ export async function POST(req) {
                     where: { id: r.id },
                     data: { goodsForSaleQuantity: newLotQty }
                   });
-                  lotAllocations.push({
+                  finalLotAllocations.push({
                     receiptId: r.id,
                     lote: alloc.lote || r.lote || null,
                     quantity: allocQty
                   });
                 } else {
-                  lotAllocations.push({
+                  finalLotAllocations.push({
                     receiptId: rId,
                     lote: alloc.lote || null,
                     quantity: allocQty
                   });
                 }
               } else {
-                lotAllocations.push({
+                finalLotAllocations.push({
                   receiptId: null,
                   lote: alloc.lote || null,
                   quantity: allocQty
@@ -379,7 +379,7 @@ export async function POST(req) {
             }
           } else if (item.lotAllocations && item.lotAllocations.length === 0) {
             // User explicitly chose "No registrar lote"
-            lotAllocations = [];
+            finalLotAllocations = [];
           } else {
             // Fallback: automatic FIFO deduction
             const receipts = await tx.goodsReceipt.findMany({
@@ -400,7 +400,7 @@ export async function POST(req) {
                 where: { id: r.id },
                 data: { goodsForSaleQuantity: newLotQty }
               });
-              lotAllocations.push({ receiptId: r.id, lote: r.lote || null, quantity: deduct });
+              finalLotAllocations.push({ receiptId: r.id, lote: r.lote || null, quantity: deduct });
               remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
             }
           }
@@ -421,18 +421,20 @@ export async function POST(req) {
                 clientProfileId_name_unit: {
                   clientProfileId: updatedGfs.clientProfileId,
                   name: updatedGfs.linkedIngredientName.trim(),
-                  unit: updatedGfs.unit.trim()
+                  unit: (updatedGfs.unit || 'kg').trim()
                 }
               },
               update: { stock: newStock },
               create: {
                 clientProfileId: updatedGfs.clientProfileId,
                 name: updatedGfs.linkedIngredientName.trim(),
-                unit: updatedGfs.unit.trim(),
+                unit: (updatedGfs.unit || 'kg').trim(),
                 stock: newStock
               }
             });
           }
+        } else {
+          finalLotAllocations = Array.isArray(item.lotAllocations) ? [...item.lotAllocations] : [];
         }
 
         await tx.combinedSaleGoodsItem.create({
@@ -441,7 +443,7 @@ export async function POST(req) {
             goodsForSaleId: item.goodsForSaleId,
             quantity: item.quantity,
             price: item.price,
-            lotAllocations: lotAllocations
+            lotAllocations: finalLotAllocations
           }
         });
       }
@@ -467,7 +469,7 @@ export async function POST(req) {
           }
         }
       });
-    });
+    }, { maxWait: 10000, timeout: 30000 });
 
     if (!isDraftSale && validatedGoodsItems.length > 0) {
       const gfsIds = [...new Set(validatedGoodsItems.map(it => it.goodsForSaleId))];
