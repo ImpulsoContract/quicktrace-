@@ -8,6 +8,7 @@ import {
   Layers, ChevronRight, Hash, Delete, ScanBarcode
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import SelectGoodsLotsModal from "@/components/SelectGoodsLotsModal";
 
 export default function PosDisplay({
   customers = [],
@@ -61,6 +62,16 @@ export default function PosDisplay({
   const [quantityUnits, setQuantityUnits] = useState(1); // Quantity multiplier from Column 3
   const [quantityString, setQuantityString] = useState("1"); // Keypad display string
   const [isQtyFresh, setIsQtyFresh] = useState(true); // Flag to overwrite "1" on initial number tap
+
+  // Lots modal for goods
+  const [goodsLotModal, setGoodsLotModal] = useState({
+    isOpen: false,
+    goods: null,
+    product: null,
+    editingItemId: null,
+    initialQuantity: null,
+    initialAllocations: null
+  });
 
   // Sync quantityUnits whenever quantityString changes
   useEffect(() => {
@@ -295,7 +306,8 @@ export default function PosDisplay({
               unit: gfs?.unit || "ud",
               unitPrice: gs.price && gs.quantity ? Math.round((gs.price / gs.quantity) * 100) / 100 : (found?.salePrice || 0),
               quantity: gs.quantity || 1,
-              price: gs.price || 0
+              price: gs.price || 0,
+              lotAllocations: Array.isArray(gs.lotAllocations) ? gs.lotAllocations : []
             };
           });
 
@@ -451,7 +463,8 @@ export default function PosDisplay({
           elaborationId: it.type === 'elaboration' ? it.elaborationId : null,
           goodsForSaleId: it.type === 'goods_for_sale' ? it.goodsForSaleId : null,
           quantity: parseFloat(it.quantity.toString().replace(',', '.')),
-          price: parseFloat(it.price.toString().replace(',', '.'))
+          price: parseFloat(it.price.toString().replace(',', '.')),
+          lotAllocations: it.lotAllocations || []
         }))
       };
 
@@ -507,7 +520,8 @@ export default function PosDisplay({
         unit: selectedProduct.unit || (parsedWeight > 0 ? 'kg' : 'ud'),
         unitPrice: selectedProduct.unitPrice,
         quantity: lineQty,
-        price: lineTotal
+        price: lineTotal,
+        lotAllocations: Array.isArray(selectedProduct.lotAllocations) ? selectedProduct.lotAllocations : []
       };
 
       const currentSellerDraft = draftsBySeller[sId] || {
@@ -555,6 +569,121 @@ export default function PosDisplay({
     else {
       setActiveSellerId(sId);
     }
+  };
+
+  // Click product in Column 2
+  const handleProductClick = (p) => {
+    if (selectedProduct?.id === p.id) {
+      setSelectedProduct(null);
+      return;
+    }
+
+    if (p.type === 'goods_for_sale') {
+      if (profile?.blockOutOfStockGoodsSales && (p.availableStock || 0) <= 0) {
+        alert(t('lots_modal.blocked_out_of_stock_alert') || "No hay stock disponible para esta mercancía y no está permitida la venta sin stock en la configuración.");
+        return;
+      }
+
+      const currentQty = effectiveQuantityToAdd > 0 ? effectiveQuantityToAdd : 1;
+      setGoodsLotModal({
+        isOpen: true,
+        goods: {
+          id: p.rawId || p.goodsForSaleId,
+          name: p.name,
+          stock: p.availableStock,
+          unit: p.unit,
+          salePrice: p.unitPrice
+        },
+        product: p,
+        editingItemId: null,
+        initialQuantity: currentQty,
+        initialAllocations: null
+      });
+      return;
+    }
+
+    // Elaborations
+    setSelectedProduct(p);
+  };
+
+  const handleConfirmGoodsLots = (allocations, totalQty) => {
+    if (goodsLotModal.editingItemId) {
+      const sId = activeSellerId?.toString();
+      const currentDraft = draftsBySeller[sId];
+      if (currentDraft) {
+        const updatedItems = currentDraft.items.map(it => {
+          if (it.id === goodsLotModal.editingItemId) {
+            const unitP = parseFloat(it.unitPrice) || 0;
+            const newTotal = Math.round(totalQty * unitP * 100) / 100;
+            return {
+              ...it,
+              lotAllocations: allocations,
+              quantity: totalQty,
+              price: newTotal
+            };
+          }
+          return it;
+        });
+        const updatedDraft = { ...currentDraft, items: updatedItems };
+        setDraftsBySeller(prev => ({ ...prev, [sId]: updatedDraft }));
+        autoSaveDraftForSeller(sId, updatedDraft);
+      }
+    } else if (goodsLotModal.product) {
+      const p = goodsLotModal.product;
+      const productWithLots = {
+        ...p,
+        lotAllocations: allocations
+      };
+      setSelectedProduct(productWithLots);
+      setQuantityUnits(totalQty);
+      setQuantityString(totalQty.toString());
+      setIsQtyFresh(true);
+      if (p.unit === 'kg') {
+        setWeightInput(totalQty.toString());
+      }
+    }
+    setGoodsLotModal({ isOpen: false, goods: null, product: null, editingItemId: null, initialQuantity: null, initialAllocations: null });
+  };
+
+  const handleSelectGoodsWithoutLot = (qty) => {
+    if (goodsLotModal.editingItemId) {
+      const sId = activeSellerId?.toString();
+      const currentDraft = draftsBySeller[sId];
+      if (currentDraft) {
+        const updatedItems = currentDraft.items.map(it => {
+          if (it.id === goodsLotModal.editingItemId) {
+            const finalQty = qty != null && qty > 0 ? qty : it.quantity;
+            const unitP = parseFloat(it.unitPrice) || 0;
+            const newTotal = Math.round(finalQty * unitP * 100) / 100;
+            return {
+              ...it,
+              lotAllocations: [],
+              quantity: finalQty,
+              price: newTotal
+            };
+          }
+          return it;
+        });
+        const updatedDraft = { ...currentDraft, items: updatedItems };
+        setDraftsBySeller(prev => ({ ...prev, [sId]: updatedDraft }));
+        autoSaveDraftForSeller(sId, updatedDraft);
+      }
+    } else if (goodsLotModal.product) {
+      const p = goodsLotModal.product;
+      const finalQty = qty != null && qty > 0 ? qty : 1;
+      const productWithLots = {
+        ...p,
+        lotAllocations: []
+      };
+      setSelectedProduct(productWithLots);
+      setQuantityUnits(finalQty);
+      setQuantityString(finalQty.toString());
+      setIsQtyFresh(true);
+      if (p.unit === 'kg') {
+        setWeightInput(finalQty.toString());
+      }
+    }
+    setGoodsLotModal({ isOpen: false, goods: null, product: null, editingItemId: null, initialQuantity: null, initialAllocations: null });
   };
 
   // Remove an item from the active seller's ticket
@@ -638,7 +767,8 @@ export default function PosDisplay({
           elaborationId: it.type === 'elaboration' ? it.elaborationId : null,
           goodsForSaleId: it.type === 'goods_for_sale' ? it.goodsForSaleId : null,
           quantity: parseFloat(it.quantity.toString().replace(',', '.')),
-          price: parseFloat(it.price.toString().replace(',', '.'))
+          price: parseFloat(it.price.toString().replace(',', '.')),
+          lotAllocations: it.lotAllocations || []
         }))
       };
 
@@ -933,6 +1063,59 @@ export default function PosDisplay({
               <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {selectedProduct.displayName}
               </div>
+              {selectedProduct.type === 'goods_for_sale' && (
+                <div style={{ fontSize: '0.68rem', color: '#38bdf8', marginTop: '0.15rem' }}>
+                  {Array.isArray(selectedProduct.lotAllocations) && selectedProduct.lotAllocations.length > 0 ? (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setGoodsLotModal({
+                          isOpen: true,
+                          goods: {
+                            id: selectedProduct.rawId || selectedProduct.goodsForSaleId,
+                            name: selectedProduct.name,
+                            stock: selectedProduct.availableStock,
+                            unit: selectedProduct.unit,
+                            salePrice: selectedProduct.unitPrice
+                          },
+                          product: selectedProduct,
+                          editingItemId: null,
+                          initialQuantity: effectiveQuantityToAdd,
+                          initialAllocations: selectedProduct.lotAllocations
+                        });
+                      }}
+                      style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                      title="Clic para cambiar lotes"
+                    >
+                      Lotes: {selectedProduct.lotAllocations.map(a => `${a.lote || 'Sin ref'} (${a.quantity})`).join(', ')}
+                    </span>
+                  ) : (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setGoodsLotModal({
+                          isOpen: true,
+                          goods: {
+                            id: selectedProduct.rawId || selectedProduct.goodsForSaleId,
+                            name: selectedProduct.name,
+                            stock: selectedProduct.availableStock,
+                            unit: selectedProduct.unit,
+                            salePrice: selectedProduct.unitPrice
+                          },
+                          product: selectedProduct,
+                          editingItemId: null,
+                          initialQuantity: effectiveQuantityToAdd,
+                          initialAllocations: []
+                        });
+                      }}
+                      style={{ cursor: 'pointer', textDecoration: 'underline', color: '#94a3b8' }}
+                      title="Clic para asignar lotes"
+                    >
+                      Sin lote asignado
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div style={{
@@ -1104,6 +1287,50 @@ export default function PosDisplay({
                     <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
                       <strong style={{ color: '#cbd5e1' }}>{item.quantity} {item.unit}</strong> × {item.unitPrice ? item.unitPrice.toFixed(2) : "0.00"} {currencySymbol}
                     </div>
+                    {item.type === 'goods_for_sale' && (
+                      <div style={{ marginTop: '0.2rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGoodsLotModal({
+                              isOpen: true,
+                              goods: {
+                                id: item.goodsForSaleId,
+                                name: item.name,
+                                unit: item.unit,
+                                salePrice: item.unitPrice
+                              },
+                              product: null,
+                              editingItemId: item.id,
+                              initialQuantity: item.quantity,
+                              initialAllocations: item.lotAllocations || []
+                            });
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            color: '#38bdf8',
+                            fontSize: '0.67rem',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                            textAlign: 'left',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                          title="Clic para cambiar asignación de lotes"
+                        >
+                          <Layers size={10} />
+                          {Array.isArray(item.lotAllocations) && item.lotAllocations.length > 0 ? (
+                            <span>Lotes: {item.lotAllocations.map(a => `${a.lote || 'Sin ref'} (${a.quantity})`).join(', ')}</span>
+                          ) : (
+                            <span style={{ color: '#94a3b8' }}>Sin lote asignado</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
@@ -1332,13 +1559,7 @@ export default function PosDisplay({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => {
-                      if (isSelected) {
-                        setSelectedProduct(null);
-                      } else {
-                        setSelectedProduct(p);
-                      }
-                    }}
+                    onClick={() => handleProductClick(p)}
                     style={{
                       background: isSelected ? 'rgba(21, 128, 61, 0.35)' : '#1e293b',
                       border: isSelected ? '2px solid #22c55e' : '1px solid #334155',
@@ -1348,7 +1569,8 @@ export default function PosDisplay({
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       textAlign: 'left',
-                      cursor: 'pointer',
+                      cursor: (p.type === 'goods_for_sale' && profile?.blockOutOfStockGoodsSales && (p.availableStock || 0) <= 0) ? 'not-allowed' : 'pointer',
+                      opacity: (p.type === 'goods_for_sale' && profile?.blockOutOfStockGoodsSales && (p.availableStock || 0) <= 0) ? 0.5 : 1,
                       height: '92px',
                       transition: 'all 0.12s ease',
                       boxShadow: isSelected ? '0 0 12px rgba(34, 197, 94, 0.35)' : 'none',
@@ -2235,6 +2457,18 @@ export default function PosDisplay({
           </div>
         </div>
       )}
+
+      {/* GOODS LOT SELECTION MODAL */}
+      <SelectGoodsLotsModal
+        isOpen={goodsLotModal.isOpen}
+        goods={goodsLotModal.goods}
+        initialQuantity={goodsLotModal.initialQuantity}
+        initialAllocations={goodsLotModal.initialAllocations}
+        currency={profile?.currency || "EUR"}
+        onConfirm={handleConfirmGoodsLots}
+        onSelectWithoutLot={handleSelectGoodsWithoutLot}
+        onClose={() => setGoodsLotModal({ isOpen: false, goods: null, product: null, editingItemId: null, initialQuantity: null, initialAllocations: null })}
+      />
 
     </div>
   );

@@ -257,8 +257,8 @@
     "cutting_traceability_section": "Trazabilidad del despiece",
     "cutting_traceability_desc": "Activa o desactiva la trazabilidad del despiece. Al activarla, tendrás disponible un apartado específico en el menú principal para registrar y consultar piezas, lotes, fechas de venta y fotos de etiquetas.",
     "cutting_traceability_enable": "Activar trazabilidad del despiece",
-    "block_out_of_stock_lots_section": "Permitir usar lotes sin stock en las elaboraciones",
-    "block_out_of_stock_lots_desc": "Configura si se permite utilizar lotes de ingredientes que ya no disponen de existencias al registrar elaboraciones.",
+    "block_out_of_stock_lots_section": "Permitir usar y vender mercancías sin stock disponible",
+    "block_out_of_stock_lots_desc": "Configura si se permite utilizar ingredientes agotados en elaboraciones y vender mercancías sin existencias.",
     "block_out_of_stock_lots_enable": "No permitir utilizar lotes de ingredientes sin stock (agotados)",
     "block_out_of_stock_lots_help": "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones.",
     "additional_sections_title": "Activa secciones adicionales",
@@ -319,7 +319,13 @@
     "badge_active": "Activo",
     "badge_inactive": "Inactivo",
     "badge_disconnected": "Sin conectar",
-    "btn_configure": "Configurar"
+    "btn_configure": "Configurar",
+    "block_out_of_stock_goods_enable": "No permitir vender mercancías para las que no haya stock",
+    "block_out_of_stock_goods_help": "Si marcas esta opción, no se permitirá vender mercancías en venta que no tengan stock disponible. Si la dejas desmarcada (por defecto), se permitirá vender cualquier mercancía y su stock nunca será negativo, quedándose en 0 si no hay existencias.",
+    "badge_allowed_all": "Sin restricciones",
+    "badge_blocked_all": "Restricción total",
+    "badge_blocked_ingredients": "Bloqueo ingredientes",
+    "badge_blocked_goods": "Bloqueo venta merc."
   },
   "dashboard": {
     "welcome": "Hola",
@@ -2110,5 +2116,31 @@
     "unassign_drop_zone": "Arrastra aquí para quitar de cualquier familia",
     "empty_families_title": "No tienes familias creadas",
     "empty_families_desc": "Crea tu primera familia de productos para organizar el catálogo de tu TPV."
+  },
+  "lots_modal": {
+    "title": "Seleccionar lote(s) de venta",
+    "subtitle": "Selecciona el lote o distribuye la cantidad a vender entre varios lotes",
+    "no_lot_option": "No registrar lote",
+    "confirm_btn": "Aceptar",
+    "cancel_btn": "Cancelar",
+    "load_more": "Cargar más lotes (+10)",
+    "show_out_of_stock": "Ver lotes sin stock",
+    "show_in_stock_only": "Ver solo lotes con stock",
+    "no_stock_showing_past": "No hay ningún lote con stock disponible. Mostrando los lotes más recientes sin stock:",
+    "no_lots_found": "No hay entradas de mercancía registradas para este producto.",
+    "available_stock": "Stock disponible",
+    "out_of_stock": "Agotado",
+    "qty_to_sell_lot": "Cantidad de este lote:",
+    "assign_all": "Asignar todo",
+    "total_allocated": "Total asignado:",
+    "total_price": "Importe total:",
+    "unit_price": "Precio unitario:",
+    "target_complete": "Cantidad completa",
+    "target_missing": "Faltan {qty} por asignar",
+    "receipt_date": "Fecha entrada:",
+    "provider": "Proveedor:",
+    "without_lot_badge": "Sin lote asignado",
+    "alert_select_lot": "Por favor selecciona al menos un lote con cantidad o utiliza la opción 'No registrar lote'.",
+    "blocked_out_of_stock_alert": "No hay stock disponible para esta mercancía y no está permitida la venta sin stock en la configuración."
   }
 }

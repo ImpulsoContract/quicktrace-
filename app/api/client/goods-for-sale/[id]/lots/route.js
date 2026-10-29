@@ -13,7 +13,7 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    if (session.user.role === "WORKER" && !session.user.permissions?.hasGoods) {
+    if (session.user.role === "WORKER" && session.user.permissions && !session.user.permissions.hasGoods && !session.user.permissions.hasSales && !session.user.permissions.hasPos) {
       return NextResponse.json({ error: "No tienes permiso para acceder a mercancías" }, { status: 403 });
     }
 
@@ -65,7 +65,10 @@ export async function GET(req, { params }) {
         goodsForSaleQuantity: true,
         goodsForSaleCostPrice: true
       },
-      orderBy: { date: "desc" }
+      orderBy: [
+        { date: "desc" },
+        { id: "desc" }
+      ]
     });
 
     return NextResponse.json({
@@ -210,7 +213,10 @@ export async function PUT(req, { params }) {
           clientProfileId: goodsForSale.clientProfileId,
           goodsForSaleCostPrice: { not: null }
         },
-        orderBy: { date: "desc" }
+        orderBy: [
+        { date: "desc" },
+        { id: "desc" }
+      ]
       });
       goodsForSaleUpdates.costPrice = latestReceiptWithCost ? latestReceiptWithCost.goodsForSaleCostPrice : null;
     }

@@ -2553,7 +2553,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.invoicingProvider !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.blockOutOfStockGoodsSales !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.invoicingProvider !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -13345,6 +13345,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [hasOilCollection, setHasOilCollection] = useState(profile?.hasOilCollection || false);
   const [hasVegetableDisinfection, setHasVegetableDisinfection] = useState(profile?.hasVegetableDisinfection || false);
   const [blockOutOfStockLots, setBlockOutOfStockLots] = useState(profile?.blockOutOfStockLots || false);
+  const [blockOutOfStockGoodsSales, setBlockOutOfStockGoodsSales] = useState(profile?.blockOutOfStockGoodsSales || false);
   const [goodsLowStockAlertEnabled, setGoodsLowStockAlertEnabled] = useState(profile?.goodsLowStockAlertEnabled || false);
   const [goodsLowStockThreshold, setGoodsLowStockThreshold] = useState(profile?.goodsLowStockThreshold ?? 2);
   const [goodsLowStockInApp, setGoodsLowStockInApp] = useState(profile?.goodsLowStockInApp ?? true);
@@ -13393,6 +13394,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setHasOilCollection(profile.hasOilCollection || false);
       setHasVegetableDisinfection(profile.hasVegetableDisinfection || false);
       setBlockOutOfStockLots(profile.blockOutOfStockLots || false);
+      setBlockOutOfStockGoodsSales(profile.blockOutOfStockGoodsSales || false);
       setGoodsLowStockAlertEnabled(profile.goodsLowStockAlertEnabled || false);
       setGoodsLowStockThreshold(profile.goodsLowStockThreshold ?? 2);
       setGoodsLowStockInApp(profile.goodsLowStockInApp ?? true);
@@ -13578,6 +13580,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       hasOilCollection,
       hasVegetableDisinfection,
       blockOutOfStockLots,
+      blockOutOfStockGoodsSales,
       goodsLowStockAlertEnabled,
       goodsLowStockThreshold: parseFloat(goodsLowStockThreshold) >= 0 ? parseFloat(goodsLowStockThreshold) : 2,
       goodsLowStockInApp,
@@ -13724,15 +13727,19 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     },
     {
       id: "out_of_stock_lots",
-      title: t('business_config.block_out_of_stock_lots_section') || "Lotes sin stock en elaboraciones",
-      description: t('business_config.block_out_of_stock_lots_desc') || "Configura si se permite o bloquea el uso de lotes de ingredientes agotados.",
+      title: t('business_config.block_out_of_stock_lots_section') || "Permitir usar y vender mercancías sin stock disponible",
+      description: t('business_config.block_out_of_stock_lots_desc') || "Configura si se permite utilizar ingredientes agotados y vender mercancías sin existencias.",
       icon: <Ban size={24} />,
       badge: {
-        text: blockOutOfStockLots 
-          ? (t('business_config.badge_blocked') || "Bloqueados") 
-          : (t('business_config.badge_allowed') || "Permitidos"),
-        bg: blockOutOfStockLots ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-        color: blockOutOfStockLots ? '#dc2626' : '#16a34a'
+        text: (blockOutOfStockLots && blockOutOfStockGoodsSales)
+          ? (t('business_config.badge_blocked_all') || "Restricción total")
+          : blockOutOfStockGoodsSales
+            ? (t('business_config.badge_blocked_goods') || "Bloqueo merc.")
+            : blockOutOfStockLots
+              ? (t('business_config.badge_blocked_ingredients') || "Bloqueo ingr.")
+              : (t('business_config.badge_allowed_all') || "Sin restricciones"),
+        bg: (blockOutOfStockLots || blockOutOfStockGoodsSales) ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+        color: (blockOutOfStockLots || blockOutOfStockGoodsSales) ? '#dc2626' : '#16a34a'
       }
     },
     {
@@ -14290,28 +14297,52 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       return (
         <div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-            {t('business_config.block_out_of_stock_lots_desc') || "Configura si se permite utilizar lotes de ingredientes que ya no disponen de existencias al registrar elaboraciones."}
+            {t('business_config.block_out_of_stock_lots_desc') || "Configura si se permite utilizar ingredientes agotados en elaboraciones y vender mercancías sin existencias."}
           </p>
 
-          <label className="switch-container" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', cursor: 'pointer', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-            <div style={{ position: 'relative', width: '48px', height: '24px', minWidth: '48px', background: blockOutOfStockLots ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s', marginTop: '2px' }}>
-              <div style={{ position: 'absolute', left: blockOutOfStockLots ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
-            </div>
-            <input 
-              type="checkbox" 
-              style={{ display: 'none' }}
-              checked={blockOutOfStockLots} 
-              onChange={(e) => setBlockOutOfStockLots(e.target.checked)} 
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              <span style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                {t('business_config.block_out_of_stock_lots_enable') || "No permitir utilizar lotes de ingredientes sin stock (agotados)"}
-              </span>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                {t('business_config.block_out_of_stock_lots_help') || "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones."}
-              </span>
-            </div>
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Option 1: Block out of stock lots for elaborations */}
+            <label className="switch-container" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', cursor: 'pointer', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ position: 'relative', width: '48px', height: '24px', minWidth: '48px', background: blockOutOfStockLots ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s', marginTop: '2px' }}>
+                <div style={{ position: 'absolute', left: blockOutOfStockLots ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+              </div>
+              <input 
+                type="checkbox" 
+                style={{ display: 'none' }}
+                checked={blockOutOfStockLots} 
+                onChange={(e) => setBlockOutOfStockLots(e.target.checked)} 
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                  {t('business_config.block_out_of_stock_lots_enable') || "No permitir utilizar lotes de ingredientes sin stock (agotados)"}
+                </span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  {t('business_config.block_out_of_stock_lots_help') || "Por defecto esta casilla está desmarcada, permitiendo seleccionar cualquier lote. Si la marcas, el sistema impedirá seleccionar o utilizar lotes de ingredientes cuyo stock esté agotado (0) al registrar elaboraciones."}
+                </span>
+              </div>
+            </label>
+
+            {/* Option 2: Block selling goods without stock */}
+            <label className="switch-container" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', cursor: 'pointer', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ position: 'relative', width: '48px', height: '24px', minWidth: '48px', background: blockOutOfStockGoodsSales ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s', marginTop: '2px' }}>
+                <div style={{ position: 'absolute', left: blockOutOfStockGoodsSales ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+              </div>
+              <input 
+                type="checkbox" 
+                style={{ display: 'none' }}
+                checked={blockOutOfStockGoodsSales} 
+                onChange={(e) => setBlockOutOfStockGoodsSales(e.target.checked)} 
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                  {t('business_config.block_out_of_stock_goods_enable') || "No permitir vender mercancías para las que no haya stock"}
+                </span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  {t('business_config.block_out_of_stock_goods_help') || "Si marcas esta opción, no se permitirá vender mercancías en venta que no tengan stock disponible. Si la dejas desmarcada (por defecto), se permitirá vender cualquier mercancía y su stock nunca será negativo, quedándose en 0 si no hay existencias."}
+                </span>
+              </div>
+            </label>
+          </div>
 
           <div style={{ marginTop: '2rem', textAlign: 'center' }}>
             <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>

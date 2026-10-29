@@ -257,8 +257,8 @@
     "cutting_traceability_section": "Rastreabilidade de desmanche",
     "cutting_traceability_desc": "Ative ou desative a rastreabilidade de desmanche. Ao ativá-la, você terá uma seção dedicada no menu principal para registrar e consultar peças, números de lote, datas de venda e fotos de etiquetas.",
     "cutting_traceability_enable": "Ativar rastreabilidade de desmanche",
-    "block_out_of_stock_lots_section": "Permitir usar lotes sem estoque nas elaborações",
-    "block_out_of_stock_lots_desc": "Configure se é permitido utilizar lotes de ingredientes esgotados ao registrar elaborações.",
+    "block_out_of_stock_lots_section": "Permitir usar e vender mercadorias sem stock disponível",
+    "block_out_of_stock_lots_desc": "Configure se é permitido utilizar ingredientes esgotados e vender mercadorias sem stock disponível.",
     "block_out_of_stock_lots_enable": "Não permitir o uso de lotes de ingredientes sem estoque (esgotados)",
     "block_out_of_stock_lots_help": "Por padrão esta caixa está desmarcada, permitindo selecionar qualquer lote. Se marcada, o sistema impedirá de selecionar ou usar lotes de ingredientes cujo estoque restante seja 0 nas elaborações.",
     "additional_sections_title": "Ativar secções adicionais",
@@ -319,7 +319,13 @@
     "badge_active": "Ativo",
     "badge_inactive": "Inativo",
     "badge_disconnected": "Não conectado",
-    "btn_configure": "Configurar"
+    "btn_configure": "Configurar",
+    "block_out_of_stock_goods_enable": "Não permitir vender mercadorias para as quais não haja stock",
+    "block_out_of_stock_goods_help": "Se marcar esta opção, não será permitido vender mercadorias que não tenham stock disponível. Se desmarcada (predefinição), será permitido vender qualquer mercadoria e o stock nunca será negativo, ficando em 0.",
+    "badge_allowed_all": "Sem restrições",
+    "badge_blocked_all": "Restrição total",
+    "badge_blocked_ingredients": "Ingredientes bloqueados",
+    "badge_blocked_goods": "Venda mercadorias bloqueada"
   },
   "dashboard": {
     "welcome": "Olá",
@@ -2104,5 +2110,31 @@
     "unassign_drop_zone": "Arraste para aqui para remover de qualquer família",
     "empty_families_title": "Nenhuma família criada",
     "empty_families_desc": "Crie a sua primeira família de produtos para organizar o catálogo do seu POS."
+  },
+  "lots_modal": {
+    "title": "Selecionar lote(s) de venda",
+    "subtitle": "Selecione o lote ou distribua a quantidade a vender por vários lotes",
+    "no_lot_option": "Não registar lote",
+    "confirm_btn": "Confirmar",
+    "cancel_btn": "Cancelar",
+    "load_more": "Carregar mais lotes (+10)",
+    "show_out_of_stock": "Ver lotes sem stock",
+    "show_in_stock_only": "Ver apenas lotes com stock",
+    "no_stock_showing_past": "Nenhum lote com stock disponível. A mostrar os lotes mais recentes sem stock:",
+    "no_lots_found": "Nenhuma entrada registada para este produto.",
+    "available_stock": "Stock disponível",
+    "out_of_stock": "Esgotado",
+    "qty_to_sell_lot": "Quantidade deste lote:",
+    "assign_all": "Atribuir tudo",
+    "total_allocated": "Total atribuído:",
+    "total_price": "Valor total:",
+    "unit_price": "Preço unitário:",
+    "target_complete": "Quantidade completa",
+    "target_missing": "Faltam {qty} por atribuir",
+    "receipt_date": "Data de entrada:",
+    "provider": "Fornecedor:",
+    "without_lot_badge": "Sem lote atribuído",
+    "alert_select_lot": "Por favor selecione pelo menos um lote com quantidade ou utilize a opção 'Não registrar lote'.",
+    "blocked_out_of_stock_alert": "Não há estoque disponível para esta mercadoria e a venda sem estoque está bloqueada nas configurações."
   }
 }

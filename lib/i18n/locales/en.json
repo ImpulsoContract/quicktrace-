@@ -257,8 +257,8 @@
     "cutting_traceability_section": "Cutting traceability",
     "cutting_traceability_desc": "Enable or disable cutting traceability. When enabled, a dedicated section will be available in the main menu to log and view pieces, lot numbers, sale dates, and label photos.",
     "cutting_traceability_enable": "Enable cutting traceability",
-    "block_out_of_stock_lots_section": "Allow using out-of-stock lots in elaborations",
-    "block_out_of_stock_lots_desc": "Configure whether out-of-stock ingredient lots can be used when registering elaborations.",
+    "block_out_of_stock_lots_section": "Allow using and selling goods without available stock",
+    "block_out_of_stock_lots_desc": "Configure whether to allow using exhausted ingredients and selling goods without available stock.",
     "block_out_of_stock_lots_enable": "Do not allow using out-of-stock ingredient lots (depleted)",
     "block_out_of_stock_lots_help": "By default this checkbox is unchecked, allowing any lot to be selected. If checked, the system will prevent selecting or using ingredient lots with 0 remaining stock in elaborations.",
     "additional_sections_title": "Activate additional sections",
@@ -319,7 +319,13 @@
     "badge_active": "Active",
     "badge_inactive": "Inactive",
     "badge_disconnected": "Not connected",
-    "btn_configure": "Configure"
+    "btn_configure": "Configure",
+    "block_out_of_stock_goods_enable": "Do not allow selling goods with no available stock",
+    "block_out_of_stock_goods_help": "If checked, selling goods without available stock will be prohibited. If unchecked (default), selling any goods is allowed and stock will never be negative, staying at 0 if exhausted.",
+    "badge_allowed_all": "No restrictions",
+    "badge_blocked_all": "Full restriction",
+    "badge_blocked_ingredients": "Ingredients restricted",
+    "badge_blocked_goods": "Goods sales restricted"
   },
   "dashboard": {
     "welcome": "Hello",
@@ -2110,5 +2116,31 @@
     "unassign_drop_zone": "Drag here to remove from any family",
     "empty_families_title": "No families created yet",
     "empty_families_desc": "Create your first product family to organize your POS catalog."
+  },
+  "lots_modal": {
+    "title": "Select sale lot(s)",
+    "subtitle": "Select the lot or distribute the quantity to sell across multiple lots",
+    "no_lot_option": "Do not register lot",
+    "confirm_btn": "Confirm",
+    "cancel_btn": "Cancel",
+    "load_more": "Load more lots (+10)",
+    "show_out_of_stock": "View out-of-stock lots",
+    "show_in_stock_only": "View only in-stock lots",
+    "no_stock_showing_past": "No lots with available stock. Showing most recent out-of-stock lots:",
+    "no_lots_found": "No goods receipts found for this product.",
+    "available_stock": "Available stock",
+    "out_of_stock": "Exhausted",
+    "qty_to_sell_lot": "Quantity from this lot:",
+    "assign_all": "Assign all",
+    "total_allocated": "Total allocated:",
+    "total_price": "Total amount:",
+    "unit_price": "Unit price:",
+    "target_complete": "Quantity complete",
+    "target_missing": "{qty} remaining to allocate",
+    "receipt_date": "Receipt date:",
+    "provider": "Provider:",
+    "without_lot_badge": "No lot assigned",
+    "alert_select_lot": "Please select at least one lot with quantity or use the 'Do not register lot' option.",
+    "blocked_out_of_stock_alert": "There is no stock available for this merchandise and selling without stock is blocked in business settings."
   }
 }

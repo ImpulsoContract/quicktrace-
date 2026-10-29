@@ -120,6 +120,7 @@ model ClientProfile {
   hasOilCollection           Boolean           @default(false)
   hasVegetableDisinfection   Boolean           @default(false)
   blockOutOfStockLots        Boolean           @default(false)
+  blockOutOfStockGoodsSales  Boolean           @default(false)
   cuttingRecords             CuttingRecord[]
   oilCollections             OilCollection[]
   vegetableDisinfections     VegetableDisinfection[]

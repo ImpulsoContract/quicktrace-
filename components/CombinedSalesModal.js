@@ -7,6 +7,7 @@ import {
 import { useI18n } from "@/lib/i18n/I18nContext";
 import ManageSellersModal from "@/components/ManageSellersModal";
 import DeliveryNoteModal from "@/components/DeliveryNoteModal";
+import SelectGoodsLotsModal from "@/components/SelectGoodsLotsModal";
 import { generateDeliveryNotePDF } from "@/lib/deliveryNoteGenerator";
 
 export default function CombinedSalesModal({
@@ -46,6 +47,15 @@ export default function CombinedSalesModal({
   const [saleItems, setSaleItems] = useState([]); 
   const [activeSearchIdx, setActiveSearchIdx] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Goods lot selection modal state
+  const [goodsLotModal, setGoodsLotModal] = useState({
+    isOpen: false,
+    rowIndex: null,
+    goods: null,
+    initialQuantity: null,
+    initialAllocations: null
+  });
 
   // Holded Contact prompt state
   const [contactConfirm, setContactConfirm] = useState({
@@ -198,7 +208,8 @@ export default function CombinedSalesModal({
         unitPrice: uPrice,
         quantity: gs.quantity != null ? gs.quantity.toString() : "",
         price: gs.price != null ? gs.price.toString() : "",
-        searchQuery: ''
+        searchQuery: '',
+        lotAllocations: Array.isArray(gs.lotAllocations) ? gs.lotAllocations : []
       };
     });
 
@@ -274,7 +285,8 @@ export default function CombinedSalesModal({
           unitPrice: 0,
           quantity: '',
           price: '',
-          searchQuery: ''
+          searchQuery: '',
+          lotAllocations: []
         }
       ];
       setActiveSearchIdx(newItems.length - 1);
@@ -308,6 +320,7 @@ export default function CombinedSalesModal({
 
   // Select a goods for sale for a row
   const handleSelectGoods = (index, gfs) => {
+    const existingQty = saleItems[index]?.quantity ? parseFloat(saleItems[index].quantity.toString().replace(',', '.')) : null;
     setSaleItems(prev => {
       const updated = [...prev];
       const item = { ...updated[index] };
@@ -318,6 +331,7 @@ export default function CombinedSalesModal({
       item.unit = gfs.unit || "unidades";
       item.unitPrice = gfs.salePrice || 0;
       item.searchQuery = '';
+      item.lotAllocations = [];
       if (item.quantity) {
         const qtyNum = parseFloat(item.quantity.toString().replace(',', '.'));
         if (!isNaN(qtyNum) && qtyNum > 0 && item.unitPrice > 0) {
@@ -328,6 +342,70 @@ export default function CombinedSalesModal({
       return updated;
     });
     setActiveSearchIdx(null);
+
+    // Open lot selection modal automatically
+    setGoodsLotModal({
+      isOpen: true,
+      rowIndex: index,
+      goods: gfs,
+      initialQuantity: existingQty,
+      initialAllocations: null
+    });
+  };
+
+  const handleOpenLotModal = (index) => {
+    const item = saleItems[index];
+    if (!item || item.type !== 'goods_for_sale' || !item.goodsForSaleId) return;
+    const gfs = (availableGoods || []).find(g => g.id === item.goodsForSaleId) || {
+      id: item.goodsForSaleId,
+      name: item.name,
+      stock: item.availableStock,
+      unit: item.unit,
+      salePrice: item.unitPrice
+    };
+    setGoodsLotModal({
+      isOpen: true,
+      rowIndex: index,
+      goods: gfs,
+      initialQuantity: item.quantity ? parseFloat(item.quantity.toString().replace(',', '.')) : null,
+      initialAllocations: item.lotAllocations || []
+    });
+  };
+
+  const handleConfirmGoodsLots = (allocations, totalQty) => {
+    const idx = goodsLotModal.rowIndex;
+    if (idx != null && saleItems[idx]) {
+      setSaleItems(prev => {
+        const updated = [...prev];
+        const item = { ...updated[idx] };
+        item.lotAllocations = allocations;
+        item.quantity = totalQty.toString();
+        const unitP = parseFloat(item.unitPrice) || 0;
+        item.price = (Math.round(totalQty * unitP * 100) / 100).toFixed(2);
+        updated[idx] = item;
+        return updated;
+      });
+    }
+    setGoodsLotModal({ isOpen: false, rowIndex: null, goods: null, initialQuantity: null, initialAllocations: null });
+  };
+
+  const handleSelectGoodsWithoutLot = (qty) => {
+    const idx = goodsLotModal.rowIndex;
+    if (idx != null && saleItems[idx]) {
+      setSaleItems(prev => {
+        const updated = [...prev];
+        const item = { ...updated[idx] };
+        item.lotAllocations = [];
+        if (qty != null && qty > 0) {
+          item.quantity = qty.toString();
+          const unitP = parseFloat(item.unitPrice) || 0;
+          item.price = (Math.round(qty * unitP * 100) / 100).toFixed(2);
+        }
+        updated[idx] = item;
+        return updated;
+      });
+    }
+    setGoodsLotModal({ isOpen: false, rowIndex: null, goods: null, initialQuantity: null, initialAllocations: null });
   };
 
   // Update item field (quantity or price or searchQuery)
@@ -377,12 +455,14 @@ export default function CombinedSalesModal({
       const qty = parseFloat(item.quantity?.toString().replace(',', '.'));
       if (item.quantity !== "" && (isNaN(qty) || qty <= 0)) {
         errors[idx] = t('elaboration_sales.quantity_invalid') || "La cantidad debe ser mayor que 0.";
-      } else if (qty > item.availableStock + 0.0001) {
+      } else if (item.type === 'elaboration' && qty > item.availableStock + 0.0001) {
         errors[idx] = `La cantidad supera el stock disponible (${item.availableStock} ${item.unit}).`;
+      } else if (item.type === 'goods_for_sale' && profile?.blockOutOfStockGoodsSales && qty > item.availableStock + 0.0001) {
+        errors[idx] = `No hay suficiente stock disponible (${item.availableStock} ${item.unit}). Venta sin stock bloqueada por configuración.`;
       }
     });
     return errors;
-  }, [saleItems, t]);
+  }, [saleItems, profile?.blockOutOfStockGoodsSales, t]);
 
   const isDraftValid = useMemo(() => {
     if (saleItems.length === 0) return false;
@@ -430,7 +510,8 @@ export default function CombinedSalesModal({
           elaborationId: it.type === 'elaboration' ? it.elaborationId : null,
           goodsForSaleId: it.type === 'goods_for_sale' ? it.goodsForSaleId : null,
           quantity: parseFloat(it.quantity.toString().replace(',', '.')),
-          price: parseFloat(it.price.toString().replace(',', '.'))
+          price: parseFloat(it.price.toString().replace(',', '.')),
+          lotAllocations: it.lotAllocations || []
         }))
       };
 
@@ -504,7 +585,8 @@ export default function CombinedSalesModal({
             type: 'goods_for_sale',
             goodsForSaleId: gs.goodsForSaleId,
             quantity: gs.quantity,
-            price: gs.price
+            price: gs.price,
+            lotAllocations: gs.lotAllocations || []
           }))
         ]
       };
@@ -1253,9 +1335,16 @@ export default function CombinedSalesModal({
                                         {t('combined_sales.badge_goods') || "Mercancía"}
                                       </span>
                                       {gs.goodsForSale?.name || "Mercancía en venta"}
+                                      {Array.isArray(gs.lotAllocations) && gs.lotAllocations.length > 0 && (
+                                        <div style={{ fontSize: '0.72rem', color: '#0369a1', marginTop: '0.15rem' }}>
+                                          Lotes: {gs.lotAllocations.map(a => `${a.lote || 'Sin ref'} (${a.quantity} ${gs.goodsForSale?.unit || 'ud'})`).join(', ')}
+                                        </div>
+                                      )}
                                     </td>
                                     <td style={{ padding: '0.6rem 0.85rem', color: 'var(--text-muted)' }}>
-                                      -
+                                      {Array.isArray(gs.lotAllocations) && gs.lotAllocations.length > 0
+                                        ? gs.lotAllocations.map(a => a.lote || 'Sin ref').join(', ')
+                                        : '-'}
                                     </td>
                                     <td style={{ padding: '0.6rem 0.85rem', textAlign: 'right', fontWeight: '700', color: '#0284c7' }}>
                                       {gs.quantity} {gs.goodsForSale?.unit || 'ud'}
@@ -1617,6 +1706,37 @@ export default function CombinedSalesModal({
                                         <span>Sin PVP unitario</span>
                                       )}
                                     </div>
+
+                                    {isGoods && (
+                                      <div style={{ marginTop: '0.35rem' }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleOpenLotModal(idx)}
+                                          style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.35rem',
+                                            padding: '0.2rem 0.55rem',
+                                            borderRadius: '0.4rem',
+                                            fontSize: '0.73rem',
+                                            fontWeight: '700',
+                                            cursor: 'pointer',
+                                            background: (item.lotAllocations && item.lotAllocations.length > 0) ? '#ecfdf5' : '#f1f5f9',
+                                            color: (item.lotAllocations && item.lotAllocations.length > 0) ? '#065f46' : '#475569',
+                                            border: (item.lotAllocations && item.lotAllocations.length > 0) ? '1px solid #a7f3d0' : '1px solid #cbd5e1'
+                                          }}
+                                        >
+                                          <Layers size={13} />
+                                          {item.lotAllocations && item.lotAllocations.length > 0 ? (
+                                            <span>
+                                              Lotes: {item.lotAllocations.map(a => `${a.lote || 'Sin ref'} (${a.quantity} ${item.unit})`).join(', ')}
+                                            </span>
+                                          ) : (
+                                            <span>Sin lote asignado (clic para asignar)</span>
+                                          )}
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
 
                                   <button
@@ -1670,7 +1790,7 @@ export default function CombinedSalesModal({
                                   type="number"
                                   step="any"
                                   min="0.001"
-                                  max={isSelected ? item.availableStock : undefined}
+                                  max={isSelected && (item.type === 'elaboration' || profile?.blockOutOfStockGoodsSales) ? item.availableStock : undefined}
                                   disabled={!isSelected}
                                   className="input-field"
                                   value={item.quantity}
@@ -1912,6 +2032,17 @@ export default function CombinedSalesModal({
           onConfirm={handleConfirmDeliveryNote}
           saleSummary={deliveryNoteSale ? `${deliveryNoteSale.customer?.commercialName || t('delivery_note.direct_sale') || 'Venta directa'} • #${deliveryNoteSale.id} • ${new Date(deliveryNoteSale.date).toLocaleDateString()}` : null}
           isGenerating={generatingDeliveryNote}
+        />
+
+        <SelectGoodsLotsModal
+          isOpen={goodsLotModal.isOpen}
+          goods={goodsLotModal.goods}
+          initialQuantity={goodsLotModal.initialQuantity}
+          initialAllocations={goodsLotModal.initialAllocations}
+          currency={profile?.currency || "EUR"}
+          onConfirm={handleConfirmGoodsLots}
+          onSelectWithoutLot={handleSelectGoodsWithoutLot}
+          onClose={() => setGoodsLotModal({ isOpen: false, rowIndex: null, goods: null, initialQuantity: null, initialAllocations: null })}
         />
       </div>
     );

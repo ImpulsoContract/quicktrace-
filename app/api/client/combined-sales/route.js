@@ -237,6 +237,11 @@ export async function POST(req) {
         return NextResponse.json({ error: "Una o más mercancías en venta no fueron encontradas." }, { status: 400 });
       }
 
+      const clientProfile = await prisma.clientProfile.findUnique({
+        where: { id: profileId },
+        select: { blockOutOfStockGoodsSales: true }
+      });
+
       const gfsMap = new Map();
       goodsList.forEach(g => gfsMap.set(g.id, g));
 
@@ -264,9 +269,9 @@ export async function POST(req) {
         const availableStock = gfs.stock || 0;
         const totalQtyForGoods = totalRequestedGoods.get(gfsId) || 0;
 
-        if (!isDraftSale && totalQtyForGoods > availableStock + 0.0001) {
+        if (!isDraftSale && clientProfile?.blockOutOfStockGoodsSales && totalQtyForGoods > availableStock + 0.0001) {
           return NextResponse.json({
-            error: `Stock insuficiente para "${gfs.name}". Intentas vender ${totalQtyForGoods} ${gfs.unit}, pero solo hay ${availableStock} ${gfs.unit} disponibles.`
+            error: `Stock insuficiente para "${gfs.name}". No está permitido vender mercancías sin stock disponible.`
           }, { status: 400 });
         }
 
@@ -275,7 +280,8 @@ export async function POST(req) {
         validatedGoodsItems.push({
           goodsForSaleId: gfsId,
           quantity: Math.round(qty * 1000) / 1000,
-          price: Math.round(price * 100) / 100
+          price: Math.round(price * 100) / 100,
+          lotAllocations: Array.isArray(item.lotAllocations) ? item.lotAllocations : null
         });
       }
     }
@@ -331,36 +337,75 @@ export async function POST(req) {
         });
       }
 
-      // 2. Create GoodsSales (deduct stock FIFO only if NOT draft)
+      // 2. Create GoodsSales (deduct stock only if NOT draft)
       for (const item of validatedGoodsItems) {
-        let lotAllocations = null;
+        let lotAllocations = Array.isArray(item.lotAllocations) ? item.lotAllocations : [];
 
         if (!isDraftSale) {
-          const receipts = await tx.goodsReceipt.findMany({
-            where: {
-              goodsForSaleId: item.goodsForSaleId,
-              goodsForSaleQuantity: { gt: 0 }
-            },
-            orderBy: { date: 'asc' }
-          });
-
-          let remainingToDeduct = item.quantity;
-          lotAllocations = [];
-
-          for (const r of receipts) {
-            if (remainingToDeduct <= 0) break;
-            const avail = r.goodsForSaleQuantity || 0;
-            const deduct = Math.min(avail, remainingToDeduct);
-            const newLotQty = Math.round((avail - deduct) * 10000) / 10000;
-            await tx.goodsReceipt.update({
-              where: { id: r.id },
-              data: { goodsForSaleQuantity: newLotQty }
+          if (Array.isArray(item.lotAllocations) && item.lotAllocations.length > 0) {
+            // User explicitly allocated specific lots
+            for (const alloc of item.lotAllocations) {
+              const allocQty = parseFloat(alloc.quantity) || 0;
+              if (allocQty <= 0) continue;
+              const rId = parseInt(alloc.receiptId);
+              if (rId && !isNaN(rId)) {
+                const r = await tx.goodsReceipt.findUnique({ where: { id: rId } });
+                if (r) {
+                  const avail = r.goodsForSaleQuantity || 0;
+                  const newLotQty = Math.max(0, Math.round((avail - allocQty) * 10000) / 10000);
+                  await tx.goodsReceipt.update({
+                    where: { id: r.id },
+                    data: { goodsForSaleQuantity: newLotQty }
+                  });
+                  lotAllocations.push({
+                    receiptId: r.id,
+                    lote: alloc.lote || r.lote || null,
+                    quantity: allocQty
+                  });
+                } else {
+                  lotAllocations.push({
+                    receiptId: rId,
+                    lote: alloc.lote || null,
+                    quantity: allocQty
+                  });
+                }
+              } else {
+                lotAllocations.push({
+                  receiptId: null,
+                  lote: alloc.lote || null,
+                  quantity: allocQty
+                });
+              }
+            }
+          } else if (item.lotAllocations && item.lotAllocations.length === 0) {
+            // User explicitly chose "No registrar lote"
+            lotAllocations = [];
+          } else {
+            // Fallback: automatic FIFO deduction
+            const receipts = await tx.goodsReceipt.findMany({
+              where: {
+                goodsForSaleId: item.goodsForSaleId,
+                goodsForSaleQuantity: { gt: 0 }
+              },
+              orderBy: { date: 'asc' }
             });
-            lotAllocations.push({ receiptId: r.id, quantity: deduct });
-            remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
+
+            let remainingToDeduct = item.quantity;
+            for (const r of receipts) {
+              if (remainingToDeduct <= 0) break;
+              const avail = r.goodsForSaleQuantity || 0;
+              const deduct = Math.min(avail, remainingToDeduct);
+              const newLotQty = Math.max(0, Math.round((avail - deduct) * 10000) / 10000);
+              await tx.goodsReceipt.update({
+                where: { id: r.id },
+                data: { goodsForSaleQuantity: newLotQty }
+              });
+              lotAllocations.push({ receiptId: r.id, lote: r.lote || null, quantity: deduct });
+              remainingToDeduct = Math.round((remainingToDeduct - deduct) * 10000) / 10000;
+            }
           }
 
-          // Decrement GoodsForSale total stock
+          // Decrement GoodsForSale total stock (always clamped to >= 0)
           const currentGfs = await tx.goodsForSale.findUnique({
             where: { id: item.goodsForSaleId }
           });
