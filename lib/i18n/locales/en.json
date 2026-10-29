@@ -125,7 +125,8 @@
     "oil_collection": "Frying oil collection",
     "vegetable_disinfection": "Vegetable disinfection",
     "sales": "Sales",
-    "product_families": "Product Families"
+    "product_families": "Product Families",
+    "manage_license": "Manage my license"
   },
   "inventory": {
     "title": "Inventory Management",
@@ -759,7 +760,8 @@
     "btn_request_payout": "Request commission payout",
     "payout_request_info": "Send an email to soporte@quicktrace.es requesting the payout of your pending commissions. Remember to send the email from the email address associated with your Quicktrace account.",
     "date_collected": "Amount collected",
-    "table_paid": "Total Paid"
+    "table_paid": "Total Paid",
+    "sidebar_btn_short": "Earn money"
   },
   "register": {
     "title": "Start Today",

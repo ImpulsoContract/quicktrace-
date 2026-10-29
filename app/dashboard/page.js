@@ -5724,45 +5724,142 @@ export default function ClientDashboard() {
           <div 
             onClick={() => setIsProfileOpen(true)}
             style={{ 
-              padding: '1.5rem', borderTop: '1px solid var(--border)', 
-              cursor: 'pointer', transition: 'all 0.2s'
+              padding: '0.85rem 1rem', 
+              borderTop: '1px solid var(--border)', 
+              cursor: 'pointer', 
+              transition: 'background 0.2s ease',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem'
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(66, 98, 22, 0.05)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--corp-green)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 'bold' }}>
+            {/* Cabecera del usuario: Avatar, Nombre, Plan y Enlace Gestionar Licencia */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{ 
+                width: '34px', 
+                height: '34px', 
+                borderRadius: '50%', 
+                background: 'var(--corp-green)', 
+                color: 'white', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: '0.85rem', 
+                fontWeight: 'bold',
+                flexShrink: 0
+              }}>
                 {profile?.personName?.[0] || session?.user?.name?.[0] || 'U'}
               </div>
-              <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile?.personName || session?.user?.name}</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800' }}>{t('sidebar.plan')} {profile?.plan?.name || '...'}</div>
+              <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden', color: 'var(--text-main)' }}>
+                  {profile?.personName || session?.user?.name}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800', lineHeight: '1.2' }}>
+                  {t('sidebar.plan')} {profile?.plan?.name || '...'}
+                </div>
+                {session?.user?.role !== "WORKER" && (
+                  <Link 
+                    href="/dashboard/plans" 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (window.innerWidth <= 1024) setIsSidebarOpen(false); 
+                    }}
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '0.25rem', 
+                      fontSize: '0.7rem', 
+                      color: 'var(--corp-green)', 
+                      fontWeight: '700', 
+                      textDecoration: 'underline',
+                      marginTop: '0.1rem',
+                      cursor: 'pointer',
+                      lineHeight: '1.2'
+                    }}
+                    title={t('sidebar.manage_license') || "Gestionar mi licencia"}
+                  >
+                    <Crown size={11} style={{ flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {t('sidebar.manage_license') || "Gestionar mi licencia"}
+                    </span>
+                  </Link>
+                )}
               </div>
             </div>
             
-            <div style={{ padding: '0 1.5rem 1rem' }}>
+            {/* Botones de acción alineados: Gana dinero (afiliados) y Cerrar sesión */}
+            <div style={{ display: 'flex', gap: '0.45rem', width: '100%' }}>
               <button 
-                onClick={(e) => { e.stopPropagation(); setActiveTab('afiliados'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }}
-                className="btn-secondary"
-                style={{ 
-                  width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', 
-                  padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.85rem',
-                  fontWeight: '700', color: 'var(--corp-green)', background: 'rgba(66, 98, 22, 0.05)',
-                  border: '1px solid rgba(66, 98, 22, 0.15)', cursor: 'pointer',
-                  textAlign: 'left', lineHeight: '1.2', whiteSpace: 'normal'
+                type="button"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setActiveTab('afiliados'); 
+                  if (window.innerWidth <= 1024) setIsSidebarOpen(false); 
                 }}
+                style={{ 
+                  flex: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '0.35rem', 
+                  padding: '0.45rem 0.35rem', 
+                  borderRadius: '0.5rem', 
+                  fontSize: '0.72rem',
+                  fontWeight: '700', 
+                  color: 'var(--corp-green)', 
+                  background: 'rgba(66, 98, 22, 0.06)',
+                  border: '1px solid rgba(66, 98, 22, 0.2)', 
+                  cursor: 'pointer',
+                  textAlign: 'center', 
+                  minHeight: '34px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(66, 98, 22, 0.12)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(66, 98, 22, 0.06)'}
+                title={t('affiliate.sidebar_link') || "Gana dinero con Quicktrace"}
               >
-                <ArrowUpCircle size={18} style={{ flexShrink: 0 }} /> 
-                <span>{t('affiliate.sidebar_link')}</span>
+                <ArrowUpCircle size={14} style={{ flexShrink: 0 }} /> 
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {t('affiliate.sidebar_btn_short') || t('affiliate.sidebar_link') || "Gana dinero"}
+                </span>
               </button>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+
               <button 
-                onClick={(e) => { e.stopPropagation(); signOut({ callbackUrl: '/login' }); }}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.6rem', borderRadius: '0.5rem', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                type="button"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  signOut({ callbackUrl: '/login' }); 
+                }}
+                style={{ 
+                  flex: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '0.35rem', 
+                  padding: '0.45rem 0.35rem', 
+                  borderRadius: '0.5rem', 
+                  background: '#fef2f2', 
+                  border: '1px solid #fee2e2', 
+                  color: '#dc2626', 
+                  fontSize: '0.72rem', 
+                  fontWeight: '700', 
+                  cursor: 'pointer',
+                  minHeight: '34px',
+                  textAlign: 'center',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#fef2f2'}
+                title={t('auth.logout') || "Cerrar Sesión"}
               >
-                <LogOut size={14} /> {t('auth.logout')}
+                <LogOut size={14} style={{ flexShrink: 0 }} /> 
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {t('auth.logout')}
+                </span>
               </button>
             </div>
           </div>

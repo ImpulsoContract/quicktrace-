@@ -125,7 +125,8 @@
     "oil_collection": "Collecte des huiles de friture",
     "vegetable_disinfection": "Désinfection des végétaux",
     "sales": "Ventes",
-    "product_families": "Familles de produits"
+    "product_families": "Familles de produits",
+    "manage_license": "Gérer ma licence"
   },
   "inventory": {
     "title": "Gestion des Stocks",
@@ -754,7 +755,8 @@
     "btn_request_payout": "Demander le paiement des commissions",
     "payout_request_info": "Envoyez un e-mail à supporto@quicktrace.es demandant le paiement de vos commissions en attente. N'oubliez pas d'envoyer l'e-mail à partir de l'adresse figurant sur votre compte Quicktrace.",
     "date_collected": "Montant perçu",
-    "table_paid": "Total Payé"
+    "table_paid": "Total Payé",
+    "sidebar_btn_short": "Gagnez de l'argent"
   },
   "register": {
     "title": "Commencez dès Aujourd'hui",

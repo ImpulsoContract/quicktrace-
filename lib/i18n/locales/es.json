@@ -125,7 +125,8 @@
     "oil_collection": "Retirada de aceites de fritura",
     "vegetable_disinfection": "Desinfección de vegetales",
     "sales": "Ventas",
-    "product_families": "Familias de productos"
+    "product_families": "Familias de productos",
+    "manage_license": "Gestionar mi licencia"
   },
   "inventory": {
     "title": "Gestión de Inventario",
@@ -759,7 +760,8 @@
     "btn_request_payout": "Solicitar cobro de comisiones",
     "payout_request_info": "Envía un email a soporte@quicktrace.es solicitando el cobro de tus comisiones pendientes. Recuerda enviar el email desde el email que tienes en tu cuenta de usuario de Quicktrace",
     "date_collected": "Cantidad cobrada",
-    "table_paid": "Total Pagado"
+    "table_paid": "Total Pagado",
+    "sidebar_btn_short": "Gana dinero"
   },
   "register": {
     "title": "Empieza Hoy",

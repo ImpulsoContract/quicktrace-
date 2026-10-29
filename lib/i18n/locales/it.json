@@ -125,7 +125,8 @@
     "oil_collection": "Ritiro oli di frittura",
     "vegetable_disinfection": "Disinfezione dei vegetali",
     "sales": "Vendite",
-    "product_families": "Famiglie di prodotti"
+    "product_families": "Famiglie di prodotti",
+    "manage_license": "Gestisci la mia licenza"
   },
   "inventory": {
     "title": "Gestione dell'Inventario",
@@ -754,7 +755,8 @@
     "btn_request_payout": "Richiedi incasso commissioni",
     "payout_request_info": "Invia un'email a supporto@quicktrace.es richiedendo il pagamento delle tue commissioni in sospeso. Ricorda di inviare l'email dall'indirizzo che hai nel tuo account Quicktrace",
     "date_collected": "Importo riscosso",
-    "table_paid": "Totale Pagato"
+    "table_paid": "Totale Pagato",
+    "sidebar_btn_short": "Guadagna"
   },
   "register": {
     "title": "Inizia Oggi",
