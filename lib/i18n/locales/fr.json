@@ -308,7 +308,18 @@
     "isbue_series_default": "Par défaut d'Isbue",
     "isbue_series_help": "Choisissez la série avec laquelle émettre les factures depuis QuickTrace.",
     "isbue_disconnect_btn": "Déconnecter Isbue",
-    "isbue_disconnect_confirm": "Êtes-vous sûr de vouloir déconnecter l'intégration Isbue ?"
+    "isbue_disconnect_confirm": "Êtes-vous sûr de vouloir déconnecter l'intégration Isbue ?",
+    "subtitle": "Sélectionnez un bloc pour ouvrir sa configuration.",
+    "currency_desc": "Sélectionnez la devise principale de votre entreprise.",
+    "labor_cost_desc": "Coût horaire du personnel et durée obligatoire d'élaboration.",
+    "types_badge": "types",
+    "active_count_badge": "actives",
+    "badge_allowed": "Autorisés",
+    "badge_blocked": "Bloqués",
+    "badge_active": "Actif",
+    "badge_inactive": "Inactif",
+    "badge_disconnected": "Non connecté",
+    "btn_configure": "Configurer"
   },
   "dashboard": {
     "welcome": "Bonjour",

@@ -308,7 +308,18 @@
     "isbue_series_default": "Isbue default",
     "isbue_series_help": "Choose the series to use when issuing invoices from QuickTrace.",
     "isbue_disconnect_btn": "Disconnect Isbue",
-    "isbue_disconnect_confirm": "Are you sure you want to disconnect the Isbue integration?"
+    "isbue_disconnect_confirm": "Are you sure you want to disconnect the Isbue integration?",
+    "subtitle": "Select a block to open its configuration.",
+    "currency_desc": "Select the primary working currency for your business.",
+    "labor_cost_desc": "Staff hourly cost and mandatory elaboration time.",
+    "types_badge": "types",
+    "active_count_badge": "active",
+    "badge_allowed": "Allowed",
+    "badge_blocked": "Blocked",
+    "badge_active": "Active",
+    "badge_inactive": "Inactive",
+    "badge_disconnected": "Not connected",
+    "btn_configure": "Configure"
   },
   "dashboard": {
     "welcome": "Hello",

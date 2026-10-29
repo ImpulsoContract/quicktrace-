@@ -13333,6 +13333,8 @@ function CleaningRegistrationModal({ zones, onClose, onSubmit, formData, setForm
 
 function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh, loading }) {
   const { t } = useI18n();
+  const [activeModal, setActiveModal] = useState(null);
+
   const [selectedCurrency, setSelectedCurrency] = useState(profile?.currency || "EUR");
   const [laborCostHourlyRate, setLaborCostHourlyRate] = useState(profile?.laborCostHourlyRate || 0);
   const [isPreparationTimeMandatory, setIsPreparationTimeMandatory] = useState(profile?.isPreparationTimeMandatory || false);
@@ -13379,12 +13381,13 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
     .sort((a, b) => a.code.localeCompare(b.code));
   
-  useEffect(() => {
+  const resetToProfile = () => {
     if (profile) {
       setSelectedCurrency(profile.currency || "EUR");
       setLaborCostHourlyRate(profile.laborCostHourlyRate || 0);
       setIsPreparationTimeMandatory(profile.isPreparationTimeMandatory || false);
       setMerchantTypes(profile.merchantTypes || []);
+      setNewMerchantType("");
       setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
       setHasCuttingTraceability(profile.hasCuttingTraceability || false);
       setHasOilCollection(profile.hasOilCollection || false);
@@ -13395,9 +13398,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setGoodsLowStockInApp(profile.goodsLowStockInApp ?? true);
       setGoodsLowStockEmail(profile.goodsLowStockEmail || false);
       setInvoicingProvider(profile.invoicingProvider || "HOLDED");
-      if (profile.invoicingProvider === "ISBUE" && !profile.holdedApiKey) {
-        setInvoicingTab("isbue");
-      }
+      setInvoicingTab(profile.invoicingProvider === "ISBUE" ? "isbue" : "holded");
       setHoldedApiKey(profile.holdedApiKey || "");
       setHoldedTax(profile.holdedTax !== undefined && profile.holdedTax !== null ? profile.holdedTax : 10);
       setHoldedSeriesId(profile.holdedSeriesId || "");
@@ -13409,8 +13410,35 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setIsbueSeriesId(profile.isbueSeriesId || "");
       setIsbueSeriesName(profile.isbueSeriesName || "");
       setIsbueVerified(!!profile.isbueApiKey);
+      setHoldedTestError("");
+      setIsbueTestError("");
     }
+  };
+
+  useEffect(() => {
+    resetToProfile();
   }, [profile]);
+
+  useEffect(() => {
+    if (activeModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [activeModal]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && activeModal) {
+        closeModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeModal, profile]);
 
   useEffect(() => {
     if (profile?.holdedApiKey) {
@@ -13539,8 +13567,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     }
   };
 
-  const handleSave = () => {
-    onUpdate({ 
+  const handleSave = async (options = { closeModal: true }) => {
+    const success = await onUpdate({ 
       currency: selectedCurrency,
       merchantTypes: merchantTypes,
       laborCostHourlyRate,
@@ -13565,6 +13593,14 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       isbueSeriesId: isbueSeriesId || null,
       isbueSeriesName: isbueSeriesName || null
     });
+    if (success && options.closeModal) {
+      setActiveModal(null);
+    }
+  };
+
+  const closeModal = () => {
+    resetToProfile();
+    setActiveModal(null);
   };
 
   const handleAddMerchantType = () => {
@@ -13628,111 +13664,225 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     );
   }, [lotFormat, nextElabNumExample, t]);
 
-  // Check if anything changed to enable save button
-  const hasChanges = selectedCurrency !== profile?.currency || 
-                    JSON.stringify(merchantTypes) !== JSON.stringify(profile?.merchantTypes || []) ||
-                    laborCostHourlyRate !== (profile?.laborCostHourlyRate || 0) ||
-                    isPreparationTimeMandatory !== (profile?.isPreparationTimeMandatory || false) ||
-                    (lotFormat || DEFAULT_LOT_FORMAT) !== (profile?.lotFormat || DEFAULT_LOT_FORMAT) ||
-                    hasCuttingTraceability !== (profile?.hasCuttingTraceability || false) ||
-                    hasOilCollection !== (profile?.hasOilCollection || false) ||
-                    hasVegetableDisinfection !== (profile?.hasVegetableDisinfection || false) ||
-                    blockOutOfStockLots !== (profile?.blockOutOfStockLots || false) ||
-                    goodsLowStockAlertEnabled !== (profile?.goodsLowStockAlertEnabled || false) ||
-                    parseFloat(goodsLowStockThreshold) !== (profile?.goodsLowStockThreshold ?? 2) ||
-                    goodsLowStockInApp !== (profile?.goodsLowStockInApp ?? true) ||
-                    goodsLowStockEmail !== (profile?.goodsLowStockEmail || false) ||
-                    (invoicingProvider || "HOLDED") !== (profile?.invoicingProvider || "HOLDED") ||
-                    (holdedApiKey.trim() || "") !== (profile?.holdedApiKey || "") ||
-                    holdedTax !== (profile?.holdedTax !== undefined && profile?.holdedTax !== null ? profile.holdedTax : 10) ||
-                    (holdedSeriesId || "") !== (profile?.holdedSeriesId || "") ||
-                    (isbueApiKey.trim() || "") !== (profile?.isbueApiKey || "") ||
-                    (isbueApiUrl.trim() || "") !== (profile?.isbueApiUrl || "") ||
-                    isbueTax !== (profile?.isbueTax !== undefined && profile?.isbueTax !== null ? profile.isbueTax : 10) ||
-                    (isbueSeriesId || "") !== (profile?.isbueSeriesId || "");
+  const currencySymbol = ALL_CURRENCIES.find(c => c.code === selectedCurrency)?.symbol || selectedCurrency;
 
-  return (
-    <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '800px', paddingBottom: '4rem' }}>
-      <header style={{ marginBottom: '2.5rem' }}>
-        <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
-          {t('business_config.title')}
-        </h2>
-      </header>
+  const blocks = [
+    {
+      id: "currency",
+      title: t('business_config.currency_section') || "Precios y Moneda",
+      description: t('business_config.currency_desc') || "Selecciona la divisa principal de trabajo para tu negocio.",
+      icon: <DollarSign size={24} />,
+      badge: {
+        text: `${selectedCurrency} (${currencySymbol})`,
+        bg: 'rgba(66, 98, 22, 0.08)',
+        color: 'var(--corp-green)'
+      }
+    },
+    {
+      id: "labor_cost",
+      title: t('business_config.labor_cost_section') || "Precio hora y tiempo",
+      description: t('business_config.labor_cost_desc') || "Coste por hora de personal y obligatoriedad del tiempo de elaboración.",
+      icon: <Clock size={24} />,
+      badge: {
+        text: `${laborCostHourlyRate} ${currencySymbol}/h`,
+        bg: 'rgba(66, 98, 22, 0.08)',
+        color: 'var(--corp-green)'
+      }
+    },
+    {
+      id: "merchant_types",
+      title: t('business_config.merchant_types_section') || "Tipos de Mercancía",
+      description: t('business_config.merchant_types_desc') || "Gestiona los tipos de mercancía (Carne, Pescado, Fruta...) para clasificarlas.",
+      icon: <Package size={24} />,
+      badge: {
+        text: `${merchantTypes.length} ${t('business_config.types_badge') || 'tipos'}`,
+        bg: 'rgba(66, 98, 22, 0.08)',
+        color: 'var(--corp-green)'
+      }
+    },
+    {
+      id: "lot_format",
+      title: t('business_config.lot_format_section') || "Formato del número de lote",
+      description: t('business_config.lot_format_desc') || "Personaliza la estructura y nomenclatura automática para los números de lote.",
+      icon: <Hash size={24} />,
+      badge: {
+        text: lotFormat || DEFAULT_LOT_FORMAT,
+        bg: 'rgba(66, 98, 22, 0.08)',
+        color: 'var(--corp-green)'
+      }
+    },
+    {
+      id: "additional_sections",
+      title: t('business_config.additional_sections_title') || "Secciones adicionales",
+      description: t('business_config.additional_sections_desc') || "Activa despiece, recogida de aceite de fritura y desinfección de vegetales.",
+      icon: <Layers size={24} />,
+      badge: {
+        text: `${[hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].filter(Boolean).length} ${t('business_config.active_count_badge') || 'activas'}`,
+        bg: [hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].some(Boolean) ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+        color: [hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].some(Boolean) ? '#16a34a' : '#64748b'
+      }
+    },
+    {
+      id: "out_of_stock_lots",
+      title: t('business_config.block_out_of_stock_lots_section') || "Lotes sin stock en elaboraciones",
+      description: t('business_config.block_out_of_stock_lots_desc') || "Configura si se permite o bloquea el uso de lotes de ingredientes agotados.",
+      icon: <Ban size={24} />,
+      badge: {
+        text: blockOutOfStockLots 
+          ? (t('business_config.badge_blocked') || "Bloqueados") 
+          : (t('business_config.badge_allowed') || "Permitidos"),
+        bg: blockOutOfStockLots ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+        color: blockOutOfStockLots ? '#dc2626' : '#16a34a'
+      }
+    },
+    {
+      id: "goods_low_stock",
+      title: t('business_config.goods_low_stock_section_title') || "Avisos de stock escaso",
+      description: t('business_config.goods_low_stock_section_desc') || "Alertas automáticas en la app y por correo cuando el stock desciende del umbral.",
+      icon: <Bell size={24} />,
+      badge: {
+        text: goodsLowStockAlertEnabled 
+          ? `${t('business_config.badge_active') || 'Activo'} (≤ ${goodsLowStockThreshold})` 
+          : (t('business_config.badge_inactive') || "Inactivo"),
+        bg: goodsLowStockAlertEnabled ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+        color: goodsLowStockAlertEnabled ? '#16a34a' : '#64748b'
+      }
+    },
+    {
+      id: "invoicing_programs",
+      title: t('business_config.invoicing_programs_title') || "Programas de facturación",
+      description: t('business_config.invoicing_programs_desc') || "Conecta Holded o Isbue para emitir facturas oficiales de tus ventas.",
+      icon: <FileText size={24} />,
+      badge: {
+        text: `${invoicingProvider === "ISBUE" ? "Isbue" : "Holded"}${
+          (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified) 
+            ? ` (${t('business_config.connected_status') || 'Conectado'})` 
+            : ` (${t('business_config.badge_disconnected') || 'Sin conectar'})`
+        }`,
+        bg: (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified) ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+        color: (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified) ? '#16a34a' : '#64748b'
+      }
+    }
+  ];
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        {/* Currency Section */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <DollarSign size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.currency_section')}</h3>
+  const currentModalInfo = useMemo(() => {
+    switch (activeModal) {
+      case "currency":
+        return {
+          title: t('business_config.currency_section') || "Precios y Moneda",
+          icon: <DollarSign size={22} />
+        };
+      case "labor_cost":
+        return {
+          title: t('business_config.labor_cost_section') || "Precio por hora y tiempo de elaboración",
+          icon: <Clock size={22} />
+        };
+      case "merchant_types":
+        return {
+          title: t('business_config.merchant_types_section') || "Tipos de Mercancía",
+          icon: <Package size={22} />
+        };
+      case "lot_format":
+        return {
+          title: t('business_config.lot_format_section') || "Formato del número de lote",
+          icon: <Hash size={22} />
+        };
+      case "additional_sections":
+        return {
+          title: t('business_config.additional_sections_title') || "Activa secciones adicionales",
+          icon: <Layers size={22} />
+        };
+      case "out_of_stock_lots":
+        return {
+          title: t('business_config.block_out_of_stock_lots_section') || "Permitir usar lotes sin stock en las elaboraciones",
+          icon: <Ban size={22} />
+        };
+      case "goods_low_stock":
+        return {
+          title: t('business_config.goods_low_stock_section_title') || "Avisos de stock escaso (mercancías e ingredientes)",
+          icon: <Bell size={22} />
+        };
+      case "invoicing_programs":
+        return {
+          title: t('business_config.invoicing_programs_title') || "Programas de facturación",
+          icon: <FileText size={22} />
+        };
+      default:
+        return null;
+    }
+  }, [activeModal, t]);
+
+  const renderModalContent = () => {
+    if (activeModal === "currency") {
+      return (
+        <div>
+          <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>
+            {t('business_config.select_currency')}
+          </label>
+          
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+              {t('business_config.quick_access')}
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {popular.map(code => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setSelectedCurrency(code)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '0.75rem',
+                    border: '2px solid',
+                    borderColor: selectedCurrency === code ? 'var(--corp-green)' : 'var(--border)',
+                    background: selectedCurrency === code ? 'rgba(66, 98, 22, 0.05)' : 'white',
+                    color: selectedCurrency === code ? 'var(--corp-green)' : 'var(--text-main)',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <span style={{ fontSize: '1.1rem' }}>{ALL_CURRENCIES.find(c => c.code === code)?.symbol}</span>
+                  {code}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="form-group">
-            <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>{t('business_config.select_currency')}</label>
-            
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
-                {t('business_config.quick_access')}
-              </div>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                {popular.map(code => (
-                  <button
-                    key={code}
-                    onClick={() => setSelectedCurrency(code)}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '0.75rem',
-                      border: '2px solid',
-                      borderColor: selectedCurrency === code ? 'var(--corp-green)' : 'var(--border)',
-                      background: selectedCurrency === code ? 'rgba(66, 98, 22, 0.05)' : 'white',
-                      color: selectedCurrency === code ? 'var(--corp-green)' : 'var(--text-main)',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.1rem' }}>{ALL_CURRENCIES.find(c => c.code === code)?.symbol}</span>
-                    {code}
-                  </button>
-                ))}
-              </div>
+          <div style={{ width: '100%' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+              {t('business_config.others')}
             </div>
-
-            <div style={{ width: '100%' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
-                {t('business_config.others')}
-              </div>
-              <select 
-                className="input-field"
-                value={popular.includes(selectedCurrency) ? "" : selectedCurrency}
-                onChange={(e) => {
-                  if (e.target.value) setSelectedCurrency(e.target.value);
-                }}
-                style={{ padding: '1rem', fontSize: '1rem', fontWeight: '500' }}
-              >
-                <option value="" disabled>{t('common.select_currency') || "Selecciona..."}</option>
-                {otherCurrencies.map(c => (
-                  <option key={c.code} value={c.code}>
-                    {c.code} ({c.symbol})
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select 
+              className="input-field"
+              value={popular.includes(selectedCurrency) ? "" : selectedCurrency}
+              onChange={(e) => {
+                if (e.target.value) setSelectedCurrency(e.target.value);
+              }}
+              style={{ padding: '1rem', fontSize: '1rem', fontWeight: '500' }}
+            >
+              <option value="" disabled>{t('common.select_currency') || "Selecciona..."}</option>
+              {otherCurrencies.map(c => (
+                <option key={c.code} value={c.code}>
+                  {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
             <div style={{ 
-              fontSize: '0.9rem', 
+              fontSize: '0.88rem', 
               color: '#3b82f6', 
               fontWeight: '600',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
               background: 'rgba(59, 130, 246, 0.05)',
-              padding: '0.75rem 1.5rem',
+              padding: '0.75rem 1.25rem',
               borderRadius: '0.75rem',
               border: '1px solid rgba(59, 130, 246, 0.1)'
             }}>
@@ -13740,33 +13890,21 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               {t('business_config.save_reminder')}
             </div>
           </div>
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
+        </div>
+      );
+    }
 
-        {/* Labor Cost & Preparation Time Configuration */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <Clock size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.labor_cost_section')}</h3>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+    if (activeModal === "labor_cost") {
+      return (
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem', marginBottom: '1.5rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
                 {t('business_config.labor_cost_per_hour')}
               </label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: '600' }}>
-                  {ALL_CURRENCIES.find(c => c.code === selectedCurrency)?.symbol || selectedCurrency}
+                  {currencySymbol}
                 </span>
                 <input 
                   type="number" 
@@ -13810,36 +13948,23 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           </div>
           
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
               <AlertCircle size={16} /> {t('business_config.save_reminder')}
             </div>
           </div>
+        </div>
+      );
+    }
 
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
-
-        {/* Merchant Types Section */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <Package size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.merchant_types_section')}</h3>
-          </div>
-          
-          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>
+    if (activeModal === "merchant_types") {
+      return (
+        <div>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
             {t('business_config.merchant_types_desc')}
           </p>
 
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.75rem' }}>
             <input 
               type="text" 
               className="input-field" 
@@ -13849,6 +13974,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               onKeyDown={(e) => e.key === 'Enter' && handleAddMerchantType()}
             />
             <button 
+              type="button"
               onClick={handleAddMerchantType}
               className="btn-primary"
               style={{ whiteSpace: 'nowrap', padding: '0 1.5rem' }}
@@ -13857,7 +13983,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.85rem' }}>
             {merchantTypes.map((type, idx) => (
               <div 
                 key={idx} 
@@ -13866,21 +13992,22 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
-                  padding: '1rem', 
+                  padding: '0.85rem 1rem', 
                   background: '#f8fafc', 
                   borderRadius: '0.75rem', 
                   border: '1px solid var(--border)',
                   animation: 'fadeIn 0.3s ease'
                 }}
               >
-                <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{type}</span>
+                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{type}</span>
                 <button 
+                  type="button"
                   onClick={() => handleDeleteMerchantType(type)}
                   style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', transition: 'background 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
@@ -13891,16 +14018,16 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             )}
           </div>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
             <div style={{ 
-              fontSize: '0.9rem', 
+              fontSize: '0.88rem', 
               color: '#3b82f6', 
               fontWeight: '600',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
               background: 'rgba(59, 130, 246, 0.05)',
-              padding: '0.75rem 1.5rem',
+              padding: '0.75rem 1.25rem',
               borderRadius: '0.75rem',
               border: '1px solid rgba(59, 130, 246, 0.1)'
             }}>
@@ -13908,60 +14035,46 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               {t('business_config.save_reminder')}
             </div>
           </div>
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
+        </div>
+      );
+    }
 
-        {/* Lot Number Format Configuration */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <Hash size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.lot_format_section')}</h3>
-          </div>
-          
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
+    if (activeModal === "lot_format") {
+      return (
+        <div>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.25rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
             {t('business_config.lot_format_desc')}
           </p>
 
-          {/* Help box */}
-          <div style={{ marginBottom: '2rem', padding: '1rem 1.25rem', background: 'rgba(66, 98, 22, 0.06)', borderRadius: '0.75rem', border: '1px solid rgba(66, 98, 22, 0.15)', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+          <div style={{ marginBottom: '1.5rem', padding: '1rem 1.25rem', background: 'rgba(66, 98, 22, 0.06)', borderRadius: '0.75rem', border: '1px solid rgba(66, 98, 22, 0.15)', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
             <Info size={20} color="var(--corp-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
             <p style={{ fontSize: '0.85rem', color: '#2d450c', margin: 0, lineHeight: '1.5', fontWeight: '500' }}>
               {t('business_config.lot_format_help')}
             </p>
           </div>
 
-          {/* 9 Buttons in requested order */}
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
               {t('business_config.lot_format_section')}
             </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
               {lotButtons.map(btn => (
                 <button
                   key={btn.id}
                   type="button"
                   onClick={() => handleAddToken(btn.token)}
                   style={{
-                    padding: '0.6rem 1rem',
+                    padding: '0.5rem 0.85rem',
                     borderRadius: '0.6rem',
                     border: '1.5px solid var(--border)',
                     background: '#f8fafc',
                     color: 'var(--text-main)',
                     fontWeight: '600',
-                    fontSize: '0.85rem',
+                    fontSize: '0.82rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
+                    gap: '0.45rem',
                     transition: 'all 0.15s ease',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
                   }}
@@ -13977,8 +14090,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                   }}
                 >
                   <span style={{ 
-                    fontSize: '0.75rem', 
-                    padding: '0.15rem 0.4rem', 
+                    fontSize: '0.72rem', 
+                    padding: '0.12rem 0.35rem', 
                     borderRadius: '0.35rem', 
                     background: 'rgba(66, 98, 22, 0.1)', 
                     color: 'var(--corp-green)',
@@ -13993,8 +14106,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           </div>
 
-          {/* Auxiliary control buttons: delete last, clear, reset default */}
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
             <button
               type="button"
               onClick={handleDeleteLastToken}
@@ -14061,15 +14173,13 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </button>
           </div>
 
-          {/* Two display fields: Format text and Real-time Example preview */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            {/* 1. Format text */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
             <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
                 {t('business_config.lot_format_label')}
               </label>
               <div style={{ 
-                fontSize: '1.1rem', 
+                fontSize: '1.05rem', 
                 fontWeight: '700', 
                 fontFamily: 'monospace', 
                 color: lotFormat ? 'var(--text-main)' : 'var(--text-muted)',
@@ -14082,13 +14192,12 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               </div>
             </div>
 
-            {/* 2. Real-time Example Preview */}
             <div style={{ background: 'rgba(66, 98, 22, 0.04)', padding: '1.25rem', borderRadius: '0.75rem', border: '1.5px solid rgba(66, 98, 22, 0.25)' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--corp-green)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
                 {t('business_config.lot_format_example')}
               </label>
               <div style={{ 
-                fontSize: '1.2rem', 
+                fontSize: '1.15rem', 
                 fontWeight: '800', 
                 fontFamily: 'monospace', 
                 color: 'var(--corp-green)',
@@ -14103,30 +14212,17 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
           </div>
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
               <AlertCircle size={16} /> {t('business_config.save_reminder')}
             </div>
           </div>
+        </div>
+      );
+    }
 
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
-
-        {/* Additional Sections Block */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <Layers size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>{t('business_config.additional_sections_title') || "Activa secciones adicionales"}</h3>
-          </div>
-
+    if (activeModal === "additional_sections") {
+      return (
+        <div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
             {t('business_config.additional_sections_desc') || "Configura qué secciones opcionales deseas mostrar en tu menú principal."}
           </p>
@@ -14181,33 +14277,18 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </label>
           </div>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
               <AlertCircle size={16} /> {t('business_config.save_reminder')}
             </div>
           </div>
+        </div>
+      );
+    }
 
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
-
-        {/* Out of Stock Lots Section */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <Layers size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-              {t('business_config.block_out_of_stock_lots_section') || "Permitir usar lotes sin stock en las elaboraciones"}
-            </h3>
-          </div>
-
+    if (activeModal === "out_of_stock_lots") {
+      return (
+        <div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
             {t('business_config.block_out_of_stock_lots_desc') || "Configura si se permite utilizar lotes de ingredientes que ya no disponen de existencias al registrar elaboraciones."}
           </p>
@@ -14232,39 +14313,22 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           </label>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
               <AlertCircle size={16} /> {t('business_config.save_reminder')}
             </div>
           </div>
+        </div>
+      );
+    }
 
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
-
-        
-        {/* Goods Low Stock Alert Configuration */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
-            <Bell size={24} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-              {t('business_config.goods_low_stock_section_title') || "Avisos de stock escaso (mercancías e ingredientes)"}
-            </h3>
-          </div>
-
+    if (activeModal === "goods_low_stock") {
+      return (
+        <div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
             {t('business_config.goods_low_stock_section_desc') || "Configura alertas automáticas cuando el stock de una mercancía en venta o de un ingrediente baje por debajo de una cantidad mínima."}
           </p>
 
-          {/* Master Enable Switch */}
           <label className="switch-container" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', cursor: 'pointer', padding: '1.25rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
             <div style={{ position: 'relative', width: '48px', height: '24px', minWidth: '48px', background: goodsLowStockAlertEnabled ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s', marginTop: '2px' }}>
               <div style={{ position: 'absolute', left: goodsLowStockAlertEnabled ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
@@ -14286,8 +14350,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
           </label>
 
           {goodsLowStockAlertEnabled && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
-              {/* Threshold input */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeIn 0.3s ease' }}>
               <div style={{ background: '#ffffff', padding: '1.25rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
                   {t('business_config.goods_low_stock_threshold_label') || "Cantidad mínima de stock (umbral de alerta)"}
@@ -14309,9 +14372,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                 </p>
               </div>
 
-              {/* Notification channels (In-app and Email) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
-                {/* In-app checkbox */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                 <label style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -14336,7 +14397,6 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                   </div>
                 </label>
 
-                {/* Email checkbox */}
                 <label style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -14364,37 +14424,21 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           )}
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
               <AlertCircle size={16} /> {t('business_config.save_reminder')}
             </div>
           </div>
+        </div>
+      );
+    }
 
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
-
-        {/* Invoicing Programs Integration Section */}
-        <section className="glass-card" style={{ padding: '2.5rem', background: 'white' }}>
+    if (activeModal === "invoicing_programs") {
+      return (
+        <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--corp-green)' }}>
-              <FileText size={24} />
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-                {t('business_config.invoicing_programs_title') || "Programas de facturación"}
-              </h3>
-            </div>
-
-            {/* Active Provider Indicator / Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem' }}>
-              <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem' }}>
+              <span style={{ color: 'var(--text-muted)', fontWeight: '700' }}>
                 {t('business_config.active_invoicing_provider') || "Programa activo:"}
               </span>
               <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '0.5rem', padding: '0.2rem' }}>
@@ -14405,7 +14449,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     border: 'none',
                     padding: '0.35rem 0.85rem',
                     borderRadius: '0.4rem',
-                    fontSize: '0.82rem',
+                    fontSize: '0.85rem',
                     fontWeight: '700',
                     cursor: 'pointer',
                     background: invoicingProvider === "HOLDED" ? 'white' : 'transparent',
@@ -14423,7 +14467,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                     border: 'none',
                     padding: '0.35rem 0.85rem',
                     borderRadius: '0.4rem',
-                    fontSize: '0.82rem',
+                    fontSize: '0.85rem',
                     fontWeight: '700',
                     cursor: 'pointer',
                     background: invoicingProvider === "ISBUE" ? 'white' : 'transparent',
@@ -14438,16 +14482,15 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           </div>
 
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: '1.5' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
             {t('business_config.invoicing_programs_desc') || "Configura y conecta tus programas de facturación externa para emitir facturas oficiales de tus ventas con un solo clic."}
           </p>
 
-          {/* Program Tabs */}
           <div style={{ 
             display: 'flex', 
             gap: '0.5rem', 
             borderBottom: '2px solid #e2e8f0', 
-            marginBottom: '1.75rem' 
+            marginBottom: '1.5rem' 
           }}>
             <button
               type="button"
@@ -14571,14 +14614,13 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               {/* VAT and Series Configuration */}
               <div style={{ 
                 background: '#f8fafc', 
-                padding: '1.5rem', 
+                padding: '1.25rem', 
                 borderRadius: '0.85rem', 
                 border: '1px solid var(--border)',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                 gap: '1.25rem'
               }}>
-                {/* Default VAT */}
                 <div>
                   <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
                     {t('business_config.holded_tax_label') || "Tipo de IVA predeterminado para las facturas"}
@@ -14599,7 +14641,6 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                   </span>
                 </div>
 
-                {/* Series */}
                 <div>
                   <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
                     {t('business_config.holded_series_label') || "Serie de facturación"}
@@ -14741,14 +14782,13 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
               {/* VAT and Series Configuration */}
               <div style={{ 
                 background: '#f8fafc', 
-                padding: '1.5rem', 
+                padding: '1.25rem', 
                 borderRadius: '0.85rem', 
                 border: '1px solid var(--border)',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                 gap: '1.25rem'
               }}>
-                {/* Default VAT */}
                 <div>
                   <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
                     {t('business_config.isbue_tax_label') || "Tipo de IVA predeterminado para las facturas"}
@@ -14769,7 +14809,6 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                   </span>
                 </div>
 
-                {/* Series */}
                 <div>
                   <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
                     {t('business_config.isbue_series_label') || "Serie de facturación Isbue"}
@@ -14837,36 +14876,263 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           )}
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
               <AlertCircle size={16} /> {t('business_config.save_reminder')}
             </div>
           </div>
-
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <button 
-              onClick={handleSave}
-              className="btn-primary" 
-              disabled={loading || !hasChanges}
-              style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontSize: '1rem' }}
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save')}</>}
-            </button>
-          </div>
-        </section>
-
-        {/* Global Save Button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-          <button 
-            onClick={handleSave}
-            className="btn-primary" 
-            disabled={loading || !hasChanges}
-            style={{ minWidth: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '1rem 2rem', fontSize: '1.1rem' }}
-          >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> {t('common.save')}</>}
-          </button>
         </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '1000px', paddingBottom: '4rem' }}>
+      <header style={{ marginBottom: '2.5rem' }}>
+        <h2 style={{ fontSize: '2.25rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+          {t('business_config.title')}
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', margin: 0 }}>
+          {t('business_config.subtitle') || "Selecciona un bloque para abrir su configuración."}
+        </p>
+      </header>
+
+      {/* Grid of Block Buttons */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+        gap: '1.25rem'
+      }}>
+        {blocks.map(block => (
+          <button
+            key={block.id}
+            type="button"
+            onClick={() => setActiveModal(block.id)}
+            className="glass-card"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '1.75rem',
+              background: 'white',
+              borderRadius: '1.25rem',
+              border: '1.5px solid var(--border)',
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+              width: '100%',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--corp-green)';
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = '0 10px 20px -5px rgba(66, 98, 22, 0.12)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+            }}
+          >
+            {/* Top row: Icon + Badge */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', width: '100%', marginBottom: '1rem' }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '0.85rem',
+                background: 'rgba(66, 98, 22, 0.08)',
+                color: 'var(--corp-green)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                {block.icon}
+              </div>
+
+              {block.badge && (
+                <span style={{
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '1rem',
+                  background: block.badge.bg,
+                  color: block.badge.color,
+                  whiteSpace: 'nowrap',
+                  maxWidth: '180px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {block.badge.text}
+                </span>
+              )}
+            </div>
+
+            {/* Middle: Title & Description */}
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)', margin: '0 0 0.4rem 0' }}>
+              {block.title}
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.45', flex: 1 }}>
+              {block.description}
+            </p>
+
+            {/* Bottom: Configure Action */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginTop: '1.25rem', 
+              paddingTop: '0.85rem', 
+              borderTop: '1px solid #f1f5f9',
+              width: '100%',
+              color: 'var(--corp-green)',
+              fontWeight: '700',
+              fontSize: '0.88rem'
+            }}>
+              <span>{t('business_config.btn_configure') || "Configurar"}</span>
+              <ChevronRight size={18} />
+            </div>
+          </button>
+        ))}
       </div>
+
+      {/* Modal Popup */}
+      {activeModal && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1.25rem'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeModal();
+            }
+          }}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '1.5rem',
+              width: '100%',
+              maxWidth: activeModal === 'lot_format' || activeModal === 'invoicing_programs' ? '760px' : '650px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+              animation: 'slideUp 0.3s ease',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{
+              padding: '1.5rem 2rem',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: '#f8fafc'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '0.75rem',
+                  background: 'rgba(66, 98, 22, 0.1)',
+                  color: 'var(--corp-green)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  {currentModalInfo?.icon}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                    {currentModalInfo?.title}
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div style={{
+              padding: '2rem',
+              overflowY: 'auto',
+              flex: 1
+            }}>
+              {renderModalContent()}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '1.25rem 2rem',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: '#f8fafc',
+              gap: '1rem'
+            }}>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="btn-secondary"
+                style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem', fontWeight: '700' }}
+              >
+                {t('common.cancel') || "Cancelar"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSave({ closeModal: true })}
+                className="btn-primary"
+                disabled={loading}
+                style={{
+                  minWidth: '160px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.75rem',
+                  fontSize: '0.95rem',
+                  fontWeight: '800'
+                }}
+              >
+                {loading ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> {t('common.save') || "Guardar"}</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
