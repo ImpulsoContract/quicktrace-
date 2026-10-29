@@ -472,7 +472,8 @@
     "no_temp_records_desc": "Pulsa en 'NUEVO REGISTRO' para añadir tu primera lectura de temperatura.",
     "automate_records_btn": "Cómo automatizar registros",
     "automate_records_modal_title": "En este video te enseñamos cómo automatizar el control diario de las temperaturas de tus cámaras",
-    "automate_records_more_info_btn": "Quiero más información sobre el sistema de sensores"
+    "automate_records_more_info_btn": "Quiero más información sobre el sistema de sensores",
+    "date_and_recipe": "Fecha y receta"
   },
   "modals": {
     "cleaning_header": "Nuevo Registro de Limpieza",

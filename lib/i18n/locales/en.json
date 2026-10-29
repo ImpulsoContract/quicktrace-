@@ -472,7 +472,8 @@
     "no_temp_records_desc": "Click on 'NEW RECORD' to add your first temperature reading.",
     "automate_records_btn": "How to automate records",
     "automate_records_modal_title": "In this video we show you how to automate the daily temperature control of your chambers",
-    "automate_records_more_info_btn": "I want more information about the sensor system"
+    "automate_records_more_info_btn": "I want more information about the sensor system",
+    "date_and_recipe": "Date and recipe"
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",

@@ -468,7 +468,8 @@
     "no_temp_records_desc": "Cliquez sur 'NOUVEL ENREGISTREMENT' pour ajouter votre premier relevé de température.",
     "automate_records_btn": "Comment automatiser les relevés",
     "automate_records_modal_title": "Dans cette vidéo, nous vous montrons comment automatiser le contrôle quotidien des températures de vos chambres",
-    "automate_records_more_info_btn": "Je souhaite plus d'informations sur le système de capteurs"
+    "automate_records_more_info_btn": "Je souhaite plus d'informations sur le système de capteurs",
+    "date_and_recipe": "Date et recette"
   },
   "modals": {
     "cleaning_header": "Nouvel Enregistrement de Nettoyage",

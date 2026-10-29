@@ -7442,9 +7442,8 @@ export default function ClientDashboard() {
                               />
                             </div>
                           </th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date')}</th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('traceability_form.elaboration_title')}</th>
-                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.recipe_name')}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date_and_recipe') || "Fecha y receta"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', minWidth: '220px' }}>{t('traceability_form.elaboration_title')}</th>
                           {session?.user?.role !== "WORKER" && (
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
                               {t('dashboard.cost_column_header') || "Coste"}
@@ -7468,67 +7467,185 @@ export default function ClientDashboard() {
                                 onChange={() => toggleSelectRecord(el.id)}
                               />
                             </td>
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{formatDateDDMMYYYY(el.date || el.createdAt)}</td>
                           <td style={{ padding: '1.5rem 2rem' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                              <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{el.name}</span>
-                              <div style={{ margin: '0.15rem 0' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                <Calendar size={14} />
+                                <span>{formatDateDDMMYYYY(el.date || el.createdAt)}</span>
+                              </div>
+                              <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                                {el.recipe?.name || '-'}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '1.5rem 2rem', minWidth: '220px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', maxWidth: '240px' }}>
+                              <span style={{ fontWeight: '700', color: 'var(--corp-green)', fontSize: '0.95rem' }}>{el.name}</span>
+                              
+                              {/* Fila 1: Botón Etiqueta ancho completo */}
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  generateLabelPDF(el);
+                                }}
+                                className="btn-action-uniform"
+                                style={{ 
+                                  background: 'white', 
+                                  border: '1px solid #cbd5e1', 
+                                  color: 'var(--text-main)', 
+                                  padding: '0.35rem 0.6rem', 
+                                  borderRadius: '0.375rem', 
+                                  cursor: 'pointer', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  gap: '0.35rem', 
+                                  fontSize: '0.75rem', 
+                                  fontWeight: '600',
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                  width: '100%',
+                                  transition: 'all 0.15s ease'
+                                }}
+                                title={t('traceability_form.label_btn') || "Etiqueta"}
+                              >
+                                <Printer size={13} color="var(--corp-green)" />
+                                <span>{t('traceability_form.label_btn') || "Etiqueta"}</span>
+                              </button>
+
+                              {/* Fila 2: Exportar y Ver elaboración (50% cada uno) */}
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem', width: '100%' }}>
                                 <button 
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    generateLabelPDF(el);
+                                    handleExportElaborationPDF(el);
                                   }}
+                                  className="btn-action-uniform"
                                   style={{ 
                                     background: 'white', 
                                     border: '1px solid #cbd5e1', 
                                     color: 'var(--text-main)', 
-                                    padding: '0.25rem 0.6rem', 
+                                    padding: '0.35rem 0.5rem', 
                                     borderRadius: '0.375rem', 
                                     cursor: 'pointer', 
-                                    display: 'inline-flex', 
+                                    display: 'flex', 
                                     alignItems: 'center', 
+                                    justifyContent: 'center',
                                     gap: '0.35rem', 
                                     fontSize: '0.75rem', 
                                     fontWeight: '600',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                    width: '100%',
+                                    transition: 'all 0.15s ease'
                                   }}
-                                  title={t('traceability_form.label_btn') || "Etiqueta"}
+                                  title={t('dashboard.export_pdf_short') || "Exportar PDF"}
                                 >
-                                  <Printer size={13} color="var(--corp-green)" /> {t('traceability_form.label_btn') || "Etiqueta"}
+                                  <Download size={13} color="#0ea5e9" />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {t('dashboard.export_pdf_short') || "Exportar PDF"}
+                                  </span>
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewElaborationOnly(el);
+                                  }}
+                                  className="btn-action-uniform"
+                                  style={{ 
+                                    background: 'white', 
+                                    border: '1px solid #cbd5e1', 
+                                    color: 'var(--text-main)', 
+                                    padding: '0.35rem 0.5rem', 
+                                    borderRadius: '0.375rem', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    gap: '0.35rem', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                    width: '100%',
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                  title={t('dashboard.view_elaboration') || "Ver elaboración"}
+                                >
+                                  <Eye size={13} color="var(--corp-green)" />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {t('dashboard.view_elaboration') || "Ver elaboración"}
+                                  </span>
                                 </button>
                               </div>
-                              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
-                                <span 
-                                  onClick={() => handleViewElaborationOnly(el)} 
-                                  style={{ color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+
+                              {/* Fila 3: Editar y Eliminar (50% cada uno) */}
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem', width: '100%' }}>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditElaboration(el);
+                                  }}
+                                  className="btn-action-uniform"
+                                  style={{ 
+                                    background: 'white', 
+                                    border: '1px solid #cbd5e1', 
+                                    color: 'var(--text-main)', 
+                                    padding: '0.35rem 0.5rem', 
+                                    borderRadius: '0.375rem', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    gap: '0.35rem', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                    width: '100%',
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                  title={t('common.edit') || "Editar"}
                                 >
-                                  {t('dashboard.view_elaboration') || "Ver elaboración"}
-                                </span>
-                                <span 
-                                  onClick={() => handleExportElaborationPDF(el)} 
-                                  style={{ color: '#0ea5e9', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                                  <Edit size={13} color="#475569" />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {t('common.edit') || "Editar"}
+                                  </span>
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteElaboration(el.id);
+                                  }}
+                                  className="btn-action-uniform btn-danger"
+                                  style={{ 
+                                    background: 'white', 
+                                    border: '1px solid #cbd5e1', 
+                                    color: '#dc2626', 
+                                    padding: '0.35rem 0.5rem', 
+                                    borderRadius: '0.375rem', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    gap: '0.35rem', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                    width: '100%',
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                  title={t('common.delete') || "Eliminar"}
                                 >
-                                  {t('dashboard.export_pdf_short') || "Exportar PDF"}
-                                </span>
-                              </div>
-                              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
-                                <span 
-                                  onClick={() => handleEditElaboration(el)} 
-                                  style={{ color: '#475569', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
-                                >
-                                  {t('common.edit') || "Modificar"}
-                                </span>
-                                <span 
-                                  onClick={() => handleDeleteElaboration(el.id)} 
-                                  style={{ color: '#ef4444', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
-                                >
-                                  {t('common.delete') || "Eliminar"}
-                                </span>
+                                  <Trash2 size={13} color="#dc2626" />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {t('common.delete') || "Eliminar"}
+                                  </span>
+                                </button>
                               </div>
                             </div>
                           </td>
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{el.recipe?.name}</td>
                           {session?.user?.role !== "WORKER" && (() => {
                             const rawCost = Number(el.costPrice) || 0;
                             const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
@@ -7741,7 +7858,7 @@ export default function ClientDashboard() {
                           transition: 'all 0.2s ease'
                         }}
                       >
-                        {/* Cabecera de la tarjeta: Selección, Fecha y Botón Etiqueta */}
+                        {/* Cabecera de la tarjeta: Selección y Fecha */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
                             <input 
@@ -7755,30 +7872,6 @@ export default function ClientDashboard() {
                               📅 {formatDateDDMMYYYY(el.date || el.createdAt)}
                             </span>
                           </label>
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              generateLabelPDF(el);
-                            }}
-                            style={{ 
-                              background: 'white', 
-                              border: '1px solid #cbd5e1', 
-                              color: 'var(--text-main)', 
-                              padding: '0.35rem 0.75rem', 
-                              borderRadius: '0.375rem', 
-                              cursor: 'pointer', 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              gap: '0.35rem', 
-                              fontSize: '0.75rem', 
-                              fontWeight: '600',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
-                            }}
-                            title={t('traceability_form.label_btn') || "Etiqueta"}
-                          >
-                            <Printer size={14} color="var(--corp-green)" /> {t('traceability_form.label_btn') || "Etiqueta"}
-                          </button>
                         </div>
 
                         {/* Nombre de Elaboración y Receta */}
@@ -7792,32 +7885,170 @@ export default function ClientDashboard() {
                           </div>
                         </div>
 
-                        {/* Enlaces de acciones */}
-                        <div style={{ display: 'flex', gap: '0.85rem', fontSize: '0.8rem', flexWrap: 'wrap', padding: '0.35rem 0', borderTop: '1px dashed #f1f5f9', borderBottom: '1px dashed #f1f5f9' }}>
-                          <span 
-                            onClick={() => handleViewElaborationOnly(el)} 
-                            style={{ color: 'var(--corp-green)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
+                        {/* Botones de acción uniformes */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', width: '100%', padding: '0.35rem 0', borderTop: '1px dashed #f1f5f9', borderBottom: '1px dashed #f1f5f9' }}>
+                          {/* Fila 1: Botón Etiqueta ancho completo */}
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              generateLabelPDF(el);
+                            }}
+                            className="btn-action-uniform"
+                            style={{ 
+                              background: 'white', 
+                              border: '1px solid #cbd5e1', 
+                              color: 'var(--text-main)', 
+                              padding: '0.45rem 0.75rem', 
+                              borderRadius: '0.375rem', 
+                              cursor: 'pointer', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center',
+                              gap: '0.35rem', 
+                              fontSize: '0.78rem', 
+                              fontWeight: '600',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                              width: '100%',
+                              transition: 'all 0.15s ease'
+                            }}
+                            title={t('traceability_form.label_btn') || "Etiqueta"}
                           >
-                            {t('dashboard.view_elaboration') || "Ver elaboración"}
-                          </span>
-                          <span 
-                            onClick={() => handleExportElaborationPDF(el)} 
-                            style={{ color: '#0ea5e9', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
-                          >
-                            {t('dashboard.export_pdf_short') || "Exportar PDF"}
-                          </span>
-                          <span 
-                            onClick={() => handleEditElaboration(el)} 
-                            style={{ color: '#475569', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
-                          >
-                            {t('common.edit') || "Modificar"}
-                          </span>
-                          <span 
-                            onClick={() => handleDeleteElaboration(el.id)} 
-                            style={{ color: '#ef4444', cursor: 'pointer', textDecoration: 'underline', fontWeight: '700' }}
-                          >
-                            {t('common.delete') || "Eliminar"}
-                          </span>
+                            <Printer size={14} color="var(--corp-green)" />
+                            <span>{t('traceability_form.label_btn') || "Etiqueta"}</span>
+                          </button>
+
+                          {/* Fila 2: Exportar y Ver elaboración (50% cada uno) */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem', width: '100%' }}>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExportElaborationPDF(el);
+                              }}
+                              className="btn-action-uniform"
+                              style={{ 
+                                background: 'white', 
+                                border: '1px solid #cbd5e1', 
+                                color: 'var(--text-main)', 
+                                padding: '0.45rem 0.5rem', 
+                                borderRadius: '0.375rem', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                gap: '0.35rem', 
+                                fontSize: '0.78rem', 
+                                fontWeight: '600',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                width: '100%',
+                                transition: 'all 0.15s ease'
+                              }}
+                              title={t('dashboard.export_pdf_short') || "Exportar PDF"}
+                            >
+                              <Download size={14} color="#0ea5e9" />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {t('dashboard.export_pdf_short') || "Exportar PDF"}
+                              </span>
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewElaborationOnly(el);
+                              }}
+                              className="btn-action-uniform"
+                              style={{ 
+                                background: 'white', 
+                                border: '1px solid #cbd5e1', 
+                                color: 'var(--text-main)', 
+                                padding: '0.45rem 0.5rem', 
+                                borderRadius: '0.375rem', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                gap: '0.35rem', 
+                                fontSize: '0.78rem', 
+                                fontWeight: '600',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                width: '100%',
+                                transition: 'all 0.15s ease'
+                              }}
+                              title={t('dashboard.view_elaboration') || "Ver elaboración"}
+                            >
+                              <Eye size={14} color="var(--corp-green)" />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {t('dashboard.view_elaboration') || "Ver elaboración"}
+                              </span>
+                            </button>
+                          </div>
+
+                          {/* Fila 3: Editar y Eliminar (50% cada uno) */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem', width: '100%' }}>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditElaboration(el);
+                              }}
+                              className="btn-action-uniform"
+                              style={{ 
+                                background: 'white', 
+                                border: '1px solid #cbd5e1', 
+                                color: 'var(--text-main)', 
+                                padding: '0.45rem 0.5rem', 
+                                borderRadius: '0.375rem', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                gap: '0.35rem', 
+                                fontSize: '0.78rem', 
+                                fontWeight: '600',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                width: '100%',
+                                transition: 'all 0.15s ease'
+                              }}
+                              title={t('common.edit') || "Editar"}
+                            >
+                              <Edit size={14} color="#475569" />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {t('common.edit') || "Editar"}
+                              </span>
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteElaboration(el.id);
+                              }}
+                              className="btn-action-uniform btn-danger"
+                              style={{ 
+                                background: 'white', 
+                                border: '1px solid #cbd5e1', 
+                                color: '#dc2626', 
+                                padding: '0.45rem 0.5rem', 
+                                borderRadius: '0.375rem', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                gap: '0.35rem', 
+                                fontSize: '0.78rem', 
+                                fontWeight: '600',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                width: '100%',
+                                transition: 'all 0.15s ease'
+                              }}
+                              title={t('common.delete') || "Eliminar"}
+                            >
+                              <Trash2 size={14} color="#dc2626" />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {t('common.delete') || "Eliminar"}
+                              </span>
+                            </button>
+                          </div>
                         </div>
 
                         {/* Bloque de Costes */}
