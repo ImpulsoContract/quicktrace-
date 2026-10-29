@@ -890,6 +890,12 @@ export default function ClientDashboard() {
   }, [activeTab, profile]);
 
   useEffect(() => {
+    if (activeTab === "familias-productos" && profile && !profile.hasPosMode) {
+      setActiveTab("trazabilidad");
+    }
+  }, [activeTab, profile]);
+
+  useEffect(() => {
     if (activeTab === "temperaturas") {
       fetchTempRecords();
       setTempPage(1);
@@ -5576,7 +5582,7 @@ export default function ClientDashboard() {
                     onClick={() => { setActiveTab("ventas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                   />
                 )}
-                {profile?.hasPosMode && session?.user?.role !== "WORKER" && (
+                {Boolean(profile?.hasPosMode) && session?.user?.role !== "WORKER" && (
                   <SidebarBtn 
                     icon={<Boxes size={20} />} 
                     label={t('sidebar.product_families') || "Familias de productos"} 
