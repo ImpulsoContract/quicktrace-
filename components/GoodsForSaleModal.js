@@ -10,7 +10,8 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 export default function GoodsForSaleModal({
   isOpen,
   onClose,
-  profile
+  profile,
+  onEditReceipt
 }) {
   const { t, locale } = useI18n();
 
@@ -312,7 +313,8 @@ export default function GoodsForSaleModal({
           [itemId]: (prev[itemId] || []).map(r => r.id === receiptId ? {
             ...r,
             goodsForSaleQuantity: edits.quantity === "" ? 0 : parseFloat(edits.quantity),
-            goodsForSaleCostPrice: edits.costPrice === "" ? null : parseFloat(edits.costPrice)
+            goodsForSaleCostPrice: edits.costPrice === "" ? null : parseFloat(edits.costPrice),
+            barcode: edits.barcode ? edits.barcode.trim() : null
           } : r)
         }));
 
@@ -913,19 +915,25 @@ export default function GoodsForSaleModal({
                                             <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700' }}>{t('goods_for_sale.col_receipt_invoice') || "Nº Albarán / Factura"}</th>
                                             <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700' }}>{t('goods_for_sale.col_receipt_lot') || "Lote"}</th>
                                             <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700', width: '150px' }}>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <ScanBarcode size={13} style={{ color: 'var(--corp-green)' }} />
+                                                <span>{t('goods_for_sale.col_receipt_barcode') || "Código de barras"}</span>
+                                              </div>
+                                            </th>
+                                            <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700', width: '130px' }}>
                                               {t('goods_for_sale.col_receipt_stock') || "Stock disponible"} ({item.unit})
                                             </th>
-                                            <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700', width: '150px' }}>
+                                            <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700', width: '130px' }}>
                                               {t('goods_for_sale.col_receipt_cost_price') || "Precio coste / ud"} ({currencySymbol})
                                             </th>
-                                            <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700', textAlign: 'center', width: '90px' }}>
+                                            <th style={{ padding: '0.5rem 0.6rem', fontWeight: '700', textAlign: 'center', width: '150px' }}>
                                               {t('common.actions') || "Acciones"}
                                             </th>
                                           </tr>
                                         </thead>
                                         <tbody>
                                           {lots.map(lot => {
-                                            const edit = receiptEdits[lot.id] || { quantity: "", costPrice: "" };
+                                            const edit = receiptEdits[lot.id] || { quantity: "", costPrice: "", barcode: "" };
                                             const isSavingThis = savingReceiptId === lot.id;
                                             const isSavedThis = savedReceiptId === lot.id;
 
@@ -942,11 +950,40 @@ export default function GoodsForSaleModal({
                                                 </td>
                                                 <td style={{ padding: '0.5rem 0.6rem', color: 'var(--text-main)', fontWeight: '700' }}>
                                                   <div>{lot.lote || "-"}</div>
-                                                  {lot.barcode && (
-                                                    <div style={{ fontSize: '0.72rem', color: '#0284c7', fontFamily: 'monospace', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                                                      <ScanBarcode size={11} /> {lot.barcode}
-                                                    </div>
+                                                  {onEditReceipt && (
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => onEditReceipt(lot)}
+                                                      style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        color: '#0284c7',
+                                                        fontSize: '0.72rem',
+                                                        fontWeight: '700',
+                                                        cursor: 'pointer',
+                                                        padding: 0,
+                                                        marginTop: '0.2rem',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.25rem',
+                                                        textDecoration: 'underline'
+                                                      }}
+                                                      title={t('goods_for_sale.edit_goods_receipt') || "Modificar entrada de mercancías"}
+                                                    >
+                                                      <Edit size={11} />
+                                                      <span>{t('goods_for_sale.edit_goods_receipt') || "Modificar entrada"}</span>
+                                                    </button>
                                                   )}
+                                                </td>
+                                                <td style={{ padding: '0.5rem 0.6rem' }}>
+                                                  <input
+                                                    type="text"
+                                                    className="input-field"
+                                                    value={edit.barcode || ""}
+                                                    onChange={(e) => handleReceiptInputChange(lot.id, 'barcode', e.target.value)}
+                                                    style={{ margin: 0, padding: '0.3rem 0.5rem', fontSize: '0.82rem', width: '100%' }}
+                                                    placeholder={item.barcode ? (item.barcode + " (" + (t('goods_receipt_form.general_barcode_inherited') || 'heredado') + ")") : (t('goods_for_sale.barcode_placeholder') || "Ej: 841234...")}
+                                                  />
                                                 </td>
                                                 <td style={{ padding: '0.5rem 0.6rem' }}>
                                                   <input
@@ -973,34 +1010,59 @@ export default function GoodsForSaleModal({
                                                   />
                                                 </td>
                                                 <td style={{ padding: '0.5rem 0.6rem', textAlign: 'center' }}>
-                                                  {isSavedThis ? (
-                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', color: '#16a34a', fontSize: '0.75rem', fontWeight: '700' }}>
-                                                      <Check size={14} /> OK
-                                                    </span>
-                                                  ) : (
-                                                    <button
-                                                      type="button"
-                                                      disabled={isSavingThis}
-                                                      onClick={() => handleSaveReceipt(item.id, lot.id)}
-                                                      className="btn-primary"
-                                                      style={{
-                                                        padding: '0.3rem 0.65rem',
-                                                        fontSize: '0.75rem',
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.25rem',
-                                                        borderRadius: '0.35rem'
-                                                      }}
-                                                      title={t('goods_for_sale.save_receipt_changes') || "Guardar"}
-                                                    >
-                                                      {isSavingThis ? (
-                                                        <Loader2 size={12} className="animate-spin" />
-                                                      ) : (
-                                                        <Save size={13} />
-                                                      )}
-                                                      <span>{t('goods_for_sale.save_receipt_changes') || "Guardar"}</span>
-                                                    </button>
-                                                  )}
+                                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                                                    {isSavedThis ? (
+                                                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', color: '#16a34a', fontSize: '0.75rem', fontWeight: '700', padding: '0.3rem 0.4rem' }}>
+                                                        <Check size={14} /> OK
+                                                      </span>
+                                                    ) : (
+                                                      <button
+                                                        type="button"
+                                                        disabled={isSavingThis}
+                                                        onClick={() => handleSaveReceipt(item.id, lot.id)}
+                                                        className="btn-primary"
+                                                        style={{
+                                                          padding: '0.3rem 0.6rem',
+                                                          fontSize: '0.75rem',
+                                                          display: 'inline-flex',
+                                                          alignItems: 'center',
+                                                          gap: '0.25rem',
+                                                          borderRadius: '0.35rem'
+                                                        }}
+                                                        title={t('goods_for_sale.save_receipt_changes') || "Guardar"}
+                                                      >
+                                                        {isSavingThis ? (
+                                                          <Loader2 size={12} className="animate-spin" />
+                                                        ) : (
+                                                          <Save size={13} />
+                                                        )}
+                                                        <span>{t('goods_for_sale.save_receipt_changes') || "Guardar"}</span>
+                                                      </button>
+                                                    )}
+
+                                                    {onEditReceipt && (
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => onEditReceipt(lot)}
+                                                        className="btn-secondary"
+                                                        style={{
+                                                          padding: '0.3rem 0.5rem',
+                                                          fontSize: '0.75rem',
+                                                          display: 'inline-flex',
+                                                          alignItems: 'center',
+                                                          gap: '0.25rem',
+                                                          borderRadius: '0.35rem',
+                                                          color: '#0369a1',
+                                                          borderColor: '#bae6fd',
+                                                          background: '#f0f9ff'
+                                                        }}
+                                                        title={t('goods_for_sale.edit_goods_receipt') || "Modificar entrada de mercancías"}
+                                                      >
+                                                        <Edit size={12} />
+                                                        <span>{t('goods_for_sale.edit_receipt_btn') || "Editar"}</span>
+                                                      </button>
+                                                    )}
+                                                  </div>
                                                 </td>
                                               </tr>
                                             );

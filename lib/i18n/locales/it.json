@@ -1888,9 +1888,12 @@
     "col_receipt_provider": "Fornitore",
     "col_receipt_invoice": "N° Bolla / Fattura",
     "col_receipt_lot": "Lotto",
+    "col_receipt_barcode": "Codice a barre",
     "col_receipt_stock": "Giacenza disponibile",
     "col_receipt_cost_price": "Prezzo di costo / unità",
     "save_receipt_changes": "Salva",
+    "edit_goods_receipt": "Modifica entrata merci",
+    "edit_receipt_btn": "Modifica",
     "receipt_saved_success": "Entrata aggiornata con successo.",
     "badge_archived": "Archiviata"
   },

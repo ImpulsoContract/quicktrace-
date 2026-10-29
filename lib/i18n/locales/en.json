@@ -1893,9 +1893,12 @@
     "col_receipt_provider": "Supplier",
     "col_receipt_invoice": "Delivery Note / Invoice",
     "col_receipt_lot": "Lot",
+    "col_receipt_barcode": "Barcode",
     "col_receipt_stock": "Available stock",
     "col_receipt_cost_price": "Cost price / unit",
     "save_receipt_changes": "Save",
+    "edit_goods_receipt": "Edit goods receipt",
+    "edit_receipt_btn": "Edit",
     "receipt_saved_success": "Receipt updated successfully.",
     "badge_archived": "Archived"
   },

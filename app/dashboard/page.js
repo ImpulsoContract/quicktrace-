@@ -10924,6 +10924,11 @@ export default function ClientDashboard() {
           isOpen={isGoodsForSaleModalOpen}
           onClose={() => setIsGoodsForSaleModalOpen(false)}
           profile={profile}
+          onEditReceipt={(receipt) => {
+            setIsGoodsForSaleModalOpen(false);
+            const fullReceipt = (goodsReceipts || []).find(r => r.id === receipt.id) || receipt;
+            handleEditGoods(fullReceipt);
+          }}
         />
       )}
 

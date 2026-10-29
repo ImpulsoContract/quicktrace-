@@ -1888,9 +1888,12 @@
     "col_receipt_provider": "Fournisseur",
     "col_receipt_invoice": "N° Bon / Facture",
     "col_receipt_lot": "Lot",
+    "col_receipt_barcode": "Code-barres",
     "col_receipt_stock": "Stock disponible",
     "col_receipt_cost_price": "Prix de revient / unité",
     "save_receipt_changes": "Enregistrer",
+    "edit_goods_receipt": "Modifier l'entrée de marchandise",
+    "edit_receipt_btn": "Modifier",
     "receipt_saved_success": "Entrée mise à jour avec succès.",
     "badge_archived": "Archivée"
   },

@@ -56,15 +56,10 @@ export async function GET(req, { params }) {
 
     const receipts = await prisma.goodsReceipt.findMany({
       where,
-      select: {
-        id: true,
-        lote: true,
-        barcode: true,
-        date: true,
-        providerName: true,
-        invoiceNumber: true,
-        goodsForSaleQuantity: true,
-        goodsForSaleCostPrice: true
+      include: {
+        goodsForSale: {
+          select: { id: true, name: true, unit: true, salePrice: true, stock: true, barcode: true }
+        }
       },
       orderBy: [
         { date: "desc" },
@@ -137,7 +132,8 @@ export async function PUT(req, { params }) {
       updates = [{
         receiptId: body.receiptId,
         newQuantity: body.newQuantity,
-        newCostPrice: body.newCostPrice
+        newCostPrice: body.newCostPrice,
+        newBarcode: body.newBarcode
       }];
     } else {
       return NextResponse.json({ error: "Datos de actualización inválidos" }, { status: 400 });

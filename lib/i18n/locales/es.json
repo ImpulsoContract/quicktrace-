@@ -1893,9 +1893,12 @@
     "col_receipt_provider": "Proveedor",
     "col_receipt_invoice": "Nº Albarán / Factura",
     "col_receipt_lot": "Lote",
+    "col_receipt_barcode": "Código de barras",
     "col_receipt_stock": "Stock disponible",
     "col_receipt_cost_price": "Precio coste / ud",
     "save_receipt_changes": "Guardar",
+    "edit_goods_receipt": "Modificar entrada de mercancías",
+    "edit_receipt_btn": "Editar",
     "receipt_saved_success": "Entrada actualizada correctamente.",
     "badge_archived": "Archivada"
   },
