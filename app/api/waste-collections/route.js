@@ -11,11 +11,20 @@ export async function GET(request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasWaste) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: session.user.id },
+    const profile = await prisma.clientProfile.findFirst({
+      where: {
+        OR: [
+          { userId: session.user.id ? parseInt(session.user.id) : undefined },
+          { id: session.user.profileId ? parseInt(session.user.profileId) : undefined }
+        ].filter(Boolean)
+      },
       include: { plan: true }
     });
 
@@ -47,6 +56,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasWaste) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const data = await request.json();
     const { date, personName, kilos, observations } = data;
 
@@ -54,17 +67,21 @@ export async function POST(request) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
 
-    const profileId = session.user.profileId;
-    if (await isRecipeLimitExceeded(profileId)) {
-      return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
-    }
-
-    const profile = await prisma.clientProfile.findUnique({
-      where: { id: profileId }
+    const profile = await prisma.clientProfile.findFirst({
+      where: {
+        OR: [
+          { userId: session.user.id ? parseInt(session.user.id) : undefined },
+          { id: session.user.profileId ? parseInt(session.user.profileId) : undefined }
+        ].filter(Boolean)
+      }
     });
 
     if (!profile) {
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+    }
+
+    if (await isRecipeLimitExceeded(profile.id)) {
+      return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
     }
 
     const newCollection = await prisma.wasteCollection.create({
@@ -91,11 +108,20 @@ export async function DELETE(request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasWaste) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: session.user.id }
+    const profile = await prisma.clientProfile.findFirst({
+      where: {
+        OR: [
+          { userId: session.user.id ? parseInt(session.user.id) : undefined },
+          { id: session.user.profileId ? parseInt(session.user.profileId) : undefined }
+        ].filter(Boolean)
+      }
     });
 
     if (!profile) {
@@ -142,6 +168,10 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasWaste) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const data = await request.json();
     const { id, date, personName, kilos, observations } = data;
 
@@ -149,8 +179,13 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: session.user.id }
+    const profile = await prisma.clientProfile.findFirst({
+      where: {
+        OR: [
+          { userId: session.user.id ? parseInt(session.user.id) : undefined },
+          { id: session.user.profileId ? parseInt(session.user.profileId) : undefined }
+        ].filter(Boolean)
+      }
     });
 
     if (!profile) {

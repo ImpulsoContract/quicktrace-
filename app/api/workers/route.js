@@ -59,11 +59,15 @@ export async function POST(req) {
           userId: newUser.id,
           clientProfileId: session.user.profileId,
           name,
-          hasTraceability: permissions.hasTraceability || false,
-          hasCleaning: permissions.hasCleaning || false,
-          hasTemperatures: permissions.hasTemperatures || false,
-          hasWater: permissions.hasWater || false,
-          hasGoods: permissions.hasGoods || false
+          hasTraceability: Boolean(permissions.hasTraceability),
+          hasCleaning: Boolean(permissions.hasCleaning),
+          hasTemperatures: Boolean(permissions.hasTemperatures),
+          hasWater: Boolean(permissions.hasWater),
+          hasGoods: Boolean(permissions.hasGoods),
+          hasCutting: Boolean(permissions.hasCutting ?? permissions.hasCuttingTraceability),
+          hasWaste: Boolean(permissions.hasWaste ?? permissions.hasWasteCollection),
+          hasOil: Boolean(permissions.hasOil ?? permissions.hasOilCollection),
+          hasVegetables: Boolean(permissions.hasVegetables ?? permissions.hasVegetableDisinfection)
         }
       });
 

@@ -11,6 +11,10 @@ export async function GET(request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasVegetables && !session.user.permissions?.hasVegetableDisinfection) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
 
@@ -49,6 +53,10 @@ export async function POST(request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasVegetables && !session.user.permissions?.hasVegetableDisinfection) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const data = await request.json();
@@ -99,6 +107,10 @@ export async function DELETE(request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasVegetables && !session.user.permissions?.hasVegetableDisinfection) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -153,6 +165,10 @@ export async function PATCH(request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasVegetables && !session.user.permissions?.hasVegetableDisinfection) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const data = await request.json();

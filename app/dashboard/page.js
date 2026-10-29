@@ -735,7 +735,11 @@ export default function ClientDashboard() {
       hasCleaning: false,
       hasTemperatures: false,
       hasWater: false,
-      hasGoods: false
+      hasGoods: false,
+      hasCutting: false,
+      hasWaste: false,
+      hasOil: false,
+      hasVegetables: false
     }
   });
   const [ingredientPrices, setIngredientPrices] = useState([]);
@@ -1345,7 +1349,7 @@ export default function ClientDashboard() {
         fetchWorkers();
         setWorkerForm({
           name: '', email: '', password: '', 
-          permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false }
+          permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false, hasCutting: false, hasWaste: false, hasOil: false, hasVegetables: false }
         });
       } else {
         alert(data.error);
@@ -5553,44 +5557,48 @@ export default function ClientDashboard() {
             )}
 
             {(session?.user?.role === "CLIENT" || session?.user?.role === "ADMIN" || session?.user?.permissions?.hasTraceability) && (
-              <>
-                <SidebarBtn 
-                  icon={<ClipboardList size={20} />} 
-                  label={t('sidebar.traceability')} 
-                  active={activeTab === 'trazabilidad'} 
-                  onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                />
-                {profile?.hasCuttingTraceability && (
-                  <SidebarBtn 
-                    icon={<Scissors size={20} />} 
-                    label={t('sidebar.cutting_traceability')} 
-                    active={activeTab === "despiece"} 
-                    onClick={() => { setActiveTab("despiece"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                  />
-                )}
-                <SidebarBtn 
-                  icon={<History size={20} />} 
-                  label={t('sidebar.history')} 
-                  active={activeTab === "historial"} 
-                  onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                />
-                {session?.user?.role !== "WORKER" && (
-                  <SidebarBtn 
-                    icon={<ShoppingCart size={20} />} 
-                    label={t('sidebar.sales') || "Ventas"} 
-                    active={activeTab === "ventas"} 
-                    onClick={() => { setActiveTab("ventas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                  />
-                )}
-                {Boolean(profile?.hasPosMode) && session?.user?.role !== "WORKER" && (
-                  <SidebarBtn 
-                    icon={<Boxes size={20} />} 
-                    label={t('sidebar.product_families') || "Familias de productos"} 
-                    active={activeTab === "familias-productos"} 
-                    onClick={() => { setActiveTab("familias-productos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                  />
-                )}
-              </>
+              <SidebarBtn 
+                icon={<ClipboardList size={20} />} 
+                label={t('sidebar.traceability')} 
+                active={activeTab === 'trazabilidad'} 
+                onClick={() => { setActiveTab('trazabilidad'); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
+
+            {profile?.hasCuttingTraceability && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasCutting) && (
+              <SidebarBtn 
+                icon={<Scissors size={20} />} 
+                label={t('sidebar.cutting_traceability')} 
+                active={activeTab === "despiece"} 
+                onClick={() => { setActiveTab("despiece"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
+
+            {(session?.user?.role === "CLIENT" || session?.user?.role === "ADMIN" || session?.user?.permissions?.hasTraceability) && (
+              <SidebarBtn 
+                icon={<History size={20} />} 
+                label={t('sidebar.history')} 
+                active={activeTab === "historial"} 
+                onClick={() => { setActiveTab("historial"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
+
+            {session?.user?.role !== "WORKER" && (
+              <SidebarBtn 
+                icon={<ShoppingCart size={20} />} 
+                label={t('sidebar.sales') || "Ventas"} 
+                active={activeTab === "ventas"} 
+                onClick={() => { setActiveTab("ventas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
+
+            {Boolean(profile?.hasPosMode) && session?.user?.role !== "WORKER" && (
+              <SidebarBtn 
+                icon={<Boxes size={20} />} 
+                label={t('sidebar.product_families') || "Familias de productos"} 
+                active={activeTab === "familias-productos"} 
+                onClick={() => { setActiveTab("familias-productos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
             )}
 
             {(profile?.plan?.hasCleaning || session?.user?.role === "ADMIN") && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasCleaning) && (
@@ -5637,48 +5645,49 @@ export default function ClientDashboard() {
                 onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
-            {(session?.user?.role !== "WORKER") && (
-              <>
-                <SidebarBtn 
-                  icon={<Contact size={20} />} 
-                  label={t('sidebar.customers') || "Clientes"} 
-                  active={activeTab === "clientes"} 
-                  onClick={() => { setActiveTab("clientes"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                />
-                {(profile?.hasWasteSection !== false) && (
-                  <SidebarBtn 
-                    icon={<Recycle size={20} />} 
-                    label={t('sidebar.waste') || "Residuos"} 
-                    active={activeTab === "residuos"} 
-                    onClick={() => { setActiveTab("residuos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                  />
-                )}
+            {session?.user?.role !== "WORKER" && (
+              <SidebarBtn 
+                icon={<Contact size={20} />} 
+                label={t('sidebar.customers') || "Clientes"} 
+                active={activeTab === "clientes"} 
+                onClick={() => { setActiveTab("clientes"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
 
-                {profile?.hasOilCollection && (
-                  <SidebarBtn 
-                    icon={<Droplets size={20} />} 
-                    label={t('sidebar.oil_collection') || "Retirada de aceites de fritura"} 
-                    active={activeTab === "aceites"} 
-                    onClick={() => { setActiveTab("aceites"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                  />
-                )}
+            {(profile?.hasWasteSection !== false) && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasWaste) && (
+              <SidebarBtn 
+                icon={<Recycle size={20} />} 
+                label={t('sidebar.waste') || "Residuos"} 
+                active={activeTab === "residuos"} 
+                onClick={() => { setActiveTab("residuos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
 
-                {profile?.hasVegetableDisinfection && (
-                  <SidebarBtn 
-                    icon={<Salad size={20} />} 
-                    label={t('sidebar.vegetable_disinfection') || "Desinfección de vegetales"} 
-                    active={activeTab === "vegetales"} 
-                    onClick={() => { setActiveTab("vegetales"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                  />
-                )}
+            {profile?.hasOilCollection && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasOil) && (
+              <SidebarBtn 
+                icon={<Droplets size={20} />} 
+                label={t('sidebar.oil_collection') || "Retirada de aceites de fritura"} 
+                active={activeTab === "aceites"} 
+                onClick={() => { setActiveTab("aceites"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
 
-                <SidebarBtn 
-                  icon={<Settings size={20} />} 
-                  label={t('sidebar.business_config') || "Configuración del negocio"}
-                  active={activeTab === "configuracion"} 
-                  onClick={() => { setActiveTab("configuracion"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                />
-              </>
+            {profile?.hasVegetableDisinfection && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasVegetables) && (
+              <SidebarBtn 
+                icon={<Salad size={20} />} 
+                label={t('sidebar.vegetable_disinfection') || "Desinfección de vegetales"} 
+                active={activeTab === "vegetales"} 
+                onClick={() => { setActiveTab("vegetales"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
+            )}
+
+            {session?.user?.role !== "WORKER" && (
+              <SidebarBtn 
+                icon={<Settings size={20} />} 
+                label={t('sidebar.business_config') || "Configuración del negocio"}
+                active={activeTab === "configuracion"} 
+                onClick={() => { setActiveTab("configuracion"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+              />
             )}
           </nav>
 
@@ -9686,7 +9695,7 @@ export default function ClientDashboard() {
                       setEditingWorker(null);
                       setWorkerForm({
                         name: '', email: '', password: '', 
-                        permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false }
+                        permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false, hasCutting: false, hasWaste: false, hasOil: false, hasVegetables: false }
                       });
                       setIsWorkerModalOpen(true);
                     }}
@@ -9724,10 +9733,14 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.5rem 2rem' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                               {worker.hasTraceability && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#ecfdf5', color: '#059669', fontSize: '0.7rem', fontWeight: '700' }}>Trazabilidad</span>}
+                              {worker.hasCutting && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fdf2f8', color: '#db2777', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.cutting_traceability') || "Despiece"}</span>}
                               {worker.hasCleaning && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#eff6ff', color: '#2563eb', fontSize: '0.7rem', fontWeight: '700' }}>Limpieza</span>}
                               {worker.hasTemperatures && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fef2f2', color: '#dc2626', fontSize: '0.7rem', fontWeight: '700' }}>Temperaturas</span>}
                               {worker.hasWater && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#f0f9ff', color: '#0ea5e9', fontSize: '0.7rem', fontWeight: '700' }}>Agua</span>}
                               {worker.hasGoods && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fefce8', color: '#ca8a04', fontSize: '0.7rem', fontWeight: '700' }}>Mercancías</span>}
+                              {worker.hasWaste && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fef3c7', color: '#d97706', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.waste') || "Residuos"}</span>}
+                              {worker.hasOil && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fffbeb', color: '#b45309', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.oil_collection') || "Aceites"}</span>}
+                              {worker.hasVegetables && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#f0fdf4', color: '#16a34a', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.vegetable_disinfection') || "Vegetales"}</span>}
                             </div>
                           </td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
@@ -9740,11 +9753,15 @@ export default function ClientDashboard() {
                                     email: worker.user?.email,
                                     password: '',
                                     permissions: {
-                                      hasTraceability: worker.hasTraceability,
-                                      hasCleaning: worker.hasCleaning,
-                                      hasTemperatures: worker.hasTemperatures,
-                                      hasWater: worker.hasWater,
-                                      hasGoods: worker.hasGoods
+                                      hasTraceability: Boolean(worker.hasTraceability),
+                                      hasCleaning: Boolean(worker.hasCleaning),
+                                      hasTemperatures: Boolean(worker.hasTemperatures),
+                                      hasWater: Boolean(worker.hasWater),
+                                      hasGoods: Boolean(worker.hasGoods),
+                                      hasCutting: Boolean(worker.hasCutting),
+                                      hasWaste: Boolean(worker.hasWaste),
+                                      hasOil: Boolean(worker.hasOil),
+                                      hasVegetables: Boolean(worker.hasVegetables)
                                     }
                                   });
                                   setIsWorkerModalOpen(true);
@@ -12133,11 +12150,15 @@ export default function ClientDashboard() {
                 <label className="label" style={{ marginBottom: '1rem', display: 'block' }}>{t('workers.permissions_lbl')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
                   {[
-                    { id: 'hasTraceability', label: t('sidebar.traceability') },
-                    { id: 'hasCleaning', label: t('sidebar.cleaning') },
-                    { id: 'hasTemperatures', label: t('sidebar.temperatures') },
-                    { id: 'hasWater', label: t('sidebar.water') },
-                    { id: 'hasGoods', label: t('sidebar.goods') },
+                    { id: 'hasTraceability', label: t('sidebar.traceability') || "Trazabilidad" },
+                    { id: 'hasCutting', label: t('sidebar.cutting_traceability') || "Trazabilidad del despiece" },
+                    { id: 'hasCleaning', label: t('sidebar.cleaning') || "Limpieza" },
+                    { id: 'hasTemperatures', label: t('sidebar.temperatures') || "Temperaturas" },
+                    { id: 'hasWater', label: t('sidebar.water') || "Agua" },
+                    { id: 'hasGoods', label: t('sidebar.goods') || "Mercancías" },
+                    { id: 'hasWaste', label: t('sidebar.waste') || "Residuos" },
+                    { id: 'hasOil', label: t('sidebar.oil_collection') || "Retirada de aceites" },
+                    { id: 'hasVegetables', label: t('sidebar.vegetable_disinfection') || "Desinfección de vegetales" },
                   ].map(perm => (
                     <label key={perm.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
                       <input 

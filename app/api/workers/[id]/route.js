@@ -28,11 +28,15 @@ export async function PATCH(req, { params }) {
         where: { id },
         data: {
           name: name || worker.name,
-          hasTraceability: permissions.hasTraceability !== undefined ? permissions.hasTraceability : worker.hasTraceability,
-          hasCleaning: permissions.hasCleaning !== undefined ? permissions.hasCleaning : worker.hasCleaning,
-          hasTemperatures: permissions.hasTemperatures !== undefined ? permissions.hasTemperatures : worker.hasTemperatures,
-          hasWater: permissions.hasWater !== undefined ? permissions.hasWater : worker.hasWater,
-          hasGoods: permissions.hasGoods !== undefined ? permissions.hasGoods : worker.hasGoods
+          hasTraceability: permissions.hasTraceability !== undefined ? Boolean(permissions.hasTraceability) : worker.hasTraceability,
+          hasCleaning: permissions.hasCleaning !== undefined ? Boolean(permissions.hasCleaning) : worker.hasCleaning,
+          hasTemperatures: permissions.hasTemperatures !== undefined ? Boolean(permissions.hasTemperatures) : worker.hasTemperatures,
+          hasWater: permissions.hasWater !== undefined ? Boolean(permissions.hasWater) : worker.hasWater,
+          hasGoods: permissions.hasGoods !== undefined ? Boolean(permissions.hasGoods) : worker.hasGoods,
+          hasCutting: (permissions.hasCutting !== undefined ? permissions.hasCutting : permissions.hasCuttingTraceability) !== undefined ? Boolean(permissions.hasCutting ?? permissions.hasCuttingTraceability) : worker.hasCutting,
+          hasWaste: (permissions.hasWaste !== undefined ? permissions.hasWaste : permissions.hasWasteCollection) !== undefined ? Boolean(permissions.hasWaste ?? permissions.hasWasteCollection) : worker.hasWaste,
+          hasOil: (permissions.hasOil !== undefined ? permissions.hasOil : permissions.hasOilCollection) !== undefined ? Boolean(permissions.hasOil ?? permissions.hasOilCollection) : worker.hasOil,
+          hasVegetables: (permissions.hasVegetables !== undefined ? permissions.hasVegetables : permissions.hasVegetableDisinfection) !== undefined ? Boolean(permissions.hasVegetables ?? permissions.hasVegetableDisinfection) : worker.hasVegetables
         }
       });
 

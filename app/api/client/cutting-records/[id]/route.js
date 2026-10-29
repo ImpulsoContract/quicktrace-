@@ -12,6 +12,10 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasCutting && !session.user.permissions?.hasCuttingTraceability) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const profileId = session.user.profileId;
     if (!profileId) {
       return NextResponse.json({ error: "Perfil de cliente no encontrado" }, { status: 404 });
@@ -65,6 +69,10 @@ export async function DELETE(req, { params }) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasCutting && !session.user.permissions?.hasCuttingTraceability) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const profileId = session.user.profileId;

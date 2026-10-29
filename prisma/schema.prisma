@@ -611,6 +611,10 @@ model Worker {
   hasTemperatures Boolean @default(false)
   hasWater        Boolean @default(false)
   hasGoods        Boolean @default(false)
+  hasCutting      Boolean @default(false)
+  hasWaste        Boolean @default(false)
+  hasOil          Boolean @default(false)
+  hasVegetables   Boolean @default(false)
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

@@ -12,6 +12,10 @@ export async function POST(req) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasCutting && !session.user.permissions?.hasCuttingTraceability) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file");
 
