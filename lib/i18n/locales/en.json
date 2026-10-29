@@ -1727,7 +1727,16 @@
     "confirm_merge_action": "Confirm and Merge",
     "merging_in_progress": "Merging ingredients...",
     "merge_success": "Ingredients merged successfully.",
-    "no_ingredients_found": "No ingredients found."
+    "no_ingredients_found": "No ingredients found.",
+    "did_you_mean": "Did you mean \"{name}\"?",
+    "unit_mismatch_warning": "This ingredient is usually used with unit \"{unit}\". We recommend using the same unit to better control stocks.",
+    "use_unit_btn": "Use {unit}",
+    "sell_as_good_lbl": "Sell as merchandise",
+    "sell_as_good_tooltip": "For example, if you have a butcher shop and the ingredient is chicken, check this box if you use chicken both for elaborations and to sell to customers.",
+    "sell_as_good_section_title": "Sale as merchandise",
+    "sell_as_good_price": "Sale price (€)",
+    "sell_as_good_barcode": "Barcode",
+    "sell_as_good_info": "You can modify this information and manage stock later in the Goods section."
   },
   "oil_collection": {
     "title": "Frying oil collection",

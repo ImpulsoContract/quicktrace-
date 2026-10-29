@@ -115,6 +115,63 @@ export async function PATCH(req, { params }) {
       });
     });
 
+    // Sync any ingredients marked as goods for sale
+    if (Array.isArray(ingredients)) {
+      for (const ing of ingredients) {
+        if (ing.sellAsGood && ing.name && ing.name.trim()) {
+          const cleanName = toTitleCase(ing.name).trim();
+          const cleanUnit = (ing.unit || "").trim();
+          const parsedPrice = parseFloat(String(ing.goodsSalePrice || 0).replace(',', '.')) || 0;
+          const cleanBarcode = ing.goodsBarcode && String(ing.goodsBarcode).trim() ? String(ing.goodsBarcode).trim() : null;
+
+          try {
+            const existingGood = await prisma.goodsForSale.findFirst({
+              where: {
+                clientProfileId: profile.id,
+                OR: [
+                  {
+                    name: { equals: cleanName, mode: 'insensitive' },
+                    unit: { equals: cleanUnit, mode: 'insensitive' }
+                  },
+                  {
+                    linkedIngredientName: { equals: cleanName, mode: 'insensitive' }
+                  }
+                ]
+              }
+            });
+
+            if (existingGood) {
+              await prisma.goodsForSale.update({
+                where: { id: existingGood.id },
+                data: {
+                  name: cleanName,
+                  unit: cleanUnit || existingGood.unit,
+                  salePrice: parsedPrice > 0 ? parsedPrice : existingGood.salePrice,
+                  barcode: cleanBarcode !== null ? cleanBarcode : existingGood.barcode,
+                  linkedIngredientName: cleanName,
+                  isArchived: false
+                }
+              });
+            } else if (cleanUnit) {
+              await prisma.goodsForSale.create({
+                data: {
+                  clientProfileId: profile.id,
+                  name: cleanName,
+                  unit: cleanUnit,
+                  salePrice: parsedPrice >= 0 ? parsedPrice : 0,
+                  barcode: cleanBarcode,
+                  linkedIngredientName: cleanName,
+                  stock: 0
+                }
+              });
+            }
+          } catch (gfsErr) {
+            console.error("Error upserting goodsForSale for recipe ingredient:", gfsErr);
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating recipe by client:", error);

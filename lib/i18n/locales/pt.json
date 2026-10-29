@@ -1721,7 +1721,16 @@
     "confirm_merge_action": "Confirmar e Fundir",
     "merging_in_progress": "A fundir ingredientes...",
     "merge_success": "Ingredientes fundidos com sucesso.",
-    "no_ingredients_found": "Nenhum ingrediente encontrado."
+    "no_ingredients_found": "Nenhum ingrediente encontrado.",
+    "did_you_mean": "Queria escrever \"{name}\"?",
+    "unit_mismatch_warning": "Este ingrediente é habitualmente utilizado com a unidade \"{unit}\". Recomendamos usar a mesma unidade para controlar melhor os stocks.",
+    "use_unit_btn": "Usar {unit}",
+    "sell_as_good_lbl": "Vender como mercadoria",
+    "sell_as_good_tooltip": "Por exemplo, se tiver um talho e o ingrediente for frango, assinale esta caixa se usar o frango tanto para confeções como para vender aos clientes.",
+    "sell_as_good_section_title": "Venda como mercadoria",
+    "sell_as_good_price": "Preço de venda (€)",
+    "sell_as_good_barcode": "Código de barras",
+    "sell_as_good_info": "Poderá modificar esta informação e gerir o stock mais tarde na secção de Mercadorias."
   },
   "oil_collection": {
     "title": "Recolha de óleos de fritura",

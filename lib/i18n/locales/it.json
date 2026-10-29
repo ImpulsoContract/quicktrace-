@@ -1722,7 +1722,16 @@
     "confirm_merge_action": "Conferma e Unisci",
     "merging_in_progress": "Unione ingredienti in corso...",
     "merge_success": "Ingredienti uniti con successo.",
-    "no_ingredients_found": "Nessun ingrediente trovato."
+    "no_ingredients_found": "Nessun ingrediente trovato.",
+    "did_you_mean": "Volevi scrivere \"{name}\"?",
+    "unit_mismatch_warning": "Questo ingrediente viene solitamente utilizzato con l'unità \"{unit}\". Ti consigliamo di utilizzare la stessa per controllare meglio le scorte.",
+    "use_unit_btn": "Usa {unit}",
+    "sell_as_good_lbl": "Vendere come merce",
+    "sell_as_good_tooltip": "Ad esempio, se hai una macelleria e l'ingrediente è il pollo, seleziona questa casella se usi il pollo sia per le preparazioni sia per venderlo ai clienti.",
+    "sell_as_good_section_title": "Vendita come merce",
+    "sell_as_good_price": "Prezzo di vendita (€)",
+    "sell_as_good_barcode": "Codice a barre",
+    "sell_as_good_info": "Potrai modificare queste informazioni e gestire le scorte in seguito nella sezione Merci."
   },
   "oil_collection": {
     "title": "Ritiro oli di frittura",

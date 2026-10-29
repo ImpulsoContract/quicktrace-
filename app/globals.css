@@ -106,13 +106,18 @@ body {
   gap: 1rem;
   align-items: center;
 }
+.recipe-ing-goods-details {
+  grid-column: 1 / -1;
+  width: 100%;
+}
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .recipe-ingredient-row {
     grid-template-columns: auto 2.5fr 1fr 1fr auto !important;
     grid-template-areas:
       "handle name amount unit delete"
-      "checks checks checks checks checks" !important;
+      "checks checks checks checks checks"
+      "goods goods goods goods goods" !important;
     gap: 0.85rem !important;
     align-items: center !important;
   }
@@ -129,6 +134,10 @@ body {
     padding-top: 0.6rem !important;
     border-top: 1px dashed #e2e8f0 !important;
   }
+  .recipe-ing-goods-details {
+    grid-area: goods !important;
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -141,7 +150,8 @@ body {
       "handle name delete"
       "handle amount amount"
       "handle unit unit"
-      "handle checks checks" !important;
+      "handle checks checks"
+      "goods goods goods" !important;
     gap: 0.75rem !important;
     align-items: start !important;
     padding: 0.85rem !important;
@@ -215,6 +225,10 @@ body {
     gap: 0.5rem !important;
     padding-top: 0.5rem !important;
     border-top: 1px dashed #e2e8f0 !important;
+  }
+  .recipe-ing-goods-details {
+    grid-area: goods !important;
+    width: 100% !important;
   }
 }
 

@@ -610,7 +610,7 @@ export default function ClientDashboard() {
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [recipeForm, setRecipeForm] = useState({ 
     name: "", 
-    ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false }],
+    ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }],
     expiryDays: 0,
     expiryType: "EXPIRATION",
     hasDryingRoom: false,
@@ -1069,7 +1069,10 @@ export default function ClientDashboard() {
         loteMandatory: !!ing.loteMandatory,
         quantityMandatory: !!ing.quantityMandatory,
         expandItem: !!ing.expandItem,
-        expandedText: ing.expandedText || ""
+        expandedText: ing.expandedText || "",
+        sellAsGood: !!ing.sellAsGood,
+        goodsSalePrice: ing.goodsSalePrice !== undefined ? ing.goodsSalePrice : "",
+        goodsBarcode: ing.goodsBarcode || ""
       })),
       expiryDays: recipe.expiryDays || 0,
       expiryType: recipe.expiryType || "EXPIRATION",
@@ -1163,7 +1166,7 @@ export default function ClientDashboard() {
   const addIngredient = () => {
     setRecipeForm({
       ...recipeForm,
-      ingredients: [...recipeForm.ingredients, { name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }]
+      ingredients: [...recipeForm.ingredients, { name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }]
     });
   };
 
@@ -10152,7 +10155,7 @@ export default function ClientDashboard() {
                         setEditingRecipe(null);
                         setRecipeForm({ 
                           name: "", 
-                          ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }], 
+                          ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }], 
                           hasBarcode: false, 
                           barcode: "",
                           expiryDays: 0,
@@ -10208,7 +10211,7 @@ export default function ClientDashboard() {
                         setEditingRecipe(null);
                         setRecipeForm({ 
                           name: "", 
-                          ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "" }], 
+                          ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }], 
                           hasBarcode: false, 
                           barcode: "",
                           expiryDays: 0,
@@ -11306,6 +11309,8 @@ export default function ClientDashboard() {
           onAddIngredient={addIngredient}
           onRemoveIngredient={removeIngredient}
           onIngredientChange={handleRecipeIngredientChange}
+          recipes={recipes}
+          goodsReceipts={goodsReceipts}
         />
       )}
 
@@ -17654,7 +17659,7 @@ function NutritionAiDisclaimerModal({ isOpen, onClose, onAccept }) {
   );
 }
 
-function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange }) {
+function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange, recipes = [], goodsReceipts = [] }) {
   const { t } = useI18n();
   const [isAiScanOpen, setIsAiScanOpen] = useState(false);
   const [aiSuccessMsg, setAiSuccessMsg] = useState(null);
@@ -17665,6 +17670,197 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
   const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
   const [isCalculatingNutrition, setIsCalculatingNutrition] = useState(false);
   const [nutritionFeedback, setNutritionFeedback] = useState(null);
+  const [goodsList, setGoodsList] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/client/goods-for-sale?all=true")
+      .then(res => res.json())
+      .then(data => {
+        if (!isMounted) return;
+        const items = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+        setGoodsList(items);
+
+        // Prepopulate sellAsGood and goodsSalePrice / goodsBarcode if ingredient already matches an existing GoodForSale
+        setFormData(prev => {
+          let hasChanges = false;
+          const updatedIngs = (prev.ingredients || []).map(ing => {
+            if (!ing.name || !ing.name.trim()) return ing;
+            const cleanName = ing.name.trim().toLowerCase();
+            const cleanUnit = (ing.unit || "").trim().toLowerCase();
+            
+            const matchedGood = items.find(g => 
+              (g.linkedIngredientName && g.linkedIngredientName.trim().toLowerCase() === cleanName) ||
+              (g.name && g.name.trim().toLowerCase() === cleanName && (!cleanUnit || !g.unit || g.unit.trim().toLowerCase() === cleanUnit))
+            );
+
+            if (matchedGood) {
+              const shouldUpdate = !ing.sellAsGood || (ing.goodsSalePrice === undefined || ing.goodsSalePrice === "");
+              if (shouldUpdate) {
+                hasChanges = true;
+                return {
+                  ...ing,
+                  sellAsGood: true,
+                  goodsSalePrice: (ing.goodsSalePrice !== undefined && ing.goodsSalePrice !== "") ? ing.goodsSalePrice : matchedGood.salePrice,
+                  goodsBarcode: (ing.goodsBarcode !== undefined && ing.goodsBarcode !== "") ? ing.goodsBarcode : (matchedGood.barcode || "")
+                };
+              }
+            }
+            return ing;
+          });
+
+          return hasChanges ? { ...prev, ingredients: updatedIngs } : prev;
+        });
+      })
+      .catch(err => console.error("Error loading goods for sale:", err));
+
+    return () => { isMounted = false; };
+  }, []);
+
+  // Aggregated existing ingredients from recipes, goods, and receipts
+  const existingIngredients = useMemo(() => {
+    const map = new Map();
+
+    const addIng = (rawName, rawUnit) => {
+      if (!rawName || typeof rawName !== 'string') return;
+      const name = rawName.trim();
+      if (!name) return;
+      const norm = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const unit = (rawUnit || "").trim();
+
+      if (!map.has(norm)) {
+        map.set(norm, {
+          name,
+          norm,
+          unitCounts: unit ? { [unit.toLowerCase()]: 1 } : {},
+          preferredUnit: unit || "",
+          count: 1
+        });
+      } else {
+        const item = map.get(norm);
+        item.count++;
+        if (unit) {
+          const uLower = unit.toLowerCase();
+          item.unitCounts[uLower] = (item.unitCounts[uLower] || 0) + 1;
+          let maxCount = 0;
+          let bestUnit = item.preferredUnit;
+          for (const [u, count] of Object.entries(item.unitCounts)) {
+            if (count > maxCount) {
+              maxCount = count;
+              bestUnit = unit;
+            }
+          }
+          item.preferredUnit = bestUnit;
+        }
+      }
+    };
+
+    (recipes || []).forEach(r => {
+      (r.ingredients || []).forEach(i => addIng(i.name, i.unit));
+    });
+
+    (goodsList || []).forEach(g => {
+      addIng(g.linkedIngredientName || g.name, g.unit);
+    });
+
+    (goodsReceipts || []).forEach(gr => {
+      addIng(gr.productName, gr.unit);
+    });
+
+    return Array.from(map.values());
+  }, [recipes, goodsList, goodsReceipts]);
+
+  // Fast Levenshtein distance with Damerau transposition
+  const getLevenshteinDistance = (s1, s2) => {
+    const m = s1.length;
+    const n = s2.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+
+    if (m > n) return getLevenshteinDistance(s2, s1);
+
+    const row = Array.from({ length: m + 1 }, (_, i) => i);
+
+    for (let j = 1; j <= n; j++) {
+      let prev = j;
+      for (let i = 1; i <= m; i++) {
+        const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+        let val = Math.min(
+          row[i] + 1,
+          prev + 1,
+          row[i - 1] + cost
+        );
+        if (i > 1 && j > 1 && s1[i - 1] === s2[j - 2] && s1[i - 2] === s2[j - 1]) {
+          val = Math.min(val, row[i - 2] + 1);
+        }
+        row[i - 1] = prev;
+        prev = val;
+      }
+      row[m] = prev;
+    }
+    return row[m];
+  };
+
+  // Typo / Fuzzy suggestion helper
+  const getFuzzySuggestion = (typedName) => {
+    if (!typedName || typeof typedName !== 'string') return null;
+    const clean = typedName.trim();
+    if (clean.length < 3) return null;
+
+    const normTyped = clean.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // Exact match -> no suggestion
+    const hasExact = existingIngredients.some(item => item.norm === normTyped);
+    if (hasExact) return null;
+
+    let bestMatch = null;
+    let minDistance = Infinity;
+
+    for (const item of existingIngredients) {
+      if (Math.abs(normTyped.length - item.norm.length) > 2) continue;
+      const dist = getLevenshteinDistance(normTyped, item.norm);
+
+      let isEligible = false;
+      if (clean.length === 3) {
+        isEligible = (dist === 1 && normTyped[0] === item.norm[0]);
+      } else if (clean.length <= 6) {
+        isEligible = (dist === 1);
+      } else {
+        isEligible = (dist <= 2);
+      }
+
+      if (isEligible) {
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestMatch = item;
+        } else if (dist === minDistance && bestMatch && item.count > bestMatch.count) {
+          bestMatch = item;
+        }
+      }
+    }
+
+    return bestMatch ? bestMatch.name : null;
+  };
+
+  // Unit mismatch helper
+  const getUnitMismatch = (typedName, typedUnit) => {
+    if (!typedName || typeof typedName !== 'string') return null;
+    const cleanName = typedName.trim();
+    if (cleanName.length < 2) return null;
+
+    const normTyped = cleanName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const matched = existingIngredients.find(item => item.norm === normTyped);
+
+    if (matched && matched.preferredUnit) {
+      const cleanUnit = (typedUnit || "").trim().toLowerCase();
+      const prefUnit = matched.preferredUnit.trim().toLowerCase();
+      if (cleanUnit && cleanUnit !== prefUnit) {
+        return matched.preferredUnit.trim();
+      }
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     if (formData.elaborationInstructions && !aiCookingDescription) {
@@ -18017,67 +18213,258 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                     )}
                   </div>
 
-                  <div className="recipe-ing-name">
-                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_name')}</label>
-                    <input type="text" className="input-field" value={ing.name} onChange={(e) => onIngredientChange(idx, 'name', e.target.value)} required placeholder={t('modals.ing_name')} />
-                    
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-main)' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={ing.expandItem || false} 
-                            onChange={(e) => onIngredientChange(idx, 'expandItem', e.target.checked)} 
-                            style={{ accentColor: 'var(--corp-green)' }} 
-                          />
-                          {t('modals.expand_ingredient')}
-                        </label>
-                        <button 
-                          type="button" 
-                          onClick={() => alert(t('modals.expand_ingredient_info'))}
-                          style={{ background: '#e2e8f0', border: 'none', color: '#475569', cursor: 'pointer', width: '16px', height: '16px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                          title="Información"
-                        >
-                          ?
-                        </button>
-                      </div>
-                      {ing.expandItem && (
-                        <textarea 
-                          className="input-field" 
-                          value={ing.expandedText || ''} 
-                          onChange={(e) => onIngredientChange(idx, 'expandedText', e.target.value)} 
-                          placeholder={t('modals.expand_ingredient_placeholder')} 
-                          rows={3}
-                          style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem', resize: 'vertical', width: '100%', minHeight: '65px' }} 
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className="recipe-ing-amount">
-                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_amount')}</label>
-                    <input type="text" className="input-field" value={ing.amount} onChange={(e) => onIngredientChange(idx, 'amount', e.target.value)} placeholder="500" />
-                  </div>
-                  <div className="recipe-ing-unit">
-                    <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_unit')}</label>
-                    <input type="text" className="input-field" value={ing.unit} onChange={(e) => onIngredientChange(idx, 'unit', e.target.value)} placeholder="g, kg, L..." />
-                  </div>
-                  <div className="recipe-ing-checks" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}>
-                      <input type="checkbox" checked={ing.loteMandatory} onChange={(e) => onIngredientChange(idx, 'loteMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
-                      {t('modals.lote_obligatory')}
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}>
-                      <input type="checkbox" checked={ing.quantityMandatory} onChange={(e) => onIngredientChange(idx, 'quantityMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
-                      {t('modals.real_qty_obligatory')}
-                    </label>
-                  </div>
-                  <div className="recipe-ing-delete" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    {formData.ingredients.length > 1 && (
-                      <button type="button" onClick={() => onRemoveIngredient(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                  </div>
+                  {(() => {
+                    const fuzzySuggestion = getFuzzySuggestion(ing.name);
+                    const unitMismatch = getUnitMismatch(ing.name, ing.unit);
+
+                    return (
+                      <>
+                        <div className="recipe-ing-name">
+                          <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_name')}</label>
+                          <input type="text" className="input-field" value={ing.name} onChange={(e) => onIngredientChange(idx, 'name', e.target.value)} required placeholder={t('modals.ing_name')} />
+                          
+                          {/* Sugerencia de corrección ortográfica / parecidos */}
+                          {fuzzySuggestion && (
+                            <button
+                              type="button"
+                              onClick={() => onIngredientChange(idx, 'name', fuzzySuggestion)}
+                              style={{
+                                marginTop: '0.4rem',
+                                padding: '0.35rem 0.65rem',
+                                background: '#fffbeb',
+                                border: '1px solid #fde68a',
+                                borderRadius: '0.5rem',
+                                color: '#92400e',
+                                fontSize: '0.78rem',
+                                fontWeight: '600',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                transition: 'all 0.15s ease'
+                              }}
+                              title={t('recipes.did_you_mean') ? t('recipes.did_you_mean').replace('{name}', fuzzySuggestion) : `¿Quisiste escribir "${fuzzySuggestion}"?`}
+                            >
+                              <Sparkles size={13} style={{ flexShrink: 0, color: '#d97706' }} />
+                              <span>{t('recipes.did_you_mean') ? t('recipes.did_you_mean').replace('{name}', fuzzySuggestion) : `¿Quisiste escribir "${fuzzySuggestion}"?`}</span>
+                            </button>
+                          )}
+
+                          <div style={{ marginTop: '0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={ing.expandItem || false} 
+                                  onChange={(e) => onIngredientChange(idx, 'expandItem', e.target.checked)} 
+                                  style={{ accentColor: 'var(--corp-green)' }} 
+                                />
+                                {t('modals.expand_ingredient')}
+                              </label>
+                              <button 
+                                type="button" 
+                                onClick={() => alert(t('modals.expand_ingredient_info'))}
+                                style={{ background: '#e2e8f0', border: 'none', color: '#475569', cursor: 'pointer', width: '16px', height: '16px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                                title="Información"
+                              >
+                                ?
+                              </button>
+                            </div>
+                            {ing.expandItem && (
+                              <textarea 
+                                className="input-field" 
+                                value={ing.expandedText || ''} 
+                                onChange={(e) => onIngredientChange(idx, 'expandedText', e.target.value)} 
+                                placeholder={t('modals.expand_ingredient_placeholder')} 
+                                rows={3}
+                                style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem', resize: 'vertical', width: '100%', minHeight: '65px' }} 
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="recipe-ing-amount">
+                          <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_amount')}</label>
+                          <input type="text" className="input-field" value={ing.amount} onChange={(e) => onIngredientChange(idx, 'amount', e.target.value)} placeholder="500" />
+                        </div>
+
+                        <div className="recipe-ing-unit">
+                          <label style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('modals.ing_unit')}</label>
+                          <input type="text" className="input-field" value={ing.unit} onChange={(e) => onIngredientChange(idx, 'unit', e.target.value)} placeholder="g, kg, L..." />
+                          
+                          {/* Recomendación de unidad de medida */}
+                          {unitMismatch && (
+                            <div style={{
+                              marginTop: '0.4rem',
+                              padding: '0.45rem 0.65rem',
+                              background: '#eff6ff',
+                              border: '1px solid #bfdbfe',
+                              borderRadius: '0.5rem',
+                              fontSize: '0.74rem',
+                              color: '#1e40af',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.35rem'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.35rem' }}>
+                                <Info size={13} style={{ flexShrink: 0, marginTop: '2px', color: '#3b82f6' }} />
+                                <span style={{ lineHeight: 1.35 }}>
+                                  {t('recipes.unit_mismatch_warning') 
+                                    ? t('recipes.unit_mismatch_warning').replace('{unit}', unitMismatch) 
+                                    : `Este ingrediente suele usarse con la unidad "${unitMismatch}". Te recomendamos usar la misma para controlar mejor los stocks.`}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => onIngredientChange(idx, 'unit', unitMismatch)}
+                                style={{
+                                  alignSelf: 'flex-start',
+                                  background: '#2563eb',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '0.35rem',
+                                  padding: '0.2rem 0.55rem',
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {t('recipes.use_unit_btn') ? t('recipes.use_unit_btn').replace('{unit}', unitMismatch) : `Usar ${unitMismatch}`}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="recipe-ing-checks" style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}>
+                            <input type="checkbox" checked={ing.loteMandatory} onChange={(e) => onIngredientChange(idx, 'loteMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
+                            {t('modals.lote_obligatory')}
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}>
+                            <input type="checkbox" checked={ing.quantityMandatory} onChange={(e) => onIngredientChange(idx, 'quantityMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
+                            {t('modals.real_qty_obligatory')}
+                          </label>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={!!ing.sellAsGood} 
+                                onChange={(e) => {
+                                  const isChecked = e.target.checked;
+                                  onIngredientChange(idx, 'sellAsGood', isChecked);
+                                  if (isChecked && (!ing.goodsSalePrice || !ing.goodsBarcode)) {
+                                    const clean = (ing.name || '').trim().toLowerCase();
+                                    const found = goodsList.find(g => 
+                                      (g.linkedIngredientName && g.linkedIngredientName.trim().toLowerCase() === clean) ||
+                                      (g.name && g.name.trim().toLowerCase() === clean)
+                                    );
+                                    if (found) {
+                                      if (!ing.goodsSalePrice && found.salePrice !== undefined) {
+                                        onIngredientChange(idx, 'goodsSalePrice', found.salePrice);
+                                      }
+                                      if (!ing.goodsBarcode && found.barcode) {
+                                        onIngredientChange(idx, 'goodsBarcode', found.barcode);
+                                      }
+                                    }
+                                  }
+                                }} 
+                                style={{ accentColor: 'var(--corp-green)' }} 
+                              />
+                              {t('recipes.sell_as_good_lbl') || "Vender como mercancía"}
+                            </label>
+                            <button
+                              type="button"
+                              title={t('recipes.sell_as_good_tooltip') || "Por ejemplo, si tienes una carnicería y el ingrediente es pollo, señala esta casilla si usas el pollo tanto para hacer elaboraciones como para vendérselo a los clientes."}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                alert(t('recipes.sell_as_good_tooltip') || "Por ejemplo, si tienes una carnicería y el ingrediente es pollo, señala esta casilla si usas el pollo tanto para hacer elaboraciones como para vendérselo a los clientes.");
+                              }}
+                              style={{
+                                background: '#e2e8f0',
+                                border: 'none',
+                                color: '#475569',
+                                cursor: 'pointer',
+                                width: '16px',
+                                height: '16px',
+                                borderRadius: '50%',
+                                fontSize: '11px',
+                                fontWeight: 'bold',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                              }}
+                            >
+                              ?
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="recipe-ing-delete" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                          {formData.ingredients.length > 1 && (
+                            <button type="button" onClick={() => onRemoveIngredient(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}>
+                              <Trash2 size={18} />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Bloque desplegable de campos de venta como mercancía */}
+                        {ing.sellAsGood && (
+                          <div 
+                            className="recipe-ing-goods-details"
+                            style={{
+                              gridColumn: '1 / -1',
+                              width: '100%',
+                              marginTop: '0.5rem',
+                              padding: '0.85rem 1rem',
+                              background: 'rgba(66, 98, 22, 0.05)',
+                              border: '1px solid rgba(66, 98, 22, 0.2)',
+                              borderRadius: '0.75rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.65rem'
+                            }}
+                          >
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem' }}>
+                              <div>
+                                <label style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-main)', display: 'block', marginBottom: '0.25rem' }}>
+                                  {t('recipes.sell_as_good_price') || "Precio de venta (€)"}
+                                </label>
+                                <input 
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  className="input-field" 
+                                  value={ing.goodsSalePrice !== undefined ? ing.goodsSalePrice : ''} 
+                                  onChange={(e) => onIngredientChange(idx, 'goodsSalePrice', e.target.value)} 
+                                  placeholder="0.00"
+                                  style={{ fontSize: '0.9rem', padding: '0.5rem 0.75rem', background: 'white' }}
+                                />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-main)', display: 'block', marginBottom: '0.25rem' }}>
+                                  {t('recipes.sell_as_good_barcode') || "Código de barras"}
+                                </label>
+                                <input 
+                                  type="text" 
+                                  className="input-field" 
+                                  value={ing.goodsBarcode || ''} 
+                                  onChange={(e) => onIngredientChange(idx, 'goodsBarcode', e.target.value)} 
+                                  placeholder="8412345678901"
+                                  style={{ fontSize: '0.9rem', padding: '0.5rem 0.75rem', background: 'white' }}
+                                />
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              <Info size={14} style={{ color: 'var(--corp-green)', flexShrink: 0 }} />
+                              <span>{t('recipes.sell_as_good_info') || "Podrás modificar esta información y gestionar el stock más adelante en la sección de Mercancías."}</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
 

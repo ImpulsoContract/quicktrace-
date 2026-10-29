@@ -1727,7 +1727,16 @@
     "confirm_merge_action": "Confirmar y Fusionar",
     "merging_in_progress": "Fusionando ingredientes...",
     "merge_success": "Ingredientes fusionados correctamente.",
-    "no_ingredients_found": "No se encontraron ingredientes."
+    "no_ingredients_found": "No se encontraron ingredientes.",
+    "did_you_mean": "¿Quisiste escribir \"{name}\"?",
+    "unit_mismatch_warning": "Este ingrediente suele usarse con la unidad \"{unit}\". Te recomendamos usar la misma para controlar mejor los stocks.",
+    "use_unit_btn": "Usar {unit}",
+    "sell_as_good_lbl": "Vender como mercancía",
+    "sell_as_good_tooltip": "Por ejemplo, si tienes una carnicería y el ingrediente es pollo, señala esta casilla si usas el pollo tanto para hacer elaboraciones como para vendérselo a los clientes.",
+    "sell_as_good_section_title": "Venta como mercancía",
+    "sell_as_good_price": "Precio de venta (€)",
+    "sell_as_good_barcode": "Código de barras",
+    "sell_as_good_info": "Podrás modificar esta información y gestionar el stock más adelante en la sección de Mercancías."
   },
   "oil_collection": {
     "title": "Retirada de aceites de fritura",

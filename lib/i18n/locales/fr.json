@@ -1722,7 +1722,16 @@
     "confirm_merge_action": "Confirmer et Fusionner",
     "merging_in_progress": "Fusion des ingrédients...",
     "merge_success": "Ingrédients fusionnés avec succès.",
-    "no_ingredients_found": "Aucun ingrédient trouvé."
+    "no_ingredients_found": "Aucun ingrédient trouvé.",
+    "did_you_mean": "Vouliez-vous écrire « {name} » ?",
+    "unit_mismatch_warning": "Cet ingrédient est habituellement utilisé avec l'unité « {unit} ». Nous vous recommandons d'utiliser la même pour un meilleur contrôle des stocks.",
+    "use_unit_btn": "Utiliser {unit}",
+    "sell_as_good_lbl": "Vendre comme marchandise",
+    "sell_as_good_tooltip": "Par exemple, si vous avez une boucherie et que l'ingrédient est le poulet, cochez cette case si vous utilisez le poulet pour vos préparations et pour la vente directe aux clients.",
+    "sell_as_good_section_title": "Vente comme marchandise",
+    "sell_as_good_price": "Prix de vente (€)",
+    "sell_as_good_barcode": "Code-barres",
+    "sell_as_good_info": "Vous pourrez modifier ces informations et gérer les stocks plus tard dans la section Marchandises."
   },
   "oil_collection": {
     "title": "Collecte des huiles de friture",
