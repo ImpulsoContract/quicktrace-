@@ -13,6 +13,7 @@ export default function SelectGoodsLotsModal({
   initialQuantity = null,
   initialAllocations = null,
   currency = "EUR",
+  isPos = false,
   onConfirm,
   onSelectWithoutLot,
   onClose
@@ -28,10 +29,13 @@ export default function SelectGoodsLotsModal({
   const [visibleInStockCount, setVisibleInStockCount] = useState(10);
   const [visibleOutOfStockCount, setVisibleOutOfStockCount] = useState(10);
 
-  // Allocations state: { [receiptId]: quantityNumber }
+  // Allocations state (for Sales modal multi-allocation): { [receiptId]: quantityNumber }
   const [allocations, setAllocations] = useState({});
 
-  // Fallback target quantity if pre-specified
+  // Single lot selection (for TPV mode where quantity is entered in TPV)
+  const [selectedPosLotId, setSelectedPosLotId] = useState(null);
+
+  // Fallback target quantity if pre-specified (only used in non-TPV mode)
   const [targetQuantity, setTargetQuantity] = useState(
     initialQuantity != null && !isNaN(parseFloat(initialQuantity)) ? parseFloat(initialQuantity) : null
   );
@@ -60,17 +64,23 @@ export default function SelectGoodsLotsModal({
             setActiveTab("in_stock");
           }
 
-          // Pre-populate initial allocations if provided
+          // Pre-populate initial allocations / selected lot if provided
           if (Array.isArray(initialAllocations) && initialAllocations.length > 0) {
-            const initialMap = {};
-            initialAllocations.forEach(alloc => {
-              if (alloc.receiptId && alloc.quantity) {
-                initialMap[alloc.receiptId] = parseFloat(alloc.quantity) || 0;
-              }
-            });
-            setAllocations(initialMap);
+            if (isPos) {
+              const firstAlloc = initialAllocations[0];
+              setSelectedPosLotId(firstAlloc?.receiptId || null);
+            } else {
+              const initialMap = {};
+              initialAllocations.forEach(alloc => {
+                if (alloc.receiptId && alloc.quantity) {
+                  initialMap[alloc.receiptId] = parseFloat(alloc.quantity) || 0;
+                }
+              });
+              setAllocations(initialMap);
+            }
           } else {
             setAllocations({});
+            setSelectedPosLotId(null);
           }
         } else {
           setError(data.error || t('alerts.connection_error') || "Error al cargar los lotes.");
@@ -83,7 +93,7 @@ export default function SelectGoodsLotsModal({
       .finally(() => {
         setLoading(false);
       });
-  }, [isOpen, goods?.id]);
+  }, [isOpen, goods?.id, isPos]);
 
   // Separate receipts into in-stock and out-of-stock
   const inStockLots = useMemo(() => {
@@ -135,17 +145,38 @@ export default function SelectGoodsLotsModal({
     });
   };
 
-  // Total allocated
+  // Total allocated (for sales modal)
   const totalAllocated = useMemo(() => {
     const sum = Object.values(allocations).reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
     return Math.round(sum * 10000) / 10000;
   }, [allocations]);
+
+  const selectedPosLotReceipt = useMemo(() => {
+    if (!selectedPosLotId) return null;
+    return allReceipts.find(r => r.id === selectedPosLotId) || null;
+  }, [allReceipts, selectedPosLotId]);
 
   const unitPrice = goods?.salePrice || 0;
   const totalPrice = Math.round(totalAllocated * unitPrice * 100) / 100;
 
   // Confirm selection with lots
   const handleConfirm = () => {
+    if (isPos) {
+      if (!selectedPosLotId) {
+        alert(t('lots_modal.alert_select_lot') || "Por favor selecciona un lote o utiliza la opción 'No registrar lote'.");
+        return;
+      }
+      const receipt = allReceipts.find(r => r.id === selectedPosLotId);
+      if (onConfirm) {
+        onConfirm([{
+          receiptId: receipt ? receipt.id : selectedPosLotId,
+          lote: receipt?.lote || null,
+          quantity: 0
+        }], 0);
+      }
+      return;
+    }
+
     const allocArray = [];
     for (const [rIdStr, qty] of Object.entries(allocations)) {
       const rId = parseInt(rIdStr);
@@ -171,6 +202,12 @@ export default function SelectGoodsLotsModal({
 
   // Option: sell without lot
   const handleWithoutLot = () => {
+    if (isPos) {
+      if (onSelectWithoutLot) {
+        onSelectWithoutLot(0);
+      }
+      return;
+    }
     let finalQty = totalAllocated > 0 ? totalAllocated : (targetQuantity != null && targetQuantity > 0 ? targetQuantity : 1);
     if (onSelectWithoutLot) {
       onSelectWithoutLot(finalQty);
@@ -239,6 +276,11 @@ export default function SelectGoodsLotsModal({
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, marginTop: '0.2rem' }}>
                 <strong style={{ color: 'var(--text-main)' }}>{goods.name}</strong> · {t('lots_modal.available_stock')}: <span style={{ color: goods.stock > 0 ? 'var(--corp-green)' : '#dc2626', fontWeight: '700' }}>{goods.stock} {goods.unit || 'ud'}</span>
+              </p>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
+                {isPos 
+                  ? (t('lots_modal.pos_subtitle') || "Selecciona el lote que vas a vender (la cantidad se establece en el TPV)") 
+                  : (t('lots_modal.subtitle') || "Selecciona el lote o distribuye la cantidad a vender entre varios lotes")}
               </p>
             </div>
           </div>
@@ -417,7 +459,7 @@ export default function SelectGoodsLotsModal({
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               {visibleLots.map(receipt => {
-                const isSelected = !!allocations[receipt.id];
+                const isSelected = isPos ? (selectedPosLotId === receipt.id) : !!allocations[receipt.id];
                 const currentQty = allocations[receipt.id] || "";
                 const stockQty = Math.max(0, parseFloat(receipt.goodsForSaleQuantity) || 0);
                 const hasStock = stockQty > 0;
@@ -425,29 +467,54 @@ export default function SelectGoodsLotsModal({
                 return (
                   <div
                     key={receipt.id}
+                    onClick={() => isPos && setSelectedPosLotId(receipt.id)}
                     style={{
                       border: isSelected ? '2px solid var(--corp-green)' : '1px solid var(--border)',
                       background: isSelected ? 'rgba(66, 98, 22, 0.03)' : (hasStock ? 'white' : '#f8fafc'),
                       borderRadius: '1rem',
                       padding: '1rem 1.25rem',
                       transition: 'all 0.15s ease',
-                      boxShadow: isSelected ? '0 4px 12px rgba(66, 98, 22, 0.08)' : 'none'
+                      boxShadow: isSelected ? '0 4px 12px rgba(66, 98, 22, 0.08)' : 'none',
+                      cursor: isPos ? 'pointer' : 'default'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-                      {/* Checkbox & Lot information */}
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer', flex: 1, minWidth: '220px' }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleLot(receipt)}
-                          style={{
-                            width: '20px',
-                            height: '20px',
-                            accentColor: 'var(--corp-green)',
-                            cursor: 'pointer'
-                          }}
-                        />
+                      {/* Checkbox / Radio & Lot information */}
+                      <label 
+                        onClick={(e) => {
+                          if (isPos) {
+                            e.preventDefault();
+                            setSelectedPosLotId(receipt.id);
+                          }
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer', flex: 1, minWidth: '220px' }}
+                      >
+                        {isPos ? (
+                          <input
+                            type="radio"
+                            name="posLotSelection"
+                            checked={isSelected}
+                            onChange={() => setSelectedPosLotId(receipt.id)}
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              accentColor: 'var(--corp-green)',
+                              cursor: 'pointer'
+                            }}
+                          />
+                        ) : (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleLot(receipt)}
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              accentColor: 'var(--corp-green)',
+                              cursor: 'pointer'
+                            }}
+                          />
+                        )}
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <span style={{
@@ -507,60 +574,98 @@ export default function SelectGoodsLotsModal({
                         </div>
                       </label>
 
-                      {/* Quantity input when selected */}
-                      {isSelected && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', animation: 'fadeIn 0.2s ease' }}>
-                          <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-muted)' }}>
-                            {t('lots_modal.qty_to_sell_lot') || "Cantidad:"}
-                          </span>
-                          <div style={{ position: 'relative', width: '110px' }}>
-                            <input
-                              type="number"
-                              min="0"
-                              step="any"
-                              value={currentQty}
-                              onChange={(e) => handleSetLotQuantity(receipt.id, e.target.value)}
-                              placeholder="0"
-                              className="input-field"
-                              style={{
-                                padding: '0.45rem 0.6rem',
-                                fontSize: '0.95rem',
-                                fontWeight: '800',
-                                textAlign: 'right',
-                                paddingRight: '2rem'
-                              }}
-                              autoFocus
-                            />
-                            <span style={{
-                              position: 'absolute',
-                              right: '0.6rem',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              fontSize: '0.78rem',
-                              color: 'var(--text-muted)',
-                              fontWeight: '600'
-                            }}>
-                              {goods.unit || 'ud'}
-                            </span>
-                          </div>
-
-                          {hasStock && (
-                            <button
-                              type="button"
-                              onClick={() => handleSetLotQuantity(receipt.id, stockQty)}
-                              className="btn-secondary"
-                              title="Asignar todo el stock de este lote"
-                              style={{
-                                padding: '0.45rem 0.65rem',
-                                fontSize: '0.75rem',
-                                fontWeight: '700',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {t('lots_modal.assign_all') || "Todo"}
-                            </button>
-                          )}
+                      {/* Right side: In POS mode show Select button, in Sales mode show quantity allocation input */}
+                      {isPos ? (
+                        <div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPosLotId(receipt.id);
+                            }}
+                            style={{
+                              padding: '0.45rem 0.9rem',
+                              borderRadius: '0.5rem',
+                              fontSize: '0.82rem',
+                              fontWeight: '700',
+                              border: isSelected ? '1.5px solid var(--corp-green)' : '1px solid var(--border)',
+                              background: isSelected ? 'var(--corp-green)' : 'white',
+                              color: isSelected ? 'white' : 'var(--text-main)',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {isSelected ? (
+                              <>
+                                <Check size={14} />
+                                <span>{t('lots_modal.selected_lot') || "Seleccionado"}</span>
+                              </>
+                            ) : (
+                              <span>{t('lots_modal.select_this_lot') || "Seleccionar"}</span>
+                            )}
+                          </button>
                         </div>
+                      ) : (
+                        isSelected && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', animation: 'fadeIn 0.2s ease' }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+                              {t('lots_modal.qty_to_sell_lot') || "Cantidad:"}
+                            </span>
+                            <div style={{ position: 'relative', width: '110px' }}>
+                              <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                value={currentQty}
+                                onChange={(e) => handleSetLotQuantity(receipt.id, e.target.value)}
+                                placeholder="0"
+                                className="input-field"
+                                style={{
+                                  padding: '0.45rem 0.6rem',
+                                  fontSize: '0.95rem',
+                                  fontWeight: '800',
+                                  textAlign: 'right',
+                                  paddingRight: '2rem'
+                                }}
+                                autoFocus
+                              />
+                              <span style={{
+                                position: 'absolute',
+                                right: '0.6rem',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                fontSize: '0.78rem',
+                                color: 'var(--text-muted)',
+                                fontWeight: '600'
+                              }}>
+                                {goods.unit || 'ud'}
+                              </span>
+                            </div>
+
+                            {hasStock && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSetLotQuantity(receipt.id, stockQty);
+                                }}
+                                className="btn-secondary"
+                                title="Asignar todo el stock de este lote"
+                                style={{
+                                  padding: '0.45rem 0.65rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '700',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {t('lots_modal.assign_all') || "Todo"}
+                              </button>
+                            )}
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
@@ -610,40 +715,75 @@ export default function SelectGoodsLotsModal({
           gap: '1rem'
         }}>
           {/* Summary */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-                {t('lots_modal.total_allocated') || "Total a vender:"}
-              </span>
-              <span style={{ fontSize: '1.25rem', fontWeight: '900', color: totalAllocated > 0 ? 'var(--corp-green)' : 'var(--text-main)' }}>
-                {totalAllocated} {goods.unit || 'ud'}
-              </span>
-              {unitPrice > 0 && (
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-                  · {totalPrice.toFixed(2)} {currency === 'EUR' ? '€' : currency}
+          {isPos ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Package size={20} color={selectedPosLotId ? "var(--corp-green)" : "#94a3b8"} />
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                  {selectedPosLotReceipt ? (
+                    <>
+                      <span>{t('lots_modal.selected_lot') || "Lote seleccionado"}: </span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: '800', color: 'var(--corp-green)' }}>
+                        {selectedPosLotReceipt.lote || "Sin ref"}
+                      </span>
+                    </>
+                  ) : (
+                    <span style={{ color: '#94a3b8' }}>
+                      {t('lots_modal.no_lot_selected') || "No has seleccionado ningún lote"}
+                    </span>
+                  )}
+                </div>
+                {selectedPosLotReceipt && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {parseFloat(selectedPosLotReceipt.goodsForSaleQuantity) > 0 ? (
+                      <span style={{ color: '#16a34a', fontWeight: '600' }}>
+                        {selectedPosLotReceipt.goodsForSaleQuantity} {goods.unit || 'ud'} disponibles
+                      </span>
+                    ) : (
+                      <span style={{ color: '#64748b' }}>
+                        {t('lots_modal.out_of_stock') || "Agotado"} (0 {goods.unit || 'ud'})
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                  {t('lots_modal.total_allocated') || "Total a vender:"}
+                </span>
+                <span style={{ fontSize: '1.25rem', fontWeight: '900', color: totalAllocated > 0 ? 'var(--corp-green)' : 'var(--text-main)' }}>
+                  {totalAllocated} {goods.unit || 'ud'}
+                </span>
+                {unitPrice > 0 && (
+                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                    · {totalPrice.toFixed(2)} {currency === 'EUR' ? '€' : currency}
+                  </span>
+                )}
+              </div>
+
+              {targetQuantity != null && targetQuantity > 0 && (
+                <span style={{
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  color: totalAllocated === targetQuantity ? '#16a34a' : (totalAllocated < targetQuantity ? '#d97706' : '#2563eb'),
+                  marginTop: '0.2rem'
+                }}>
+                  {totalAllocated === targetQuantity ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Check size={14} /> Cantidad exacta alcanzada ({targetQuantity} {goods.unit})
+                    </span>
+                  ) : totalAllocated < targetQuantity ? (
+                    `Faltan ${(Math.round((targetQuantity - totalAllocated) * 1000) / 1000)} ${goods.unit} para llegar a ${targetQuantity}`
+                  ) : (
+                    `Supera la cantidad inicial (${totalAllocated} / ${targetQuantity} ${goods.unit})`
+                  )}
                 </span>
               )}
             </div>
-
-            {targetQuantity != null && targetQuantity > 0 && (
-              <span style={{
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                color: totalAllocated === targetQuantity ? '#16a34a' : (totalAllocated < targetQuantity ? '#d97706' : '#2563eb'),
-                marginTop: '0.2rem'
-              }}>
-                {totalAllocated === targetQuantity ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <Check size={14} /> Cantidad exacta alcanzada ({targetQuantity} {goods.unit})
-                  </span>
-                ) : totalAllocated < targetQuantity ? (
-                  `Faltan ${(Math.round((targetQuantity - totalAllocated) * 1000) / 1000)} ${goods.unit} para llegar a ${targetQuantity}`
-                ) : (
-                  `Supera la cantidad inicial (${totalAllocated} / ${targetQuantity} ${goods.unit})`
-                )}
-              </span>
-            )}
-          </div>
+          )}
 
           {/* Action buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -660,7 +800,7 @@ export default function SelectGoodsLotsModal({
               type="button"
               onClick={handleConfirm}
               className="btn-primary"
-              disabled={totalAllocated <= 0}
+              disabled={isPos ? !selectedPosLotId : totalAllocated <= 0}
               style={{
                 padding: '0.65rem 1.75rem',
                 fontSize: '0.95rem',
@@ -668,8 +808,8 @@ export default function SelectGoodsLotsModal({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                opacity: totalAllocated <= 0 ? 0.6 : 1,
-                cursor: totalAllocated <= 0 ? 'not-allowed' : 'pointer'
+                opacity: (isPos ? !selectedPosLotId : totalAllocated <= 0) ? 0.6 : 1,
+                cursor: (isPos ? !selectedPosLotId : totalAllocated <= 0) ? 'not-allowed' : 'pointer'
               }}
             >
               <Check size={18} />

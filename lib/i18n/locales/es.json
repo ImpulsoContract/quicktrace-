@@ -2141,6 +2141,10 @@
     "provider": "Proveedor:",
     "without_lot_badge": "Sin lote asignado",
     "alert_select_lot": "Por favor selecciona al menos un lote con cantidad o utiliza la opción 'No registrar lote'.",
-    "blocked_out_of_stock_alert": "No hay stock disponible para esta mercancía y no está permitida la venta sin stock en la configuración."
+    "blocked_out_of_stock_alert": "No hay stock disponible para esta mercancía y no está permitida la venta sin stock en la configuración.",
+    "pos_subtitle": "Selecciona el lote que vas a vender (la cantidad se establece en el TPV)",
+    "selected_lot": "Lote seleccionado:",
+    "no_lot_selected": "Ningún lote seleccionado",
+    "select_this_lot": "Seleccionar lote"
   }
 }

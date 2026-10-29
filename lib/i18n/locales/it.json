@@ -2136,6 +2136,10 @@
     "provider": "Fornitore:",
     "without_lot_badge": "Nessun lotto assegnato",
     "alert_select_lot": "Seleziona almeno un lotto con quantità o utilizza l'opzione 'Non registrare lotto'.",
-    "blocked_out_of_stock_alert": "Non c'è stock disponibile per questa merce e la vendita senza stock è bloccata nelle impostazioni."
+    "blocked_out_of_stock_alert": "Non c'è stock disponibile per questa merce e la vendita senza stock è bloccata nelle impostazioni.",
+    "pos_subtitle": "Seleziona il lotto che stai vendendo (la quantità viene inserita nel POS)",
+    "selected_lot": "Lotto selezionato:",
+    "no_lot_selected": "Nessun lotto selezionato",
+    "select_this_lot": "Seleziona lotto"
   }
 }

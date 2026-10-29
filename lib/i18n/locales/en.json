@@ -2141,6 +2141,10 @@
     "provider": "Provider:",
     "without_lot_badge": "No lot assigned",
     "alert_select_lot": "Please select at least one lot with quantity or use the 'Do not register lot' option.",
-    "blocked_out_of_stock_alert": "There is no stock available for this merchandise and selling without stock is blocked in business settings."
+    "blocked_out_of_stock_alert": "There is no stock available for this merchandise and selling without stock is blocked in business settings.",
+    "pos_subtitle": "Select the lot you are selling (quantity is entered in the POS)",
+    "selected_lot": "Selected lot:",
+    "no_lot_selected": "No lot selected",
+    "select_this_lot": "Select lot"
   }
 }
