@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendTemperatureOutOfRangeEmail } from "@/lib/temperatureAlert";
+import { roundTemperature } from "@/lib/utils";
 
 export async function POST(req) {
   try {
@@ -145,20 +146,22 @@ export async function POST(req) {
         );
       }
 
+      const roundedTempVal = roundTemperature(tempVal);
+
       processedReadings.push({
         chamberId: matchedChamber.id,
         chamberName: matchedChamber.name,
-        value: tempVal
+        value: roundedTempVal
       });
 
       // Check if out of range and notifications enabled
       if (matchedChamber.notifyOutOfRange) {
-        const isBelow = matchedChamber.minTemp !== null && matchedChamber.minTemp !== undefined && tempVal < matchedChamber.minTemp;
-        const isAbove = matchedChamber.maxTemp !== null && matchedChamber.maxTemp !== undefined && tempVal > matchedChamber.maxTemp;
+        const isBelow = matchedChamber.minTemp !== null && matchedChamber.minTemp !== undefined && roundedTempVal < matchedChamber.minTemp;
+        const isAbove = matchedChamber.maxTemp !== null && matchedChamber.maxTemp !== undefined && roundedTempVal > matchedChamber.maxTemp;
         if (isBelow || isAbove) {
           outOfRangeAlerts.push({
             chamberName: matchedChamber.name,
-            value: tempVal,
+            value: roundedTempVal,
             minTemp: matchedChamber.minTemp,
             maxTemp: matchedChamber.maxTemp
           });

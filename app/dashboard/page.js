@@ -42,7 +42,7 @@ import RelateGoodsReceiptModal from "@/components/RelateGoodsReceiptModal";
 import DeliveryNoteModal from "@/components/DeliveryNoteModal";
 import { generateDeliveryNotePDF } from "@/lib/deliveryNoteGenerator";
 import ProductFamiliesView from "@/components/ProductFamiliesView";
-import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
+import { normalizeProviderName, matchProviderNames, roundTemperature } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
   { code: "EUR", symbol: "€" },
@@ -2752,7 +2752,7 @@ export default function ClientDashboard() {
         const row = [formatDateTimeDDMMYYYY(record.date)];
         sortedChamberIds.forEach(chamberId => {
           const val = record.values.find(v => v.chamberId === chamberId);
-          row.push(val ? `${val.value} ºC` : '-');
+          row.push(val && val.value !== null && val.value !== undefined ? `${roundTemperature(val.value)} ºC` : '-');
         });
         row.push(record.notes || "-");
         return row;
@@ -5373,7 +5373,15 @@ export default function ClientDashboard() {
     try {
       const url = "/api/temperature-records";
       const method = editingTempRecord ? "PATCH" : "POST";
-      const body = editingTempRecord ? { ...tempForm, id: editingTempRecord.id } : tempForm;
+      const cleanedValues = {};
+      if (tempForm.values) {
+        Object.entries(tempForm.values).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== "") {
+            cleanedValues[k] = roundTemperature(v);
+          }
+        });
+      }
+      const body = editingTempRecord ? { ...tempForm, values: cleanedValues, id: editingTempRecord.id } : { ...tempForm, values: cleanedValues };
 
       const res = await fetch(url, {
         method,
@@ -5406,7 +5414,7 @@ export default function ClientDashboard() {
     setEditingTempRecord(record);
     const values = {};
     record.values.forEach(v => {
-      values[v.chamberId] = v.value;
+      values[v.chamberId] = roundTemperature(v.value);
     });
     setTempForm({
       date: new Date(record.date).toISOString().slice(0, 16),
@@ -9771,6 +9779,9 @@ export default function ClientDashboard() {
                             </td>
                             {chambers.map(chamber => {
                               const val = record.values.find(v => v.chamberId === chamber.id);
+                              const formattedVal = val && val.value !== null && val.value !== undefined
+                                ? roundTemperature(val.value)
+                                : null;
                               return (
                                 <td key={chamber.id} style={{ padding: '1.5rem 2rem', textAlign: 'center' }}>
                                   <span style={{ 
@@ -9782,7 +9793,7 @@ export default function ClientDashboard() {
                                     fontSize: '1rem',
                                     border: val ? '1px solid rgba(66, 98, 22, 0.15)' : '1px solid #e2e8f0'
                                   }}>
-                                    {val ? `${val.value} ºC` : 'N/A'}
+                                    {formattedVal !== null ? `${formattedVal} ºC` : 'N/A'}
                                   </span>
                                 </td>
                               );
@@ -17011,12 +17022,26 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
     }));
   };
 
+  const handleValueBlur = (chamberId) => {
+    setFormData(prev => {
+      const val = prev.values?.[chamberId];
+      if (val === undefined || val === null || val === "") return prev;
+      return {
+        ...prev,
+        values: {
+          ...prev.values,
+          [chamberId]: roundTemperature(val)
+        }
+      };
+    });
+  };
+
   const handleAutoFill = () => {
     if (!lastRecord || !lastRecord.values) return;
     
     const newValues = { ...formData.values };
     lastRecord.values.forEach(v => {
-      newValues[v.chamberId] = v.value;
+      newValues[v.chamberId] = roundTemperature(v.value);
     });
     
     setFormData(prev => ({
@@ -17075,11 +17100,12 @@ function TemperatureRegistrationModal({ chambers, onClose, onSubmit, formData, s
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <input 
                       type="number" 
-                      step="0.1"
+                      step="any"
                       className="input-field" 
                       placeholder="0.0"
-                      value={formData.values[chamber.id] || ""}
+                      value={formData.values[chamber.id] !== undefined ? formData.values[chamber.id] : ""}
                       onChange={(e) => handleValueChange(chamber.id, e.target.value)}
+                      onBlur={() => handleValueBlur(chamber.id)}
                       required
                       style={{ margin: 0, padding: '0.5rem' }}
                     />

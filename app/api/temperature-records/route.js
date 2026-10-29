@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isRecipeLimitExceeded } from "@/lib/planLimits";
 import { sendTemperatureOutOfRangeEmail } from "@/lib/temperatureAlert";
+import { roundTemperature } from "@/lib/utils";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -109,7 +110,7 @@ export async function POST(req) {
         clientProfileId: profile.id,
         values: {
           create: Object.entries(values).map(([chamberId, value]) => ({
-            value: parseFloat(value),
+            value: roundTemperature(value),
             chamberId: parseInt(chamberId)
           }))
         }
@@ -204,7 +205,7 @@ export async function PATCH(req) {
         values: {
           deleteMany: {},
           create: Object.entries(values).map(([chamberId, value]) => ({
-            value: parseFloat(value),
+            value: roundTemperature(value),
             chamberId: parseInt(chamberId)
           }))
         }
