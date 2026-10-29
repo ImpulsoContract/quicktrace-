@@ -310,6 +310,7 @@ const generateLotNumber = (format, recipe, nextElabNum, date = new Date()) => {
 const DEFAULT_LABEL_CONFIG = {
   headerImage: null,
   healthRegistry: "",
+  otherText: "",
   showFields: {
     lote: true,
     person: false,
@@ -3560,6 +3561,15 @@ export default function ClientDashboard() {
             const splitHR = doc.splitTextToSize(hrText, columnWidth);
             doc.text(splitHR, startX, currentY);
             currentY += (splitHR.length * lineHeightMM);
+          }
+          break;
+        case 'otherText':
+          const otText = config.otherText || profile?.labelConfig?.otherText;
+          if (otText && otText.trim()) {
+            doc.setFont("helvetica", "normal");
+            const splitOT = doc.splitTextToSize(otText.trim(), columnWidth);
+            doc.text(splitOT, startX, currentY);
+            currentY += (splitOT.length * lineHeightMM);
           }
           break;
         case 'dryingRoomDates':
@@ -18608,7 +18618,7 @@ function LabelConfigModal({ config, onClose, onSave }) {
     'recipeName', 'lote', 'elaborationDate', 'expirationDate', 'netWeight',
     'elaborationInstructions', 'conservationInstructions', 
     'allergens', 'nutritionalTable', 'ingredientsList', 
-    'madeBy', 'barcode', 'healthRegistry', 'unitPrice', 'dryingRoomDates',
+    'madeBy', 'barcode', 'healthRegistry', 'otherText', 'unitPrice', 'dryingRoomDates',
     'elaborationNotes'
   ];
 
@@ -18774,6 +18784,24 @@ function LabelConfigModal({ config, onClose, onSave }) {
               placeholder="Ej: RGSEAA 12.34567/XX"
               value={localConfig.healthRegistry || ""}
               onChange={(e) => setLocalConfig({...localConfig, healthRegistry: e.target.value})}
+            />
+          </section>
+
+          {/* Other Text for Label Textarea */}
+          <section style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', marginTop: '-1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--corp-green)' }}>
+              {t('modals.labels_other_text') || "Otro texto para la etiqueta"}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              {t('modals.labels_other_text_desc') || "Introduce aquí cualquier texto adicional que desees que aparezca en la etiqueta"}
+            </p>
+            <textarea 
+              className="input-field" 
+              rows={4}
+              placeholder={t('modals.labels_other_text_placeholder') || "Escribe aquí cualquier texto adicional para la etiqueta..."}
+              value={localConfig.otherText || ""}
+              onChange={(e) => setLocalConfig({...localConfig, otherText: e.target.value})}
+              style={{ resize: 'vertical' }}
             />
           </section>
 
