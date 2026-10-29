@@ -3308,8 +3308,9 @@ export default function ClientDashboard() {
     }
   };
 
-  const generateLabelPDF = (elaboration) => {
-    const config = mergeLabelConfig(profile?.labelConfig);
+  const generateLabelPDF = (elaboration, overrideConfig = null, isPreview = false) => {
+    const config = overrideConfig ? mergeLabelConfig(overrideConfig) : mergeLabelConfig(profile?.labelConfig);
+    const targetRecipe = elaboration?.recipe || { name: elaboration?.name || "Elaboración", expiryType: "EXPIRATION" };
     
     let storedWidth = parseInt(config.dimensions?.width);
     let storedHeight = parseInt(config.dimensions?.height);
@@ -3376,7 +3377,7 @@ export default function ClientDashboard() {
         case 'recipeName':
           doc.setFont("helvetica", "bold");
           doc.setFontSize(fontSize + 2); 
-          const nameLines = doc.splitTextToSize(elaboration.recipe.name, columnWidth);
+          const nameLines = doc.splitTextToSize(targetRecipe.name || elaboration.name || "Elaboración", columnWidth);
           doc.text(nameLines, startX, currentY);
           currentY += (nameLines.length * lineHeightMM);
           break;
@@ -3411,7 +3412,7 @@ export default function ClientDashboard() {
           break;
         case 'expirationDate':
           if (elaboration.expirationDate) {
-            const expLabel = elaboration.recipe.expiryType === "BEST_BEFORE" 
+            const expLabel = targetRecipe.expiryType === "BEST_BEFORE" 
               ? t('traceability_form.label_best_before') 
               : t('traceability_form.label_expiration');
             doc.setFont("helvetica", "bold");
@@ -3446,30 +3447,30 @@ export default function ClientDashboard() {
           }
           break;
         case 'elaborationInstructions':
-          if (elaboration.recipe.elaborationInstructions) {
+          if (targetRecipe.elaborationInstructions) {
             doc.setFont("helvetica", "bold");
             doc.text("Elaboración:", startX, currentY);
             currentY += lineHeightMM;
             doc.setFont("helvetica", "normal");
-            const splitText = doc.splitTextToSize(elaboration.recipe.elaborationInstructions, columnWidth);
+            const splitText = doc.splitTextToSize(targetRecipe.elaborationInstructions, columnWidth);
             doc.text(splitText, startX, currentY);
             currentY += (splitText.length * lineHeightMM);
           }
           break;
         case 'conservationInstructions':
-          if (elaboration.recipe.conservationInstructions) {
+          if (targetRecipe.conservationInstructions) {
             doc.setFont("helvetica", "bold");
             doc.text("Conservación:", startX, currentY);
             currentY += lineHeightMM;
             doc.setFont("helvetica", "normal");
-            const splitText = doc.splitTextToSize(elaboration.recipe.conservationInstructions, columnWidth);
+            const splitText = doc.splitTextToSize(targetRecipe.conservationInstructions, columnWidth);
             doc.text(splitText, startX, currentY);
             currentY += (splitText.length * lineHeightMM);
           }
           break;
         case 'allergens':
-          if (elaboration.recipe.allergens && elaboration.recipe.allergens.length > 0) {
-            const allergensList = elaboration.recipe.allergens.map(a => t(`allergens.list.${a}`) || a).join(', ');
+          if (targetRecipe.allergens && targetRecipe.allergens.length > 0) {
+            const allergensList = targetRecipe.allergens.map(a => t(`allergens.list.${a}`) || a).join(', ');
             const titleTxt = `${t('allergens.prefix_label') || "Alérgenos: "}${allergensList}`;
             doc.setFont("helvetica", "bold");
             const lines = doc.splitTextToSize(titleTxt, columnWidth);
@@ -3478,7 +3479,7 @@ export default function ClientDashboard() {
           }
           break;
         case 'nutritionalTable':
-          const nInfo = elaboration.recipe;
+          const nInfo = targetRecipe;
           if (nInfo.energyValue || nInfo.fats || nInfo.carbohydrates || nInfo.proteins || nInfo.salt) {
             currentY += 2;
             doc.setFont("helvetica", "bold");
@@ -3526,8 +3527,8 @@ export default function ClientDashboard() {
 
             elaboration.ingredients.forEach(ing => {
               let displayName = ing.name;
-              if (elaboration.recipe && elaboration.recipe.ingredients) {
-                const recipeIng = elaboration.recipe.ingredients.find(ri => 
+              if (targetRecipe && targetRecipe.ingredients) {
+                const recipeIng = targetRecipe.ingredients.find(ri => 
                   ri.name.trim().toLowerCase() === ing.name.trim().toLowerCase()
                 );
                 if (recipeIng && recipeIng.expandItem && recipeIng.expandedText) {
@@ -3571,10 +3572,10 @@ export default function ClientDashboard() {
           }
           break;
         case 'barcode':
-          if (elaboration.recipe.hasBarcode && elaboration.recipe.barcode) {
+          if (targetRecipe.hasBarcode && targetRecipe.barcode) {
             try {
               const canvas = document.createElement('canvas');
-              JsBarcode(canvas, elaboration.recipe.barcode, {
+              JsBarcode(canvas, targetRecipe.barcode, {
                 format: "EAN13",
                 displayValue: true,
                 fontSize: 14,
@@ -3667,7 +3668,11 @@ export default function ClientDashboard() {
       renderColumnArray(config.columns?.col1, margin, y);
     }
 
-    doc.save(`Etiqueta_${elaboration.name}.pdf`);
+    if (isPreview) {
+      return doc.output('blob');
+    }
+
+    doc.save(`Etiqueta_${elaboration?.name || "elaboracion"}.pdf`);
   };
 
   const generateGoodsReportPDF = async (startDate, endDate) => {
@@ -11380,6 +11385,50 @@ export default function ClientDashboard() {
           config={mergeLabelConfig(profile?.labelConfig)}
           onClose={() => setIsLabelModalOpen(false)}
           onSave={(newConfig) => handleUpdateProfile({ labelConfig: newConfig })}
+          latestElaboration={elaborations.length > 0 ? elaborations[0] : null}
+          onGeneratePreview={(overrideConfig) => {
+            const el = elaborations.length > 0 ? elaborations[0] : {
+              id: 0,
+              name: "L-2026-001",
+              date: new Date().toISOString(),
+              expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              netWeight: "500 g",
+              unitPrice: 5.95,
+              personName: profile?.personName || "Responsable de elaboración",
+              extraInfo: "Lote de elaboración de prueba",
+              recipe: {
+                name: recipes.length > 0 ? recipes[0].name : "Producto de ejemplo",
+                expiryType: "EXPIRATION",
+                elaborationInstructions: "Elaborado según protocolo de calidad y trazabilidad.",
+                conservationInstructions: "Conservar entre 0ºC y 4ºC.",
+                allergens: recipes.length > 0 && recipes[0].allergens ? recipes[0].allergens : [],
+                energyValue: "210 kcal / 878 kJ",
+                fats: "12 g",
+                saturatedFats: "3.5 g",
+                carbohydrates: "4.2 g",
+                sugars: "0.8 g",
+                proteins: "22 g",
+                salt: "1.2 g",
+                hasBarcode: true,
+                barcode: "8412345678901",
+                ingredients: recipes.length > 0 && recipes[0].ingredients ? recipes[0].ingredients : []
+              },
+              ingredients: recipes.length > 0 && recipes[0].ingredients && recipes[0].ingredients.length > 0
+                ? recipes[0].ingredients.map((ing, i) => ({
+                    name: ing.name,
+                    amount: ing.amount,
+                    unit: ing.unit,
+                    lote: `LOT-${i + 1}0${i + 2}`,
+                    realAmount: ing.amount
+                  }))
+                : [
+                    { name: "Ingrediente Principal", amount: "400", unit: "g", lote: "LOT-A101", realAmount: "400" },
+                    { name: "Condimento / Especias", amount: "50", unit: "g", lote: "LOT-B202", realAmount: "50" },
+                    { name: "Aceite de Oliva", amount: "50", unit: "ml", lote: "LOT-C303", realAmount: "50" }
+                  ]
+            };
+            return generateLabelPDF(el, overrideConfig, true);
+          }}
         />
       )}
 
@@ -19394,10 +19443,46 @@ function ManageCleaningZonesModal({ zones, onClose, onCreate, onEdit, onDelete }
   );
 }
 
-function LabelConfigModal({ config, onClose, onSave }) {
+function LabelConfigModal({ config, onClose, onSave, latestElaboration, onGeneratePreview }) {
   const { t } = useI18n();
   const [localConfig, setLocalConfig] = useState(mergeLabelConfig(config));
   const [showHelpVideo, setShowHelpVideo] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewBlobUrl) {
+        URL.revokeObjectURL(previewBlobUrl);
+      }
+    };
+  }, [previewBlobUrl]);
+
+  const handleShowPreview = () => {
+    try {
+      if (!onGeneratePreview) return;
+      const blob = onGeneratePreview(localConfig);
+      if (blob) {
+        if (previewBlobUrl) {
+          URL.revokeObjectURL(previewBlobUrl);
+        }
+        const url = URL.createObjectURL(blob);
+        setPreviewBlobUrl(url);
+        setIsPreviewOpen(true);
+      }
+    } catch (err) {
+      console.error("Error generating label preview:", err);
+      alert(t('modals.preview_error') || "Error al generar la vista previa de la etiqueta");
+    }
+  };
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false);
+    if (previewBlobUrl) {
+      URL.revokeObjectURL(previewBlobUrl);
+      setPreviewBlobUrl(null);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19472,11 +19557,47 @@ function LabelConfigModal({ config, onClose, onSave }) {
   return (
     <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '850px' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>{t('modals.labels_header')}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-            <X size={24} />
-          </button>
+        <header style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>{t('modals.labels_header')}</h2>
+            <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.35rem', borderRadius: '0.5rem' }}>
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Botón de Vista Previa justo debajo del título */}
+          <div style={{ marginTop: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+            <button 
+              type="button"
+              onClick={handleShowPreview}
+              className="btn-secondary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.6rem 1.25rem',
+                fontSize: '0.88rem',
+                fontWeight: '700',
+                background: 'white',
+                border: '1.5px solid var(--corp-green)',
+                color: 'var(--corp-green)',
+                borderRadius: '0.65rem',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(66, 98, 22, 0.08)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Eye size={18} />
+              {t('modals.preview_label_btn') || "Vista previa de la etiqueta"}
+            </button>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              {latestElaboration 
+                ? (t('modals.preview_with_last_elaboration') 
+                    ? t('modals.preview_with_last_elaboration').replace('{name}', latestElaboration.recipe?.name || latestElaboration.name) 
+                    : `Última elaboración: ${latestElaboration.recipe?.name || latestElaboration.name}`)
+                : (t('modals.preview_with_sample_data') || "Mostrando datos de ejemplo")}
+            </span>
+          </div>
         </header>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -19814,6 +19935,127 @@ function LabelConfigModal({ config, onClose, onSave }) {
             <button type="submit" className="btn-primary" style={{ padding: '0.75rem 2rem' }}>{t('common.save')}</button>
           </footer>
         </form>
+
+        {/* Modal de Vista Previa de Etiqueta superpuesto (z-index superior) */}
+        {isPreviewOpen && previewBlobUrl && (
+          <div 
+            className="modal-overlay" 
+            style={{ 
+              zIndex: 1200, 
+              backgroundColor: 'rgba(15, 23, 42, 0.75)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem'
+            }}
+            onClick={handleClosePreview}
+          >
+            <div 
+              className="modal-content glass-card"
+              style={{
+                maxWidth: '820px',
+                width: '100%',
+                maxHeight: '92vh',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: '1.25rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+                background: 'white',
+                overflow: 'hidden',
+                border: '1px solid var(--border)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <header style={{ 
+                padding: '1.25rem 1.5rem', 
+                borderBottom: '1px solid var(--border)', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                background: '#f8fafc'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '0.5rem', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--corp-green)' }}>
+                    <Eye size={20} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                      {t('modals.preview_modal_title') || "Vista previa de la etiqueta"}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {latestElaboration
+                        ? (t('modals.preview_with_last_elaboration') ? t('modals.preview_with_last_elaboration').replace('{name}', latestElaboration.recipe?.name || latestElaboration.name) : `Última elaboración: ${latestElaboration.recipe?.name || latestElaboration.name}`)
+                        : (t('modals.preview_modal_subtitle') || "Con la configuración actual del formulario")}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={handleClosePreview} 
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.5rem' }}
+                >
+                  <X size={22} />
+                </button>
+              </header>
+
+              <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', minHeight: '520px' }}>
+                <iframe 
+                  src={previewBlobUrl} 
+                  style={{ 
+                    width: '100%', 
+                    height: '520px', 
+                    border: '1px solid #cbd5e1', 
+                    borderRadius: '0.75rem',
+                    background: 'white',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                  }} 
+                  title="Vista previa de etiqueta"
+                />
+              </div>
+
+              <footer style={{ 
+                padding: '1rem 1.5rem', 
+                borderTop: '1px solid var(--border)', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                background: '#f8fafc',
+                flexWrap: 'wrap',
+                gap: '0.75rem'
+              }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  {t('modals.preview_modal_hint') || "Esta vista previa muestra la última elaboración con los cambios actuales del formulario aunque aún no los hayas guardado."}
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <a 
+                    href={previewBlobUrl} 
+                    download="Vista_Previa_Etiqueta.pdf"
+                    className="btn-secondary"
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '0.4rem', 
+                      fontSize: '0.85rem',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <Download size={16} />
+                    {t('common.download') || "Descargar PDF"}
+                  </a>
+                  <button 
+                    type="button" 
+                    onClick={handleClosePreview} 
+                    className="btn-primary"
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+                  >
+                    {t('common.close') || "Cerrar"}
+                  </button>
+                </div>
+              </footer>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

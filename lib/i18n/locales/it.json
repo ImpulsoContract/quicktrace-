@@ -653,7 +653,13 @@
     "gfs_cost_no_receipts": "Nessuna entrata merci registrata per questa merce in vendita.",
     "gfs_cost_search_placeholder": "Cerca merce in vendita...",
     "gfs_cost_updated_success": "Prezzo di costo del lotto aggiornato con successo",
-    "no_goods_for_sale": "Nessuna merce in vendita registrata. Crea merci in vendita per iniziare."
+    "no_goods_for_sale": "Nessuna merce in vendita registrata. Crea merci in vendita per iniziare.",
+    "preview_label_btn": "Anteprima dell'etichetta",
+    "preview_modal_title": "Anteprima dell'etichetta",
+    "preview_modal_subtitle": "Anteprima con la configurazione attuale del modulo",
+    "preview_with_last_elaboration": "Ultima preparazione: {name}",
+    "preview_with_sample_data": "Mostrando dati di esempio",
+    "preview_modal_hint": "Questa anteprima mostra l'ultima preparazione con le modifiche attuali del modulo anche se non le hai ancora salvate."
   },
   "workers": {
     "title": "Gestione dei Lavoratori",

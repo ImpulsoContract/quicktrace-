@@ -657,7 +657,13 @@
     "gfs_cost_no_receipts": "No goods receipts recorded for this goods for sale.",
     "gfs_cost_search_placeholder": "Search goods for sale...",
     "gfs_cost_updated_success": "Lot cost price updated successfully",
-    "no_goods_for_sale": "No goods for sale recorded. Create goods for sale to get started."
+    "no_goods_for_sale": "No goods for sale recorded. Create goods for sale to get started.",
+    "preview_label_btn": "Label preview",
+    "preview_modal_title": "Label preview",
+    "preview_modal_subtitle": "Preview with current form configuration",
+    "preview_with_last_elaboration": "Latest elaboration: {name}",
+    "preview_with_sample_data": "Showing sample data",
+    "preview_modal_hint": "This preview shows the latest elaboration with current form changes even if you haven't saved them yet."
   },
   "workers": {
     "title": "Worker Management",

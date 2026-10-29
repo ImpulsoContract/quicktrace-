@@ -653,7 +653,13 @@
     "gfs_cost_no_receipts": "Não há entradas de mercadorias registadas para esta mercadoria para venda.",
     "gfs_cost_search_placeholder": "Pesquisar mercadoria para venda...",
     "gfs_cost_updated_success": "Preço de custo do lote atualizado com sucesso",
-    "no_goods_for_sale": "Não há mercadorias para venda registadas. Crie mercadorias para venda para começar."
+    "no_goods_for_sale": "Não há mercadorias para venda registadas. Crie mercadorias para venda para começar.",
+    "preview_label_btn": "Pré-visualização da etiqueta",
+    "preview_modal_title": "Pré-visualização da etiqueta",
+    "preview_modal_subtitle": "Pré-visualização com a configuração atual do formulário",
+    "preview_with_last_elaboration": "Última preparação: {name}",
+    "preview_with_sample_data": "A mostrar dados de exemplo",
+    "preview_modal_hint": "Esta pré-visualização mostra a última preparação com as alterações atuais do formulário mesmo que ainda não as tenha guardado."
   },
   "workers": {
     "title": "Gestão de Trabalhadores",

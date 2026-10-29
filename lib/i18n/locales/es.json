@@ -657,7 +657,13 @@
     "gfs_cost_no_receipts": "No hay entradas de mercancía registradas para esta mercancía en venta.",
     "gfs_cost_search_placeholder": "Buscar mercancía en venta...",
     "gfs_cost_updated_success": "Precio de coste del lote actualizado correctamente",
-    "no_goods_for_sale": "No hay mercancías en venta registradas. Crea mercancías en venta para empezar."
+    "no_goods_for_sale": "No hay mercancías en venta registradas. Crea mercancías en venta para empezar.",
+    "preview_label_btn": "Vista previa de la etiqueta",
+    "preview_modal_title": "Vista previa de la etiqueta",
+    "preview_modal_subtitle": "Previsualización con la configuración actual del formulario",
+    "preview_with_last_elaboration": "Última elaboración: {name}",
+    "preview_with_sample_data": "Mostrando datos de ejemplo",
+    "preview_modal_hint": "Esta vista previa muestra la última elaboración con los cambios actuales del formulario aunque aún no los hayas guardado."
   },
   "workers": {
     "title": "Gestión de Trabajadores",
