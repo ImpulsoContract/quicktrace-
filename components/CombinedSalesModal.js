@@ -10,6 +10,28 @@ import DeliveryNoteModal from "@/components/DeliveryNoteModal";
 import SelectGoodsLotsModal from "@/components/SelectGoodsLotsModal";
 import { generateDeliveryNotePDF } from "@/lib/deliveryNoteGenerator";
 
+const getMatchedLot = (g, q) => {
+  if (!q || !g || !Array.isArray(g.goodsReceipts)) return null;
+  const cleanQ = q.toString().trim().toLowerCase();
+  if (!cleanQ) return null;
+
+  // 1. Exact match by lot barcode
+  const exactBarcode = g.goodsReceipts.find(r => r.barcode && r.barcode.toString().trim().toLowerCase() === cleanQ);
+  if (exactBarcode) return exactBarcode;
+
+  // 2. Exact match by lot number
+  const exactLot = g.goodsReceipts.find(r => r.lote && r.lote.toString().trim().toLowerCase() === cleanQ);
+  if (exactLot) return exactLot;
+
+  // If query is an exact match for the product's generic barcode, don't preselect an arbitrary lot
+  const isGenericBarcode = g.barcode && g.barcode.toString().trim().toLowerCase() === cleanQ;
+  if (isGenericBarcode) return null;
+
+  // 3. Partial match by lot barcode or lot number
+  return g.goodsReceipts.find(r => r.barcode && r.barcode.toString().toLowerCase().includes(cleanQ)) ||
+         g.goodsReceipts.find(r => r.lote && r.lote.toString().toLowerCase().includes(cleanQ)) || null;
+};
+
 export default function CombinedSalesModal({
   isOpen,
   onClose,
@@ -332,7 +354,7 @@ export default function CombinedSalesModal({
       item.unit = gfs.unit || "unidades";
       item.unitPrice = gfs.salePrice || 0;
       item.searchQuery = '';
-      item.barcode = gfs.barcode || null;
+      item.barcode = preselectedLot?.barcode || gfs.barcode || null;
 
       if (preselectedLot) {
         item.lotAllocations = [{
@@ -399,6 +421,12 @@ export default function CombinedSalesModal({
         item.quantity = totalQty.toString();
         const unitP = parseFloat(item.unitPrice) || 0;
         item.price = (Math.round(totalQty * unitP * 100) / 100).toFixed(2);
+        if (allocations && allocations.length === 1) {
+          const allocLot = (goodsLotModal.goods?.goodsReceipts || []).find(r => r.id === allocations[0].receiptId);
+          if (allocLot?.barcode) {
+            item.barcode = allocLot.barcode;
+          }
+        }
         updated[idx] = item;
         return updated;
       });
@@ -460,6 +488,18 @@ export default function CombinedSalesModal({
   // Validate form items
   const formErrors = useMemo(() => {
     const errors = {};
+
+    const totalGoodsQty = {};
+    const totalElabQty = {};
+    saleItems.forEach(item => {
+      const q = parseFloat(item.quantity?.toString().replace(',', '.')) || 0;
+      if (item.type === 'goods_for_sale' && item.goodsForSaleId) {
+        totalGoodsQty[item.goodsForSaleId] = (totalGoodsQty[item.goodsForSaleId] || 0) + q;
+      } else if (item.type === 'elaboration' && item.elaborationId) {
+        totalElabQty[item.elaborationId] = (totalElabQty[item.elaborationId] || 0) + q;
+      }
+    });
+
     saleItems.forEach((item, idx) => {
       if (item.type === 'elaboration' && !item.elaborationId) {
         errors[idx] = t('combined_sales.select_product_first') || "Debes seleccionar un lote de elaboración.";
@@ -472,10 +512,16 @@ export default function CombinedSalesModal({
       const qty = parseFloat(item.quantity?.toString().replace(',', '.'));
       if (item.quantity !== "" && (isNaN(qty) || qty <= 0)) {
         errors[idx] = t('elaboration_sales.quantity_invalid') || "La cantidad debe ser mayor que 0.";
-      } else if (item.type === 'elaboration' && qty > item.availableStock + 0.0001) {
-        errors[idx] = `La cantidad supera el stock disponible (${item.availableStock} ${item.unit}).`;
-      } else if (item.type === 'goods_for_sale' && profile?.blockOutOfStockGoodsSales && qty > item.availableStock + 0.0001) {
-        errors[idx] = `No hay suficiente stock disponible (${item.availableStock} ${item.unit}). Venta sin stock bloqueada por configuración.`;
+      } else if (item.type === 'elaboration') {
+        const totalReq = totalElabQty[item.elaborationId] || 0;
+        if (totalReq > item.availableStock + 0.0001) {
+          errors[idx] = `La cantidad total solicitada (${totalReq} ${item.unit}) supera el stock disponible (${item.availableStock} ${item.unit}).`;
+        }
+      } else if (item.type === 'goods_for_sale' && profile?.blockOutOfStockGoodsSales) {
+        const totalReq = totalGoodsQty[item.goodsForSaleId] || 0;
+        if (totalReq > item.availableStock + 0.0001) {
+          errors[idx] = `No hay suficiente stock disponible para "${item.name}". Total solicitado: ${totalReq} ${item.unit}, disponible: ${item.availableStock} ${item.unit}. Venta sin stock bloqueada por configuración.`;
+        }
       }
     });
     return errors;
@@ -1534,24 +1580,67 @@ export default function CombinedSalesModal({
                         // Filter matches for combobox
                         const query = (item.searchQuery || "").toLowerCase().trim();
                         const elabMatches = isElab ? availableElaborations.filter(e => {
-                          const alreadySelectedInAnotherRow = saleItems.some((it, i) => i !== idx && it.type === 'elaboration' && it.elaborationId === e.id);
-                          if (alreadySelectedInAnotherRow) return false;
                           if (!query) return true;
-                          return e.recipeName.toLowerCase().includes(query) || e.name.toLowerCase().includes(query);
+                          const cleanQ = query.trim().toLowerCase();
+                          const matchesRecipe = (e.recipeName || "").toLowerCase().includes(cleanQ);
+                          const matchesName = (e.name || "").toLowerCase().includes(cleanQ);
+                          const matchesBarcode = e.barcode && e.barcode.toLowerCase().includes(cleanQ);
+                          return matchesRecipe || matchesName || matchesBarcode;
+                        }).sort((a, b) => {
+                          if (!query) return 0;
+                          const cleanQ = query.trim().toLowerCase();
+                          const aExactBarcode = a.barcode && a.barcode.trim().toLowerCase() === cleanQ;
+                          const bExactBarcode = b.barcode && b.barcode.trim().toLowerCase() === cleanQ;
+                          if (aExactBarcode && !bExactBarcode) return -1;
+                          if (!aExactBarcode && bExactBarcode) return 1;
+
+                          const aExactLot = a.name && a.name.trim().toLowerCase() === cleanQ;
+                          const bExactLot = b.name && b.name.trim().toLowerCase() === cleanQ;
+                          if (aExactLot && !bExactLot) return -1;
+                          if (!aExactLot && bExactLot) return 1;
+
+                          return 0;
                         }) : [];
 
                         const goodsMatches = isGoods ? availableGoods.filter(g => {
-                          const alreadySelectedInAnotherRow = saleItems.some((it, i) => i !== idx && it.type === 'goods_for_sale' && it.goodsForSaleId === g.id);
-                          if (alreadySelectedInAnotherRow) return false;
                           if (!query) return true;
-                          const matchesName = (g.name || "").toLowerCase().includes(query);
-                          const matchesUnit = (g.unit || "").toLowerCase().includes(query);
-                          const matchesBarcode = g.barcode && g.barcode.toLowerCase().includes(query);
+                          const cleanQ = query.trim().toLowerCase();
+                          const matchesName = (g.name || "").toLowerCase().includes(cleanQ);
+                          const matchesUnit = (g.unit || "").toLowerCase().includes(cleanQ);
+                          const matchesBarcode = g.barcode && g.barcode.toLowerCase().includes(cleanQ);
                           const matchesLot = g.goodsReceipts && g.goodsReceipts.some(r => 
-                            (r.barcode && r.barcode.toLowerCase().includes(query)) ||
-                            (r.lote && r.lote.toLowerCase().includes(query))
+                            (r.barcode && r.barcode.toLowerCase().includes(cleanQ)) ||
+                            (r.lote && r.lote.toLowerCase().includes(cleanQ))
                           );
                           return matchesName || matchesUnit || matchesBarcode || matchesLot;
+                        }).sort((a, b) => {
+                          if (!query) return 0;
+                          const cleanQ = query.trim().toLowerCase();
+                          // 1. Exact lot barcode match
+                          const aExactLotBarcode = a.goodsReceipts && a.goodsReceipts.some(r => r.barcode && r.barcode.trim().toLowerCase() === cleanQ);
+                          const bExactLotBarcode = b.goodsReceipts && b.goodsReceipts.some(r => r.barcode && r.barcode.trim().toLowerCase() === cleanQ);
+                          if (aExactLotBarcode && !bExactLotBarcode) return -1;
+                          if (!aExactLotBarcode && bExactLotBarcode) return 1;
+
+                          // 2. Exact generic barcode match
+                          const aExactBarcode = a.barcode && a.barcode.trim().toLowerCase() === cleanQ;
+                          const bExactBarcode = b.barcode && b.barcode.trim().toLowerCase() === cleanQ;
+                          if (aExactBarcode && !bExactBarcode) return -1;
+                          if (!aExactBarcode && bExactBarcode) return 1;
+
+                          // 3. Exact lot code match
+                          const aExactLot = a.goodsReceipts && a.goodsReceipts.some(r => r.lote && r.lote.trim().toLowerCase() === cleanQ);
+                          const bExactLot = b.goodsReceipts && b.goodsReceipts.some(r => r.lote && r.lote.trim().toLowerCase() === cleanQ);
+                          if (aExactLot && !bExactLot) return -1;
+                          if (!aExactLot && bExactLot) return 1;
+
+                          // 4. Exact product name match
+                          const aExactName = (a.name || "").trim().toLowerCase() === cleanQ;
+                          const bExactName = (b.name || "").trim().toLowerCase() === cleanQ;
+                          if (aExactName && !bExactName) return -1;
+                          if (!aExactName && bExactName) return 1;
+
+                          return 0;
                         }) : [];
 
                         return (
@@ -1587,8 +1676,8 @@ export default function CombinedSalesModal({
                                             e.preventDefault();
                                             if (isGoods && goodsMatches.length > 0) {
                                               const g = goodsMatches[0];
-                                              const matchedLot = query ? g.goodsReceipts?.find(r => r.barcode && r.barcode.toLowerCase() === query) : null;
-                                              handleSelectGoods(idx, g, matchedLot || null);
+                                              const matchedLot = getMatchedLot(g, query);
+                                              handleSelectGoods(idx, g, matchedLot);
                                             } else if (isElab && elabMatches.length > 0) {
                                               handleSelectElaboration(idx, elabMatches[0]);
                                             }
@@ -1679,11 +1768,11 @@ export default function CombinedSalesModal({
                                           </div>
                                         ) : (
                                           goodsMatches.map(g => {
-                                            const matchedLot = query ? g.goodsReceipts?.find(r => r.barcode && r.barcode.toLowerCase() === query) : null;
+                                            const matchedLot = getMatchedLot(g, query);
                                             return (
                                             <div
                                               key={g.id}
-                                              onClick={() => handleSelectGoods(idx, g, matchedLot || null)}
+                                              onClick={() => handleSelectGoods(idx, g, matchedLot)}
                                               style={{
                                                 padding: '0.55rem 0.75rem',
                                                 borderBottom: '1px solid #f1f5f9',
