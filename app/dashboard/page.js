@@ -22144,15 +22144,17 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers: initialP
   const [linkRowIndex, setLinkRowIndex] = useState(null);
 
   const handleOpenAddProvider = (prefillName) => {
+    const targetName = prefillName || extractedData?.provider || "";
+    const matched = providers.find(p => matchProviderNames(p.name, targetName));
     const info = extractedData?.providerInfo || {};
     setAddProviderFormData({
-      name: prefillName || info.name || extractedData?.provider || "",
-      nif: info.nif || "",
-      rgs: info.rgs || "",
-      phone: info.phone || "",
-      address: info.address || "",
-      products: "",
-      merchantTypes: []
+      name: targetName || info.name || matched?.name || "",
+      nif: info.nif || matched?.nif || "",
+      rgs: info.rgs || matched?.rgs || "",
+      phone: info.phone || matched?.phone || "",
+      address: info.address || matched?.address || "",
+      products: matched?.products || "",
+      merchantTypes: matched?.merchantTypes || []
     });
     setIsAddProviderModalOpen(true);
   };
@@ -22993,15 +22995,19 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
   // State for raw ingredient linking modal
   const [linkRowIndex, setLinkRowIndex] = useState(null);
 
-  const handleOpenAddProvider = (prefillName) => {
+  const handleOpenAddProvider = (prefillName, rowProviderInfo) => {
+    const targetName = prefillName || selectedNote?.providerName || "";
+    const matched = providers.find(p => matchProviderNames(p.name, targetName));
+    const info = rowProviderInfo || selectedNote?.providerInfo || (Array.isArray(selectedNote?.items) ? selectedNote.items.find(it => it.providerInfo)?.providerInfo : null) || {};
+
     setAddProviderFormData({
-      name: prefillName || selectedNote?.providerName || "",
-      nif: "",
-      rgs: "",
-      phone: "",
-      address: "",
-      products: "",
-      merchantTypes: []
+      name: targetName || info.name || matched?.name || "",
+      nif: info.nif || matched?.nif || "",
+      rgs: info.rgs || matched?.rgs || "",
+      phone: info.phone || matched?.phone || "",
+      address: info.address || matched?.address || "",
+      products: matched?.products || "",
+      merchantTypes: matched?.merchantTypes || []
     });
     setIsAddProviderModalOpen(true);
   };
@@ -23029,6 +23035,18 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
         if (fetchProviders) {
           fetchProviders();
         }
+        const newProviderInfo = {
+          name: createdProvider.name,
+          nif: createdProvider.nif || "",
+          rgs: createdProvider.rgs || "",
+          phone: createdProvider.phone || "",
+          address: createdProvider.address || ""
+        };
+        setSelectedNote(prev => prev ? {
+          ...prev,
+          providerName: createdProvider.name,
+          providerInfo: newProviderInfo
+        } : null);
         setEditableRows(prev => prev.map(row => {
           const isMatch = !row.providerId || 
             !row.providerName || 
@@ -23038,7 +23056,8 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
             return {
               ...row,
               providerName: createdProvider.name,
-              providerId: createdProvider.id
+              providerId: createdProvider.id,
+              providerInfo: newProviderInfo
             };
           }
           return row;
@@ -23101,6 +23120,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
           productName: matchingReceipt.productName || it.productName || "",
           providerName: matchingReceipt.providerName || note.providerName || "",
           providerId: matchingReceipt.providerId || providers.find(p => matchProviderNames(p.name, matchingReceipt.providerName || note.providerName))?.id || null,
+          providerInfo: it.providerInfo || note.providerInfo || null,
           lote: matchingReceipt.lote || it.lote || "",
           quantity: matchingReceipt.quantity || it.quantity || "",
           invoiceNumber: matchingReceipt.invoiceNumber || "",
@@ -23125,6 +23145,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
         productName: it.productName || "",
         providerName: note.providerName || "",
         providerId: providers.find(p => matchProviderNames(p.name, note.providerName))?.id || null,
+        providerInfo: it.providerInfo || note.providerInfo || null,
         lote: it.lote || "",
         quantity: it.quantity || "",
         invoiceNumber: "",
@@ -23157,7 +23178,14 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
           return {
             ...row,
             providerName: value,
-            providerId: found ? found.id : null
+            providerId: found ? found.id : null,
+            providerInfo: found ? {
+              name: found.name,
+              nif: found.nif || "",
+              rgs: found.rgs || "",
+              phone: found.phone || "",
+              address: found.address || ""
+            } : row.providerInfo
           };
         }
         return { ...row, [field]: value };
@@ -23480,8 +23508,38 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-light)', padding: '1rem 1.25rem', borderRadius: '0.85rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block' }}>Proveedor</span>
-                  <span style={{ fontWeight: '700', color: 'var(--corp-green)', fontSize: '1rem' }}>{selectedNote.providerName || "Sin proveedor"}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block' }}>{t('goods_receipt_form.provider') || "Proveedor"}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.15rem' }}>
+                    <span style={{ fontWeight: '700', color: 'var(--corp-green)', fontSize: '1rem' }}>{selectedNote.providerName || "Sin proveedor"}</span>
+                    {selectedNote.providerName && (
+                      providers.some(p => matchProviderNames(p.name, selectedNote.providerName)) ? (
+                        <span style={{ color: '#16a34a', fontSize: '0.75rem', fontWeight: '700', background: '#dcfce7', padding: '0.2rem 0.5rem', borderRadius: '0.35rem' }}>
+                          {t('goods_receipt_form.provider_registered') || "Registrado"}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAddProvider(selectedNote.providerName, selectedNote.providerInfo)}
+                          style={{
+                            background: 'var(--corp-green)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <Plus size={13} />
+                          {t('goods_receipt_form.add_provider') || "Añadir proveedor"}
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', display: 'block' }}>Fecha de escaneo</span>
@@ -23555,7 +23613,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
                         {!row.saved && (
                           <button
                             type="button"
-                            onClick={() => handleOpenAddProvider(row.providerName)}
+                            onClick={() => handleOpenAddProvider(row.providerName, row.providerInfo)}
                             disabled={row.saving}
                             style={{
                               background: 'none',

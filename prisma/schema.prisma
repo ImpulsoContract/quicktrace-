@@ -668,6 +668,7 @@ model ScannedDeliveryNote {
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
   providerName    String?
+  providerInfo    Json?
   imageUrl        String
   fileName        String?
   items           Json          @default("[]")

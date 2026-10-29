@@ -168,15 +168,6 @@ export async function POST(req) {
     console.log(`[Gemini Response] Extracted text:`, resultText);
     const parsedData = JSON.parse(resultText);
 
-    const initialItems = (parsedData.items || []).map((item, idx) => ({
-      id: idx,
-      productName: item.product || "",
-      lote: item.lote || "",
-      quantity: item.quantity || "",
-      saved: false,
-      goodsReceiptId: null
-    }));
-
     const providerName = parsedData.provider || parsedData.providerInfo?.name || "";
     const providerInfo = {
       name: parsedData.providerInfo?.name || providerName || "",
@@ -186,12 +177,24 @@ export async function POST(req) {
       address: parsedData.providerInfo?.address || ""
     };
 
+    const initialItems = (parsedData.items || []).map((item, idx) => ({
+      id: idx,
+      productName: item.product || "",
+      lote: item.lote || "",
+      quantity: item.quantity || "",
+      providerName: providerName,
+      providerInfo: providerInfo,
+      saved: false,
+      goodsReceiptId: null
+    }));
+
     let scannedDoc = null;
     try {
       scannedDoc = await prisma.scannedDeliveryNote.create({
         data: {
           clientProfileId: profileId,
           providerName: providerName,
+          providerInfo: providerInfo,
           imageUrl: blob.url,
           fileName: file.name || "albaran.jpg",
           items: initialItems,
