@@ -2558,7 +2558,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.blockOutOfStockLots !== undefined || updates.blockOutOfStockGoodsSales !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.invoicingProvider !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.hasWaterSection !== undefined || updates.hasWasteSection !== undefined || updates.blockOutOfStockLots !== undefined || updates.blockOutOfStockGoodsSales !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.invoicingProvider !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -5605,7 +5605,7 @@ export default function ClientDashboard() {
               />
             )}
 
-            {(profile?.plan?.hasWater || session?.user?.role === "ADMIN") && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasWater) && (
+            {(profile?.plan?.hasWater || session?.user?.role === "ADMIN") && (session?.user?.role !== "WORKER" || session?.user?.permissions?.hasWater) && (profile?.hasWaterSection !== false) && (
               <SidebarBtn 
                 icon={<Waves size={20} />} 
                 label={t('sidebar.water') || "Agua"} 
@@ -5639,12 +5639,14 @@ export default function ClientDashboard() {
                   active={activeTab === "clientes"} 
                   onClick={() => { setActiveTab("clientes"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
-                <SidebarBtn 
-                  icon={<Recycle size={20} />} 
-                  label={t('sidebar.waste') || "Residuos"} 
-                  active={activeTab === "residuos"} 
-                  onClick={() => { setActiveTab("residuos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
-                />
+                {(profile?.hasWasteSection !== false) && (
+                  <SidebarBtn 
+                    icon={<Recycle size={20} />} 
+                    label={t('sidebar.waste') || "Residuos"} 
+                    active={activeTab === "residuos"} 
+                    onClick={() => { setActiveTab("residuos"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+                  />
+                )}
 
                 {profile?.hasOilCollection && (
                   <SidebarBtn 
@@ -13347,6 +13349,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [hasCuttingTraceability, setHasCuttingTraceability] = useState(profile?.hasCuttingTraceability || false);
   const [hasOilCollection, setHasOilCollection] = useState(profile?.hasOilCollection || false);
   const [hasVegetableDisinfection, setHasVegetableDisinfection] = useState(profile?.hasVegetableDisinfection || false);
+  const [hasWaterSection, setHasWaterSection] = useState(profile?.hasWaterSection !== false);
+  const [hasWasteSection, setHasWasteSection] = useState(profile?.hasWasteSection !== false);
   const [blockOutOfStockLots, setBlockOutOfStockLots] = useState(profile?.blockOutOfStockLots || false);
   const [blockOutOfStockGoodsSales, setBlockOutOfStockGoodsSales] = useState(profile?.blockOutOfStockGoodsSales || false);
   const [goodsLowStockAlertEnabled, setGoodsLowStockAlertEnabled] = useState(profile?.goodsLowStockAlertEnabled || false);
@@ -13396,6 +13400,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setHasCuttingTraceability(profile.hasCuttingTraceability || false);
       setHasOilCollection(profile.hasOilCollection || false);
       setHasVegetableDisinfection(profile.hasVegetableDisinfection || false);
+      setHasWaterSection(profile.hasWaterSection !== false);
+      setHasWasteSection(profile.hasWasteSection !== false);
       setBlockOutOfStockLots(profile.blockOutOfStockLots || false);
       setBlockOutOfStockGoodsSales(profile.blockOutOfStockGoodsSales || false);
       setGoodsLowStockAlertEnabled(profile.goodsLowStockAlertEnabled || false);
@@ -13582,6 +13588,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       hasCuttingTraceability,
       hasOilCollection,
       hasVegetableDisinfection,
+      hasWaterSection,
+      hasWasteSection,
       blockOutOfStockLots,
       blockOutOfStockGoodsSales,
       goodsLowStockAlertEnabled,
@@ -13720,12 +13728,12 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     {
       id: "additional_sections",
       title: t('business_config.additional_sections_title') || "Secciones adicionales",
-      description: t('business_config.additional_sections_desc') || "Activa despiece, recogida de aceite de fritura y desinfección de vegetales.",
+      description: t('business_config.additional_sections_desc') || "Configura qué secciones opcionales deseas mostrar en tu menú principal.",
       icon: <Layers size={24} />,
       badge: {
-        text: `${[hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].filter(Boolean).length} ${t('business_config.active_count_badge') || 'activas'}`,
-        bg: [hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].some(Boolean) ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
-        color: [hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].some(Boolean) ? '#16a34a' : '#64748b'
+        text: `${[hasWaterSection, hasWasteSection, hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].filter(Boolean).length} ${t('business_config.active_count_badge') || 'activas'}`,
+        bg: [hasWaterSection, hasWasteSection, hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].some(Boolean) ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+        color: [hasWaterSection, hasWasteSection, hasCuttingTraceability, hasOilCollection, hasVegetableDisinfection].some(Boolean) ? '#16a34a' : '#64748b'
       }
     },
     {
@@ -14238,6 +14246,38 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ position: 'relative', width: '48px', height: '24px', background: hasWaterSection ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+                <div style={{ position: 'absolute', left: hasWaterSection ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+              </div>
+              <input 
+                type="checkbox" 
+                style={{ display: 'none' }}
+                checked={hasWaterSection} 
+                onChange={(e) => setHasWaterSection(e.target.checked)} 
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Waves size={18} color="var(--corp-green)" />
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.water_enable') || "Activar control de aguas"}</span>
+              </div>
+            </label>
+
+            <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ position: 'relative', width: '48px', height: '24px', background: hasWasteSection ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
+                <div style={{ position: 'absolute', left: hasWasteSection ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />
+              </div>
+              <input 
+                type="checkbox" 
+                style={{ display: 'none' }}
+                checked={hasWasteSection} 
+                onChange={(e) => setHasWasteSection(e.target.checked)} 
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Recycle size={18} color="var(--corp-green)" />
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{t('business_config.waste_enable') || "Activar retirada de residuos"}</span>
+              </div>
+            </label>
+
             <label className="switch-container" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', padding: '1rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
               <div style={{ position: 'relative', width: '48px', height: '24px', background: hasCuttingTraceability ? 'var(--corp-green)' : '#cbd5e1', borderRadius: '12px', transition: 'background 0.3s' }}>
                 <div style={{ position: 'absolute', left: hasCuttingTraceability ? '26px' : '2px', top: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s' }} />

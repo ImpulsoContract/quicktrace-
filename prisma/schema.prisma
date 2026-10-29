@@ -119,6 +119,8 @@ model ClientProfile {
   hasCuttingTraceability     Boolean           @default(false)
   hasOilCollection           Boolean           @default(false)
   hasVegetableDisinfection   Boolean           @default(false)
+  hasWaterSection            Boolean           @default(true)
+  hasWasteSection            Boolean           @default(true)
   blockOutOfStockLots        Boolean           @default(false)
   blockOutOfStockGoodsSales  Boolean           @default(false)
   cuttingRecords             CuttingRecord[]

@@ -263,6 +263,8 @@
     "block_out_of_stock_lots_help": "Por padrão esta caixa está desmarcada, permitindo selecionar qualquer lote. Se marcada, o sistema impedirá de selecionar ou usar lotes de ingredientes cujo estoque restante seja 0 nas elaborações.",
     "additional_sections_title": "Ativar secções adicionais",
     "additional_sections_desc": "Configure quais secções opcionais deseja exibir no seu menu principal.",
+    "water_enable": "Ativar controlo de água",
+    "waste_enable": "Ativar recolha de resíduos",
     "oil_collection_enable": "Ativar recolha de óleos de fritura",
     "vegetable_disinfection_enable": "Ativar desinfeção de vegetais",
     "holded_section_title": "Integração com o Holded",

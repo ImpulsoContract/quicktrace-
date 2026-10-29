@@ -263,6 +263,8 @@
     "block_out_of_stock_lots_help": "Per impostazione predefinita questa casella non è selezionata, consentendo di selezionare qualsiasi lotto. Se selezionata, il sistema impedirà di selezionare o utilizzare lotti di ingredienti con giacenza 0 nelle elaborazioni.",
     "additional_sections_title": "Attiva sezioni aggiuntive",
     "additional_sections_desc": "Configura quali sezioni opzionali desideri visualizzare nel tuo menu principale.",
+    "water_enable": "Abilita controllo delle acque",
+    "waste_enable": "Abilita gestione dei rifiuti",
     "oil_collection_enable": "Attiva ritiro oli di frittura",
     "vegetable_disinfection_enable": "Attiva disinfezione dei vegetali",
     "holded_section_title": "Integrazione con Holded",

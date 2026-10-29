@@ -263,6 +263,8 @@
     "block_out_of_stock_lots_help": "Par défaut cette case est décochée, permettant de sélectionner n'importe quel lot. Si vous la cochez, le système empêchera de sélectionner ou d'utiliser des lots d'ingrédients dont le stock restant est à 0 dans les élaborations.",
     "additional_sections_title": "Activer des sections supplémentaires",
     "additional_sections_desc": "Configurez les sections optionnelles que vous souhaitez afficher dans votre menu principal.",
+    "water_enable": "Activer le contrôle de l'eau",
+    "waste_enable": "Activer la gestion des déchets",
     "oil_collection_enable": "Activer la collecte des huiles de friture",
     "vegetable_disinfection_enable": "Activer la désinfection des végétaux",
     "holded_section_title": "Intégration Holded",

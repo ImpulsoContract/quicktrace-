@@ -263,6 +263,8 @@
     "block_out_of_stock_lots_help": "By default this checkbox is unchecked, allowing any lot to be selected. If checked, the system will prevent selecting or using ingredient lots with 0 remaining stock in elaborations.",
     "additional_sections_title": "Activate additional sections",
     "additional_sections_desc": "Configure which optional sections you want to display in your main menu.",
+    "water_enable": "Enable water control",
+    "waste_enable": "Enable waste management",
     "oil_collection_enable": "Enable frying oil collection",
     "vegetable_disinfection_enable": "Enable vegetable disinfection",
     "holded_section_title": "Holded Integration",
