@@ -9898,13 +9898,25 @@ export default function ClientDashboard() {
                               <FileText size={16} />
                             </button>
                             <button 
+                              type="button"
+                              onClick={() => handleDuplicateRecipe(recipe)}
+                              title={t('common.duplicate') || "Duplicar"}
+                              style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                              <Copy size={16} />
+                            </button>
+                            <button 
+                              type="button"
                               onClick={() => handleEditRecipe(recipe)}
+                              title={t('common.edit') || "Editar"}
                               style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
                             >
                               <Edit size={16} />
                             </button>
                             <button 
+                              type="button"
                               onClick={() => handleDeleteRecipe(recipe.id)}
+                              title={t('common.delete') || "Eliminar"}
                               style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.6rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}
                             >
                               <Trash2 size={16} />
@@ -9912,48 +9924,14 @@ export default function ClientDashboard() {
                           </div>
                         </div>
                         
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                          <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button 
-                              onClick={() => handleDuplicateRecipe(recipe)}
-                              className="btn-secondary"
-                              style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            >
-                              <Plus size={14} /> {t('common.duplicate') || "Duplicar"}
-                            </button>
-                            <button 
-                              onClick={() => handleOpenRecipe(recipe)}
-                              className="btn-primary"
-                              style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            >
-                              <PlayCircle size={14} /> {t('dashboard.elaborar') || "Elaborar"}
-                            </button>
-                          </div>
-
+                        <div>
                           <button 
                             type="button"
-                            onClick={() => setRecipeForTechnicalSheet(recipe)}
-                            className="btn-secondary"
-                            style={{ 
-                              width: '100%', 
-                              padding: '0.65rem 1rem', 
-                              fontSize: '0.82rem', 
-                              fontWeight: '600',
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              gap: '0.5rem',
-                              background: '#f8fafc',
-                              color: '#1e293b',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '0.5rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                            title={t('recipes.download_technical_sheet') || "Descargar ficha técnica en PDF"}
+                            onClick={() => handleOpenRecipe(recipe)}
+                            className="btn-primary"
+                            style={{ width: '100%', padding: '0.65rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                           >
-                            <Download size={14} style={{ color: 'var(--corp-green)' }} />
-                            <span>{t('recipes.download_technical_sheet') || "Descargar ficha técnica en PDF"}</span>
+                            <PlayCircle size={16} /> {t('dashboard.elaborar') || "Elaborar"}
                           </button>
                         </div>
                       </div>
