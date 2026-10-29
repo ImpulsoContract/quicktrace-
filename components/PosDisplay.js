@@ -892,12 +892,46 @@ export default function PosDisplay({
         background: '#020617',
         borderBottom: '2px solid #1e293b',
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1.2fr auto',
-        gap: '1rem',
+        gridTemplateColumns: 'auto 1fr 1fr 1.2fr auto',
+        gap: '0.85rem',
         alignItems: 'center',
-        padding: '0 1.25rem',
+        padding: '0 1rem',
         boxSizing: 'border-box'
       }}>
+        {/* ESQUINA SUPERIOR IZQUIERDA: BOTÓN SALIR / VOLVER A MODO GESTIÓN */}
+        <button
+          type="button"
+          onClick={onExitPos}
+          title={t('pos.exit_btn') || "Volver al modo gestión"}
+          aria-label={t('pos.exit_btn') || "Volver al modo gestión"}
+          style={{
+            background: '#1e293b',
+            border: '1.5px solid #334155',
+            borderRadius: '8px',
+            width: '38px',
+            height: '38px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#94a3b8',
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#ffffff';
+            e.currentTarget.style.background = '#ef4444';
+            e.currentTarget.style.borderColor = '#ef4444';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#94a3b8';
+            e.currentTarget.style.background = '#1e293b';
+            e.currentTarget.style.borderColor = '#334155';
+          }}
+        >
+          <X size={20} />
+        </button>
+
         {/* BOX 1: PESO (KG) - Editable by keyboard */}
         <div style={{
           background: '#0a0f1d',
@@ -1113,6 +1147,28 @@ export default function PosDisplay({
               Selecciona un producto...
             </div>
           )}
+
+          {/* Autosave status info */}
+          <div style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.2rem' }}>
+            {autoSaveStatus === "saving" && (
+              <span style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Loader2 size={11} className="animate-spin" />
+                {t('pos.auto_saving') || "Guardando..."}
+              </span>
+            )}
+            {autoSaveStatus === "saved" && (
+              <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <CheckCircle2 size={11} />
+                {t('pos.auto_saved') || "Autoguardado"} {lastSavedAt && `(${lastSavedAt})`}
+              </span>
+            )}
+            {autoSaveStatus === "error" && (
+              <span style={{ color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <AlertCircle size={11} />
+                {t('pos.auto_save_error') || "Error al autoguardar"}
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1864,24 +1920,12 @@ export default function PosDisplay({
             gap: '0.35rem',
             flexShrink: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <ScanBarcode size={14} style={{ color: '#38bdf8' }} />
-                <span style={{ fontSize: '0.72rem', fontWeight: 900, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {t('pos.barcode_input_title') || "CÓDIGO DE PRODUCTO"}
-                </span>
-              </div>
-              <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
-                Código / Barras
-              </span>
-            </div>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
                 <input
                   ref={barcodeInputRef}
                   type="text"
-                  placeholder={t('pos.barcode_placeholder') || "Escanear o escribir código..."}
+                  placeholder={t('pos.barcode_placeholder') || "Código de producto"}
                   value={barcodeInput}
                   onChange={(e) => {
                     setBarcodeInput(e.target.value);
@@ -1934,7 +1978,7 @@ export default function PosDisplay({
               <button
                 type="button"
                 onClick={() => handleBarcodeSearch(barcodeInput)}
-                title="Buscar producto por código"
+                title={t('pos.search_product_code_title') || "Buscar producto por código"}
                 style={{
                   background: '#0ea5e9',
                   border: 'none',
@@ -1971,15 +2015,6 @@ export default function PosDisplay({
             gap: '0.45rem',
             flexShrink: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.05em' }}>
-                {t('pos.qty_selector_title') || "CANTIDAD (UDS)"}
-              </span>
-              <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
-                {parsedWeight > 0 ? (t('pos.qty_weight_mult') || "Multiplicador peso") : (t('pos.qty_direct_units') || "Unidades directas")}
-              </span>
-            </div>
-
             {/* Display de Cantidad (Sin botones + y -) */}
             <div style={{
               background: '#090d16',
@@ -2077,70 +2112,6 @@ export default function PosDisplay({
         </section>
 
       </main>
-
-      {/* ============================================================== */}
-      {/* 3. BOTTOM BAR (FRANJA DE ABAJO)                               */}
-      {/* ============================================================== */}
-      <footer style={{
-        height: '64px',
-        minHeight: '64px',
-        maxHeight: '64px',
-        background: '#020617',
-        borderTop: '1.5px solid #1e293b',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 1.25rem',
-        boxSizing: 'border-box'
-      }}>
-        {/* Left: Volver a Modo Gestión */}
-        <button
-          type="button"
-          onClick={onExitPos}
-          className="btn-secondary"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.55rem 1.15rem',
-            borderRadius: '6px',
-            fontSize: '0.85rem',
-            fontWeight: 800,
-            background: '#1e293b',
-            border: '1px solid #334155',
-            color: '#f8fafc',
-            cursor: 'pointer'
-          }}
-        >
-          <ArrowLeft size={16} />
-          <span>{t('pos.exit_btn') || "Modo gestión"}</span>
-        </button>
-
-        {/* Center: Autosave status info */}
-        <div style={{ fontSize: '0.78rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          {autoSaveStatus === "saving" && (
-            <span style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Loader2 size={13} className="animate-spin" />
-              {t('pos.auto_saving') || "Guardando..."}
-            </span>
-          )}
-          {autoSaveStatus === "saved" && (
-            <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <CheckCircle2 size={13} />
-              {t('pos.auto_saved') || "Autoguardado"} {lastSavedAt && `(${lastSavedAt})`}
-            </span>
-          )}
-          {autoSaveStatus === "error" && (
-            <span style={{ color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <AlertCircle size={13} />
-              Error en autoguardado
-            </span>
-          )}
-        </div>
-
-        {/* Right: Empty spacer to balance layout */}
-        <div style={{ width: '130px' }} />
-      </footer>
 
       {/* ============================================================== */}
       {/* 5. CHECKOUT / CERRAR VENTA DIALOG                              */}

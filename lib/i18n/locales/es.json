@@ -1906,7 +1906,7 @@
   },
   "pos": {
     "enter_btn": "Modo TPV",
-    "exit_btn": "Modo gestión",
+    "exit_btn": "Volver al modo gestión",
     "seller_anonymous": "Anónimo",
     "seller_management": "Gestión",
     "auto_saving": "Guardando...",
@@ -1964,9 +1964,11 @@
     "filter_all_families": "Todas las familias",
     "products_count": "productos",
     "barcode_input_title": "CÓDIGO DE PRODUCTO",
-    "barcode_placeholder": "Escanear o escribir código...",
+    "barcode_placeholder": "Código de producto",
     "barcode_not_found": "No se encontró elaboración con código: {code}",
-    "barcode_found": "Elaboración seleccionada"
+    "barcode_found": "Elaboración seleccionada",
+    "auto_save_error": "Error al autoguardar",
+    "search_product_code_title": "Buscar producto por código"
   },
   "goods_ingredient_link": {
     "btn_link": "Enlazar con ingrediente",

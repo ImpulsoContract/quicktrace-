@@ -1906,7 +1906,7 @@
   },
   "pos": {
     "enter_btn": "POS Mode",
-    "exit_btn": "Management Mode",
+    "exit_btn": "Back to management mode",
     "seller_anonymous": "Anonymous",
     "seller_management": "Management",
     "auto_saving": "Saving...",
@@ -1964,9 +1964,11 @@
     "filter_all_families": "All families",
     "products_count": "products",
     "barcode_input_title": "PRODUCT CODE",
-    "barcode_placeholder": "Scan or enter code...",
+    "barcode_placeholder": "Product code",
     "barcode_not_found": "No elaboration found with code: {code}",
-    "barcode_found": "Elaboration selected"
+    "barcode_found": "Elaboration selected",
+    "auto_save_error": "Autosave error",
+    "search_product_code_title": "Search product by code"
   },
   "goods_ingredient_link": {
     "btn_link": "Link with ingredient",

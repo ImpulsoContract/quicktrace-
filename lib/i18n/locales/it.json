@@ -1901,7 +1901,7 @@
   },
   "pos": {
     "enter_btn": "Modalità POS",
-    "exit_btn": "Modalità gestione",
+    "exit_btn": "Torna alla modalità gestione",
     "seller_anonymous": "Anonimo",
     "seller_management": "Gestione",
     "auto_saving": "Salvataggio...",
@@ -1959,9 +1959,11 @@
     "filter_all_families": "Tutte le famiglie",
     "products_count": "prodotti",
     "barcode_input_title": "CODICE PRODOTTO",
-    "barcode_placeholder": "Scansiona o inserisci codice...",
+    "barcode_placeholder": "Codice prodotto",
     "barcode_not_found": "Nessuna elaborazione trovata con codice: {code}",
-    "barcode_found": "Elaborazione selezionata"
+    "barcode_found": "Elaborazione selezionata",
+    "auto_save_error": "Errore di salvataggio automatico",
+    "search_product_code_title": "Cerca prodotto per codice"
   },
   "goods_ingredient_link": {
     "btn_link": "Collega a ingrediente",
