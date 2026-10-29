@@ -469,7 +469,8 @@
     "automate_records_btn": "Come automatizzare le registrazioni",
     "automate_records_modal_title": "In questo video ti mostriamo come automatizzare il controllo giornaliero delle temperature delle tue celle",
     "automate_records_more_info_btn": "Voglio maggiori informazioni sul sistema di sensori",
-    "date_and_recipe": "Data e ricetta"
+    "date_and_recipe": "Data e ricetta",
+    "showing_last_20_cleaning_logs": "Visualizzazione degli ultimi 20 record. Seleziona le date sopra per filtrare per periodo."
   },
   "modals": {
     "cleaning_header": "Nuovo Record di Pulizia",

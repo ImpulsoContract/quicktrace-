@@ -473,7 +473,8 @@
     "automate_records_btn": "How to automate records",
     "automate_records_modal_title": "In this video we show you how to automate the daily temperature control of your chambers",
     "automate_records_more_info_btn": "I want more information about the sensor system",
-    "date_and_recipe": "Date and recipe"
+    "date_and_recipe": "Date and recipe",
+    "showing_last_20_cleaning_logs": "Showing the last 20 records. Select dates above to filter by period."
   },
   "modals": {
     "cleaning_header": "New Cleaning Record",

@@ -472,7 +472,8 @@
     "automate_records_btn": "Como automatizar registos",
     "automate_records_modal_title": "Neste vídeo mostramos-lhe como automatizar o controlo diário das temperaturas das suas câmaras",
     "automate_records_more_info_btn": "Quero mais informações sobre o sistema de sensores",
-    "date_and_recipe": "Data e receita"
+    "date_and_recipe": "Data e receita",
+    "showing_last_20_cleaning_logs": "A mostrar os últimos 20 registos. Selecione as datas acima para filtrar por período."
   },
   "modals": {
     "cleaning_header": "Novo Registo de Limpeza",

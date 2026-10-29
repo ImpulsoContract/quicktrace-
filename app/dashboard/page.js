@@ -501,6 +501,31 @@ export default function ClientDashboard() {
     onlyWithStock: false
   });
   const [cleaningFilters, setCleaningFilters] = useState({ startDate: "", endDate: "" });
+
+  const sortedCleaningLogs = useMemo(() => {
+    return [...cleaningLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [cleaningLogs]);
+
+  const hasCleaningDateFilter = Boolean(cleaningFilters.startDate || cleaningFilters.endDate);
+
+  const displayedCleaningLogs = useMemo(() => {
+    if (!hasCleaningDateFilter) {
+      return sortedCleaningLogs.slice(0, 20);
+    }
+    return sortedCleaningLogs.filter(log => {
+      const date = new Date(log.date);
+      if (cleaningFilters.startDate) {
+        const start = new Date(cleaningFilters.startDate);
+        if (date < start) return false;
+      }
+      if (cleaningFilters.endDate) {
+        const end = new Date(cleaningFilters.endDate);
+        end.setHours(23, 59, 59, 999);
+        if (date > end) return false;
+      }
+      return true;
+    });
+  }, [sortedCleaningLogs, hasCleaningDateFilter, cleaningFilters.startDate, cleaningFilters.endDate]);
   const [tempFilters, setTempFilters] = useState({ startDate: "", endDate: "" });
   const [tempPage, setTempPage] = useState(1);
   const tempItemsPerPage = 20;
@@ -900,6 +925,9 @@ export default function ClientDashboard() {
   }, [activeTab, profile]);
 
   useEffect(() => {
+    if (activeTab === "limpieza") {
+      fetchCleaningLogs();
+    }
     if (activeTab === "temperaturas") {
       fetchTempRecords();
       setTempPage(1);
@@ -9352,27 +9380,24 @@ export default function ClientDashboard() {
                 </button>
               </div>
 
-              {(!cleaningFilters.startDate || !cleaningFilters.endDate) ? (
-                <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', color: 'var(--text-muted)' }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-                    <Calendar size={40} color="var(--border)" />
-                  </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>Consulta de limpieza</h3>
-                  <p>Por favor, selecciona un rango de fechas para visualizar los registros.</p>
+              {!hasCleaningDateFilter && sortedCleaningLogs.length > 0 && (
+                <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.88rem', fontWeight: '600', background: '#f8fafc', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                  <Info size={16} color="var(--corp-green)" />
+                  <span>{t('dashboard.showing_last_20_cleaning_logs') || "Mostrando los últimos 20 registros. Selecciona fechas arriba para filtrar por periodo."}</span>
                 </div>
-              ) : cleaningLogs.filter(log => {
-                const date = new Date(log.date);
-                const start = new Date(cleaningFilters.startDate);
-                const end = new Date(cleaningFilters.endDate);
-                end.setHours(23, 59, 59, 999);
-                return date >= start && date <= end;
-              }).length === 0 ? (
+              )}
+
+              {displayedCleaningLogs.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem' }}>
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                     <Brush size={40} color="var(--border)" />
                   </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem' }}>No hay registros en este rango</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>No se encontraron registros de limpieza para las fechas seleccionadas.</p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                    {hasCleaningDateFilter ? (t('dashboard.no_records_range') || "No hay registros en este rango") : (t('dashboard.no_records') || "No hay registros")}
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)' }}>
+                    {hasCleaningDateFilter ? (t('dashboard.no_cleaning_records_range_desc') || "No se encontraron registros de limpieza para las fechas seleccionadas.") : (t('dashboard.no_cleaning_records_desc') || "No se han encontrado registros de limpieza.")}
+                  </p>
                 </div>
               ) : (
                 <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
@@ -9386,20 +9411,8 @@ export default function ClientDashboard() {
                               <input 
                                 type="checkbox" 
                                 style={{ cursor: 'pointer', accentColor: 'var(--corp-green)', width: '1.25rem', height: '1.25rem', border: '2px solid #cbd5e1', borderRadius: '0.25rem' }}
-                                checked={cleaningLogs.length > 0 && cleaningLogs.filter(log => {
-                                  const date = new Date(log.date);
-                                  const start = new Date(cleaningFilters.startDate);
-                                  const end = new Date(cleaningFilters.endDate);
-                                  end.setHours(23, 59, 59, 999);
-                                  return date >= start && date <= end;
-                                }).every(log => selectedRecords.includes(log.id))}
-                                onChange={() => toggleSelectAll(cleaningLogs.filter(log => {
-                                  const date = new Date(log.date);
-                                  const start = new Date(cleaningFilters.startDate);
-                                  const end = new Date(cleaningFilters.endDate);
-                                  end.setHours(23, 59, 59, 999);
-                                  return date >= start && date <= end;
-                                }))}
+                                checked={displayedCleaningLogs.length > 0 && displayedCleaningLogs.every(log => selectedRecords.includes(log.id))}
+                                onChange={() => toggleSelectAll(displayedCleaningLogs)}
                               />
                             </div>
                           </th>
@@ -9421,15 +9434,7 @@ export default function ClientDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {cleaningLogs
-                          .filter(log => {
-                            const date = new Date(log.date);
-                            const start = new Date(cleaningFilters.startDate);
-                            const end = new Date(cleaningFilters.endDate);
-                            end.setHours(23, 59, 59, 999);
-                            return date >= start && date <= end;
-                          })
-                          .map(log => (
+                        {displayedCleaningLogs.map(log => (
                           <tr key={log.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : 'white' }}>
                             <td style={{ padding: '0.75rem 1rem', textAlign: 'center', borderRight: '1px solid var(--border)', background: selectedRecords.includes(log.id) ? '#f0fdf4' : '#f8fafc' }}>
                               <input 
