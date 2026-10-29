@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { 
   X, Plus, Edit, Trash2, Tag, Loader2, Search, CheckCircle, 
   AlertCircle, DollarSign, Package, ShoppingBag, Layers,
-  Archive, ArchiveRestore, ChevronDown, ChevronUp, Save, Check, Link2
+  Archive, ArchiveRestore, ChevronDown, ChevronUp, Save, Check, Link2, ScanBarcode
 } from "lucide-react";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -27,7 +27,8 @@ export default function GoodsForSaleModal({
   const [formData, setFormData] = useState({
     name: "",
     unit: "",
-    salePrice: ""
+    salePrice: "",
+    barcode: ""
   });
 
   // Receipts detail state
@@ -71,7 +72,7 @@ export default function GoodsForSaleModal({
       fetchItems("active");
       setEditingId(null);
       setExpandedItemId(null);
-      setFormData({ name: "", unit: "", salePrice: "" });
+      setFormData({ name: "", unit: "", salePrice: "", barcode: "" });
       setSearchTerm("");
     }
   }, [isOpen]);
@@ -90,13 +91,14 @@ export default function GoodsForSaleModal({
     setFormData({
       name: item.name,
       unit: item.unit,
-      salePrice: item.salePrice != null ? item.salePrice.toString() : ""
+      salePrice: item.salePrice != null ? item.salePrice.toString() : "",
+      barcode: item.barcode || ""
     });
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
-    setFormData({ name: "", unit: "", salePrice: "" });
+    setFormData({ name: "", unit: "", salePrice: "", barcode: "" });
   };
 
   const handleSubmit = async (e) => {
@@ -133,7 +135,8 @@ export default function GoodsForSaleModal({
         body: JSON.stringify({
           name: trimmedName,
           unit: trimmedUnit,
-          salePrice: parsedPrice
+          salePrice: parsedPrice,
+          barcode: formData.barcode ? formData.barcode.trim() : null
         })
       });
 
@@ -255,7 +258,8 @@ export default function GoodsForSaleModal({
         data.lots.forEach(lot => {
           edits[lot.id] = {
             quantity: lot.goodsForSaleQuantity != null ? lot.goodsForSaleQuantity.toString() : "",
-            costPrice: lot.goodsForSaleCostPrice != null ? lot.goodsForSaleCostPrice.toString() : ""
+            costPrice: lot.goodsForSaleCostPrice != null ? lot.goodsForSaleCostPrice.toString() : "",
+            barcode: lot.barcode || ""
           };
         });
         setReceiptEdits(prev => ({ ...prev, ...edits }));
@@ -289,7 +293,8 @@ export default function GoodsForSaleModal({
         body: JSON.stringify({
           receiptId: receiptId,
           newQuantity: edits.quantity,
-          newCostPrice: edits.costPrice
+          newCostPrice: edits.costPrice,
+          newBarcode: edits.barcode
         })
       });
       const data = await res.json();
@@ -421,7 +426,7 @@ export default function GoodsForSaleModal({
               </div>
 
               <form onSubmit={handleSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.85rem', alignItems: 'flex-start' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem', alignItems: 'flex-start' }}>
                   {/* Nombre */}
                   <div>
                     <label className="label" style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.35rem', display: 'block' }}>
@@ -481,6 +486,25 @@ export default function GoodsForSaleModal({
                         {currencySymbol}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Código de barras */}
+                  <div>
+                    <label className="label" style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <ScanBarcode size={14} color="#0284c7" />
+                      <span>{t('goods_for_sale.col_barcode') || "Código de barras"}</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={formData.barcode || ""}
+                      onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                      placeholder={t('goods_for_sale.barcode_placeholder') || "Ej: 8412345678901"}
+                      style={{ margin: 0, fontSize: '0.88rem' }}
+                    />
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.72rem', color: '#64748b', lineHeight: 1.25 }}>
+                      {t('goods_for_sale.barcode_hint') || "Código general para ventas (opcional si se identifica por lote)."}
+                    </p>
                   </div>
                 </div>
 
@@ -676,9 +700,15 @@ export default function GoodsForSaleModal({
                         <React.Fragment key={item.id}>
                           <tr style={{ borderBottom: isExpanded ? 'none' : '1px solid #f1f5f9', background: isBeingEdited ? '#eff6ff' : (isExpanded ? '#f8fafc' : 'transparent') }}>
                             <td style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 <Package size={16} color="var(--corp-green)" />
                                 <span>{item.name}</span>
+                                {item.barcode && (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "#f0f9ff", color: "#0369a1", border: "1px solid #bae6fd", padding: "0.1rem 0.45rem", borderRadius: "4px", fontSize: "0.72rem", fontWeight: 700, fontFamily: "monospace" }}>
+                                    <ScanBarcode size={12} />
+                                    {item.barcode}
+                                  </span>
+                                )}
                                 {item.linkedIngredientName && (
                                   <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0", padding: "0.1rem 0.45rem", borderRadius: "4px", fontSize: "0.72rem", fontWeight: 700 }} title={t("goods_ingredient_link.badge_linked_with", { name: item.linkedIngredientName }) || ("Enlazado con: " + item.linkedIngredientName)}>
                                     <Link2 size={12} />
@@ -911,7 +941,12 @@ export default function GoodsForSaleModal({
                                                   {lot.invoiceNumber || "-"}
                                                 </td>
                                                 <td style={{ padding: '0.5rem 0.6rem', color: 'var(--text-main)', fontWeight: '700' }}>
-                                                  {lot.lote || "-"}
+                                                  <div>{lot.lote || "-"}</div>
+                                                  {lot.barcode && (
+                                                    <div style={{ fontSize: '0.72rem', color: '#0284c7', fontFamily: 'monospace', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                                                      <ScanBarcode size={11} /> {lot.barcode}
+                                                    </div>
+                                                  )}
                                                 </td>
                                                 <td style={{ padding: '0.5rem 0.6rem' }}>
                                                   <input

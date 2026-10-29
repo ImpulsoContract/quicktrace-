@@ -318,9 +318,10 @@ export default function CombinedSalesModal({
     setActiveSearchIdx(null);
   };
 
-  // Select a goods for sale for a row
-  const handleSelectGoods = (index, gfs) => {
+  // Select a goods for sale for a row (optional preselectedLot when matched by lot barcode)
+  const handleSelectGoods = (index, gfs, preselectedLot = null) => {
     const existingQty = saleItems[index]?.quantity ? parseFloat(saleItems[index].quantity.toString().replace(',', '.')) : null;
+    const initialQty = existingQty || 1;
     setSaleItems(prev => {
       const updated = [...prev];
       const item = { ...updated[index] };
@@ -331,7 +332,21 @@ export default function CombinedSalesModal({
       item.unit = gfs.unit || "unidades";
       item.unitPrice = gfs.salePrice || 0;
       item.searchQuery = '';
-      item.lotAllocations = [];
+      item.barcode = gfs.barcode || null;
+
+      if (preselectedLot) {
+        item.lotAllocations = [{
+          receiptId: preselectedLot.id,
+          lote: preselectedLot.lote || "",
+          quantity: initialQty
+        }];
+        if (!item.quantity) {
+          item.quantity = initialQty.toString();
+        }
+      } else {
+        item.lotAllocations = [];
+      }
+
       if (item.quantity) {
         const qtyNum = parseFloat(item.quantity.toString().replace(',', '.'));
         if (!isNaN(qtyNum) && qtyNum > 0 && item.unitPrice > 0) {
@@ -343,14 +358,16 @@ export default function CombinedSalesModal({
     });
     setActiveSearchIdx(null);
 
-    // Open lot selection modal automatically
-    setGoodsLotModal({
-      isOpen: true,
-      rowIndex: index,
-      goods: gfs,
-      initialQuantity: existingQty,
-      initialAllocations: null
-    });
+    // If no preselectedLot was scanned, open lot selection modal automatically
+    if (!preselectedLot) {
+      setGoodsLotModal({
+        isOpen: true,
+        rowIndex: index,
+        goods: gfs,
+        initialQuantity: existingQty,
+        initialAllocations: null
+      });
+    }
   };
 
   const handleOpenLotModal = (index) => {
@@ -1527,7 +1544,14 @@ export default function CombinedSalesModal({
                           const alreadySelectedInAnotherRow = saleItems.some((it, i) => i !== idx && it.type === 'goods_for_sale' && it.goodsForSaleId === g.id);
                           if (alreadySelectedInAnotherRow) return false;
                           if (!query) return true;
-                          return g.name.toLowerCase().includes(query) || (g.unit || "").toLowerCase().includes(query);
+                          const matchesName = (g.name || "").toLowerCase().includes(query);
+                          const matchesUnit = (g.unit || "").toLowerCase().includes(query);
+                          const matchesBarcode = g.barcode && g.barcode.toLowerCase().includes(query);
+                          const matchesLot = g.goodsReceipts && g.goodsReceipts.some(r => 
+                            (r.barcode && r.barcode.toLowerCase().includes(query)) ||
+                            (r.lote && r.lote.toLowerCase().includes(query))
+                          );
+                          return matchesName || matchesUnit || matchesBarcode || matchesLot;
                         }) : [];
 
                         return (
@@ -1558,6 +1582,18 @@ export default function CombinedSalesModal({
                                         value={item.searchQuery || ""}
                                         onFocus={() => setActiveSearchIdx(idx)}
                                         onChange={(e) => handleUpdateItem(idx, "searchQuery", e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            if (isGoods && goodsMatches.length > 0) {
+                                              const g = goodsMatches[0];
+                                              const matchedLot = query ? g.goodsReceipts?.find(r => r.barcode && r.barcode.toLowerCase() === query) : null;
+                                              handleSelectGoods(idx, g, matchedLot || null);
+                                            } else if (isElab && elabMatches.length > 0) {
+                                              handleSelectElaboration(idx, elabMatches[0]);
+                                            }
+                                          }
+                                        }}
                                         placeholder={isElab 
                                           ? (t('combined_sales.search_elaboration_placeholder') || "Buscar lote de elaboración...") 
                                           : (t('combined_sales.search_goods_placeholder') || "Buscar mercancía en venta...")}
@@ -1642,10 +1678,12 @@ export default function CombinedSalesModal({
                                             {t('combined_sales.no_goods_match') || "No se encontraron mercancías con stock disponible"}
                                           </div>
                                         ) : (
-                                          goodsMatches.map(g => (
+                                          goodsMatches.map(g => {
+                                            const matchedLot = query ? g.goodsReceipts?.find(r => r.barcode && r.barcode.toLowerCase() === query) : null;
+                                            return (
                                             <div
                                               key={g.id}
-                                              onClick={() => handleSelectGoods(idx, g)}
+                                              onClick={() => handleSelectGoods(idx, g, matchedLot || null)}
                                               style={{
                                                 padding: '0.55rem 0.75rem',
                                                 borderBottom: '1px solid #f1f5f9',
@@ -1655,9 +1693,19 @@ export default function CombinedSalesModal({
                                               onMouseEnter={(ev) => ev.currentTarget.style.background = '#f8fafc'}
                                               onMouseLeave={(ev) => ev.currentTarget.style.background = 'transparent'}
                                             >
-                                              <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.84rem' }}>
-                                                {g.name}
+                                              <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.84rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span>{g.name}</span>
+                                                {g.barcode && (
+                                                  <span style={{ fontSize: '0.68rem', color: '#0369a1', background: '#e0f2fe', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', fontFamily: 'monospace' }}>
+                                                    🏷️ {g.barcode}
+                                                  </span>
+                                                )}
                                               </div>
+                                              {matchedLot && (
+                                                <div style={{ fontSize: '0.72rem', color: '#047857', marginTop: '0.15rem', fontWeight: 600 }}>
+                                                  {t('combined_sales.lot_barcode_matched') || "Lote coincidente"}: {matchedLot.lote || matchedLot.barcode}
+                                                </div>
+                                              )}
                                               <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
                                                 <span>Disp: <strong>{g.stock} {g.unit}</strong></span>
                                                 {Number(g.salePrice) > 0 && (
@@ -1670,7 +1718,8 @@ export default function CombinedSalesModal({
                                                 )}
                                               </div>
                                             </div>
-                                          ))
+                                          );
+                                          })
                                         )
                                       )}
                                     </div>
@@ -1693,6 +1742,11 @@ export default function CombinedSalesModal({
                                       <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>
                                         {isElab ? item.recipeName : item.name}
                                       </span>
+                                      {isGoods && (item.barcode || availableGoods.find(g => g.id === item.goodsForSaleId)?.barcode) && (
+                                        <span style={{ fontSize: '0.68rem', color: '#0369a1', background: '#e0f2fe', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', fontFamily: 'monospace' }}>
+                                          🏷️ {item.barcode || availableGoods.find(g => g.id === item.goodsForSaleId)?.barcode}
+                                        </span>
+                                      )}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                                       {isElab && (

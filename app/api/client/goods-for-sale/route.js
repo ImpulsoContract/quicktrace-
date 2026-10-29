@@ -45,6 +45,14 @@ export async function GET(req) {
       include: {
         _count: {
           select: { goodsReceipts: true }
+        },
+        goodsReceipts: {
+          select: {
+            id: true,
+            lote: true,
+            barcode: true,
+            goodsForSaleQuantity: true
+          }
         }
       },
       orderBy: { name: 'asc' }
@@ -95,7 +103,7 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { name, unit, salePrice } = body;
+    const { name, unit, salePrice, barcode } = body;
 
     const trimmedName = (name || "").trim();
     const trimmedUnit = (unit || "").trim();
@@ -131,6 +139,7 @@ export async function POST(req) {
         clientProfileId: profileId,
         name: trimmedName,
         unit: trimmedUnit,
+        barcode: barcode ? barcode.trim() : null,
         salePrice: Math.round(parsedPrice * 100) / 100
       }
     });

@@ -59,6 +59,7 @@ export async function GET(req, { params }) {
       select: {
         id: true,
         lote: true,
+        barcode: true,
         date: true,
         providerName: true,
         invoiceNumber: true,
@@ -77,6 +78,7 @@ export async function GET(req, { params }) {
         id: goodsForSale.id,
         name: goodsForSale.name,
         unit: goodsForSale.unit,
+        barcode: goodsForSale.barcode,
         stock: goodsForSale.stock,
         costPrice: goodsForSale.costPrice
       },
@@ -180,6 +182,10 @@ export async function PUT(req, { params }) {
             hasCostPriceUpdate = true;
           }
         }
+      }
+
+      if (u.newBarcode !== undefined) {
+        updateData.barcode = u.newBarcode ? u.newBarcode.trim() : null;
       }
 
       if (Object.keys(updateData).length > 0) {

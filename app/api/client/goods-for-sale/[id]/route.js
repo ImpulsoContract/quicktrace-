@@ -50,7 +50,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ success: true, data: updated });
     }
 
-    const { name, unit, salePrice, isArchived } = body;
+    const { name, unit, salePrice, isArchived, barcode } = body;
 
     const trimmedName = (name || "").trim();
     const trimmedUnit = (unit || "").trim();
@@ -87,6 +87,10 @@ export async function PUT(req, { params }) {
       unit: trimmedUnit,
       salePrice: Math.round(parsedPrice * 100) / 100
     };
+
+    if (barcode !== undefined) {
+      updateData.barcode = barcode ? barcode.trim() : null;
+    }
 
     if (isArchived !== undefined) {
       updateData.isArchived = Boolean(isArchived);

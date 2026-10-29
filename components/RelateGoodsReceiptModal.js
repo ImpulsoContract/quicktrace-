@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { X, Search, PlusCircle, Check, Loader2, Info, Package, Plus, Trash2 } from "lucide-react";
+import { X, Search, PlusCircle, Check, Loader2, Info, Package, Plus, Trash2, ScanBarcode } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
 export default function RelateGoodsReceiptModal({
@@ -14,6 +14,7 @@ export default function RelateGoodsReceiptModal({
   initialGoodsForSaleId = null,
   initialGoodsForSaleQuantity = "",
   initialGoodsForSaleCostPrice = "",
+  initialBarcode = "",
   recipes = [],
   profile,
   onSave
@@ -38,10 +39,11 @@ export default function RelateGoodsReceiptModal({
   const [selectedGfsId, setSelectedGfsId] = useState(null);
   const [gfsQuantity, setGfsQuantity] = useState("");
   const [gfsCostPrice, setGfsCostPrice] = useState("");
+  const [gfsBarcode, setGfsBarcode] = useState("");
 
   // Sub-modal for creating a new GoodsForSale
   const [isAddGfsOpen, setIsAddGfsOpen] = useState(false);
-  const [newGfsForm, setNewGfsForm] = useState({ name: "", unit: "ud", salePrice: "" });
+  const [newGfsForm, setNewGfsForm] = useState({ name: "", unit: "ud", salePrice: "", barcode: "" });
   const [savingNewGfs, setSavingNewGfs] = useState(false);
 
   const currencySymbol = useMemo(() => {
@@ -72,6 +74,7 @@ export default function RelateGoodsReceiptModal({
           ? initialGoodsForSaleCostPrice.toString()
           : ""
       );
+      setGfsBarcode(initialBarcode || "");
       setIngSearchTerm("");
       setGoodsSearchTerm("");
       fetchGoodsForSale();
@@ -82,7 +85,8 @@ export default function RelateGoodsReceiptModal({
     initialQuantities,
     initialGoodsForSaleId,
     initialGoodsForSaleQuantity,
-    initialGoodsForSaleCostPrice
+    initialGoodsForSaleCostPrice,
+    initialBarcode
   ]);
 
   const fetchGoodsForSale = async () => {
@@ -351,7 +355,8 @@ export default function RelateGoodsReceiptModal({
         body: JSON.stringify({
           name: trimmedName,
           unit: trimmedUnit,
-          salePrice: parsedPrice
+          salePrice: parsedPrice,
+          barcode: newGfsForm.barcode ? newGfsForm.barcode.trim() : null
         })
       });
       const data = await res.json();
@@ -370,7 +375,7 @@ export default function RelateGoodsReceiptModal({
           });
         }
         setIsAddGfsOpen(false);
-        setNewGfsForm({ name: "", unit: "ud", salePrice: "" });
+        setNewGfsForm({ name: "", unit: "ud", salePrice: "", barcode: "" });
       } else {
         alert(data.error || t('alerts.request_error'));
       }
@@ -452,7 +457,8 @@ export default function RelateGoodsReceiptModal({
       goodsForSaleId: selectedGfsId,
       goodsForSaleQuantity: parsedGfsQty,
       goodsForSaleCostPrice: parsedGfsCost,
-      goodsForSale: selectedGood
+      goodsForSale: selectedGood,
+      barcode: gfsBarcode ? gfsBarcode.trim() : null
     });
 
     onClose();
@@ -838,7 +844,7 @@ export default function RelateGoodsReceiptModal({
                     </button>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.35rem', fontWeight: '700' }}>
                         {t('goods_receipt_form.stock_quantity_added') || "Cantidad añadida al stock"} ({selectedGood.unit}) <span style={{ color: '#ef4444' }}>*</span>
@@ -870,6 +876,24 @@ export default function RelateGoodsReceiptModal({
                         placeholder="0.00"
                         style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
                       />
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.35rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <ScanBarcode size={13} style={{ color: 'var(--corp-green)' }} />
+                        <span>{t('goods_receipt_form.barcode') || "Código de barras del lote"}</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        value={gfsBarcode}
+                        onChange={(e) => setGfsBarcode(e.target.value)}
+                        placeholder={selectedGood.barcode ? `${selectedGood.barcode} (${t('goods_receipt_form.general_barcode_inherited') || 'heredado'})` : (t('goods_receipt_form.barcode_placeholder') || "Ej: 8412345678901")}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
+                      />
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                        {t('goods_receipt_form.lot_barcode_help') || "Opcional. Código específico de este lote o entrada."}
+                      </span>
                     </div>
                   </div>
 
@@ -1053,6 +1077,24 @@ export default function RelateGoodsReceiptModal({
                   required
                   style={{ margin: 0, fontSize: '0.88rem' }}
                 />
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="label" style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <ScanBarcode size={14} style={{ color: 'var(--corp-green)' }} />
+                  <span>{t('goods_for_sale.col_barcode') || "Código de barras general"}</span>
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={newGfsForm.barcode}
+                  onChange={(e) => setNewGfsForm({ ...newGfsForm, barcode: e.target.value })}
+                  placeholder={t('goods_for_sale.barcode_placeholder') || "Ej: 8412345678901 (opcional)"}
+                  style={{ margin: 0, fontSize: '0.88rem' }}
+                />
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                  {t('goods_for_sale.barcode_hint') || "Código de barras general para identificar este producto al vender o escanear."}
+                </span>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>

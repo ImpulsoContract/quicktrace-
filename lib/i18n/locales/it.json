@@ -948,7 +948,12 @@
     "modal_add_gfs_title": "Nuova merce in vendita",
     "stock_quantity_invalid": "La quantità aggiunta alla giacenza deve essere un numero valido maggiore o uguale a 0.",
     "cost_price_invalid": "Il prezzo di costo deve essere un numero valido maggiore o uguale a 0.",
-    "no_ingredients_found": "Nessun ingrediente trovato."
+    "no_ingredients_found": "Nessun ingrediente trovato.",
+    "barcode": "Codice a barre del lotto",
+    "barcode_placeholder": "Es: 8412345678901 (opzionale)",
+    "barcode_help": "Opzionale. Codice a barre specifico per questo lotto o carico (per vendite e POS).",
+    "lot_barcode_help": "Opzionale. Codice specifico per questo lotto o entrata.",
+    "general_barcode_inherited": "ereditato dal prodotto"
   },
   "plans": {
     "title": "Piani di Prezzo",
@@ -1833,7 +1838,8 @@
     "success_confirmed": "Vendita confermata e registrata con successo.",
     "page_subtitle": "Registra, modifica e consulta le vendite di elaborazioni e merci in vendita",
     "select_customer": "Seleziona cliente",
-    "included_lots": "Lotti inclusi nella vendita"
+    "included_lots": "Lotti inclusi nella vendita",
+    "lot_barcode_matched": "Lotto corrispondente"
   },
   "goods_for_sale": {
     "btn_label": "Merci in vendita",
@@ -1844,6 +1850,9 @@
     "col_name": "Nome della merce",
     "col_unit": "Unità di misura",
     "col_sale_price": "Prezzo di vendita per unità",
+    "col_barcode": "Codice a barre",
+    "barcode_placeholder": "Es: 8412345678901 (opzionale)",
+    "barcode_hint": "Codice a barre generale per identificare questo prodotto alla vendita o scansione.",
     "name_placeholder": "Es: Olio d'oliva 5L",
     "unit_placeholder": "Es: kg, unità, scatola...",
     "save_btn": "Aggiungi alla vendita",

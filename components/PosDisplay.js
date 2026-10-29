@@ -114,15 +114,15 @@ export default function PosDisplay({
   const handleBarcodeSearch = (rawCode) => {
     const code = (rawCode || "").trim();
     if (!code) return;
+    const cleanCode = code.toLowerCase();
 
-    // Search exclusively in availableElaborations as requested ("De momento solo con las elaboraciones")
+    // 1. Search in availableElaborations
     const foundElab = availableElaborations.find(e => {
-      const eBarcode = (e.barcode || "").toString().trim();
+      const eBarcode = (e.barcode || "").toString().trim().toLowerCase();
       const eName = (e.name || "").toString().trim().toLowerCase();
       const eId = (e.id || "").toString();
-      const cleanCode = code.toLowerCase();
 
-      return (eBarcode && eBarcode === code) ||
+      return (eBarcode && eBarcode === cleanCode) ||
              (eId === code) ||
              (eName === cleanCode);
     });
@@ -149,11 +149,119 @@ export default function PosDisplay({
       setBarcodeError("");
       setSuccessToast(`✓ ${productObj.displayName}`);
       setTimeout(() => setSuccessToast(""), 3000);
-    } else {
-      const notFoundMsg = t('pos.barcode_not_found', { code }) || `No se encontró elaboración con código: ${code}`;
-      setBarcodeError(notFoundMsg);
-      setTimeout(() => setBarcodeError(""), 3500);
+      return;
     }
+
+    // 2. Search in availableGoods
+    // 2A. Check if barcode matches a specific goods receipt / lot
+    let foundGoodWithLot = null;
+    let matchedReceipt = null;
+
+    for (const g of availableGoods) {
+      if (Array.isArray(g.goodsReceipts)) {
+        const rMatch = g.goodsReceipts.find(r => r.barcode && r.barcode.toString().trim().toLowerCase() === cleanCode);
+        if (rMatch) {
+          foundGoodWithLot = g;
+          matchedReceipt = rMatch;
+          break;
+        }
+      }
+    }
+
+    if (foundGoodWithLot && matchedReceipt) {
+      if (profile?.blockOutOfStockGoodsSales && (foundGoodWithLot.stock || 0) <= 0) {
+        setBarcodeError(t('lots_modal.blocked_out_of_stock_alert') || "No hay stock disponible para esta mercancía y no está permitida la venta sin stock en la configuración.");
+        setTimeout(() => setBarcodeError(""), 3500);
+        return;
+      }
+
+      const productObj = {
+        id: `gfs_${foundGoodWithLot.id}`,
+        rawId: foundGoodWithLot.id,
+        type: 'goods_for_sale',
+        elaborationId: null,
+        goodsForSaleId: foundGoodWithLot.id,
+        name: foundGoodWithLot.name,
+        recipeName: '',
+        displayName: foundGoodWithLot.name,
+        unitPrice: foundGoodWithLot.salePrice || 0,
+        unit: foundGoodWithLot.unit || "ud",
+        availableStock: foundGoodWithLot.stock || 0,
+        productFamilyId: foundGoodWithLot.productFamilyId || null,
+        barcode: foundGoodWithLot.barcode || null,
+        lotAllocations: [{
+          receiptId: matchedReceipt.id,
+          lote: matchedReceipt.lote || "",
+          quantity: 0
+        }]
+      };
+
+      setSelectedProduct(productObj);
+      setBarcodeInput("");
+      setBarcodeError("");
+      setSuccessToast(`✓ ${foundGoodWithLot.name} (${t('dashboard.lote') || 'Lote'}: ${matchedReceipt.lote || matchedReceipt.barcode})`);
+      setTimeout(() => setSuccessToast(""), 3000);
+      return;
+    }
+
+    // 2B. Check if barcode matches general goods for sale (barcode, id, name)
+    const foundGood = availableGoods.find(g => {
+      const gBarcode = (g.barcode || "").toString().trim().toLowerCase();
+      const gName = (g.name || "").toString().trim().toLowerCase();
+      const gId = (g.id || "").toString();
+
+      return (gBarcode && gBarcode === cleanCode) ||
+             (gId === code) ||
+             (gName === cleanCode);
+    });
+
+    if (foundGood) {
+      if (profile?.blockOutOfStockGoodsSales && (foundGood.stock || 0) <= 0) {
+        setBarcodeError(t('lots_modal.blocked_out_of_stock_alert') || "No hay stock disponible para esta mercancía y no está permitida la venta sin stock en la configuración.");
+        setTimeout(() => setBarcodeError(""), 3500);
+        return;
+      }
+
+      setBarcodeInput("");
+      setBarcodeError("");
+
+      // Open lots modal for user to select lot
+      setGoodsLotModal({
+        isOpen: true,
+        goods: {
+          id: foundGood.id,
+          name: foundGood.name,
+          stock: foundGood.stock,
+          unit: foundGood.unit,
+          salePrice: foundGood.salePrice
+        },
+        product: {
+          id: `gfs_${foundGood.id}`,
+          rawId: foundGood.id,
+          type: 'goods_for_sale',
+          elaborationId: null,
+          goodsForSaleId: foundGood.id,
+          name: foundGood.name,
+          recipeName: '',
+          displayName: foundGood.name,
+          unitPrice: foundGood.salePrice || 0,
+          unit: foundGood.unit || "ud",
+          availableStock: foundGood.stock || 0,
+          productFamilyId: foundGood.productFamilyId || null,
+          barcode: foundGood.barcode || null,
+          goodsReceipts: foundGood.goodsReceipts || []
+        },
+        editingItemId: null,
+        initialQuantity: null,
+        initialAllocations: null
+      });
+      return;
+    }
+
+    // 3. Not found
+    const notFoundMsg = t('pos.barcode_not_found', { code }) || `No se encontró producto con código: ${code}`;
+    setBarcodeError(notFoundMsg);
+    setTimeout(() => setBarcodeError(""), 3500);
   };
 
   // 6. DRAFTS MAP BY SELLER: { [sellerId]: { draftId, customerId, date, notes, items: [] } }
@@ -376,7 +484,8 @@ export default function PosDisplay({
     // Goods for sale
     if (productCategory === "all" || productCategory === "goods") {
       availableGoods.forEach(g => {
-        const fullTxt = (g.name || '').toLowerCase();
+        const lotReceiptsText = (g.goodsReceipts || []).map(r => `${r.lote || ''} ${r.barcode || ''}`).join(' ');
+        const fullTxt = `${g.name || ''} ${g.barcode || ''} ${lotReceiptsText}`.toLowerCase();
         if (!searchClean || fullTxt.includes(searchClean)) {
           result.push({
             id: `gfs_${g.id}`,
@@ -390,7 +499,9 @@ export default function PosDisplay({
             unitPrice: g.salePrice || 0,
             unit: g.unit || "ud",
             availableStock: g.stock || 0,
-            productFamilyId: g.productFamilyId || null
+            productFamilyId: g.productFamilyId || null,
+            barcode: g.barcode || null,
+            goodsReceipts: g.goodsReceipts || []
           });
         }
       });
@@ -1621,17 +1732,24 @@ export default function PosDisplay({
                   >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                        <span style={{
-                          fontSize: '0.6rem',
-                          fontWeight: 800,
-                          padding: '0.05rem 0.35rem',
-                          borderRadius: '3px',
-                          background: p.type === 'elaboration' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(56, 189, 248, 0.2)',
-                          color: p.type === 'elaboration' ? '#4ade80' : '#38bdf8',
-                          textTransform: 'uppercase'
-                        }}>
-                          {p.type === 'elaboration' ? 'Elab' : 'Merc'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span style={{
+                            fontSize: '0.6rem',
+                            fontWeight: 800,
+                            padding: '0.05rem 0.35rem',
+                            borderRadius: '3px',
+                            background: p.type === 'elaboration' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+                            color: p.type === 'elaboration' ? '#4ade80' : '#38bdf8',
+                            textTransform: 'uppercase'
+                          }}>
+                            {p.type === 'elaboration' ? 'Elab' : 'Merc'}
+                          </span>
+                          {p.barcode && (
+                            <span style={{ fontSize: '0.58rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                              🏷️ {p.barcode}
+                            </span>
+                          )}
+                        </div>
                         {isSelected && (
                           <span style={{
                             background: '#22c55e',

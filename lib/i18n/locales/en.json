@@ -953,7 +953,12 @@
     "modal_add_gfs_title": "New goods for sale",
     "stock_quantity_invalid": "The quantity added to stock must be a valid number greater than or equal to 0.",
     "cost_price_invalid": "The cost price must be a valid number greater than or equal to 0.",
-    "no_ingredients_found": "No ingredients found."
+    "no_ingredients_found": "No ingredients found.",
+    "barcode": "Lot barcode",
+    "barcode_placeholder": "E.g.: 8412345678901 (optional)",
+    "barcode_help": "Optional. Specific barcode for this lot or receipt (for sales and POS).",
+    "lot_barcode_help": "Optional. Specific barcode for this lot or receipt.",
+    "general_barcode_inherited": "inherited from product"
   },
   "plans": {
     "title": "Pricing Plans",
@@ -1838,7 +1843,8 @@
     "success_confirmed": "Sale confirmed and registered successfully.",
     "page_subtitle": "Register, edit and consult sales of elaborations and goods for sale",
     "select_customer": "Select customer",
-    "included_lots": "Lots included in sale"
+    "included_lots": "Lots included in sale",
+    "lot_barcode_matched": "Matching lot"
   },
   "goods_for_sale": {
     "btn_label": "Goods for sale",
@@ -1849,6 +1855,9 @@
     "col_name": "Good / Product name",
     "col_unit": "Unit of measurement",
     "col_sale_price": "Sale price per unit",
+    "col_barcode": "Barcode",
+    "barcode_placeholder": "E.g.: 8412345678901 (optional)",
+    "barcode_hint": "General barcode to identify this product when selling or scanning.",
     "name_placeholder": "E.g.: Extra Virgin Olive Oil 5L",
     "unit_placeholder": "E.g.: kg, unit, box...",
     "save_btn": "Add to sale",

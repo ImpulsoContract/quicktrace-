@@ -947,7 +947,12 @@
     "modal_add_gfs_title": "Nova mercadoria à venda",
     "stock_quantity_invalid": "A quantidade adicionada ao estoque deve ser um número válido maior ou igual a 0.",
     "cost_price_invalid": "O preço de custo deve ser um número válido maior ou igual a 0.",
-    "no_ingredients_found": "Nenhum ingrediente encontrado."
+    "no_ingredients_found": "Nenhum ingrediente encontrado.",
+    "barcode": "Código de barras do lote",
+    "barcode_placeholder": "Ex: 8412345678901 (opcional)",
+    "barcode_help": "Opcional. Código de barras específico para este lote ou entrada (para vendas e PDV).",
+    "lot_barcode_help": "Opcional. Código específico para este lote ou entrada.",
+    "general_barcode_inherited": "herdado do produto"
   },
   "plans": {
     "title": "Planos de Preços",
@@ -1832,7 +1837,8 @@
     "success_confirmed": "Venda confirmada e registrada com sucesso.",
     "page_subtitle": "Registre, edite e consulte vendas de elaborações e mercadorias para venda",
     "select_customer": "Selecionar cliente",
-    "included_lots": "Lotes incluídos na venda"
+    "included_lots": "Lotes incluídos na venda",
+    "lot_barcode_matched": "Lote correspondente"
   },
   "goods_for_sale": {
     "btn_label": "Mercadorias à venda",
@@ -1843,6 +1849,9 @@
     "col_name": "Nome da mercadoria",
     "col_unit": "Unidade de medida",
     "col_sale_price": "Preço de venda por unidade",
+    "col_barcode": "Código de barras",
+    "barcode_placeholder": "Ex: 8412345678901 (opcional)",
+    "barcode_hint": "Código de barras geral para identificar este produto na venda ou leitura.",
     "name_placeholder": "Ex: Azeite de Oliva 5L",
     "unit_placeholder": "Ex: kg, unidade, caixa...",
     "save_btn": "Adicionar à venda",

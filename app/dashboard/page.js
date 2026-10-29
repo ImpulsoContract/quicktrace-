@@ -19,7 +19,8 @@ import {
   ShoppingCart,
   Tag,
   Store,
-  Link2
+  Link2,
+  ScanBarcode
 } from "lucide-react";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
@@ -677,6 +678,7 @@ export default function ClientDashboard() {
     providerId: null,
     productName: "",
     lote: "",
+    barcode: "",
     invoiceNumber: "",
     quantity: "",
     date: new Date().toISOString().slice(0, 16),
@@ -1921,6 +1923,7 @@ export default function ClientDashboard() {
           providerId: null,
           productName: "",
           lote: "",
+          barcode: "",
           invoiceNumber: "",
           quantity: "",
           date: new Date().toISOString().slice(0, 16),
@@ -1963,6 +1966,7 @@ export default function ClientDashboard() {
       providerName: receipt.providerName || "",
       productName: receipt.productName,
       lote: receipt.lote || "",
+      barcode: receipt.barcode || "",
       invoiceNumber: receipt.invoiceNumber || "",
       quantity: receipt.quantity || "",
       date: new Date(receipt.date).toISOString().slice(0, 16),
@@ -8739,6 +8743,7 @@ export default function ClientDashboard() {
                           providerName: "",
                           productName: "",
                           lote: "",
+                          barcode: "",
                           invoiceNumber: "",
                           quantity: "",
                           date: new Date().toISOString().slice(0, 16),
@@ -8960,6 +8965,11 @@ export default function ClientDashboard() {
                         <div>
                           <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t('dashboard.lote')}</span>
                           <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{receipt.lote || '-'}</span>
+                          {receipt.barcode && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.72rem', color: '#047857', background: '#ecfdf5', padding: '0.1rem 0.4rem', borderRadius: '0.25rem', marginTop: '0.25rem', fontFamily: 'monospace' }}>
+                              <ScanBarcode size={12} /> {receipt.barcode}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <span style={{ display: 'block', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>CANTIDAD</span>
@@ -16102,6 +16112,22 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               </div>
             </div>
             <div className="form-group">
+              <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <ScanBarcode size={15} style={{ color: 'var(--corp-green)' }} />
+                <span>{t('goods_receipt_form.barcode') || "Código de barras del lote"}</span>
+              </label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={formData.barcode || ""} 
+                onChange={(e) => setFormData({...formData, barcode: e.target.value})} 
+                placeholder={t('goods_receipt_form.barcode_placeholder') || "Ej: 8412345678901 (opcional)"}
+              />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem', lineHeight: '1.3' }}>
+                {t('goods_receipt_form.barcode_help') || "Opcional. Código específico de este lote o entrada (para ventas y TPV)."}
+              </p>
+            </div>
+            <div className="form-group">
               <label className="label">{t('goods_receipt_form.quantity') || t('modals.ing_amount') || "Cantidad"}</label>
               <input 
                 type="text" 
@@ -16276,9 +16302,10 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
           initialGoodsForSaleId={formData.goodsForSaleId}
           initialGoodsForSaleQuantity={formData.goodsForSaleQuantity}
           initialGoodsForSaleCostPrice={formData.goodsForSaleCostPrice}
+          initialBarcode={formData.barcode || ""}
           recipes={recipes}
           profile={profile}
-          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale }) => {
+          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
             setFormData({
               ...formData,
               relatedIngredients,
@@ -16286,7 +16313,8 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
               goodsForSaleId,
               goodsForSaleQuantity,
               goodsForSaleCostPrice,
-              goodsForSale
+              goodsForSale,
+              ...(barcode !== undefined ? { barcode } : {})
             });
           }}
         />
@@ -22300,6 +22328,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers: initialP
         providerName: row.providerName,
         productName: row.productName,
         lote: row.lote,
+        barcode: row.barcode || null,
         invoiceNumber: row.invoiceNumber,
         quantity: row.quantity,
         date: new Date().toISOString(),
@@ -22785,9 +22814,10 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers: initialP
           initialGoodsForSaleId={aiRows[linkRowIndex]?.goodsForSaleId}
           initialGoodsForSaleQuantity={aiRows[linkRowIndex]?.goodsForSaleQuantity}
           initialGoodsForSaleCostPrice={aiRows[linkRowIndex]?.goodsForSaleCostPrice}
+          initialBarcode={aiRows[linkRowIndex]?.barcode || ""}
           recipes={recipes}
           profile={profile}
-          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale }) => {
+          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
             setAiRows(prev => prev.map((r, i) => i === linkRowIndex ? {
               ...r,
               relatedIngredients,
@@ -22795,7 +22825,8 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers: initialP
               goodsForSaleId,
               goodsForSaleQuantity,
               goodsForSaleCostPrice,
-              goodsForSale
+              goodsForSale,
+              ...(barcode !== undefined ? { barcode } : {})
             } : r));
           }}
         />
@@ -23153,6 +23184,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
         providerName: row.providerName,
         productName: row.productName,
         lote: row.lote,
+        barcode: row.barcode || null,
         invoiceNumber: row.invoiceNumber,
         quantity: row.quantity,
         date: new Date().toISOString(),
@@ -23811,9 +23843,10 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
           initialGoodsForSaleId={editableRows[linkRowIndex]?.goodsForSaleId}
           initialGoodsForSaleQuantity={editableRows[linkRowIndex]?.goodsForSaleQuantity}
           initialGoodsForSaleCostPrice={editableRows[linkRowIndex]?.goodsForSaleCostPrice}
+          initialBarcode={editableRows[linkRowIndex]?.barcode || ""}
           recipes={recipes}
           profile={profile}
-          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale }) => {
+          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
             setEditableRows(prev => prev.map((r, i) => i === linkRowIndex ? {
               ...r,
               relatedIngredients,
@@ -23821,7 +23854,8 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
               goodsForSaleId,
               goodsForSaleQuantity,
               goodsForSaleCostPrice,
-              goodsForSale
+              goodsForSale,
+              ...(barcode !== undefined ? { barcode } : {})
             } : r));
           }}
         />

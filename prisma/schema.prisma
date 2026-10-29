@@ -507,6 +507,7 @@ model GoodsReceipt {
   providerName      String?
   productName       String
   lote              String?
+  barcode           String?
   invoiceNumber     String?
   quantity          String?
   date              DateTime @default(now())
@@ -741,6 +742,7 @@ model GoodsForSale {
 
   name      String
   unit      String
+  barcode   String?
   salePrice Float         @default(0)
   costPrice Float?
   stock     Float         @default(0)

@@ -948,7 +948,12 @@
     "modal_add_gfs_title": "Nouvelle marchandise en vente",
     "stock_quantity_invalid": "La quantité ajoutée au stock doit être un nombre valide supérieur ou égal à 0.",
     "cost_price_invalid": "Le prix de revient doit être un nombre valide supérieur ou égal à 0.",
-    "no_ingredients_found": "Aucun ingrédient trouvé."
+    "no_ingredients_found": "Aucun ingrédient trouvé.",
+    "barcode": "Code-barres du lot",
+    "barcode_placeholder": "Ex: 8412345678901 (optionnel)",
+    "barcode_help": "Optionnel. Code-barres spécifique à ce lot ou cette entrée (pour les ventes et le TPV).",
+    "lot_barcode_help": "Optionnel. Code spécifique pour ce lot ou cette entrée.",
+    "general_barcode_inherited": "hérité du produit"
   },
   "plans": {
     "title": "Plans de Tarification",
@@ -1833,7 +1838,8 @@
     "success_confirmed": "Vente confirmée et enregistrée avec succès.",
     "page_subtitle": "Enregistrez, modifiez et consultez les ventes d'élaborations et de marchandises en vente",
     "select_customer": "Sélectionner un client",
-    "included_lots": "Lots inclus dans la vente"
+    "included_lots": "Lots inclus dans la vente",
+    "lot_barcode_matched": "Lot correspondant"
   },
   "goods_for_sale": {
     "btn_label": "Marchandises en vente",
@@ -1844,6 +1850,9 @@
     "col_name": "Nom de la marchandise",
     "col_unit": "Unité de mesure",
     "col_sale_price": "Prix de vente par unité",
+    "col_barcode": "Code-barres",
+    "barcode_placeholder": "Ex: 8412345678901 (optionnel)",
+    "barcode_hint": "Code-barres général pour identifier ce produit lors de la vente ou du scan.",
     "name_placeholder": "Ex: Huile d'olive 5L",
     "unit_placeholder": "Ex: kg, unité, boîte...",
     "save_btn": "Ajouter à la vente",

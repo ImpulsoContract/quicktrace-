@@ -953,7 +953,12 @@
     "modal_add_gfs_title": "Nueva mercancía en venta",
     "stock_quantity_invalid": "La cantidad añadida al stock debe ser un número válido mayor o igual a 0.",
     "cost_price_invalid": "El precio de coste debe ser un número válido mayor o igual a 0.",
-    "no_ingredients_found": "No se encontraron ingredientes."
+    "no_ingredients_found": "No se encontraron ingredientes.",
+    "barcode": "Código de barras del lote",
+    "barcode_placeholder": "Ej: 8412345678901 (opcional)",
+    "barcode_help": "Opcional. Código específico de este lote o entrada (para ventas y TPV).",
+    "lot_barcode_help": "Opcional. Código específico de este lote o entrada.",
+    "general_barcode_inherited": "heredado del producto"
   },
   "plans": {
     "title": "Planes de Precios",
@@ -1838,7 +1843,8 @@
     "success_confirmed": "Venta confirmada y registrada correctamente.",
     "page_subtitle": "Registra, edita y consulta ventas de elaboraciones y mercancías en venta",
     "select_customer": "Seleccionar cliente",
-    "included_lots": "Lotes incluidos en la venta"
+    "included_lots": "Lotes incluidos en la venta",
+    "lot_barcode_matched": "Lote coincidente"
   },
   "goods_for_sale": {
     "btn_label": "Mercancías en venta",
@@ -1849,6 +1855,9 @@
     "col_name": "Nombre de la mercancía",
     "col_unit": "Unidad de medida",
     "col_sale_price": "Precio de venta por unidad",
+    "col_barcode": "Código de barras",
+    "barcode_placeholder": "Ej: 8412345678901 (opcional)",
+    "barcode_hint": "Código de barras general para identificar este producto al vender o escanear.",
     "name_placeholder": "Ej: Aceite de Oliva 5L",
     "unit_placeholder": "Ej: kg, ud, caja...",
     "save_btn": "Añadir a la venta",
