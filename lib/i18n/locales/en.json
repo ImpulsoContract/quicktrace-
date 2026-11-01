@@ -1742,7 +1742,18 @@
     "sell_as_good_section_title": "Sale as merchandise",
     "sell_as_good_price": "Sale price (€)",
     "sell_as_good_barcode": "Barcode",
-    "sell_as_good_info": "You can modify this information and manage stock later in the Goods section."
+    "sell_as_good_info": "You can modify this information and manage stock later in the Goods section.",
+    "view_recipe_list_btn": "View recipe list",
+    "recipe_list_title": "Recipe List",
+    "recipe_list_subtitle": "View all your recipes, ingredient count, creation date, and recorded elaborations.",
+    "col_recipe_name": "Recipe name",
+    "col_ingredients_count": "No. of Ingredients",
+    "col_created_at": "Creation date",
+    "col_elaborations_count": "Elaborations created",
+    "view_cards_btn": "View cards",
+    "view_table_btn": "View table",
+    "total_recipes": "Total recipes",
+    "total_elaborations": "Total elaborations"
   },
   "oil_collection": {
     "title": "Frying oil collection",

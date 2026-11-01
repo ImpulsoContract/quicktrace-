@@ -1742,7 +1742,18 @@
     "sell_as_good_section_title": "Venta como mercancía",
     "sell_as_good_price": "Precio de venta (€)",
     "sell_as_good_barcode": "Código de barras",
-    "sell_as_good_info": "Podrás modificar esta información y gestionar el stock más adelante en la sección de Mercancías."
+    "sell_as_good_info": "Podrás modificar esta información y gestionar el stock más adelante en la sección de Mercancías.",
+    "view_recipe_list_btn": "Ver listado de recetas",
+    "recipe_list_title": "Listado de Recetas",
+    "recipe_list_subtitle": "Consulta todas tus recetas, número de ingredientes, fecha de creación y elaboraciones registradas.",
+    "col_recipe_name": "Nombre de la receta",
+    "col_ingredients_count": "Nº Ingredientes",
+    "col_created_at": "Fecha de creación",
+    "col_elaborations_count": "Elaboraciones creadas",
+    "view_cards_btn": "Ver tarjetas",
+    "view_table_btn": "Ver tabla",
+    "total_recipes": "Total recetas",
+    "total_elaborations": "Total elaboraciones"
   },
   "oil_collection": {
     "title": "Retirada de aceites de fritura",

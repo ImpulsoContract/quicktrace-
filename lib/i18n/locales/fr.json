@@ -1737,7 +1737,18 @@
     "sell_as_good_section_title": "Vente comme marchandise",
     "sell_as_good_price": "Prix de vente (€)",
     "sell_as_good_barcode": "Code-barres",
-    "sell_as_good_info": "Vous pourrez modifier ces informations et gérer les stocks plus tard dans la section Marchandises."
+    "sell_as_good_info": "Vous pourrez modifier ces informations et gérer les stocks plus tard dans la section Marchandises.",
+    "view_recipe_list_btn": "Voir la liste des recettes",
+    "recipe_list_title": "Liste des Recettes",
+    "recipe_list_subtitle": "Consultez toutes vos recettes, nombre d'ingrédients, date de création et élaborations enregistrées.",
+    "col_recipe_name": "Nom de la recette",
+    "col_ingredients_count": "Nbre d'ingrédients",
+    "col_created_at": "Date de création",
+    "col_elaborations_count": "Élaborations créées",
+    "view_cards_btn": "Voir les cartes",
+    "view_table_btn": "Voir tableau",
+    "total_recipes": "Total des recettes",
+    "total_elaborations": "Total des élaborations"
   },
   "oil_collection": {
     "title": "Collecte des huiles de friture",

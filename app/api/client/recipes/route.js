@@ -29,7 +29,10 @@ export async function GET() {
             { order: 'asc' },
             { id: 'asc' }
           ]
-        } 
+        },
+        _count: {
+          select: { elaborations: true }
+        }
       },
       orderBy: { name: 'asc' }
     });

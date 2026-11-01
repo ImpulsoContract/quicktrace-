@@ -1736,7 +1736,18 @@
     "sell_as_good_section_title": "Venda como mercadoria",
     "sell_as_good_price": "Preço de venda (€)",
     "sell_as_good_barcode": "Código de barras",
-    "sell_as_good_info": "Poderá modificar esta informação e gerir o stock mais tarde na secção de Mercadorias."
+    "sell_as_good_info": "Poderá modificar esta informação e gerir o stock mais tarde na secção de Mercadorias.",
+    "view_recipe_list_btn": "Ver lista de receitas",
+    "recipe_list_title": "Lista de Receitas",
+    "recipe_list_subtitle": "Consulte todas as suas receitas, número de ingredientes, data de criação e elaborações registadas.",
+    "col_recipe_name": "Nome da receita",
+    "col_ingredients_count": "Nº de Ingredientes",
+    "col_created_at": "Data de criação",
+    "col_elaborations_count": "Elaborações criadas",
+    "view_cards_btn": "Ver cartões",
+    "view_table_btn": "Ver tabela",
+    "total_recipes": "Total de receitas",
+    "total_elaborations": "Total de elaborações"
   },
   "oil_collection": {
     "title": "Recolha de óleos de fritura",

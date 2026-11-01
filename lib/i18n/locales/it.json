@@ -1737,7 +1737,18 @@
     "sell_as_good_section_title": "Vendita come merce",
     "sell_as_good_price": "Prezzo di vendita (€)",
     "sell_as_good_barcode": "Codice a barre",
-    "sell_as_good_info": "Potrai modificare queste informazioni e gestire le scorte in seguito nella sezione Merci."
+    "sell_as_good_info": "Potrai modificare queste informazioni e gestire le scorte in seguito nella sezione Merci.",
+    "view_recipe_list_btn": "Visualizza elenco ricette",
+    "recipe_list_title": "Elenco delle Ricette",
+    "recipe_list_subtitle": "Consulta tutte le tue ricette, numero di ingredienti, data di creazione ed elaborazioni registrate.",
+    "col_recipe_name": "Nome della ricetta",
+    "col_ingredients_count": "N. Ingredienti",
+    "col_created_at": "Data di creazione",
+    "col_elaborations_count": "Elaborazioni create",
+    "view_cards_btn": "Visualizza schede",
+    "view_table_btn": "Visualizza tabella",
+    "total_recipes": "Totale ricette",
+    "total_elaborations": "Totale elaborazioni"
   },
   "oil_collection": {
     "title": "Ritiro oli di frittura",

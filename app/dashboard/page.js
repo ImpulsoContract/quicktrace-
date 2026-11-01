@@ -20,7 +20,10 @@ import {
   Tag,
   Store,
   Link2,
-  ScanBarcode
+  ScanBarcode,
+  List,
+  Table,
+  LayoutGrid
 } from "lucide-react";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
@@ -35,6 +38,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationsBell from "@/components/NotificationsBell";
 import CustomerImportModal from "@/components/CustomerImportModal";
 import MergeIngredientsModal from "@/components/MergeIngredientsModal";
+import RecipeListModal from "@/components/RecipeListModal";
 import CombinedSalesModal from "@/components/CombinedSalesModal";
 import PosDisplay from "@/components/PosDisplay";
 import GoodsForSaleModal from "@/components/GoodsForSaleModal";
@@ -607,6 +611,8 @@ export default function ClientDashboard() {
   // Management State
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
   const [isMergeIngredientsModalOpen, setIsMergeIngredientsModalOpen] = useState(false);
+  const [isRecipeListModalOpen, setIsRecipeListModalOpen] = useState(false);
+  const [recipeViewMode, setRecipeViewMode] = useState("cards"); // 'cards' | 'table'
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [recipeForm, setRecipeForm] = useState({ 
     name: "", 
@@ -10160,6 +10166,14 @@ export default function ClientDashboard() {
                     </button>
                     <button 
                       type="button"
+                      onClick={() => setIsRecipeListModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                    >
+                      <List size={18} /> {t('recipes.view_recipe_list_btn') || "Ver listado de recetas"}
+                    </button>
+                    <button 
+                      type="button"
                       onClick={() => setIsMergeIngredientsModalOpen(true)}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
@@ -10198,8 +10212,8 @@ export default function ClientDashboard() {
                 </div>
               </header>
 
-              <div style={{ marginBottom: '2.5rem', maxWidth: '600px' }}>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: '1 1 300px', maxWidth: '600px' }}>
                   <Search size={22} style={{ position: 'absolute', left: '1.25rem', color: 'var(--text-muted)', zIndex: 1 }} />
                   <input 
                     type="text" 
@@ -10207,11 +10221,182 @@ export default function ClientDashboard() {
                     value={recipeSearchTerm}
                     onChange={(e) => setRecipeSearchTerm(e.target.value)}
                     className="input-field"
-                    style={{ paddingLeft: '3.5rem', height: '3.75rem', fontSize: '1.05rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderRadius: '1rem' }}
+                    style={{ paddingLeft: '3.5rem', height: '3.75rem', fontSize: '1.05rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderRadius: '1rem', width: '100%' }}
                   />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '0.85rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setRecipeViewMode('cards')}
+                    title={t('recipes.view_cards_btn') || "Ver tarjetas"}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.6rem 1rem',
+                      borderRadius: '0.6rem',
+                      border: 'none',
+                      background: recipeViewMode === 'cards' ? 'white' : 'transparent',
+                      color: recipeViewMode === 'cards' ? 'var(--corp-green)' : 'var(--text-muted)',
+                      fontWeight: recipeViewMode === 'cards' ? '800' : '600',
+                      boxShadow: recipeViewMode === 'cards' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <LayoutGrid size={16} />
+                    <span>{t('recipes.view_cards_btn') || "Tarjetas"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRecipeViewMode('table')}
+                    title={t('recipes.view_table_btn') || "Ver tabla"}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.6rem 1rem',
+                      borderRadius: '0.6rem',
+                      border: 'none',
+                      background: recipeViewMode === 'table' ? 'white' : 'transparent',
+                      color: recipeViewMode === 'table' ? 'var(--corp-green)' : 'var(--text-muted)',
+                      fontWeight: recipeViewMode === 'table' ? '800' : '600',
+                      boxShadow: recipeViewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <Table size={16} />
+                    <span>{t('recipes.view_table_btn') || "Tabla"}</span>
+                  </button>
                 </div>
               </div>
 
+              {recipeViewMode === 'table' ? (
+                <div className="glass-card" style={{ background: 'white', borderRadius: '1.25rem', overflow: 'hidden', border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '780px', fontSize: '0.9rem' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                            {t('recipes.col_recipe_name') || "Nombre de la receta"}
+                          </th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '160px' }}>
+                            {t('recipes.col_ingredients_count') || "Nº Ingredientes"}
+                          </th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '180px' }}>
+                            {t('recipes.col_created_at') || "Fecha de creación"}
+                          </th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '190px' }}>
+                            {t('recipes.col_elaborations_count') || "Elaboraciones creadas"}
+                          </th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '210px' }}>
+                            {t('common.actions') || "Acciones"}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recipes.filter(recipe => recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase())).length === 0 ? (
+                          <tr>
+                            <td colSpan="5" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                              <ChefHat size={38} color="var(--border)" style={{ marginBottom: '0.75rem' }} />
+                              <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+                                {recipeSearchTerm ? (t('recipes.no_recipes_found') || "No se encontraron recetas con ese término") : (t('dashboard.no_own_recipes') || "No hay recetas disponibles")}
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          recipes
+                            .filter(recipe => recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                            .map(recipe => (
+                              <tr key={recipe.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s' }} className="hover-row">
+                                <td style={{ padding: '1rem 1.25rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(66, 98, 22, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                      <ChefHat size={17} color="var(--corp-green)" />
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '0.95rem' }}>{recipe.name}</div>
+                                      {recipe.barcode && (
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', color: '#64748b', marginTop: '0.15rem', fontFamily: 'monospace' }}>
+                                          <ScanBarcode size={11} />
+                                          <span>{recipe.barcode}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '2.5rem', padding: '0.25rem 0.65rem', borderRadius: '1rem', background: '#f1f5f9', color: '#334155', fontSize: '0.85rem', fontWeight: '800' }}>
+                                    {recipe.ingredients?.length || 0}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
+                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-main)', fontSize: '0.85rem', fontWeight: '600' }}>
+                                    <Calendar size={14} color="#64748b" />
+                                    <span>{formatDateDDMMYYYY(recipe.createdAt)}</span>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '2.5rem', padding: '0.25rem 0.75rem', borderRadius: '1rem', background: (recipe._count?.elaborations ?? 0) > 0 ? '#ecfdf5' : '#f8fafc', color: (recipe._count?.elaborations ?? 0) > 0 ? '#059669' : '#94a3b8', fontSize: '0.85rem', fontWeight: '800', border: (recipe._count?.elaborations ?? 0) > 0 ? '1px solid #a7f3d0' : '1px solid #e2e8f0' }}>
+                                    {recipe._count?.elaborations ?? 0}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
+                                  <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenRecipe(recipe)}
+                                      title={t('dashboard.elaborar') || "Elaborar"}
+                                      style={{ background: 'var(--corp-green)', border: 'none', color: 'white', padding: '0.45rem 0.65rem', borderRadius: '0.55rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', fontWeight: '700' }}
+                                    >
+                                      <PlayCircle size={14} />
+                                      <span>{t('dashboard.elaborar') || "Elaborar"}</span>
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setRecipeForTechnicalSheet(recipe)}
+                                      title={t('recipes.download_technical_sheet') || "Descargar ficha técnica en PDF"}
+                                      style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.45rem', borderRadius: '0.55rem', cursor: 'pointer' }}
+                                    >
+                                      <FileText size={15} />
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleDuplicateRecipe(recipe)}
+                                      title={t('common.duplicate') || "Duplicar"}
+                                      style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.45rem', borderRadius: '0.55rem', cursor: 'pointer' }}
+                                    >
+                                      <Copy size={15} />
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleEditRecipe(recipe)}
+                                      title={t('common.edit') || "Editar"}
+                                      style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--corp-green)', padding: '0.45rem', borderRadius: '0.55rem', cursor: 'pointer' }}
+                                    >
+                                      <Edit size={15} />
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleDeleteRecipe(recipe.id)}
+                                      title={t('common.delete') || "Eliminar"}
+                                      style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.45rem', borderRadius: '0.55rem', cursor: 'pointer' }}
+                                    >
+                                      <Trash2 size={15} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
                 {recipes.length === 0 ? (
                   <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '6rem 2rem', background: 'white', border: '2px dashed var(--border)', borderRadius: '1.5rem' }}>
@@ -10315,6 +10500,7 @@ export default function ClientDashboard() {
                     ))
                 )}
               </div>
+              )}
             </div>
           ) : activeTab === 'configuracion' ? (
             <BusinessConfigView 
@@ -11348,6 +11534,41 @@ export default function ClientDashboard() {
           recipes={recipes}
           onSuccess={() => {
             fetchRecipes();
+          }}
+        />
+      )}
+
+      {isRecipeListModalOpen && (
+        <RecipeListModal 
+          isOpen={isRecipeListModalOpen}
+          onClose={() => setIsRecipeListModalOpen(false)}
+          recipes={recipes}
+          onEdit={handleEditRecipe}
+          onDuplicate={handleDuplicateRecipe}
+          onDelete={handleDeleteRecipe}
+          onTechnicalSheet={setRecipeForTechnicalSheet}
+          onElaborate={handleOpenRecipe}
+          onNewRecipe={() => {
+            setEditingRecipe(null);
+            setRecipeForm({ 
+              name: "", 
+              ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }], 
+              hasBarcode: false, 
+              barcode: "",
+              expiryDays: 0,
+              expiryType: "EXPIRATION",
+              elaborationInstructions: "",
+              conservationInstructions: "",
+              energyValue: "",
+              fats: "",
+              saturatedFats: "",
+              carbohydrates: "",
+              sugars: "",
+              proteins: "",
+              salt: "",
+              allergens: []
+            });
+            setIsRecipeManageModalOpen(true);
           }}
         />
       )}
