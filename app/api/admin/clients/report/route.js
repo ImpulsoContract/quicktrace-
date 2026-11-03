@@ -339,7 +339,8 @@ export async function GET() {
         cuttingRecordsCount,
         oilCollectionsCount,
         vegetableDisinfectionsCount,
-        lastLogin
+        lastLogin,
+        isSimpleVersion: profile?.isSimpleVersion || false
       };
     });
 

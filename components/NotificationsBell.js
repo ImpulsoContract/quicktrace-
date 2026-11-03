@@ -12,7 +12,7 @@ export default function NotificationsBell({ profile, onOpenGoodsModal, onOpenInv
   const dropdownRef = useRef(null);
 
   const isEnabled = Boolean(
-    profile?.goodsLowStockAlertEnabled && profile?.goodsLowStockInApp
+    !profile?.isSimpleVersion && profile?.goodsLowStockAlertEnabled && profile?.goodsLowStockInApp
   );
 
   const fetchNotifications = async () => {

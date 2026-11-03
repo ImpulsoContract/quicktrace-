@@ -974,7 +974,8 @@
     "barcode_placeholder": "E.g.: 8412345678901 (optional)",
     "barcode_help": "Optional. Specific barcode for this lot or receipt (for sales and POS).",
     "lot_barcode_help": "Optional. Specific barcode for this lot or receipt.",
-    "general_barcode_inherited": "inherited from product"
+    "general_barcode_inherited": "inherited from product",
+    "relate_entry_simple": "Relate this entry with ingredients"
   },
   "plans": {
     "title": "Pricing Plans",
@@ -1130,7 +1131,8 @@
       "col_renewal": "Renewal",
       "no_razon_social": "No Business Name",
       "sin_plan_badge": "NO PLAN",
-      "showing_info": "Showing {start} - {end} of {total} clients"
+      "showing_info": "Showing {start} - {end} of {total} clients",
+      "simple_version_badge": "Simple version"
     },
     "actions": {
       "title": "Actions",
@@ -1143,7 +1145,9 @@
       "sync_clientify": "Sync with Clientify",
       "view_terms": "View Terms Acceptance",
       "delete_client": "DELETE CLIENT",
-      "manage_api_key": "Manage API Key"
+      "manage_api_key": "Manage API Key",
+      "switch_to_simple": "Switch to simple version",
+      "switch_to_full": "Switch to full version"
     },
     "delete": {
       "confirm_msg": "Confirm total data deletion for {name}? Their recipes, elaborations, records and account will be permanently deleted.",

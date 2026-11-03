@@ -968,7 +968,8 @@
     "barcode_placeholder": "Ex: 8412345678901 (opcional)",
     "barcode_help": "Opcional. Código de barras específico para este lote ou entrada (para vendas e PDV).",
     "lot_barcode_help": "Opcional. Código específico para este lote ou entrada.",
-    "general_barcode_inherited": "herdado do produto"
+    "general_barcode_inherited": "herdado do produto",
+    "relate_entry_simple": "Relacionar esta entrada com ingredientes"
   },
   "plans": {
     "title": "Planos de Preços",
@@ -1124,7 +1125,8 @@
       "col_renewal": "Renovação",
       "no_razon_social": "Sem Razão Social",
       "sin_plan_badge": "SEM PLANO",
-      "showing_info": "Mostrando {start} - {end} de {total} clientes"
+      "showing_info": "Mostrando {start} - {end} de {total} clientes",
+      "simple_version_badge": "Versão simples"
     },
     "actions": {
       "title": "Ações",
@@ -1137,7 +1139,9 @@
       "sync_clientify": "Sincronizar com Clientify",
       "view_terms": "Ver aceitação de condições",
       "delete_client": "ELIMINAR CLIENTE",
-      "manage_api_key": "Gerenciar chave de API"
+      "manage_api_key": "Gerenciar chave de API",
+      "switch_to_simple": "Mudar para versão simples",
+      "switch_to_full": "Mudar para versão completa"
     },
     "delete": {
       "confirm_msg": "Confirmar eliminação total de datos para {name}? As suas receitas, elaborações, registos e conta serão apagados permanentemente.",

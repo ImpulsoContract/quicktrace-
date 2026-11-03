@@ -10,7 +10,7 @@ import {
   X, AlertCircle, Loader2, LogOut,
   Thermometer, Brush, Save, ArrowLeft, RefreshCw, Tag, Filter, ChevronUp, ChevronDown, Menu, ExternalLink,
   Key, Eye, EyeOff, Copy, Check,
-  Table, Download, BarChart3, Store
+  Table, Download, BarChart3, Store, Layers
 } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 
@@ -389,6 +389,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleSimpleVersion = async (client) => {
+    const currentVal = Boolean(client.clientProfile?.isSimpleVersion);
+    const newVal = !currentVal;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/clients/update/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isSimpleVersion: newVal })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(newVal ? "Cliente enviado a la versión sencilla." : "Cliente enviado a la versión completa.");
+        setActiveMenu(null);
+        await fetchClients();
+      } else {
+        alert(data.error || "Error al actualizar la versión del cliente");
+      }
+    } catch (err) {
+      console.error("Error toggling simple version:", err);
+      alert("Error de conexión al actualizar la versión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleTogglePosMode = async (client) => {
     const currentVal = Boolean(client.clientProfile?.hasPosMode);
     const newVal = !currentVal;
@@ -720,7 +746,23 @@ export default function AdminDashboard() {
                         {currentClients.map((client) => (
                           <tr key={client.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
                             <td style={{ padding: '1.25rem 1rem' }}>
-                              <div style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <span style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</span>
+                                {client.clientProfile?.isSimpleVersion && (
+                                  <span style={{
+                                    background: '#fef3c7',
+                                    color: '#92400e',
+                                    fontSize: '0.65rem',
+                                    fontWeight: '800',
+                                    padding: '0.15rem 0.5rem',
+                                    borderRadius: '0.35rem',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.04em'
+                                  }}>
+                                    {t('admin.list.simple_version_badge') || "Versión sencilla"}
+                                  </span>
+                                )}
+                              </div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{client.email}</div>
                             </td>
                             <td style={{ padding: '1.25rem 1rem' }}>
@@ -950,6 +992,11 @@ export default function AdminDashboard() {
               icon={<Store size={16} />} 
               text={activeMenu.clientProfile?.hasPosMode ? "Desactivar modo TPV" : "Activar modo TPV"} 
               onClick={() => handleTogglePosMode(activeMenu)} 
+            />
+            <MenuBtn 
+              icon={<Layers size={16} />} 
+              text={activeMenu.clientProfile?.isSimpleVersion ? (t('admin.actions.switch_to_full') || "Cambiar a versión completa") : (t('admin.actions.switch_to_simple') || "Cambiar a versión sencilla")} 
+              onClick={() => handleToggleSimpleVersion(activeMenu)} 
             />
             <MenuBtn icon={<Edit size={16} />} text={t('admin.actions.edit')} onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile, personName: activeMenu.clientProfile?.personName || activeMenu.name || "" } }); setActiveMenu(null); }} />
             <MenuBtn

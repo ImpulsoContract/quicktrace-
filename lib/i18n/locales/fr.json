@@ -969,7 +969,8 @@
     "barcode_placeholder": "Ex: 8412345678901 (optionnel)",
     "barcode_help": "Optionnel. Code-barres spécifique à ce lot ou cette entrée (pour les ventes et le TPV).",
     "lot_barcode_help": "Optionnel. Code spécifique pour ce lot ou cette entrée.",
-    "general_barcode_inherited": "hérité du produit"
+    "general_barcode_inherited": "hérité du produit",
+    "relate_entry_simple": "Associer cette entrée à des ingrédients"
   },
   "plans": {
     "title": "Plans de Tarification",
@@ -1125,7 +1126,8 @@
       "col_renewal": "Renouvellement",
       "no_razon_social": "Sans Raison Sociale",
       "sin_plan_badge": "SANS PLAN",
-      "showing_info": "Affichage de {start} - {end} sur {total} clients"
+      "showing_info": "Affichage de {start} - {end} sur {total} clients",
+      "simple_version_badge": "Version simple"
     },
     "actions": {
       "title": "Actions",
@@ -1138,7 +1140,9 @@
       "sync_clientify": "Sync avec Clientify",
       "view_terms": "Voir Accettation des Termes",
       "delete_client": "SUPPRIMER CLIENT",
-      "manage_api_key": "Gérer la clé API"
+      "manage_api_key": "Gérer la clé API",
+      "switch_to_simple": "Passer à la version simple",
+      "switch_to_full": "Passer à la version complète"
     },
     "delete": {
       "confirm_msg": "Confirmer la suppression totale des données pour {name} ? Ses recettes, élaborations, enregistrements et son compte seront définitivement supprimés.",

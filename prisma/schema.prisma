@@ -129,6 +129,7 @@ model ClientProfile {
   goodsForSale               GoodsForSale[]
   sellers                    Seller[]
   hasPosMode                 Boolean           @default(false)
+  isSimpleVersion            Boolean           @default(false)
   productFamilies            ProductFamily[]
 
   holdedApiKey               String?

@@ -240,13 +240,15 @@ export async function POST(req) {
       }
     }
 
-    // Update stock levels
-    await processNewGoodsReceiptStock(profile.id, relatedQuantities);
-    await processNewGoodsReceiptGfsStock(
-      goodsForSaleId ? parseInt(goodsForSaleId, 10) : null,
-      goodsForSaleQuantity,
-      goodsForSaleCostPrice
-    );
+    // Update stock levels (skip in simple version)
+    if (!profile.isSimpleVersion) {
+      await processNewGoodsReceiptStock(profile.id, relatedQuantities);
+      await processNewGoodsReceiptGfsStock(
+        goodsForSaleId ? parseInt(goodsForSaleId, 10) : null,
+        goodsForSaleQuantity,
+        goodsForSaleCostPrice
+      );
+    }
 
     return NextResponse.json({ success: true, receipt });
   } catch (error) {
@@ -299,6 +301,11 @@ export async function PATCH(req) {
       where: { 
         id: parseInt(id),
         clientProfileId: profileId
+      },
+      include: {
+        clientProfile: {
+          select: { isSimpleVersion: true }
+        }
       }
     });
 
@@ -348,20 +355,22 @@ export async function PATCH(req) {
       }
     });
 
-    // Update stock levels
-    const finalNewQuantities = relatedQuantities !== undefined ? relatedQuantities : existing.relatedQuantities;
-    await processUpdatedGoodsReceiptStock(profileId, existing.relatedQuantities, finalNewQuantities);
+    // Update stock levels (skip in simple version)
+    if (!existing.clientProfile?.isSimpleVersion) {
+      const finalNewQuantities = relatedQuantities !== undefined ? relatedQuantities : existing.relatedQuantities;
+      await processUpdatedGoodsReceiptStock(profileId, existing.relatedQuantities, finalNewQuantities);
 
-    const finalNewGfsId = goodsForSaleId !== undefined ? (goodsForSaleId ? parseInt(goodsForSaleId, 10) : null) : existing.goodsForSaleId;
-    const finalNewGfsQty = goodsForSaleQuantity !== undefined ? goodsForSaleQuantity : existing.goodsForSaleQuantity;
-    const finalNewGfsCost = goodsForSaleCostPrice !== undefined ? goodsForSaleCostPrice : existing.goodsForSaleCostPrice;
-    await processUpdatedGoodsReceiptGfsStock(
-      existing.goodsForSaleId,
-      existing.goodsForSaleQuantity,
-      finalNewGfsId,
-      finalNewGfsQty,
-      finalNewGfsCost
-    );
+      const finalNewGfsId = goodsForSaleId !== undefined ? (goodsForSaleId ? parseInt(goodsForSaleId, 10) : null) : existing.goodsForSaleId;
+      const finalNewGfsQty = goodsForSaleQuantity !== undefined ? goodsForSaleQuantity : existing.goodsForSaleQuantity;
+      const finalNewGfsCost = goodsForSaleCostPrice !== undefined ? goodsForSaleCostPrice : existing.goodsForSaleCostPrice;
+      await processUpdatedGoodsReceiptGfsStock(
+        existing.goodsForSaleId,
+        existing.goodsForSaleQuantity,
+        finalNewGfsId,
+        finalNewGfsQty,
+        finalNewGfsCost
+      );
+    }
 
     return NextResponse.json({ success: true, receipt });
   } catch (error) {
@@ -420,9 +429,15 @@ export async function DELETE(req) {
       }
     });
 
-    // Subtract from stock
-    await processDeletedGoodsReceiptsStock(profileId, receiptsToDelete);
-    await processDeletedGoodsReceiptsGfsStock(receiptsToDelete);
+    // Subtract from stock (skip in simple version)
+    const clientProf = await prisma.clientProfile.findUnique({
+      where: { id: profileId },
+      select: { isSimpleVersion: true }
+    });
+    if (!clientProf?.isSimpleVersion) {
+      await processDeletedGoodsReceiptsStock(profileId, receiptsToDelete);
+      await processDeletedGoodsReceiptsGfsStock(receiptsToDelete);
+    }
 
     // Unlink any deleted receipts from ScannedDeliveryNote items
     for (const r of receiptsToDelete) {

@@ -969,7 +969,8 @@
     "barcode_placeholder": "Es: 8412345678901 (opzionale)",
     "barcode_help": "Opzionale. Codice a barre specifico per questo lotto o carico (per vendite e POS).",
     "lot_barcode_help": "Opzionale. Codice specifico per questo lotto o entrata.",
-    "general_barcode_inherited": "ereditato dal prodotto"
+    "general_barcode_inherited": "ereditato dal prodotto",
+    "relate_entry_simple": "Associa questa entrata a ingredienti"
   },
   "plans": {
     "title": "Piani di Prezzo",
@@ -1125,7 +1126,8 @@
       "col_renewal": "Rinnovo",
       "no_razon_social": "Senza Ragione Sociale",
       "sin_plan_badge": "SENZA PIANO",
-      "showing_info": "Mostrando {start} - {end} di {total} clienti"
+      "showing_info": "Mostrando {start} - {end} di {total} clienti",
+      "simple_version_badge": "Versione semplice"
     },
     "actions": {
       "title": "Azioni",
@@ -1138,7 +1140,9 @@
       "sync_clientify": "Sincronizza con Clientify",
       "view_terms": "Vedi Accettazione Termini",
       "delete_client": "ELIMINA CLIENTE",
-      "manage_api_key": "Gestisci chiave API"
+      "manage_api_key": "Gestisci chiave API",
+      "switch_to_simple": "Passa alla versione semplice",
+      "switch_to_full": "Passa alla versione completa"
     },
     "delete": {
       "confirm_msg": "Confermare l'eliminazione totale dei dati per {name}? Le sue ricette, lavorazioni, record e account verranno eliminati in modo permanente.",

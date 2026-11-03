@@ -20,7 +20,8 @@ export async function PATCH(req, { params }) {
       planId, personName, address, postalCode, city, province, country,
       stripeSubscriptionId, stripeCustomerId, stripeCurrentPeriodEnd,
       hasIaGoods,
-      hasPosMode
+      hasPosMode,
+      isSimpleVersion
     } = body;
 
     const userId = parseInt(id);
@@ -55,6 +56,7 @@ export async function PATCH(req, { params }) {
       if (stripeCurrentPeriodEnd !== undefined) profileData.stripeCurrentPeriodEnd = stripeCurrentPeriodEnd || null;
       if (hasIaGoods !== undefined) profileData.hasIaGoods = Boolean(hasIaGoods);
       if (hasPosMode !== undefined) profileData.hasPosMode = Boolean(hasPosMode);
+      if (isSimpleVersion !== undefined) profileData.isSimpleVersion = Boolean(isSimpleVersion);
 
       if (Object.keys(profileData).length > 0) {
         await tx.clientProfile.update({

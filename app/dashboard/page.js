@@ -929,6 +929,11 @@ export default function ClientDashboard() {
       setActiveTab("trazabilidad");
     }
   }, [activeTab, profile]);
+  useEffect(() => {
+    if (profile?.isSimpleVersion && ["trabajadores", "ventas", "clientes"].includes(activeTab)) {
+      setActiveTab("trazabilidad");
+    }
+  }, [activeTab, profile]);
 
   useEffect(() => {
     if (activeTab === "limpieza") {
@@ -5657,12 +5662,14 @@ export default function ClientDashboard() {
                   active={activeTab === "gestionar-recetas"} 
                   onClick={() => { setActiveTab("gestionar-recetas"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
+                {!profile?.isSimpleVersion && (
                 <SidebarBtn 
                   icon={<Users size={20} />} 
                   label={t('sidebar.workers') || "Trabajadores"} 
                   active={activeTab === "trabajadores"} 
                   onClick={() => { setActiveTab("trabajadores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
                 />
+              )}
               </>
             )}
 
@@ -5693,7 +5700,7 @@ export default function ClientDashboard() {
               />
             )}
 
-            {session?.user?.role !== "WORKER" && (
+            {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (
               <SidebarBtn 
                 icon={<ShoppingCart size={20} />} 
                 label={t('sidebar.sales') || "Ventas"} 
@@ -5755,7 +5762,7 @@ export default function ClientDashboard() {
                 onClick={() => { setActiveTab("proveedores"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
               />
             )}
-            {session?.user?.role !== "WORKER" && (
+            {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (
               <SidebarBtn 
                 icon={<Contact size={20} />} 
                 label={t('sidebar.customers') || "Clientes"} 
@@ -7435,7 +7442,7 @@ export default function ClientDashboard() {
                     >
                       <FileText size={18} /> {t('dashboard.traceability_report')}
                     </button>
-                    {session?.user?.role !== "WORKER" && (
+                    {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (
                       <button 
                         onClick={() => setIsCombinedSalesModalOpen(true)}
                         className="btn-secondary"
@@ -7444,7 +7451,7 @@ export default function ClientDashboard() {
                         <ShoppingCart size={18} /> {t('combined_sales.btn_label') || "Venta combinada"}
                       </button>
                     )}
-                    {session?.user?.role !== "WORKER" && (
+                    {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (
                       <button 
                         onClick={() => setIsSalesReportModalOpen(true)}
                         className="btn-secondary"
@@ -7453,15 +7460,17 @@ export default function ClientDashboard() {
                         <DollarSign size={18} /> {t('sales_report.btn_label') || "Informe de ventas"}
                       </button>
                     )}
-                    <button 
-                      onClick={generateInventoryReportPDF}
-                      disabled={inventoryReportLoading}
-                      className="btn-secondary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                    >
-                      {inventoryReportLoading ? <Loader2 className="animate-spin" size={18} /> : <Boxes size={18} />}
-                      <span>{inventoryReportLoading ? (t('inventory_report.generating') || "Generando...") : (t('dashboard.view_inventory_pdf_btn') || "Ver inventario en PDF")}</span>
-                    </button>
+                    {!profile?.isSimpleVersion && (
+                      <button 
+                        onClick={generateInventoryReportPDF}
+                        disabled={inventoryReportLoading}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                      >
+                        {inventoryReportLoading ? <Loader2 className="animate-spin" size={18} /> : <Boxes size={18} />}
+                        <span>{inventoryReportLoading ? (t('inventory_report.generating') || "Generando...") : (t('dashboard.view_inventory_pdf_btn') || "Ver inventario en PDF")}</span>
+                      </button>
+                    )}
                     <button 
                       onClick={() => setIsLabelModalOpen(true)}
                       className="btn-secondary"
@@ -7651,12 +7660,12 @@ export default function ClientDashboard() {
                           </th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('dashboard.date_and_recipe') || "Fecha y receta"}</th>
                           <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', minWidth: '220px' }}>{t('traceability_form.elaboration_title')}</th>
-                          {session?.user?.role !== "WORKER" && (
+                          {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
                               {t('dashboard.cost_column_header') || "Coste"}
                             </th>
                           )}
-                          {session?.user?.role !== "WORKER" && (
+                          {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (
                             <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>
                               {t('dashboard.sales_column_header') || "Ventas"}
                             </th>
@@ -7853,7 +7862,7 @@ export default function ClientDashboard() {
                               </div>
                             </div>
                           </td>
-                          {session?.user?.role !== "WORKER" && (() => {
+                          {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (() => {
                             const rawCost = Number(el.costPrice) || 0;
                             const prepTimeNum = el.preparationTime ? parseFloat(el.preparationTime.toString().replace(',', '.')) : 0;
                             const hourlyRate = Number(el.laborCostHourlyRate) || 0;
@@ -7904,7 +7913,7 @@ export default function ClientDashboard() {
                             );
                           })()}
                           {/* Columna Ventas */}
-                          {session?.user?.role !== "WORKER" && (() => {
+                          {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (() => {
                             const elabSales = el.sales || [];
                             const hasSales = elabSales.length > 0;
                             const totalSalesRevenue = elabSales.reduce((sum, s) => sum + (s.price || 0), 0);
@@ -8482,7 +8491,7 @@ export default function ClientDashboard() {
                 </div>
               )}
             </div>
-          ) : activeTab === 'ventas' ? (
+          ) : activeTab === 'ventas' && !profile?.isSimpleVersion ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
               <CombinedSalesModal
                 isPage={true}
@@ -8862,7 +8871,7 @@ export default function ClientDashboard() {
                     </div>
                   )}
             </div>
-          ) : activeTab === 'clientes' ? (
+          ) : activeTab === 'clientes' && !profile?.isSimpleVersion ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
               <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
@@ -9124,7 +9133,7 @@ export default function ClientDashboard() {
                     >
                       <Settings size={18} /> {t('modals.manage_merchant_types') || "Gestionar tipos de mercancía"}
                     </button>
-                    {(session?.user?.role !== "WORKER" || session?.user?.permissions?.hasGoods) && (
+                    {(session?.user?.role !== "WORKER" || session?.user?.permissions?.hasGoods) && !profile?.isSimpleVersion && (
                       <button
                         onClick={() => {
                           setSelectedElaborationForCosts(null);
@@ -9137,7 +9146,7 @@ export default function ClientDashboard() {
                         <DollarSign size={18} /> {t('dashboard.ingredient_costs_btn') || "Precios de coste"}
                       </button>
                     )}
-                    {session?.user?.role !== "WORKER" && (
+                    {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (
                       <button 
                         onClick={() => setIsGoodsForSaleModalOpen(true)}
                         className="btn-secondary"
@@ -9146,13 +9155,15 @@ export default function ClientDashboard() {
                         <Tag size={18} /> {t('goods_for_sale.btn_label') || "Mercancías en venta"}
                       </button>
                     )}
-                    <button 
-                      onClick={() => setIsInventoryModalOpen(true)}
-                      className="btn-secondary"
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
-                    >
-                      <Boxes size={18} /> {t('dashboard.view_stock_inventory_btn') || "Ver stock de mercancías"}
-                    </button>
+                    {!profile?.isSimpleVersion && (
+                      <button 
+                        onClick={() => setIsInventoryModalOpen(true)}
+                        className="btn-secondary"
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                      >
+                        <Boxes size={18} /> {t('dashboard.view_stock_inventory_btn') || "Ver stock de mercancías"}
+                      </button>
+                    )}
                     {profile?.hasIaGoods && (
                     <button 
                       onClick={() => {
@@ -10094,7 +10105,7 @@ export default function ClientDashboard() {
                 </div>
               )}
             </div>
-          ) : activeTab === 'trabajadores' ? (
+          ) : activeTab === 'trabajadores' && !profile?.isSimpleVersion ? (
             <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
                 <div>
@@ -15685,7 +15696,10 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
         gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
         gap: '1.25rem'
       }}>
-        {blocks.map(block => (
+        {(profile?.isSimpleVersion 
+          ? blocks.filter(b => !["currency", "labor_cost", "out_of_stock_lots", "goods_low_stock", "invoicing_programs"].includes(b.id))
+          : blocks
+        ).map(block => (
           <button
             key={block.id}
             type="button"
@@ -16843,7 +16857,7 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
                       }}
                     >
                       <PlusCircle size={12} />
-                      {t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con un ingrediente o una mercancía en venta"}
+                      {profile?.isSimpleVersion ? (t('goods_receipt_form.relate_entry_simple') || "Relacionar con ingredientes") : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con un ingrediente o una mercancía en venta")}
                       {relCount > 0 ? ` (${relCount})` : ''}
                     </button>
                   );

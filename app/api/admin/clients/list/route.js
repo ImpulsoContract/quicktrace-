@@ -43,6 +43,7 @@ export async function GET() {
             plan: true,
             hasIaGoods: true,
             hasPosMode: true,
+            isSimpleVersion: true,
             apiKey: true,
             apiKeyCreatedAt: true,
             _count: {

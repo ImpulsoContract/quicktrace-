@@ -20,9 +20,11 @@ export default function RelateGoodsReceiptModal({
   onSave
 }) {
   const { t } = useI18n();
+  const isSimple = Boolean(profile?.isSimpleVersion);
 
+  // In simple version, always force ingredients tab
   const [activeTab, setActiveTab] = useState(
-    initialGoodsForSaleId && (!initialIngredients || initialIngredients.length === 0)
+    !isSimple && initialGoodsForSaleId && (!initialIngredients || initialIngredients.length === 0)
       ? "goodsForSale"
       : "ingredients"
   );
@@ -389,6 +391,19 @@ export default function RelateGoodsReceiptModal({
 
   // Handle Save Link Modal
   const handleSave = () => {
+    if (isSimple) {
+      onSave({
+        relatedIngredients: selectedIngredients,
+        relatedQuantities: {},
+        goodsForSaleId: null,
+        goodsForSaleQuantity: null,
+        goodsForSaleCostPrice: null,
+        goodsForSale: null,
+        barcode: null
+      });
+      onClose();
+      return;
+    }
     // Clean up ingredients quantities
     const activeWithUnits = getIngredientsWithUnits(selectedIngredients);
     const validKeys = new Set(activeWithUnits.map(item => `${item.name}:${item.unit}`));
@@ -494,7 +509,7 @@ export default function RelateGoodsReceiptModal({
         >
           <div>
             <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
-              {t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con un ingrediente o una mercancía en venta"}
+              {isSimple ? (t('goods_receipt_form.relate_entry_simple') || "Relacionar esta entrada con ingredientes") : (t('goods_receipt_form.relate_entry_with_ingredients') || "Relacionar esta entrada con un ingrediente o una mercancía en venta")}
             </h3>
             {productName && (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: 0 }}>
@@ -512,6 +527,7 @@ export default function RelateGoodsReceiptModal({
         </header>
 
         {/* Tab Navigation */}
+        {!isSimple && (
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', gap: '0.5rem', flexShrink: 0 }}>
           <button
             type="button"
@@ -582,6 +598,7 @@ export default function RelateGoodsReceiptModal({
             )}
           </button>
         </div>
+        )}
 
         {/* Tab Content */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem', minHeight: 0 }}>
@@ -789,7 +806,7 @@ export default function RelateGoodsReceiptModal({
           )}
 
           {/* PERSISTENT CONFIGURATION FORM - ALWAYS VISIBLE REGARDLESS OF TAB */}
-          {(selectedGood || selectedIngredients.length > 0) && (
+          {(selectedGood || selectedIngredients.length > 0) && !isSimple && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
               {/* Goods for Sale section (shows stock quantity AND cost price!) */}
               {selectedGood && (
