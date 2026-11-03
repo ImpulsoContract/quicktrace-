@@ -68,6 +68,17 @@ export async function GET() {
               select: {
                 recipes: true,
                 goodsReceipts: true,
+                temperatureRecords: true,
+                cleaningLogs: true,
+                goodsForSale: true,
+                scannedDeliveryNotes: true,
+                providers: true,
+                customers: true,
+                waterMeasurements: true,
+                wasteCollections: true,
+                cuttingRecords: true,
+                oilCollections: true,
+                vegetableDisinfections: true
               }
             }
           }
@@ -76,7 +87,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
 
-    // 2. Fetch elaborations count per client profile in a fast raw aggregate
+    // 2. Fetch aggregates for elaborations, sales, stock and cost prices
     const elabMap = {};
     try {
       const elabCounts = await prisma.$queryRaw`
@@ -95,6 +106,67 @@ export async function GET() {
       }
     } catch (err) {
       console.error("[Admin Clients Report] Error querying elaboration counts:", err);
+    }
+
+    const salesMap = {};
+    try {
+      const salesCounts = await prisma.$queryRaw`
+        SELECT "clientProfileId", COUNT(*)::int as count
+        FROM (
+          SELECT "clientProfileId" FROM "CombinedSale"
+          UNION ALL
+          SELECT "clientProfileId" FROM "ElaborationSale" WHERE "combinedSaleId" IS NULL
+        ) as all_sales
+        WHERE "clientProfileId" IS NOT NULL
+        GROUP BY "clientProfileId"
+      `;
+      if (Array.isArray(salesCounts)) {
+        salesCounts.forEach(row => {
+          if (row.clientProfileId) {
+            salesMap[row.clientProfileId] = Number(row.count) || 0;
+          }
+        });
+      }
+    } catch (err) {
+      console.error("[Admin Clients Report] Error querying sales counts:", err);
+    }
+
+    const stockMap = {};
+    try {
+      const stockCounts = await prisma.$queryRaw`
+        SELECT "clientProfileId", COUNT(*)::int as count
+        FROM "IngredientStock"
+        WHERE "clientProfileId" IS NOT NULL AND stock > 0
+        GROUP BY "clientProfileId"
+      `;
+      if (Array.isArray(stockCounts)) {
+        stockCounts.forEach(row => {
+          if (row.clientProfileId) {
+            stockMap[row.clientProfileId] = Number(row.count) || 0;
+          }
+        });
+      }
+    } catch (err) {
+      console.error("[Admin Clients Report] Error querying stock counts:", err);
+    }
+
+    const priceMap = {};
+    try {
+      const priceCounts = await prisma.$queryRaw`
+        SELECT "clientProfileId", COUNT(*)::int as count
+        FROM "IngredientPrice"
+        WHERE "clientProfileId" IS NOT NULL AND price > 0
+        GROUP BY "clientProfileId"
+      `;
+      if (Array.isArray(priceCounts)) {
+        priceCounts.forEach(row => {
+          if (row.clientProfileId) {
+            priceMap[row.clientProfileId] = Number(row.count) || 0;
+          }
+        });
+      }
+    } catch (err) {
+      console.error("[Admin Clients Report] Error querying price counts:", err);
     }
 
     const now = new Date();
@@ -213,10 +285,24 @@ export async function GET() {
         }
       }
 
-      // Número de recetas, elaboraciones y entradas de mercancía
+      // Métricas de actividad y uso
       const recipesCount = profile?._count?.recipes || 0;
       const elaborationsCount = profile?.id ? (elabMap[profile.id] || 0) : 0;
       const goodsReceiptsCount = profile?._count?.goodsReceipts || 0;
+      const temperatureRecordsCount = profile?._count?.temperatureRecords || 0;
+      const cleaningLogsCount = profile?._count?.cleaningLogs || 0;
+      const salesCount = profile?.id ? (salesMap[profile.id] || 0) : 0;
+      const ingredientsWithStockCount = profile?.id ? (stockMap[profile.id] || 0) : 0;
+      const ingredientsWithCostCount = profile?.id ? (priceMap[profile.id] || 0) : 0;
+      const goodsForSaleCount = profile?._count?.goodsForSale || 0;
+      const scannedDeliveryNotesCount = profile?._count?.scannedDeliveryNotes || 0;
+      const providersCount = profile?._count?.providers || 0;
+      const customersCount = profile?._count?.customers || 0;
+      const waterMeasurementsCount = profile?._count?.waterMeasurements || 0;
+      const wasteCollectionsCount = profile?._count?.wasteCollections || 0;
+      const cuttingRecordsCount = profile?._count?.cuttingRecords || 0;
+      const oilCollectionsCount = profile?._count?.oilCollections || 0;
+      const vegetableDisinfectionsCount = profile?._count?.vegetableDisinfections || 0;
 
       // Fecha del último uso de la aplicación
       const lastLogin = user.lastLogin ? user.lastLogin.toISOString() : "";
@@ -239,6 +325,20 @@ export async function GET() {
         recipesCount,
         elaborationsCount,
         goodsReceiptsCount,
+        temperatureRecordsCount,
+        cleaningLogsCount,
+        salesCount,
+        ingredientsWithStockCount,
+        ingredientsWithCostCount,
+        goodsForSaleCount,
+        scannedDeliveryNotesCount,
+        providersCount,
+        customersCount,
+        waterMeasurementsCount,
+        wasteCollectionsCount,
+        cuttingRecordsCount,
+        oilCollectionsCount,
+        vegetableDisinfectionsCount,
         lastLogin
       };
     });

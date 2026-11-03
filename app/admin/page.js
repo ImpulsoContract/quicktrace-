@@ -3593,6 +3593,20 @@ function ClientReportTab({ onBack }) {
       "Nº Recetas",
       "Nº Elaboraciones",
       "Nº Entradas Mercancía",
+      "Nº Registros Temperatura",
+      "Nº Registros Limpieza",
+      "Nº Ventas Registradas",
+      "Nº Ingredientes con Stock",
+      "Nº Ingredientes con Coste",
+      "Nº Mercancías Registradas",
+      "Nº Albaranes IA",
+      "Nº Proveedores",
+      "Nº Clientes",
+      "Nº Control Agua",
+      "Nº Retirada Residuos",
+      "Nº Despiece",
+      "Nº Retirada Aceites",
+      "Nº Desinfección Vegetales",
       "Fecha Último Uso"
     ];
 
@@ -3612,6 +3626,20 @@ function ClientReportTab({ onBack }) {
       c.recipesCount || 0,
       c.elaborationsCount || 0,
       c.goodsReceiptsCount || 0,
+      c.temperatureRecordsCount || 0,
+      c.cleaningLogsCount || 0,
+      c.salesCount || 0,
+      c.ingredientsWithStockCount || 0,
+      c.ingredientsWithCostCount || 0,
+      c.goodsForSaleCount || 0,
+      c.scannedDeliveryNotesCount || 0,
+      c.providersCount || 0,
+      c.customersCount || 0,
+      c.waterMeasurementsCount || 0,
+      c.wasteCollectionsCount || 0,
+      c.cuttingRecordsCount || 0,
+      c.oilCollectionsCount || 0,
+      c.vegetableDisinfectionsCount || 0,
       c.lastLogin ? new Date(c.lastLogin).toLocaleString() : ""
     ]);
 
@@ -3867,7 +3895,7 @@ function ClientReportTab({ onBack }) {
       ) : (
         <>
           <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px', fontSize: '0.85rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '2600px', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ textAlign: 'left', background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                   <th onClick={() => handleSort('companyId')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -3897,8 +3925,56 @@ function ClientReportTab({ onBack }) {
                   <th onClick={() => handleSort('origin')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     {t('admin.client_report.col_origin') || "Origen"} {sortConfig.key === 'origin' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                   </th>
-                  <th style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                    {t('admin.client_report.col_activity') || "Actividad (Rec / Elab / Ent)"}
+                  <th onClick={() => handleSort('recipesCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_recipes') || "Recetas"} {sortConfig.key === 'recipesCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('elaborationsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_elaborations') || "Elaboraciones"} {sortConfig.key === 'elaborationsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('goodsReceiptsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_goods_receipts') || "Entradas mercancía"} {sortConfig.key === 'goodsReceiptsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('temperatureRecordsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_temperatures') || "Temperaturas"} {sortConfig.key === 'temperatureRecordsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('cleaningLogsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_cleaning') || "Limpiezas"} {sortConfig.key === 'cleaningLogsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('salesCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_sales') || "Ventas"} {sortConfig.key === 'salesCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('ingredientsWithStockCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_ingredients_with_stock') || "Ingredientes con stock"} {sortConfig.key === 'ingredientsWithStockCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('ingredientsWithCostCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_ingredients_with_cost') || "Ingredientes con coste"} {sortConfig.key === 'ingredientsWithCostCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('goodsForSaleCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_goods_for_sale') || "Mercancías"} {sortConfig.key === 'goodsForSaleCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('scannedDeliveryNotesCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_scanned_invoices') || "Albaranes IA"} {sortConfig.key === 'scannedDeliveryNotesCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('providersCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_providers') || "Proveedores"} {sortConfig.key === 'providersCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('customersCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_customers') || "Clientes"} {sortConfig.key === 'customersCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('waterMeasurementsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_water') || "Control agua"} {sortConfig.key === 'waterMeasurementsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('wasteCollectionsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_waste') || "Residuos"} {sortConfig.key === 'wasteCollectionsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('cuttingRecordsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_cutting') || "Despiece"} {sortConfig.key === 'cuttingRecordsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('oilCollectionsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_oil') || "Aceites"} {sortConfig.key === 'oilCollectionsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('vegetableDisinfectionsCount')} style={{ padding: '0.9rem 0.75rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    {t('admin.client_report.col_vegetables') || "Vegetales"} {sortConfig.key === 'vegetableDisinfectionsCount' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                   </th>
                   <th onClick={() => handleSort('lastLogin')} style={{ padding: '0.9rem 1rem', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     {t('admin.client_report.col_last_login') || "Último Uso"} {sortConfig.key === 'lastLogin' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
@@ -4057,49 +4133,123 @@ function ClientReportTab({ onBack }) {
                         )}
                       </td>
 
-                      {/* Actividad: Recetas / Elaboraciones / Entradas */}
-                      <td style={{ padding: '0.9rem 1rem', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <span 
-                            title="Recetas registradas"
-                            style={{ 
-                              padding: '0.15rem 0.45rem', 
-                              borderRadius: '0.3rem', 
-                              fontSize: '0.72rem', 
-                              fontWeight: '700', 
-                              background: '#eff6ff', 
-                              color: '#1d4ed8' 
-                            }}
-                          >
-                            R: {c.recipesCount}
-                          </span>
-                          <span 
-                            title="Elaboraciones registradas"
-                            style={{ 
-                              padding: '0.15rem 0.45rem', 
-                              borderRadius: '0.3rem', 
-                              fontSize: '0.72rem', 
-                              fontWeight: '700', 
-                              background: '#f0fdf4', 
-                              color: '#15803d' 
-                            }}
-                          >
-                            E: {c.elaborationsCount}
-                          </span>
-                          <span 
-                            title="Entradas de mercancías registradas"
-                            style={{ 
-                              padding: '0.15rem 0.45rem', 
-                              borderRadius: '0.3rem', 
-                              fontSize: '0.72rem', 
-                              fontWeight: '700', 
-                              background: '#fffbeb', 
-                              color: '#b45309' 
-                            }}
-                          >
-                            M: {c.goodsReceiptsCount}
-                          </span>
-                        </div>
+                      {/* Recetas */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.recipesCount || 0) > 0 ? '700' : '400', color: (c.recipesCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.recipesCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Elaboraciones */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.elaborationsCount || 0) > 0 ? '700' : '400', color: (c.elaborationsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.elaborationsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Entradas Mercancía */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.goodsReceiptsCount || 0) > 0 ? '700' : '400', color: (c.goodsReceiptsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.goodsReceiptsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Temperaturas */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.temperatureRecordsCount || 0) > 0 ? '700' : '400', color: (c.temperatureRecordsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.temperatureRecordsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Limpiezas */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.cleaningLogsCount || 0) > 0 ? '700' : '400', color: (c.cleaningLogsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.cleaningLogsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Ventas */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.salesCount || 0) > 0 ? '700' : '400', color: (c.salesCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.salesCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Ingredientes con Stock */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.ingredientsWithStockCount || 0) > 0 ? '700' : '400', color: (c.ingredientsWithStockCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.ingredientsWithStockCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Ingredientes con Coste */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.ingredientsWithCostCount || 0) > 0 ? '700' : '400', color: (c.ingredientsWithCostCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.ingredientsWithCostCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Mercancías */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.goodsForSaleCount || 0) > 0 ? '700' : '400', color: (c.goodsForSaleCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.goodsForSaleCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Albaranes IA */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.scannedDeliveryNotesCount || 0) > 0 ? '700' : '400', color: (c.scannedDeliveryNotesCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.scannedDeliveryNotesCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Proveedores */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.providersCount || 0) > 0 ? '700' : '400', color: (c.providersCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.providersCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Clientes */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.customersCount || 0) > 0 ? '700' : '400', color: (c.customersCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.customersCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Control Agua */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.waterMeasurementsCount || 0) > 0 ? '700' : '400', color: (c.waterMeasurementsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.waterMeasurementsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Residuos */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.wasteCollectionsCount || 0) > 0 ? '700' : '400', color: (c.wasteCollectionsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.wasteCollectionsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Despiece */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.cuttingRecordsCount || 0) > 0 ? '700' : '400', color: (c.cuttingRecordsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.cuttingRecordsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Aceites */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.oilCollectionsCount || 0) > 0 ? '700' : '400', color: (c.oilCollectionsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.oilCollectionsCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Vegetales */}
+                      <td style={{ padding: '0.9rem 0.75rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: (c.vegetableDisinfectionsCount || 0) > 0 ? '700' : '400', color: (c.vegetableDisinfectionsCount || 0) > 0 ? '#0f172a' : '#94a3b8' }}>
+                          {c.vegetableDisinfectionsCount || 0}
+                        </span>
                       </td>
 
                       {/* Último Uso */}
