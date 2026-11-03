@@ -2457,42 +2457,62 @@ export default function ClientDashboard() {
 
       if (elab.workshopTemp) {
         doc.setFont("helvetica", "bold");
-        doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
+        const workshopLabel = (t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":";
+        const labelLines = doc.splitTextToSize(workshopLabel, 65);
+        doc.text(labelLines, 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(elab.workshopTemp, 90, currentY);
-        currentY += 7;
+        const valLines = doc.splitTextToSize(elab.workshopTemp, 100);
+        doc.text(valLines, 90, currentY);
+        const maxLines = Math.max(labelLines.length, valLines.length);
+        currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
       }
 
       if (elab.finalElaborationTemp) {
         doc.setFont("helvetica", "bold");
-        doc.text((t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":", 20, currentY);
+        const finalTempLabel = (t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":";
+        const labelLines = doc.splitTextToSize(finalTempLabel, 65);
+        doc.text(labelLines, 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(elab.finalElaborationTemp, 90, currentY);
-        currentY += 7;
+        const valLines = doc.splitTextToSize(elab.finalElaborationTemp, 100);
+        doc.text(valLines, 90, currentY);
+        const maxLines = Math.max(labelLines.length, valLines.length);
+        currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
       }
 
       if (elab.coolingTimeUnder10) {
         doc.setFont("helvetica", "bold");
-        doc.text((t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":", 20, currentY);
+        const coolingLabel = (t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":";
+        const labelLines = doc.splitTextToSize(coolingLabel, 65);
+        doc.text(labelLines, 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(elab.coolingTimeUnder10, 90, currentY);
-        currentY += 7;
+        const valLines = doc.splitTextToSize(elab.coolingTimeUnder10, 100);
+        doc.text(valLines, 90, currentY);
+        const maxLines = Math.max(labelLines.length, valLines.length);
+        currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
       }
 
       if (elab.dryingRoomIn) {
         doc.setFont("helvetica", "bold");
-        doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
+        const dryingInLabel = (t('traceability_form.label_drying_in') || "Entrada secadero") + ":";
+        const labelLines = doc.splitTextToSize(dryingInLabel, 65);
+        doc.text(labelLines, 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(elab.dryingRoomIn, 90, currentY);
-        currentY += 7;
+        const valLines = doc.splitTextToSize(elab.dryingRoomIn, 100);
+        doc.text(valLines, 90, currentY);
+        const maxLines = Math.max(labelLines.length, valLines.length);
+        currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
       }
 
       if (elab.dryingRoomOut) {
         doc.setFont("helvetica", "bold");
-        doc.text((t('traceability_form.label_drying_out') || "Salida secadero") + ":", 20, currentY);
+        const dryingOutLabel = (t('traceability_form.label_drying_out') || "Salida secadero") + ":";
+        const labelLines = doc.splitTextToSize(dryingOutLabel, 65);
+        doc.text(labelLines, 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(elab.dryingRoomOut, 90, currentY);
-        currentY += 7;
+        const valLines = doc.splitTextToSize(elab.dryingRoomOut, 100);
+        doc.text(valLines, 90, currentY);
+        const maxLines = Math.max(labelLines.length, valLines.length);
+        currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
       }
 
       currentY += 10; // Extra spacing
@@ -4045,42 +4065,62 @@ export default function ClientDashboard() {
 
         if (el.workshopTemp) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
+          const workshopLabel = (t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":";
+          const labelLines = doc.splitTextToSize(workshopLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.workshopTemp, 90, currentY);
-          currentY += 7;
+          const valLines = doc.splitTextToSize(el.workshopTemp, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
         }
 
         if (el.finalElaborationTemp) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":", 20, currentY);
+          const finalTempLabel = (t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":";
+          const labelLines = doc.splitTextToSize(finalTempLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.finalElaborationTemp, 90, currentY);
-          currentY += 7;
+          const valLines = doc.splitTextToSize(el.finalElaborationTemp, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
         }
 
         if (el.coolingTimeUnder10) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":", 20, currentY);
+          const coolingLabel = (t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":";
+          const labelLines = doc.splitTextToSize(coolingLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.coolingTimeUnder10, 90, currentY);
-          currentY += 7;
+          const valLines = doc.splitTextToSize(el.coolingTimeUnder10, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
         }
 
         if (el.dryingRoomIn) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
+          const dryingInLabel = (t('traceability_form.label_drying_in') || "Entrada secadero") + ":";
+          const labelLines = doc.splitTextToSize(dryingInLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.dryingRoomIn, 90, currentY);
-          currentY += 7;
+          const valLines = doc.splitTextToSize(el.dryingRoomIn, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
         }
 
         if (el.dryingRoomOut) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.label_drying_out') || "Salida secadero") + ":", 20, currentY);
+          const dryingOutLabel = (t('traceability_form.label_drying_out') || "Salida secadero") + ":";
+          const labelLines = doc.splitTextToSize(dryingOutLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.dryingRoomOut, 90, currentY);
-          currentY += 7;
+          const valLines = doc.splitTextToSize(el.dryingRoomOut, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (7 + (maxLines - 1) * 5) : 7;
         }
 
         currentY += 10; // Extra spacing
@@ -4375,42 +4415,62 @@ export default function ClientDashboard() {
 
         if (el.workshopTemp) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":", 20, currentY);
+          const workshopLabel = (t('traceability_form.workshop_temp') || "Temperatura del obrador") + ":";
+          const labelLines = doc.splitTextToSize(workshopLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.workshopTemp, 90, currentY);
-          currentY += 6.5;
+          const valLines = doc.splitTextToSize(el.workshopTemp, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (6.5 + (maxLines - 1) * 5) : 6.5;
         }
 
         if (el.finalElaborationTemp) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":", 20, currentY);
+          const finalTempLabel = (t('traceability_form.final_elaboration_temp') || "Temperatura de terminacion de la elaboración") + ":";
+          const labelLines = doc.splitTextToSize(finalTempLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.finalElaborationTemp, 90, currentY);
-          currentY += 6.5;
+          const valLines = doc.splitTextToSize(el.finalElaborationTemp, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (6.5 + (maxLines - 1) * 5) : 6.5;
         }
 
         if (el.coolingTimeUnder10) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":", 20, currentY);
+          const coolingLabel = (t('traceability_form.cooling_time_under_10') || "Tiempo que ha tardado en bajar a menos de 10 grados") + ":";
+          const labelLines = doc.splitTextToSize(coolingLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.coolingTimeUnder10, 90, currentY);
-          currentY += 6.5;
+          const valLines = doc.splitTextToSize(el.coolingTimeUnder10, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (6.5 + (maxLines - 1) * 5) : 6.5;
         }
 
         if (el.dryingRoomIn) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.label_drying_in') || "Entrada secadero") + ":", 20, currentY);
+          const dryingInLabel = (t('traceability_form.label_drying_in') || "Entrada secadero") + ":";
+          const labelLines = doc.splitTextToSize(dryingInLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.dryingRoomIn, 90, currentY);
-          currentY += 6.5;
+          const valLines = doc.splitTextToSize(el.dryingRoomIn, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (6.5 + (maxLines - 1) * 5) : 6.5;
         }
 
         if (el.dryingRoomOut) {
           doc.setFont("helvetica", "bold");
-          doc.text((t('traceability_form.label_drying_out') || "Salida secadero") + ":", 20, currentY);
+          const dryingOutLabel = (t('traceability_form.label_drying_out') || "Salida secadero") + ":";
+          const labelLines = doc.splitTextToSize(dryingOutLabel, 65);
+          doc.text(labelLines, 20, currentY);
           doc.setFont("helvetica", "normal");
-          doc.text(el.dryingRoomOut, 90, currentY);
-          currentY += 6.5;
+          const valLines = doc.splitTextToSize(el.dryingRoomOut, 100);
+          doc.text(valLines, 90, currentY);
+          const maxLines = Math.max(labelLines.length, valLines.length);
+          currentY += maxLines > 1 ? (6.5 + (maxLines - 1) * 5) : 6.5;
         }
 
         // DATOS DE STOCK
