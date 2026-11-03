@@ -6029,41 +6029,45 @@ export default function ClientDashboard() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
 
-                    <div>
-                      <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.quantity_produced')}</label>
-                      <input 
-                        type="number" 
-                        step="any"
-                        min="0"
-                        className="input-field" 
-                        value={elaboracionForm.quantityProduced} 
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || !isNaN(Number(val.replace(',', '.')))) {
-                            setElaboracionForm({...elaboracionForm, quantityProduced: val});
-                          }
-                        }}
-                        placeholder={t('traceability_form.quantity_produced_placeholder') || "Ej: 50, 100..."}
-                        disabled={isReadOnlyElab}
-                      />
-                    </div>
+                    {!profile?.isSimpleVersion && (
+                      <>
+                        <div>
+                          <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.quantity_produced')}</label>
+                          <input 
+                            type="number" 
+                            step="any"
+                            min="0"
+                            className="input-field" 
+                            value={elaboracionForm.quantityProduced} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "" || !isNaN(Number(val.replace(',', '.')))) {
+                                setElaboracionForm({...elaboracionForm, quantityProduced: val});
+                              }
+                            }}
+                            placeholder={t('traceability_form.quantity_produced_placeholder') || "Ej: 50, 100..."}
+                            disabled={isReadOnlyElab}
+                          />
+                        </div>
 
-                    <div>
-                      <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>
-                        {t('traceability_form.quantity_unit') || "Unidad de medida"}
-                      </label>
-                      <input 
-                        type="text" 
-                        className="input-field" 
-                        value={elaboracionForm.quantityUnit || ""} 
-                        onChange={(e) => setElaboracionForm({...elaboracionForm, quantityUnit: e.target.value})}
-                        placeholder={t('traceability_form.quantity_unit_placeholder') || "Ej: kg, unidades, l..."}
-                        disabled={isReadOnlyElab}
-                      />
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
-                        {t('traceability_form.quantity_unit_help') || "Este campo se utiliza para la gestión de stocks y el registro de ventas de esta elaboración."}
-                      </p>
-                    </div>
+                        <div>
+                          <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                            {t('traceability_form.quantity_unit') || "Unidad de medida"}
+                          </label>
+                          <input 
+                            type="text" 
+                            className="input-field" 
+                            value={elaboracionForm.quantityUnit || ""} 
+                            onChange={(e) => setElaboracionForm({...elaboracionForm, quantityUnit: e.target.value})}
+                            placeholder={t('traceability_form.quantity_unit_placeholder') || "Ej: kg, unidades, l..."}
+                            disabled={isReadOnlyElab}
+                          />
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
+                            {t('traceability_form.quantity_unit_help') || "Este campo se utiliza para la gestión de stocks y el registro de ventas de esta elaboración."}
+                          </p>
+                        </div>
+                      </>
+                    )}
 
                     <div>
                       <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.net_weight_label')}</label>
@@ -6551,7 +6555,7 @@ export default function ClientDashboard() {
                               required={!isReadOnlyElab && !!ing.quantityMandatory} 
                               disabled={isReadOnlyElab}
                             />
-                            {session?.user?.role !== "WORKER" && (() => {
+                            {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (() => {
                               const normIngName = (ing.name || '').trim().toLowerCase();
                               const normIngUnit = (ing.unit || '').trim().toLowerCase();
                               const priceObj = (ingredientPrices || []).find(p => 
@@ -6835,7 +6839,7 @@ export default function ClientDashboard() {
                   </div>
 
                   {/* Bloque de coste total de la elaboración */}
-                  {session?.user?.role !== "WORKER" && (() => {
+                  {session?.user?.role !== "WORKER" && !profile?.isSimpleVersion && (() => {
                     const rawCost = (selectedRecipe.ingredients || []).reduce((sum, ing) => {
                       const normIngName = (ing.name || '').trim().toLowerCase();
                       const normIngUnit = (ing.unit || '').trim().toLowerCase();
@@ -11584,6 +11588,7 @@ export default function ClientDashboard() {
           onIngredientChange={handleRecipeIngredientChange}
           recipes={recipes}
           goodsReceipts={goodsReceipts}
+          profile={profile}
         />
       )}
 
@@ -18029,7 +18034,7 @@ function NutritionAiDisclaimerModal({ isOpen, onClose, onAccept }) {
   );
 }
 
-function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange, recipes = [], goodsReceipts = [] }) {
+function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange, recipes = [], goodsReceipts = [], profile }) {
   const { t } = useI18n();
   const [isAiScanOpen, setIsAiScanOpen] = useState(false);
   const [aiSuccessMsg, setAiSuccessMsg] = useState(null);
@@ -18715,60 +18720,62 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                             <input type="checkbox" checked={ing.quantityMandatory} onChange={(e) => onIngredientChange(idx, 'quantityMandatory', e.target.checked)} style={{ accentColor: 'var(--corp-green)' }} />
                             {t('modals.real_qty_obligatory')}
                           </label>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-main)' }}>
-                              <input 
-                                type="checkbox" 
-                                checked={!!ing.sellAsGood} 
-                                onChange={(e) => {
-                                  const isChecked = e.target.checked;
-                                  onIngredientChange(idx, 'sellAsGood', isChecked);
-                                  if (isChecked && (!ing.goodsSalePrice || !ing.goodsBarcode)) {
-                                    const clean = (ing.name || '').trim().toLowerCase();
-                                    const found = goodsList.find(g => 
-                                      (g.linkedIngredientName && g.linkedIngredientName.trim().toLowerCase() === clean) ||
-                                      (g.name && g.name.trim().toLowerCase() === clean)
-                                    );
-                                    if (found) {
-                                      if (!ing.goodsSalePrice && found.salePrice !== undefined) {
-                                        onIngredientChange(idx, 'goodsSalePrice', found.salePrice);
-                                      }
-                                      if (!ing.goodsBarcode && found.barcode) {
-                                        onIngredientChange(idx, 'goodsBarcode', found.barcode);
+                          {!profile?.isSimpleVersion && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-main)' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={!!ing.sellAsGood} 
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    onIngredientChange(idx, 'sellAsGood', isChecked);
+                                    if (isChecked && (!ing.goodsSalePrice || !ing.goodsBarcode)) {
+                                      const clean = (ing.name || '').trim().toLowerCase();
+                                      const found = goodsList.find(g => 
+                                        (g.linkedIngredientName && g.linkedIngredientName.trim().toLowerCase() === clean) ||
+                                        (g.name && g.name.trim().toLowerCase() === clean)
+                                      );
+                                      if (found) {
+                                        if (!ing.goodsSalePrice && found.salePrice !== undefined) {
+                                          onIngredientChange(idx, 'goodsSalePrice', found.salePrice);
+                                        }
+                                        if (!ing.goodsBarcode && found.barcode) {
+                                          onIngredientChange(idx, 'goodsBarcode', found.barcode);
+                                        }
                                       }
                                     }
-                                  }
-                                }} 
-                                style={{ accentColor: 'var(--corp-green)' }} 
-                              />
-                              {t('recipes.sell_as_good_lbl') || "Vender como mercancía"}
-                            </label>
-                            <button
-                              type="button"
-                              title={t('recipes.sell_as_good_tooltip') || "Por ejemplo, si tienes una carnicería y el ingrediente es pollo, señala esta casilla si usas el pollo tanto para hacer elaboraciones como para vendérselo a los clientes."}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                alert(t('recipes.sell_as_good_tooltip') || "Por ejemplo, si tienes una carnicería y el ingrediente es pollo, señala esta casilla si usas el pollo tanto para hacer elaboraciones como para vendérselo a los clientes.");
-                              }}
-                              style={{
-                                background: '#e2e8f0',
-                                border: 'none',
-                                color: '#475569',
-                                cursor: 'pointer',
-                                width: '16px',
-                                height: '16px',
-                                borderRadius: '50%',
-                                fontSize: '11px',
-                                fontWeight: 'bold',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: 0
-                              }}
-                            >
-                              ?
-                            </button>
-                          </div>
+                                  }} 
+                                  style={{ accentColor: 'var(--corp-green)' }} 
+                                />
+                                {t('recipes.sell_as_good_lbl') || "Vender como mercancía"}
+                              </label>
+                              <button
+                                type="button"
+                                title={t('recipes.sell_as_good_tooltip') || "Por ejemplo, si tienes una carnicería y el ingrediente es pollo, señala esta casilla si usas el pollo tanto para hacer elaboraciones como para vendérselo a los clientes."}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  alert(t('recipes.sell_as_good_tooltip') || "Por ejemplo, si tienes una carnicería y el ingrediente es pollo, señala esta casilla si usas el pollo tanto para hacer elaboraciones como para vendérselo a los clientes.");
+                                }}
+                                style={{
+                                  background: '#e2e8f0',
+                                  border: 'none',
+                                  color: '#475569',
+                                  cursor: 'pointer',
+                                  width: '16px',
+                                  height: '16px',
+                                  borderRadius: '50%',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  padding: 0
+                                }}
+                              >
+                                ?
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         <div className="recipe-ing-delete" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -18780,7 +18787,7 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
                         </div>
 
                         {/* Bloque desplegable de campos de venta como mercancía */}
-                        {ing.sellAsGood && (
+                        {ing.sellAsGood && !profile?.isSimpleVersion && (
                           <div 
                             className="recipe-ing-goods-details"
                             style={{
