@@ -1006,7 +1006,11 @@
     "referral_discount_msg": "Sconto del 5% per la raccomandazione di un altro utente",
     "referral_discount_banner": "Sconto del 5% applicato!",
     "referral_discount_applied_desc": "Essendo stato raccomandato, hai uno sconto diretto del 5% sul tuo abbonamento. Usa il coupon \"RECOMANDADOS\" al momento del pagamento per ricevere lo sconto del 5%.",
-    "learn_affiliate": "Scopri come guadagnare con Quicktrace"
+    "learn_affiliate": "Scopri come guadagnare con Quicktrace",
+    "switch_to_yearly": "Passa al pagamento annuale",
+    "switch_to_monthly": "Passa al pagamento mensile",
+    "currently_monthly": "Il tuo piano attuale (mensile)",
+    "currently_yearly": "Il tuo piano attuale (annuale)"
   },
   "allergens": {
     "title": "Allergeni",

@@ -74,6 +74,19 @@ export default function PlansPage() {
     return null;
   };
 
+  const userCurrentBillingCycle = (() => {
+    if (profile?.billingCycle) return profile.billingCycle;
+    if (!profile?.planId || !profile?.stripePriceId) return null;
+    const currentPlan = plans.find(p => p.id === profile.planId) || profile?.plan;
+    if (!currentPlan) return null;
+    if (profile.stripePriceId === currentPlan.stripePriceIdMonthly) return "monthly";
+    if (
+      profile.stripePriceId === currentPlan.stripePriceIdYearly ||
+      profile.stripePriceId === currentPlan.stripePriceId
+    ) return "yearly";
+    return null;
+  })();
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
@@ -172,14 +185,21 @@ export default function PlansPage() {
         }}>
           {plans.map((plan) => {
             const isDemo = plan.name.toLowerCase().includes('demo');
-            const isCurrentPlan = profile?.planId === plan.id || (!profile?.planId && isDemo);
+            const isUserOnDemo = !profile?.planId || (profile?.plan?.name && profile.plan.name.toLowerCase().includes('demo'));
+            const isSamePlan = profile?.planId === plan.id;
+
+            const isCurrentPlan = isUserOnDemo 
+              ? isDemo 
+              : (isSamePlan && (userCurrentBillingCycle ? userCurrentBillingCycle === billingCycle : true));
+
+            const isSamePlanDifferentCycle = isSamePlan && !isCurrentPlan && !!userCurrentBillingCycle;
             const badge = getPlanBadge(plan.name);
             
             return (
               <div key={plan.id} className="glass-card plan-card" style={{ 
                 padding: '2.5rem', 
                 background: 'white', 
-                border: isCurrentPlan ? '2px solid var(--corp-green)' : '1px solid var(--border)',
+                border: isCurrentPlan ? '2px solid var(--corp-green)' : (isSamePlanDifferentCycle ? '2px dashed var(--corp-green)' : '1px solid var(--border)'),
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
@@ -198,7 +218,25 @@ export default function PlansPage() {
                 )}
                 
                 <div style={{ marginBottom: '2rem' }}>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{plan.name}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>{plan.name}</h2>
+                    {isSamePlanDifferentCycle && (
+                      <span style={{ 
+                        fontSize: '0.72rem', 
+                        fontWeight: '800', 
+                        background: 'rgba(66, 98, 22, 0.1)', 
+                        color: 'var(--corp-green)', 
+                        padding: '0.25rem 0.6rem', 
+                        borderRadius: '0.5rem',
+                        border: '1px solid rgba(66, 98, 22, 0.2)'
+                      }}>
+                        {billingCycle === "yearly" 
+                          ? (t('plans.currently_monthly') || "Tu plan actual (modalidad mensual)") 
+                          : (t('plans.currently_yearly') || "Tu plan actual (modalidad anual)")
+                        }
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       {profile?.referredById && (plan.priceMonthly > 0 || plan.priceYearly > 0) && (
@@ -247,7 +285,17 @@ export default function PlansPage() {
                       opacity: (isCurrentPlan || submitting === plan.id) ? 0.7 : 1
                     }}
                   >
-                    {submitting === plan.id ? <Loader2 className="animate-spin" size={20} /> : (isCurrentPlan ? t('plans.current_plan') : t('plans.subscribe'))}
+                    {submitting === plan.id ? (
+                      <Loader2 className="animate-spin" size={20} />
+                    ) : isCurrentPlan ? (
+                      t('plans.current_plan')
+                    ) : isSamePlanDifferentCycle && billingCycle === "yearly" ? (
+                      t('plans.switch_to_yearly') || "Pasar a Pago Anual"
+                    ) : isSamePlanDifferentCycle && billingCycle === "monthly" ? (
+                      t('plans.switch_to_monthly') || "Pasar a Pago Mensual"
+                    ) : (
+                      t('plans.subscribe')
+                    )}
                   </button>
                 )}
               </div>

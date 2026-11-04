@@ -1011,7 +1011,11 @@
     "referral_discount_msg": "5% discount for coming recommended by another user",
     "referral_discount_banner": "5% discount applied!",
     "referral_discount_applied_desc": "By coming recommended, you have a 5% direct discount on your subscription. Use the discount coupon \"RECOMANDADOS\" during checkout to receive your 5% discount.",
-    "learn_affiliate": "Learn how to earn money with Quicktrace"
+    "learn_affiliate": "Learn how to earn money with Quicktrace",
+    "switch_to_yearly": "Switch to Yearly",
+    "switch_to_monthly": "Switch to Monthly",
+    "currently_monthly": "Your current plan (monthly)",
+    "currently_yearly": "Your current plan (yearly)"
   },
   "allergens": {
     "title": "Allergens",

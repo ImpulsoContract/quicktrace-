@@ -36,20 +36,24 @@ export async function GET() {
         // Comprobar si está cancelada y al final del periodo o cancelada directamente
         const isCanceled = subscription.cancel_at_period_end || subscription.status === 'canceled';
 
+        const currentStripePriceId = subscription.items?.data?.[0]?.price?.id;
+
         const dateChanged = profile.stripeCurrentPeriodEnd !== nextRenewalStr;
         const cancelStatusChanged = profile.stripeCancelAtPeriodEnd !== isCanceled;
+        const priceChanged = currentStripePriceId && profile.stripePriceId !== currentStripePriceId;
 
         // Si los datos de Stripe están más actualizados que la base de datos local, sincronizamos de inmediato
-        if (dateChanged || cancelStatusChanged) {
+        if (dateChanged || cancelStatusChanged || priceChanged) {
           profile = await prisma.clientProfile.update({
             where: { id: profile.id },
             include: { plan: true },
             data: {
               stripeCancelAtPeriodEnd: isCanceled,
-              stripeCurrentPeriodEnd: nextRenewalStr
+              stripeCurrentPeriodEnd: nextRenewalStr,
+              ...(priceChanged ? { stripePriceId: currentStripePriceId } : {})
             }
           });
-          console.log(`[Profile Live Sync] Sincronizado estado de cancelación para el usuario ${session.user.email}.`);
+          console.log(`[Profile Live Sync] Sincronizado estado para el usuario ${session.user.email}.`);
         }
       } catch (stripeErr) {
         console.error("Error comprobando estado en vivo Stripe:", stripeErr);
@@ -61,8 +65,21 @@ export async function GET() {
       where: { recipe: { clientProfileId: profile.id } }
     });
 
+    // Detect billing cycle
+    let billingCycle = null;
+    if (profile.plan && profile.stripePriceId) {
+      if (profile.stripePriceId === profile.plan.stripePriceIdMonthly) {
+        billingCycle = "monthly";
+      } else if (
+        profile.stripePriceId === profile.plan.stripePriceIdYearly ||
+        profile.stripePriceId === profile.plan.stripePriceId
+      ) {
+        billingCycle = "yearly";
+      }
+    }
+
     const { apiKey, apiKeyCreatedAt, ...safeProfile } = profile;
-    return NextResponse.json({ ...safeProfile, hasApiKey: !!profile.apiKey, totalElaborations });
+    return NextResponse.json({ ...safeProfile, hasApiKey: !!profile.apiKey, totalElaborations, billingCycle });
   } catch (error) {
     console.error("Error fetching client profile:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

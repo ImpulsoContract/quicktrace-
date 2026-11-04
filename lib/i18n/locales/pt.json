@@ -1005,7 +1005,11 @@
     "referral_discount_msg": "5% de desconto por vir recomendado por outro utilizador",
     "referral_discount_banner": "5% de desconto aplicado!",
     "referral_discount_applied_desc": "Ao vir recomendado, tem um desconto direto de 5% na sua subscrição. Utilize o cupão de desconto \"RECOMENDADOS\" ao realizar o pagamento para receber o seu desconto de 5%.",
-    "learn_affiliate": "Saiba como ganhar dinheiro com o Quicktrace"
+    "learn_affiliate": "Saiba como ganhar dinheiro com o Quicktrace",
+    "switch_to_yearly": "Mudar para pagamento anual",
+    "switch_to_monthly": "Mudar para pagamento mensal",
+    "currently_monthly": "O seu plano atual (mensal)",
+    "currently_yearly": "O seu plano atual (anual)"
   },
   "allergens": {
     "title": "Alergénios",

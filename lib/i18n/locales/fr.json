@@ -1006,7 +1006,11 @@
     "referral_discount_msg": "5 % de réduction par recommandation",
     "referral_discount_banner": "Réduction de 5 % appliquée !",
     "referral_discount_applied_desc": "Grâce à votre parrain, vous bénéficiez d'une réduction directe de 5 % sur votre abonnement. Utilisez le coupon \"RECOMANDADOS\" lors du paiement pour recevoir votre réduction de 5 %.",
-    "learn_affiliate": "Apprenez à gagner de l'argent avec Quicktrace"
+    "learn_affiliate": "Apprenez à gagner de l'argent avec Quicktrace",
+    "switch_to_yearly": "Passer au paiement annuel",
+    "switch_to_monthly": "Passer au paiement mensuel",
+    "currently_monthly": "Votre forfait actuel (mensuel)",
+    "currently_yearly": "Votre forfait actuel (annuel)"
   },
   "allergens": {
     "title": "Allergènes",

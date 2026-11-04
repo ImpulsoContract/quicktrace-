@@ -77,15 +77,31 @@ export async function POST(req) {
 
     const baseUrl = process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
 
-    const isUpdate = !!clientProfile.stripeSubscriptionId;
+    let isUpdate = !!clientProfile.stripeSubscriptionId;
+    let subscription = null;
+    let subscriptionItemId = null;
 
     if (isUpdate) {
-      // Optamos por el Billing Portal para actualizaciones. Es MUCHO más robusto y maneja prorrateo automáticamente.
-      console.log(`[Stripe] Creating Billing Portal update session for subscription ${clientProfile.stripeSubscriptionId}`);
-      
-      const subscription = await stripe.subscriptions.retrieve(clientProfile.stripeSubscriptionId);
-      const subscriptionItemId = subscription.items.data[0].id;
+      try {
+        subscription = await stripe.subscriptions.retrieve(clientProfile.stripeSubscriptionId);
+        if (subscription.status === 'canceled') {
+          isUpdate = false;
+        } else {
+          subscriptionItemId = subscription.items?.data?.[0]?.id;
+          if (subscription.items?.data?.[0]?.price?.id === priceId) {
+            return NextResponse.json({ error: "Ya tienes contratado este plan en esta modalidad." }, { status: 400 });
+          }
+        }
+      } catch (subErr) {
+        console.error("Error retrieving subscription, falling back to new checkout:", subErr);
+        isUpdate = false;
+      }
+    }
 
+    if (isUpdate && subscriptionItemId) {
+      // Optamos por el Billing Portal para actualizaciones. Es MUCHO más robusto y maneja prorrateo automáticamente.
+      console.log(`[Stripe] Creating Billing Portal update session for subscription ${clientProfile.stripeSubscriptionId} to price ${priceId}`);
+      
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: clientProfile.stripeCustomerId,
         return_url: `${baseUrl}/dashboard/plans`,
