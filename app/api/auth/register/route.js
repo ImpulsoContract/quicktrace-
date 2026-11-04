@@ -36,14 +36,16 @@ export async function POST(req) {
       return NextResponse.json({ error: "Debes aceptar las Condiciones de Uso" }, { status: 400 });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
+      where: { email: normalizedEmail },
+      include: { clientProfile: true }
     });
 
-    if (existingUser) {
+    // If user already exists and HAS logged in before (or is not a CLIENT), do not allow re-registration
+    if (existingUser && (existingUser.lastLogin || existingUser.role !== "CLIENT")) {
       try {
         await sendEmail({
           to: process.env.SUPPORT_ALERT_EMAIL || "soporte@quicktrace.es",
@@ -90,7 +92,7 @@ export async function POST(req) {
     let referrer = null;
     let calculatedOrigin = 'DIRECT';
 
-    // Create user and profile in a transaction
+    // Create or update user and profile in a transaction
     await prisma.$transaction(async (tx) => {
       // Find the "Demo" plan
       const demoPlan = await tx.pricingPlan.findFirst({
@@ -126,41 +128,102 @@ export async function POST(req) {
         calculatedOrigin = 'OTHER';
       }
 
-      const user = await tx.user.create({
-        data: {
-          email: normalizedEmail,
-          name,
-          password: hashedPassword,
-          role: "CLIENT",
-          verificationToken,
-          verificationTokenExpires,
-          emailVerified: false,
-          termsAcceptedAt: termsAccepted ? new Date() : null
-        }
-      });
+      if (existingUser) {
+        // User was registered but NEVER logged in: update account and set new password & verification token
+        await tx.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: name || existingUser.name,
+            password: hashedPassword,
+            verificationToken,
+            verificationTokenExpires,
+            emailVerified: false,
+            createdAt: new Date(),
+            termsAcceptedAt: termsAccepted ? new Date() : (existingUser.termsAcceptedAt || new Date())
+          }
+        });
 
-      await tx.clientProfile.create({
-        data: {
-          userId: user.id,
-          razonSocial,
-          phone,
-          personName: name,
-          nif: "", 
-          planId: demoPlan ? demoPlan.id : undefined,
-          accountType: demoPlan ? demoPlan.name : "DEMO",
-          recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
-          canManageRecipes: true,
-          referredById: referrer ? referrer.id : undefined,
-          origin: calculatedOrigin,
-          utmSource: utmSource || null,
-          utmMedium: utmMedium || null,
-          utmCampaign: utmCampaign || null,
-          utmContent: utmContent || null,
-          utmTerm: utmTerm || null,
-          gclid: gclid || null,
-          fbclid: fbclid || null
+        if (existingUser.clientProfile) {
+          await tx.clientProfile.update({
+            where: { id: existingUser.clientProfile.id },
+            data: {
+              razonSocial: razonSocial || existingUser.clientProfile.razonSocial,
+              phone: phone || existingUser.clientProfile.phone,
+              personName: name || existingUser.clientProfile.personName,
+              createdAt: new Date(),
+              ...(referrer ? { referredById: referrer.id } : {}),
+              origin: calculatedOrigin,
+              utmSource: utmSource || existingUser.clientProfile.utmSource,
+              utmMedium: utmMedium || existingUser.clientProfile.utmMedium,
+              utmCampaign: utmCampaign || existingUser.clientProfile.utmCampaign,
+              utmContent: utmContent || existingUser.clientProfile.utmContent,
+              utmTerm: utmTerm || existingUser.clientProfile.utmTerm,
+              gclid: gclid || existingUser.clientProfile.gclid,
+              fbclid: fbclid || existingUser.clientProfile.fbclid
+            }
+          });
+        } else {
+          await tx.clientProfile.create({
+            data: {
+              userId: existingUser.id,
+              razonSocial,
+              phone,
+              personName: name,
+              nif: "", 
+              planId: demoPlan ? demoPlan.id : undefined,
+              accountType: demoPlan ? demoPlan.name : "DEMO",
+              recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
+              canManageRecipes: true,
+              referredById: referrer ? referrer.id : undefined,
+              origin: calculatedOrigin,
+              utmSource: utmSource || null,
+              utmMedium: utmMedium || null,
+              utmCampaign: utmCampaign || null,
+              utmContent: utmContent || null,
+              utmTerm: utmTerm || null,
+              gclid: gclid || null,
+              fbclid: fbclid || null
+            }
+          });
         }
-      });
+      } else {
+        // Fresh registration
+        const user = await tx.user.create({
+          data: {
+            email: normalizedEmail,
+            name,
+            password: hashedPassword,
+            role: "CLIENT",
+            verificationToken,
+            verificationTokenExpires,
+            emailVerified: false,
+            termsAcceptedAt: termsAccepted ? new Date() : null
+          }
+        });
+
+        await tx.clientProfile.create({
+          data: {
+            userId: user.id,
+            razonSocial,
+            phone,
+            personName: name,
+            nif: "", 
+            planId: demoPlan ? demoPlan.id : undefined,
+            accountType: demoPlan ? demoPlan.name : "DEMO",
+            recetasContratadas: demoPlan ? (demoPlan.recipesLimit || 0) : 3,
+            canManageRecipes: true,
+            referredById: referrer ? referrer.id : undefined,
+            origin: calculatedOrigin,
+            utmSource: utmSource || null,
+            utmMedium: utmMedium || null,
+            utmCampaign: utmCampaign || null,
+            utmContent: utmContent || null,
+            utmTerm: utmTerm || null,
+            gclid: gclid || null,
+            fbclid: fbclid || null
+          }
+        });
+      }
     });
 
     // Send verification email
@@ -192,19 +255,20 @@ export async function POST(req) {
       `
     });
 
-    // Notify Support about new registration
+    // Notify Support about registration
     try {
       await sendEmail({
         to: "soporte@quicktrace.es",
-        subject: `Nuevo Registro: ${razonSocial}`,
+        subject: existingUser ? `Reactivación de Registro (sin login previo): ${razonSocial}` : `Nuevo Registro: ${razonSocial}`,
         html: `
-          <h2>Nuevo Usuario Registrado</h2>
-          <p>Un nuevo cliente se ha registrado en QuickTrace:</p>
+          <h2>${existingUser ? 'Usuario Registrado (Sin Login Previo) Reactivado' : 'Nuevo Usuario Registrado'}</h2>
+          <p>${existingUser ? 'Un cliente que se registró anteriormente pero nunca había iniciado sesión ha vuelto a registrarse con nueva contraseña:' : 'Un nuevo cliente se ha registrado en QuickTrace:'}</p>
           <ul>
             <li><strong>Empresa / Razón Social:</strong> ${razonSocial}</li>
             <li><strong>Contacto:</strong> ${name}</li>
             <li><strong>Email:</strong> ${normalizedEmail}</li>
             <li><strong>Teléfono:</strong> ${phone}</li>
+            <li><strong>Tipo:</strong> ${existingUser ? 'Re-registro de cuenta sin login previo' : 'Nuevo registro'}</li>
             <li><strong>Código Ref:</strong> ${referralCode || 'Ninguno'}</li>
             <li><strong>Origen Calculado:</strong> ${calculatedOrigin}</li>
             <li><strong>UTM Source:</strong> ${utmSource || '-'}</li>
