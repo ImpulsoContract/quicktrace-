@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { User, Mail, Building2, Phone, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { User, Mail, Building2, Phone, ArrowRight, Loader2, CheckCircle2, Lock, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -49,7 +50,17 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const [formData, setFormData] = useState({ name: "", email: "", razonSocial: "", phone: "", termsAccepted: false });
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    email: "", 
+    razonSocial: "", 
+    phone: "", 
+    password: "", 
+    confirmPassword: "", 
+    termsAccepted: false 
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -115,8 +126,19 @@ function RegisterForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    if (!formData.password || formData.password.length < 6) {
+      setError(t('reset_password.error_length') || "La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError(t('reset_password.error_mismatch') || "Las contraseñas no coinciden");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const getP = (k) => getManualQueryParam(k) || searchParams.get(k) || getCookie(`qt_${k}`) || "";
@@ -144,10 +166,21 @@ function RegisterForm() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error");
-      setSuccess(true);
+
+      // Iniciar sesión directamente y entrar al dashboard sin esperar email
+      const signInRes = await signIn("credentials", {
+        redirect: false,
+        email: formData.email.toLowerCase().trim(),
+        password: formData.password
+      });
+
+      if (signInRes?.ok) {
+        router.push("/dashboard");
+      } else {
+        router.push("/login?registered=true");
+      }
     } catch (err) {
       setError(err.message || "Error");
-    } finally {
       setLoading(false);
     }
   };
@@ -194,6 +227,70 @@ function RegisterForm() {
           <div style={{ position: 'relative' }}>
             <Phone style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
             <input type="tel" className="input-field" style={{ paddingLeft: '2.75rem' }} placeholder="Teléfono" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
+            <input 
+              type={showPassword ? "text" : "password"} 
+              className="input-field" 
+              style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }} 
+              placeholder="Contraseña (mínimo 6 caracteres)" 
+              required 
+              value={formData.password} 
+              onChange={e => setFormData({...formData, password: e.target.value})} 
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '0.85rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
+            <input 
+              type={showConfirmPassword ? "text" : "password"} 
+              className="input-field" 
+              style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }} 
+              placeholder="Confirmar contraseña" 
+              required 
+              value={formData.confirmPassword} 
+              onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{
+                position: 'absolute',
+                right: '0.85rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           <label style={{ display: 'flex', gap: '0.75rem', cursor: 'pointer' }}>

@@ -23,7 +23,8 @@ import {
   ScanBarcode,
   List,
   Table,
-  LayoutGrid
+  LayoutGrid,
+  ShieldAlert
 } from "lucide-react";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
@@ -487,6 +488,67 @@ export default function ClientDashboard() {
   const [viewingImage, setViewingImage] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
+  const [isEmailVerificationModalOpen, setIsEmailVerificationModalOpen] = useState(false);
+  const [verificationModalFeature, setVerificationModalFeature] = useState("");
+  const [showVerificationHelpConfirm, setShowVerificationHelpConfirm] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
+  const [verificationResentSuccess, setVerificationResentSuccess] = useState(false);
+  const [sendingVerificationHelp, setSendingVerificationHelp] = useState(false);
+  const [verificationHelpSentSuccess, setVerificationHelpSentSuccess] = useState(false);
+
+  const isEmailVerified = profile?.emailVerified !== false;
+  const userEmail = profile?.userEmail || session?.user?.email || "";
+  const registrationDate = profile?.userCreatedAt || profile?.createdAt;
+  const registrationTime = registrationDate ? new Date(registrationDate).getTime() : Date.now();
+  const elapsedSinceRegMs = Date.now() - registrationTime;
+  const fiveDaysMs = 5 * 24 * 60 * 60 * 1000;
+  const isBlocked5Days = !isEmailVerified && elapsedSinceRegMs >= fiveDaysMs;
+  const daysRemaining = Math.max(0, Math.ceil((fiveDaysMs - elapsedSinceRegMs) / (24 * 60 * 60 * 1000)));
+
+  const handleRequireEmailVerification = (featureName) => {
+    setVerificationModalFeature(featureName);
+    setIsEmailVerificationModalOpen(true);
+  };
+
+  const handleResendVerificationEmail = async () => {
+    try {
+      setResendingVerification(true);
+      setVerificationResentSuccess(false);
+      const res = await fetch("/api/client/resend-verification", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Error al reenviar el correo de verificación");
+      } else {
+        setVerificationResentSuccess(true);
+        setTimeout(() => setVerificationResentSuccess(false), 8000);
+      }
+    } catch (err) {
+      console.error("Error resending verification:", err);
+      alert("Error al reenviar el correo de verificación");
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
+  const handleSendVerificationHelp = async () => {
+    try {
+      setSendingVerificationHelp(true);
+      const res = await fetch("/api/client/verification-help", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Error al enviar la solicitud de ayuda");
+      } else {
+        setShowVerificationHelpConfirm(false);
+        setVerificationHelpSentSuccess(true);
+        setTimeout(() => setVerificationHelpSentSuccess(false), 8000);
+      }
+    } catch (err) {
+      console.error("Error sending verification help:", err);
+      alert("Error al enviar la solicitud");
+    } finally {
+      setSendingVerificationHelp(false);
+    }
+  };
   const [isRecipeOverlimitModalOpen, setIsRecipeOverlimitModalOpen] = useState(false);
   const isRecipeLimitExceeded = () => {
     if (!profile) return false;
@@ -5570,6 +5632,167 @@ export default function ClientDashboard() {
     );
   }
 
+  if (!loading && profile && !isEmailVerified && isBlocked5Days) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        padding: '2rem'
+      }}>
+        <div className="glass-card" style={{
+          maxWidth: '560px',
+          width: '100%',
+          padding: '3rem 2.5rem',
+          borderRadius: '1.25rem',
+          background: 'white',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '72px',
+            height: '72px',
+            borderRadius: '50%',
+            background: '#fef2f2',
+            color: '#ef4444',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.5rem auto'
+          }}>
+            <ShieldAlert size={40} />
+          </div>
+          <h1 style={{ fontSize: '1.65rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.75rem' }}>
+            Acceso bloqueado: verificación pendiente
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+            Han transcurrido más de 5 días desde tu registro y tu dirección de correo electrónico ({userEmail}) aún no ha sido verificada. Para continuar utilizando QuickTrace, por favor confirma tu email haciendo clic en el enlace que te hemos enviado.
+          </p>
+
+          {verificationResentSuccess && (
+            <div style={{
+              background: 'rgba(66, 98, 22, 0.1)',
+              border: '1px solid rgba(66, 98, 22, 0.3)',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              color: 'var(--corp-green)',
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              marginBottom: '1.5rem'
+            }}>
+              ✓ ¡Email de verificación reenviado! Revisa tu bandeja de entrada o la carpeta de spam en {userEmail}.
+            </div>
+          )}
+
+          {verificationHelpSentSuccess && (
+            <div style={{
+              background: 'rgba(66, 98, 22, 0.1)',
+              border: '1px solid rgba(66, 98, 22, 0.3)',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              color: 'var(--corp-green)',
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              marginBottom: '1.5rem'
+            }}>
+              ✓ Hemos avisado al equipo de soporte. Nos pondremos en contacto contigo lo antes posible.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <button
+              onClick={handleResendVerificationEmail}
+              disabled={resendingVerification}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                fontSize: '0.95rem',
+                fontWeight: '700'
+              }}
+            >
+              {resendingVerification ? <Loader2 size={18} className="animate-spin" /> : <Mail size={18} />}
+              <span>Reenviar email de verificación{userEmail ? (" a " + userEmail) : ""}</span>
+            </button>
+
+            <button
+              onClick={() => setShowVerificationHelpConfirm(true)}
+              disabled={sendingVerificationHelp}
+              style={{
+                width: '100%',
+                padding: '0.8rem',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '0.75rem',
+                color: '#64748b',
+                fontWeight: '600',
+                fontSize: '0.9rem',
+                cursor: 'pointer'
+              }}
+            >
+              No logro recibir el email
+            </button>
+
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                marginTop: '0.5rem'
+              }}
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+
+        {/* Verification Help Modal inside blocked screen */}
+        {showVerificationHelpConfirm && (
+          <div className="modal-overlay" style={{ zIndex: 9999 }}>
+            <div className="modal-content glass-card" style={{ maxWidth: '440px', width: '90%', padding: '2rem', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '1rem' }}>
+                ¿Necesitas ayuda con el email?
+              </h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+                ¿Quieres que avisemos a los administradores para que te ayuden con esto?
+              </p>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowVerificationHelpConfirm(false)}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                  disabled={sendingVerificationHelp}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendVerificationHelp}
+                  disabled={sendingVerificationHelp}
+                  className="btn-primary"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  {sendingVerificationHelp ? <Loader2 size={18} className="animate-spin" /> : null}
+                  <span>Sí, avisar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (isPosMode && profile?.hasPosMode) {
     return (
       <PosDisplay
@@ -5993,6 +6216,116 @@ export default function ClientDashboard() {
               </button>
             )}
           </div>
+
+          {/* Always-visible email verification banner (within 5 days) */}
+          {!isEmailVerified && !isBlocked5Days && (
+            <div style={{
+              background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+              border: '1.5px solid #fcd34d',
+              borderLeft: '5px solid #f59e0b',
+              borderRadius: '0.85rem',
+              padding: '1.1rem 1.5rem',
+              marginBottom: '2rem',
+              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.85rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem', flex: 1, minWidth: '280px' }}>
+                  <div style={{
+                    background: '#fef3c7',
+                    color: '#d97706',
+                    padding: '0.5rem',
+                    borderRadius: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <AlertTriangle size={22} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '800', color: '#92400e', fontSize: '0.95rem' }}>
+                      Verificación de email pendiente
+                    </div>
+                    <div style={{ color: '#b45309', fontSize: '0.85rem', marginTop: '0.25rem', lineHeight: '1.4' }}>
+                      Debes verificar tu email ({userEmail}) antes de {daysRemaining === 1 ? '1 día' : (daysRemaining + ' días')} para mantener el acceso a tu cuenta. Las funciones con Inteligencia Artificial (escaneo de albaranes, lectura de fichas y cálculo nutricional) están inactivas hasta que confirmes tu cuenta.
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={handleResendVerificationEmail}
+                    disabled={resendingVerification}
+                    style={{
+                      padding: '0.6rem 1.1rem',
+                      background: '#d97706',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.6rem',
+                      fontWeight: '700',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)'
+                    }}
+                  >
+                    {resendingVerification ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
+                    <span>Reenviar email</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowVerificationHelpConfirm(true)}
+                    disabled={sendingVerificationHelp}
+                    style={{
+                      padding: '0.6rem 1.1rem',
+                      background: 'white',
+                      color: '#92400e',
+                      border: '1px solid #fcd34d',
+                      borderRadius: '0.6rem',
+                      fontWeight: '700',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    No logro recibir el email
+                  </button>
+                </div>
+              </div>
+
+              {verificationResentSuccess && (
+                <div style={{
+                  background: 'rgba(66, 98, 22, 0.1)',
+                  border: '1px solid rgba(66, 98, 22, 0.3)',
+                  borderRadius: '0.5rem',
+                  padding: '0.6rem 0.85rem',
+                  color: 'var(--corp-green)',
+                  fontSize: '0.85rem',
+                  fontWeight: '600'
+                }}>
+                  ✓ ¡Email de verificación reenviado a {userEmail}! Revisa tu bandeja de entrada o spam.
+                </div>
+              )}
+
+              {verificationHelpSentSuccess && (
+                <div style={{
+                  background: 'rgba(66, 98, 22, 0.1)',
+                  border: '1px solid rgba(66, 98, 22, 0.3)',
+                  borderRadius: '0.5rem',
+                  padding: '0.6rem 0.85rem',
+                  color: 'var(--corp-green)',
+                  fontSize: '0.85rem',
+                  fontWeight: '600'
+                }}>
+                  ✓ Hemos avisado a los administradores. Nos pondremos en contacto contigo en breve.
+                </div>
+              )}
+            </div>
+          )}
 
           {selectedRecipe ? (
             <div style={{ maxWidth: '850px', margin: '0 auto' }}>
@@ -9171,6 +9504,10 @@ export default function ClientDashboard() {
                     {profile?.hasIaGoods && (
                     <button 
                       onClick={() => {
+                        if (profile?.emailVerified === false) {
+                          handleRequireEmailVerification("escanear un albarán con IA");
+                          return;
+                        }
                         if (isRecipeLimitExceeded()) {
                           setIsRecipeOverlimitModalOpen(true);
                           return;
@@ -11589,7 +11926,153 @@ export default function ClientDashboard() {
           recipes={recipes}
           goodsReceipts={goodsReceipts}
           profile={profile}
+          onRequireEmailVerification={handleRequireEmailVerification}
         />
+      )}
+
+      {/* Email Verification Required Modal for AI Features */}
+      {isEmailVerificationModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 1200 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '520px', width: '90%', padding: '2.5rem', textAlign: 'center' }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #ede9fe 0%, #fef3c7 100%)',
+              color: '#7c3aed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem auto'
+            }}>
+              <Sparkles size={32} />
+            </div>
+
+            <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.6rem' }}>
+              Verifica tu email para usar la IA
+            </h3>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+              Para {verificationModalFeature || "usar las funciones de Inteligencia Artificial"}, es necesario que confirmes tu dirección de correo electrónico haciendo clic en el enlace que te enviamos a <strong>{userEmail}</strong>.
+            </p>
+
+            {verificationResentSuccess && (
+              <div style={{
+                background: 'rgba(66, 98, 22, 0.1)',
+                border: '1px solid rgba(66, 98, 22, 0.3)',
+                borderRadius: '0.6rem',
+                padding: '0.75rem',
+                color: 'var(--corp-green)',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                marginBottom: '1.25rem'
+              }}>
+                ✓ ¡Email de verificación reenviado a {userEmail}! Revisa tu bandeja de entrada o spam.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={handleResendVerificationEmail}
+                disabled={resendingVerification}
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.95rem',
+                  fontWeight: '700'
+                }}
+              >
+                {resendingVerification ? <Loader2 size={18} className="animate-spin" /> : <Mail size={18} />}
+                <span>Reenviar email de verificación{userEmail ? (" a " + userEmail) : ""}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEmailVerificationModalOpen(false);
+                  setShowVerificationHelpConfirm(true);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  padding: '0.4rem',
+                  textDecoration: 'underline'
+                }}
+              >
+                ¿No logras recibir el email?
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsEmailVerificationModalOpen(false)}
+                className="btn-secondary"
+                style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem' }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Verification Help Modal (Admin Alert confirmation) */}
+      {showVerificationHelpConfirm && (
+        <div className="modal-overlay" style={{ zIndex: 1300 }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '440px', width: '90%', padding: '2rem', textAlign: 'center' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: '#fef3c7',
+              color: '#d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1rem auto'
+            }}>
+              <AlertCircle size={28} />
+            </div>
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '0.75rem', color: 'var(--text-main)' }}>
+              ¿Necesitas ayuda?
+            </h3>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.75rem' }}>
+              ¿Quieres que avisemos a los administradores para que te ayuden con esto?
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setShowVerificationHelpConfirm(false)}
+                className="btn-secondary"
+                style={{ flex: 1 }}
+                disabled={sendingVerificationHelp}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSendVerificationHelp}
+                disabled={sendingVerificationHelp}
+                className="btn-primary"
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                {sendingVerificationHelp ? <Loader2 size={16} className="animate-spin" /> : null}
+                <span>Sí, avisar</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {recipeForTechnicalSheet && (
@@ -18034,7 +18517,7 @@ function NutritionAiDisclaimerModal({ isOpen, onClose, onAccept }) {
   );
 }
 
-function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange, recipes = [], goodsReceipts = [], profile }) {
+function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, isEditing, onAddIngredient, onRemoveIngredient, onIngredientChange, recipes = [], goodsReceipts = [], profile, onRequireEmailVerification }) {
   const { t } = useI18n();
   const [isAiScanOpen, setIsAiScanOpen] = useState(false);
   const [aiSuccessMsg, setAiSuccessMsg] = useState(null);
@@ -18255,6 +18738,11 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
   }, [formData.ingredients, aiCookingDescription, aiFinishedWeight]);
 
   const handleExecuteCalculateNutrition = async () => {
+    if (profile?.emailVerified === false) {
+      setIsDisclaimerOpen(false);
+      onRequireEmailVerification?.("rellenar los valores nutricionales con IA");
+      return;
+    }
     setIsDisclaimerOpen(false);
     setIsCalculatingNutrition(true);
     setNutritionFeedback(null);
@@ -18375,7 +18863,13 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               type="button"
-              onClick={() => setIsAiScanOpen(true)}
+              onClick={() => {
+                if (profile?.emailVerified === false) {
+                  onRequireEmailVerification?.("leer una receta con IA para crearla");
+                  return;
+                }
+                setIsAiScanOpen(true);
+              }}
               style={{
                 width: '100%',
                 padding: '0.9rem 1.5rem',
@@ -19092,7 +19586,13 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
-                  onClick={() => setIsDisclaimerOpen(true)}
+                  onClick={() => {
+                    if (profile?.emailVerified === false) {
+                      onRequireEmailVerification?.("rellenar los valores nutricionales con IA");
+                      return;
+                    }
+                    setIsDisclaimerOpen(true);
+                  }}
                   disabled={!isNutritionFormReady || isCalculatingNutrition}
                   style={{
                     padding: '0.85rem 1.5rem',

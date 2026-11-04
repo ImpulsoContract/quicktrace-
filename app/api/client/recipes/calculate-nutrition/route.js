@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,24 @@ export async function POST(req) {
 
   if (session.user.role === "WORKER" && !session.user.permissions?.hasRecipes) {
     return NextResponse.json({ error: "No tienes permiso para gestionar recetas" }, { status: 403 });
+  }
+
+  const userRecord = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: parseInt(session.user.id) },
+        { clientProfile: { id: session.user.profileId } }
+      ]
+    },
+    select: { emailVerified: true, email: true }
+  });
+
+  if (userRecord && !userRecord.emailVerified) {
+    return NextResponse.json({ 
+      error: "Debes verificar tu correo electrónico para calcular los valores nutricionales con Inteligencia Artificial.",
+      emailNotVerified: true,
+      email: userRecord.email
+    }, { status: 403 });
   }
 
   try {

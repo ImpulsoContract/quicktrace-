@@ -20,6 +20,25 @@ export async function POST(req) {
 
   try {
     const profileId = session.user.profileId;
+
+    const userRecord = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: parseInt(session.user.id) },
+          { clientProfile: { id: profileId } }
+        ]
+      },
+      select: { emailVerified: true, email: true }
+    });
+
+    if (userRecord && !userRecord.emailVerified) {
+      return NextResponse.json({ 
+        error: "Debes verificar tu correo electrónico para escanear albaranes con Inteligencia Artificial.",
+        emailNotVerified: true,
+        email: userRecord.email
+      }, { status: 403 });
+    }
+
     if (await isRecipeLimitExceeded(profileId)) {
       return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
     }

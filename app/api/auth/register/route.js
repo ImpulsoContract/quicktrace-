@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import { sendEmail } from "@/lib/mail";
 import { sendMetaConversionEvent } from "@/lib/meta";
 import { createClientifyContact } from "@/lib/clientify";
 import { headers } from "next/headers";
 
 export async function POST(req) {
-  let name, email, razonSocial, phone, termsAccepted, referralCode, locale,
+  let name, email, razonSocial, phone, password, confirmPassword, termsAccepted, referralCode, locale,
       utmSource, utmMedium, utmCampaign, utmContent, utmTerm, 
       gclid, fbclid, msclkid, ttclid;
   try {
     const body = await req.json();
     ({ 
-      name, email, razonSocial, phone, termsAccepted, referralCode, locale,
+      name, email, razonSocial, phone, password, confirmPassword, termsAccepted, referralCode, locale,
       utmSource, utmMedium, utmCampaign, utmContent, utmTerm, 
       gclid, fbclid, msclkid, ttclid 
     } = body);
@@ -21,6 +22,14 @@ export async function POST(req) {
 
     if (!name || !email || !razonSocial || !phone) {
       return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 });
+    }
+
+    if (!password || password.length < 6) {
+      return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+    }
+
+    if (confirmPassword && password !== confirmPassword) {
+      return NextResponse.json({ error: "Las contraseñas no coinciden" }, { status: 400 });
     }
 
     if (!termsAccepted) {
@@ -75,7 +84,8 @@ export async function POST(req) {
     }
 
     const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const verificationTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     let referrer = null;
     let calculatedOrigin = 'DIRECT';
@@ -120,7 +130,7 @@ export async function POST(req) {
         data: {
           email: normalizedEmail,
           name,
-          password: "", // Temporary empty password
+          password: hashedPassword,
           role: "CLIENT",
           verificationToken,
           verificationTokenExpires,
@@ -167,13 +177,15 @@ export async function POST(req) {
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
           <h2 style="color: #426216;">¡Bienvenido a QuickTrace!</h2>
           <p>Hola ${name},</p>
-          <p>Gracias por registrarte. Para completar tu cuenta y establecer tu contraseña, haz clic en el siguiente botón:</p>
+          <p>Gracias por registrarte en QuickTrace. Tu cuenta ya está activa.</p>
+          <p>Para verificar tu dirección de correo electrónico y activar todas las funciones avanzadas (incluido el escaneo de albaranes, lectura de recetas y cálculo de tablas nutricionales con Inteligencia Artificial), haz clic en el siguiente botón:</p>
           <div style="margin: 2rem 0;">
-            <a href="${verificationUrl}" style="background: #426216; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 0.5rem; font-weight: bold; display: inline-block;">
-              Verificar Email y Configurar Contraseña
+            <a href="${verificationUrl}" style="background: #426216; color: white; padding: 0.85rem 1.75rem; text-decoration: none; border-radius: 0.5rem; font-weight: bold; display: inline-block;">
+              Verificar mi Cuenta
             </a>
           </div>
-          <p>Este enlace caducará en 24 horas.</p>
+          <p style="font-size: 0.9rem; color: #64748b;">Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
+          <p style="word-break: break-all; color: #0284c7; font-size: 0.85rem;">${verificationUrl}</p>
           <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;" />
           <p style="font-size: 0.85rem; color: #94a3b8;">Si no has solicitado este registro, puedes ignorar este correo.</p>
         </div>

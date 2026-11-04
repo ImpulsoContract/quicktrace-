@@ -21,6 +21,24 @@ export async function POST(req) {
     return NextResponse.json({ error: "No tienes permiso para gestionar recetas" }, { status: 403 });
   }
 
+  const userRecord = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: parseInt(session.user.id) },
+        { clientProfile: { id: session.user.profileId } }
+      ]
+    },
+    select: { emailVerified: true, email: true }
+  });
+
+  if (userRecord && !userRecord.emailVerified) {
+    return NextResponse.json({ 
+      error: "Debes verificar tu correo electrónico para leer y escanear recetas con Inteligencia Artificial.",
+      emailNotVerified: true,
+      email: userRecord.email
+    }, { status: 403 });
+  }
+
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey.trim() === "" || apiKey === '""' || apiKey === "''") {

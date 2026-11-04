@@ -14,7 +14,18 @@ export async function GET() {
   try {
     let profile = await prisma.clientProfile.findUnique({
       where: { id: session.user.profileId },
-      include: { plan: true }
+      include: { 
+        plan: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            emailVerified: true,
+            createdAt: true
+          }
+        }
+      }
     });
 
     if (!profile) {
@@ -46,7 +57,18 @@ export async function GET() {
         if (dateChanged || cancelStatusChanged || priceChanged) {
           profile = await prisma.clientProfile.update({
             where: { id: profile.id },
-            include: { plan: true },
+            include: { 
+              plan: true,
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                  emailVerified: true,
+                  createdAt: true
+                }
+              }
+            },
             data: {
               stripeCancelAtPeriodEnd: isCanceled,
               stripeCurrentPeriodEnd: nextRenewalStr,
@@ -79,7 +101,19 @@ export async function GET() {
     }
 
     const { apiKey, apiKeyCreatedAt, ...safeProfile } = profile;
-    return NextResponse.json({ ...safeProfile, hasApiKey: !!profile.apiKey, totalElaborations, billingCycle });
+    const emailVerified = profile.user?.emailVerified ?? true;
+    const userEmail = profile.user?.email || "";
+    const userCreatedAt = profile.user?.createdAt || null;
+
+    return NextResponse.json({ 
+      ...safeProfile, 
+      hasApiKey: !!profile.apiKey, 
+      totalElaborations, 
+      billingCycle,
+      emailVerified,
+      userEmail,
+      userCreatedAt
+    });
   } catch (error) {
     console.error("Error fetching client profile:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -174,14 +208,31 @@ export async function PATCH(request) {
         isbueSeriesId: isbueSeriesId !== undefined ? isbueSeriesId : undefined,
         isbueSeriesName: isbueSeriesName !== undefined ? isbueSeriesName : undefined
       },
-      include: { plan: true }
+      include: { 
+        plan: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            emailVerified: true,
+            createdAt: true
+          }
+        }
+      }
     });
 
     const totalElaborations = await prisma.elaboration.count({
       where: { recipe: { clientProfileId: updatedProfile.id } }
     });
 
-    return NextResponse.json({ ...updatedProfile, totalElaborations });
+    return NextResponse.json({ 
+      ...updatedProfile, 
+      totalElaborations,
+      emailVerified: updatedProfile.user?.emailVerified ?? true,
+      userEmail: updatedProfile.user?.email || "",
+      userCreatedAt: updatedProfile.user?.createdAt || null
+    });
   } catch (error) {
     console.error("Error updating client profile:", error);
     return NextResponse.json({ error: "Error al actualizar el perfil" }, { status: 500 });
