@@ -14,7 +14,7 @@ export async function PATCH(req, { params }) {
 
   try {
     const body = await req.json();
-    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode, energyValue, fats, saturatedFats, carbohydrates, sugars, proteins, salt, allergens } = body;
+    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode, energyValue, fats, saturatedFats, carbohydrates, sugars, proteins, salt, allergens, useCustomLabelIngredients, customLabelIngredients } = body;
 
     const profile = await prisma.clientProfile.findUnique({
       where: { userId: parseInt(session.user.id) }
@@ -99,6 +99,8 @@ export async function PATCH(req, { params }) {
           proteins,
           salt,
           allergens: allergens !== undefined ? allergens : undefined,
+          useCustomLabelIngredients: useCustomLabelIngredients !== undefined ? !!useCustomLabelIngredients : undefined,
+          customLabelIngredients: useCustomLabelIngredients !== undefined ? (useCustomLabelIngredients && customLabelIngredients ? customLabelIngredients.trim() : null) : (customLabelIngredients !== undefined ? (customLabelIngredients ? customLabelIngredients.trim() : null) : undefined),
           ingredients: {
             create: ingredients.map((ing, idx) => ({
               name: toTitleCase(ing.name),

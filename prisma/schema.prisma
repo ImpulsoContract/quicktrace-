@@ -277,6 +277,8 @@ model Recipe {
   conservationInstructions String?
   hasBarcode               Boolean @default(false)
   barcode                  String?
+  useCustomLabelIngredients Boolean @default(false)
+  customLabelIngredients    String?
 
   // Nutritional info
   energyValue   String?

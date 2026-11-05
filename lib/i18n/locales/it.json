@@ -1773,7 +1773,11 @@
     "view_cards_btn": "Visualizza schede",
     "view_table_btn": "Visualizza tabella",
     "total_recipes": "Totale ricette",
-    "total_elaborations": "Totale elaborazioni"
+    "total_elaborations": "Totale elaborazioni",
+    "use_custom_label_ingredients": "Utilizza un elenco ingredienti alternativo sulle etichette",
+    "use_custom_label_ingredients_desc": "Quando abilitato, le etichette di qualsiasi elaborazione di questa ricetta stamperanno il testo seguente al posto del consueto elenco degli ingredienti.",
+    "custom_label_ingredients_label": "Testo degli ingredienti per le etichette",
+    "custom_label_ingredients_placeholder": "Inserisci qui l'elenco degli ingredienti come desideri che appaia sulle etichette (es: Farina di frumento, acqua, lievito madre, sale, lievito...)"
   },
   "oil_collection": {
     "title": "Ritiro oli di frittura",

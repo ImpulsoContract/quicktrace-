@@ -13,7 +13,7 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode, energyValue, fats, saturatedFats, carbohydrates, sugars, proteins, salt, allergens } = body;
+    const { name, ingredients, expiryDays, expiryType, elaborationInstructions, conservationInstructions, hasBarcode, barcode, energyValue, fats, saturatedFats, carbohydrates, sugars, proteins, salt, allergens, useCustomLabelIngredients, customLabelIngredients } = body;
 
     // Get client profile and check privilege
     const profile = await prisma.clientProfile.findUnique({
@@ -71,6 +71,8 @@ export async function POST(req) {
         proteins,
         salt,
         allergens: allergens || [],
+        useCustomLabelIngredients: !!useCustomLabelIngredients,
+        customLabelIngredients: useCustomLabelIngredients && customLabelIngredients ? customLabelIngredients.trim() : null,
         clientProfileId: profile.id,
         ingredients: {
           create: ingredients.map((ing, idx) => ({

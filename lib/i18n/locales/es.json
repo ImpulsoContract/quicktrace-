@@ -1778,7 +1778,11 @@
     "view_cards_btn": "Ver tarjetas",
     "view_table_btn": "Ver tabla",
     "total_recipes": "Total recetas",
-    "total_elaborations": "Total elaboraciones"
+    "total_elaborations": "Total elaboraciones",
+    "use_custom_label_ingredients": "Utilizar listado de ingredientes alternativo en las etiquetas",
+    "use_custom_label_ingredients_desc": "Al activar esta opción, en las etiquetas de cualquier elaboración de esta receta se imprimirá el texto indicado abajo en lugar del listado de ingredientes habitual.",
+    "custom_label_ingredients_label": "Listado de ingredientes para etiquetas",
+    "custom_label_ingredients_placeholder": "Escribe aquí el listado de ingredientes tal y como debe aparecer en las etiquetas (ej: Harina de trigo, agua, masa madre, sal, levadura...)"
   },
   "oil_collection": {
     "title": "Retirada de aceites de fritura",

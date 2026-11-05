@@ -1772,7 +1772,11 @@
     "view_cards_btn": "Ver cartões",
     "view_table_btn": "Ver tabela",
     "total_recipes": "Total de receitas",
-    "total_elaborations": "Total de elaborações"
+    "total_elaborations": "Total de elaborações",
+    "use_custom_label_ingredients": "Usar lista de ingredientes alternativa nos rótulos",
+    "use_custom_label_ingredients_desc": "Quando ativado, os rótulos de qualquer elaboração desta receita imprimirão o texto abaixo em vez da lista habitual de ingredientes.",
+    "custom_label_ingredients_label": "Texto de ingredientes para rótulos",
+    "custom_label_ingredients_placeholder": "Digite aqui a lista de ingredientes conforme deseja que apareça nos rótulos (ex: Farinha de trigo, água, massa mãe, sal, levedura...)"
   },
   "oil_collection": {
     "title": "Recolha de óleos de fritura",

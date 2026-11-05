@@ -691,7 +691,9 @@ export default function ClientDashboard() {
     sugars: "",
     proteins: "",
     salt: "",
-    allergens: []
+    allergens: [],
+    useCustomLabelIngredients: false,
+    customLabelIngredients: ""
   });
   
   const [isManageChambersModalOpen, setIsManageChambersModalOpen] = useState(false);
@@ -1161,7 +1163,9 @@ export default function ClientDashboard() {
       sugars: recipe.sugars || "",
       proteins: recipe.proteins || "",
       salt: recipe.salt || "",
-      allergens: recipe.allergens || []
+      allergens: recipe.allergens || [],
+      useCustomLabelIngredients: !!recipe.useCustomLabelIngredients,
+      customLabelIngredients: recipe.customLabelIngredients || ""
     });
     setIsRecipeManageModalOpen(true);
   };
@@ -3403,7 +3407,19 @@ export default function ClientDashboard() {
 
   const generateLabelPDF = (elaboration, overrideConfig = null, isPreview = false) => {
     const config = overrideConfig ? mergeLabelConfig(overrideConfig) : mergeLabelConfig(profile?.labelConfig);
-    const targetRecipe = elaboration?.recipe || { name: elaboration?.name || "Elaboración", expiryType: "EXPIRATION" };
+    const foundRecipe = recipes.find(r => r.id === (elaboration?.recipeId || elaboration?.recipe?.id));
+    const targetRecipe = {
+      ...(foundRecipe || {}),
+      ...(elaboration?.recipe || {}),
+      useCustomLabelIngredients: (elaboration?.recipe?.useCustomLabelIngredients !== undefined 
+        ? elaboration.recipe.useCustomLabelIngredients 
+        : foundRecipe?.useCustomLabelIngredients) ?? false,
+      customLabelIngredients: (elaboration?.recipe?.customLabelIngredients !== undefined
+        ? elaboration.recipe.customLabelIngredients
+        : foundRecipe?.customLabelIngredients) ?? "",
+      name: elaboration?.recipe?.name || foundRecipe?.name || elaboration?.name || "Elaboración",
+      expiryType: elaboration?.recipe?.expiryType || foundRecipe?.expiryType || "EXPIRATION"
+    };
     
     let storedWidth = parseInt(config.dimensions?.width);
     let storedHeight = parseInt(config.dimensions?.height);
@@ -3607,7 +3623,17 @@ export default function ClientDashboard() {
           }
           break;
         case 'ingredientsList':
-          if (elaboration.ingredients && elaboration.ingredients.length > 0) {
+          if (targetRecipe?.useCustomLabelIngredients && targetRecipe?.customLabelIngredients && targetRecipe.customLabelIngredients.trim()) {
+            doc.setFont("helvetica", "bold");
+            doc.text(t('modals.ingredients'), startX, currentY);
+            currentY += lineHeightMM;
+            doc.setFont("helvetica", "normal");
+
+            const customText = targetRecipe.customLabelIngredients.trim();
+            const splitText = doc.splitTextToSize(customText, columnWidth);
+            doc.text(splitText, startX, currentY, { maxWidth: columnWidth, align: 'left' });
+            currentY += (splitText.length * lineHeightMM);
+          } else if (elaboration.ingredients && elaboration.ingredients.length > 0) {
             doc.setFont("helvetica", "bold");
             doc.text(t('modals.ingredients'), startX, currentY);
             currentY += lineHeightMM;
@@ -10611,7 +10637,9 @@ export default function ClientDashboard() {
                           sugars: "",
                           proteins: "",
                           salt: "",
-                          allergens: []
+                          allergens: [],
+                          useCustomLabelIngredients: false,
+                          customLabelIngredients: ""
                         });
                         setIsRecipeManageModalOpen(true);
                       }}
@@ -10838,7 +10866,9 @@ export default function ClientDashboard() {
                           sugars: "",
                           proteins: "",
                           salt: "",
-                          allergens: []
+                          allergens: [],
+                          useCustomLabelIngredients: false,
+                          customLabelIngredients: ""
                         });
                         setIsRecipeManageModalOpen(true);
                       }}
@@ -12125,7 +12155,9 @@ export default function ClientDashboard() {
               sugars: "",
               proteins: "",
               salt: "",
-              allergens: []
+              allergens: [],
+              useCustomLabelIngredients: false,
+              customLabelIngredients: ""
             });
             setIsRecipeManageModalOpen(true);
           }}
@@ -12179,6 +12211,8 @@ export default function ClientDashboard() {
               recipe: {
                 name: recipes.length > 0 ? recipes[0].name : "Producto de ejemplo",
                 expiryType: "EXPIRATION",
+                useCustomLabelIngredients: recipes.length > 0 ? !!recipes[0].useCustomLabelIngredients : false,
+                customLabelIngredients: recipes.length > 0 ? recipes[0].customLabelIngredients || "" : "",
                 elaborationInstructions: "Elaborado según protocolo de calidad y trazabilidad.",
                 conservationInstructions: "Conservar entre 0ºC y 4ºC.",
                 allergens: recipes.length > 0 && recipes[0].allergens ? recipes[0].allergens : [],
@@ -19346,6 +19380,58 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
               >
                 <Plus size={16} /> {t('modals.add_ingredient')}
               </button>
+            </div>
+            
+            {/* Checkbox y textarea de listado alternativo de ingredientes para etiquetas */}
+            <div style={{ 
+              marginTop: '1.25rem', 
+              background: formData.useCustomLabelIngredients ? 'rgba(66, 98, 22, 0.05)' : '#f8fafc', 
+              padding: '1.25rem', 
+              borderRadius: '1rem', 
+              border: formData.useCustomLabelIngredients ? '1.5px solid rgba(66, 98, 22, 0.35)' : '1px solid var(--border)',
+              transition: 'all 0.2s ease'
+            }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={!!formData.useCustomLabelIngredients}
+                  onChange={(e) => setFormData({ ...formData, useCustomLabelIngredients: e.target.checked })}
+                  style={{ accentColor: 'var(--corp-green)', width: '1.15rem', height: '1.15rem', marginTop: '0.15rem', cursor: 'pointer' }} 
+                />
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-main)', display: 'block' }}>
+                    {t('recipes.use_custom_label_ingredients') || "Utilizar listado de ingredientes alternativo en las etiquetas"}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.15rem' }}>
+                    {t('recipes.use_custom_label_ingredients_desc') || "Al activar esta opción, en las etiquetas de cualquier elaboración de esta receta se imprimirá el texto indicado abajo en lugar del listado de ingredientes habitual."}
+                  </span>
+                </div>
+              </label>
+
+              {formData.useCustomLabelIngredients && (
+                <div style={{ marginTop: '1rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(66, 98, 22, 0.15)' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.4rem' }}>
+                    {t('recipes.custom_label_ingredients_label') || "Listado de ingredientes para etiquetas"}
+                  </label>
+                  <textarea 
+                    className="input-field" 
+                    rows={4}
+                    value={formData.customLabelIngredients || ''} 
+                    onChange={(e) => setFormData({ ...formData, customLabelIngredients: e.target.value })}
+                    placeholder={t('recipes.custom_label_ingredients_placeholder') || "Escribe aquí el listado de ingredientes tal y como debe aparecer en las etiquetas (ej: Harina de trigo, agua, masa madre, sal, levadura...)"}
+                    style={{ 
+                      width: '100%', 
+                      fontSize: '0.88rem', 
+                      padding: '0.75rem', 
+                      background: 'white',
+                      borderRadius: '0.6rem',
+                      border: '1px solid #cbd5e1',
+                      resize: 'vertical',
+                      lineHeight: '1.5'
+                    }}
+                  />
+                </div>
+              )}
             </div>
             
             <div style={{ marginTop: '1.5rem', background: 'rgba(66, 98, 22, 0.05)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(66, 98, 22, 0.15)' }}>

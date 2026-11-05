@@ -1773,7 +1773,11 @@
     "view_cards_btn": "Voir les cartes",
     "view_table_btn": "Voir tableau",
     "total_recipes": "Total des recettes",
-    "total_elaborations": "Total des élaborations"
+    "total_elaborations": "Total des élaborations",
+    "use_custom_label_ingredients": "Utiliser une liste d'ingrédients alternative sur les étiquettes",
+    "use_custom_label_ingredients_desc": "Lorsque cette option est activée, les étiquettes de toute élaboration de cette recette imprimeront le texte ci-dessous au lieu de la liste d'ingrédients habituelle.",
+    "custom_label_ingredients_label": "Texte des ingrédients pour les étiquettes",
+    "custom_label_ingredients_placeholder": "Saisissez ici la liste des ingrédients telle qu'elle doit apparaître sur les étiquettes (ex : Farine de blé, eau, levain, sel, levure...)"
   },
   "oil_collection": {
     "title": "Collecte des huiles de friture",

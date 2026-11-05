@@ -88,6 +88,8 @@ export async function POST(req, { params }) {
         proteins: originalRecipe.proteins,
         salt: originalRecipe.salt,
         allergens: originalRecipe.allergens,
+        useCustomLabelIngredients: originalRecipe.useCustomLabelIngredients,
+        customLabelIngredients: originalRecipe.customLabelIngredients,
         ingredients: {
           create: originalRecipe.ingredients.map((ing, idx) => ({
             name: ing.name,

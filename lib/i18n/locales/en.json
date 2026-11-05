@@ -1778,7 +1778,11 @@
     "view_cards_btn": "View cards",
     "view_table_btn": "View table",
     "total_recipes": "Total recipes",
-    "total_elaborations": "Total elaborations"
+    "total_elaborations": "Total elaborations",
+    "use_custom_label_ingredients": "Use alternative ingredients list on labels",
+    "use_custom_label_ingredients_desc": "When enabled, labels for any elaboration of this recipe will print the text below instead of the regular ingredients list.",
+    "custom_label_ingredients_label": "Ingredients text for labels",
+    "custom_label_ingredients_placeholder": "Enter the ingredients list as you want it to appear on labels (e.g., Wheat flour, water, sourdough, salt, yeast...)"
   },
   "oil_collection": {
     "title": "Frying oil collection",
