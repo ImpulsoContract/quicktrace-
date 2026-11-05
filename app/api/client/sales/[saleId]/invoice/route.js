@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { createIsbueInvoice } from "@/lib/isbue";
+import { createStelorderInvoice } from "@/lib/stelorder";
 
 export async function POST(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -26,9 +27,16 @@ export async function POST(request, { params }) {
       where: { id: profileId }
     });
 
-    const provider = (profile?.invoicingProvider || (profile?.isbueApiKey && !profile?.holdedApiKey ? "ISBUE" : "HOLDED")).toUpperCase();
+    const provider = (profile?.invoicingProvider || (profile?.stelorderApiKey ? "STELORDER" : (profile?.isbueApiKey && !profile?.holdedApiKey ? "ISBUE" : "HOLDED"))).toUpperCase();
 
-    if (provider === "ISBUE") {
+    if (provider === "STELORDER") {
+      const stelorderKey = profile?.stelorderApiKey?.trim();
+      if (!stelorderKey) {
+        return NextResponse.json({ 
+          error: "Debes configurar tu API Key de STEL Order en la sección de 'Configuración del negocio' para poder emitir facturas." 
+        }, { status: 400 });
+      }
+    } else if (provider === "ISBUE") {
       const isbueKey = profile?.isbueApiKey?.trim();
       if (!isbueKey) {
         return NextResponse.json({ 
@@ -79,13 +87,13 @@ export async function POST(request, { params }) {
     }
 
     // Check if already invoiced
-    if (sale.holdedInvoiceId || sale.isbueInvoiceId) {
-      const invNum = sale.holdedInvoiceNum || sale.isbueInvoiceNum || sale.holdedInvoiceId || sale.isbueInvoiceId;
+    if (sale.holdedInvoiceId || sale.isbueInvoiceId || sale.stelorderInvoiceId) {
+      const invNum = sale.stelorderInvoiceNum || sale.isbueInvoiceNum || sale.holdedInvoiceNum || sale.stelorderInvoiceId || sale.isbueInvoiceId || sale.holdedInvoiceId;
       return NextResponse.json({
         success: false,
         alreadyInvoiced: true,
         invoiceNum: invNum,
-        invoiceId: sale.holdedInvoiceId || sale.isbueInvoiceId,
+        invoiceId: sale.stelorderInvoiceId || sale.isbueInvoiceId || sale.holdedInvoiceId,
         error: `Esta venta ya ha sido facturada previamente (${invNum}).`
       }, { status: 400 });
     }
@@ -116,6 +124,98 @@ export async function POST(request, { params }) {
     }
     const autoCreateContact = !!body.autoCreateContact;
     const cleanNif = customerNif.toUpperCase().replace(/\s+/g, '');
+
+    if (provider === "STELORDER") {
+      const salesList = isCombined ? sale.combinedSale.sales : [sale];
+      const items = salesList.map(s => {
+        const itemName = s.elaboration?.recipe?.name || s.elaboration?.name || "Elaboración";
+        const descParts = [];
+        if (s.elaboration?.name) descParts.push(`Lote: ${s.elaboration.name}`);
+        if (s.elaboration?.date) descParts.push(`Elab: ${new Date(s.elaboration.date).toLocaleDateString('es-ES')}`);
+        if (s.elaboration?.expirationDate) descParts.push(`Caducidad: ${new Date(s.elaboration.expirationDate).toLocaleDateString('es-ES')}`);
+        const itemDesc = descParts.length > 0 ? descParts.join(" | ") : "";
+
+        const units = s.quantity && s.quantity > 0 ? s.quantity : 1;
+        const subtotal = s.quantity && s.quantity > 0 
+          ? parseFloat((s.price / s.quantity).toFixed(4)) 
+          : parseFloat((s.price || 0).toFixed(4));
+
+        return {
+          name: itemName,
+          desc: itemDesc,
+          units,
+          price: subtotal,
+          tax: profile.stelorderTax !== undefined && profile.stelorderTax !== null ? profile.stelorderTax : 10
+        };
+      });
+
+      const invoiceNotes = isCombined 
+        ? `Venta combinada registrada desde QuickTrace. ID: ${sale.combinedSaleId}` 
+        : `Venta registrada desde QuickTrace. Venta ID: ${sale.id}`;
+
+      const stelorderResult = await createStelorderInvoice({
+        profile,
+        customer: activeCustomer,
+        items,
+        notes: invoiceNotes,
+        autoCreateContact
+      });
+
+      if (!stelorderResult.success) {
+        if (stelorderResult.contactNotFound) {
+          return NextResponse.json({
+            success: false,
+            contactNotFound: true,
+            customerName: stelorderResult.customerName,
+            customerNif: stelorderResult.customerNif,
+            message: stelorderResult.message || "El cliente no existe en STEL Order. ¿Deseas darlo de alta automáticamente?"
+          }, { status: 200 });
+        }
+        return NextResponse.json({
+          error: stelorderResult.error || "Error al generar la factura en STEL Order."
+        }, { status: 400 });
+      }
+
+      const now = new Date();
+      if (isCombined) {
+        await prisma.combinedSale.update({
+          where: { id: sale.combinedSaleId },
+          data: {
+            stelorderInvoiceId: stelorderResult.invoiceId,
+            stelorderInvoiceNum: stelorderResult.invoiceNum,
+            invoicingProvider: "STELORDER",
+            invoicedAt: now
+          }
+        });
+        await prisma.elaborationSale.updateMany({
+          where: { combinedSaleId: sale.combinedSaleId },
+          data: {
+            stelorderInvoiceId: stelorderResult.invoiceId,
+            stelorderInvoiceNum: stelorderResult.invoiceNum,
+            invoicingProvider: "STELORDER",
+            invoicedAt: now
+          }
+        });
+      } else {
+        await prisma.elaborationSale.update({
+          where: { id: sale.id },
+          data: {
+            stelorderInvoiceId: stelorderResult.invoiceId,
+            stelorderInvoiceNum: stelorderResult.invoiceNum,
+            invoicingProvider: "STELORDER",
+            invoicedAt: now
+          }
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        invoiceId: stelorderResult.invoiceId,
+        invoiceNum: stelorderResult.invoiceNum,
+        invoicedAt: now,
+        message: `Factura ${stelorderResult.invoiceNum} generada con éxito en STEL Order.`
+      });
+    }
 
     if (provider === "ISBUE") {
       const salesList = isCombined ? sale.combinedSale.sales : [sale];

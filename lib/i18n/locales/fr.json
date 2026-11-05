@@ -328,7 +328,22 @@
     "badge_allowed_all": "Sans restriction",
     "badge_blocked_all": "Restriction totale",
     "badge_blocked_ingredients": "Ingrédients bloqués",
-    "badge_blocked_goods": "Vente marchandises bloquée"
+    "badge_blocked_goods": "Vente marchandises bloquée",
+    "stelorder_section_title": "Intégration STEL Order",
+    "stelorder_section_desc": "Connectez votre compte STEL Order pour générer des factures officielles en un clic.",
+    "stelorder_api_key_label": "Clé API STEL Order",
+    "stelorder_api_key_placeholder": "Collez votre clé API STEL Order ici",
+    "stelorder_verify_btn": "Vérifier la connexion avec STEL Order",
+    "stelorder_verifying": "Vérification de la connexion...",
+    "stelorder_verified_badge": "Connecté avec STEL Order",
+    "stelorder_invalid_key": "La clé API saisie est invalide ou impossible de se connecter à STEL Order.",
+    "stelorder_tax_label": "Taux de TVA par défaut pour les factures",
+    "stelorder_tax_help": "Sélectionnez le pourcentage de TVA appliqué aux factures générées.",
+    "stelorder_series_label": "Série de facturation STEL Order",
+    "stelorder_series_default": "Par défaut STEL Order",
+    "stelorder_series_help": "Choisissez la série avec laquelle les factures seront émises.",
+    "stelorder_disconnect_btn": "Déconnecter STEL Order",
+    "stelorder_disconnect_confirm": "Êtes-vous sûr de vouloir déconnecter l'intégration avec STEL Order ?"
   },
   "dashboard": {
     "welcome": "Bonjour",

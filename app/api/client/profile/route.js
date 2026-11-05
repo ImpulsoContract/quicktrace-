@@ -165,7 +165,11 @@ export async function PATCH(request) {
       isbueApiUrl,
       isbueTax,
       isbueSeriesId,
-      isbueSeriesName
+      isbueSeriesName,
+      stelorderApiKey,
+      stelorderTax,
+      stelorderSeriesId,
+      stelorderSeriesName
     } = body;
 
     const updatedProfile = await prisma.clientProfile.update({
@@ -206,7 +210,11 @@ export async function PATCH(request) {
         isbueApiUrl: isbueApiUrl !== undefined ? isbueApiUrl : undefined,
         isbueTax: isbueTax !== undefined ? (isbueTax === null ? null : parseFloat(isbueTax)) : undefined,
         isbueSeriesId: isbueSeriesId !== undefined ? isbueSeriesId : undefined,
-        isbueSeriesName: isbueSeriesName !== undefined ? isbueSeriesName : undefined
+        isbueSeriesName: isbueSeriesName !== undefined ? isbueSeriesName : undefined,
+        stelorderApiKey: stelorderApiKey !== undefined ? stelorderApiKey : undefined,
+        stelorderTax: stelorderTax !== undefined ? (stelorderTax === null ? null : parseFloat(stelorderTax)) : undefined,
+        stelorderSeriesId: stelorderSeriesId !== undefined ? stelorderSeriesId : undefined,
+        stelorderSeriesName: stelorderSeriesName !== undefined ? stelorderSeriesName : undefined
       },
       include: { 
         plan: true,

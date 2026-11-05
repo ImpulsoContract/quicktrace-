@@ -328,7 +328,22 @@
     "badge_allowed_all": "No restrictions",
     "badge_blocked_all": "Full restriction",
     "badge_blocked_ingredients": "Ingredients restricted",
-    "badge_blocked_goods": "Goods sales restricted"
+    "badge_blocked_goods": "Goods sales restricted",
+    "stelorder_section_title": "STEL Order Integration",
+    "stelorder_section_desc": "Connect your STEL Order account to generate official sales invoices with a single click.",
+    "stelorder_api_key_label": "STEL Order API Key",
+    "stelorder_api_key_placeholder": "Paste your STEL Order API key here",
+    "stelorder_verify_btn": "Verify connection with STEL Order",
+    "stelorder_verifying": "Verifying connection...",
+    "stelorder_verified_badge": "Connected with STEL Order",
+    "stelorder_invalid_key": "The API Key entered is invalid or could not connect to STEL Order.",
+    "stelorder_tax_label": "Default VAT rate for invoices",
+    "stelorder_tax_help": "Select the VAT percentage that will apply to generated invoices.",
+    "stelorder_series_label": "STEL Order Invoicing Series",
+    "stelorder_series_default": "STEL Order default",
+    "stelorder_series_help": "Choose the numbering series for invoices issued from QuickTrace.",
+    "stelorder_disconnect_btn": "Disconnect STEL Order",
+    "stelorder_disconnect_confirm": "Are you sure you want to disconnect the STEL Order integration?"
   },
   "dashboard": {
     "welcome": "Hello",

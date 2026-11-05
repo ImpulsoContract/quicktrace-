@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getIsbueInvoicePdf } from "@/lib/isbue";
+import { getStelorderInvoicePdf } from "@/lib/stelorder";
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -31,12 +32,51 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const invoiceId = combinedSale.isbueInvoiceId || combinedSale.holdedInvoiceId;
+    const invoiceId = combinedSale.stelorderInvoiceId || combinedSale.isbueInvoiceId || combinedSale.holdedInvoiceId;
     if (!invoiceId) {
       return NextResponse.json({ error: "Esta venta combinada no tiene factura generada." }, { status: 400 });
     }
 
-    const provider = combinedSale.invoicingProvider || (combinedSale.isbueInvoiceId ? "ISBUE" : "HOLDED");
+    const provider = combinedSale.invoicingProvider || (combinedSale.stelorderInvoiceId ? "STELORDER" : (combinedSale.isbueInvoiceId ? "ISBUE" : "HOLDED"));
+
+    if (provider === "STELORDER") {
+      const stelorderRes = await getStelorderInvoicePdf({
+        profile: combinedSale.clientProfile,
+        invoiceId
+      });
+
+      if (!stelorderRes.ok || !stelorderRes.response) {
+        return NextResponse.json({ 
+          error: stelorderRes.error || "No se pudo descargar el PDF de la factura desde STEL Order." 
+        }, { status: 400 });
+      }
+
+      const contentType = stelorderRes.response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await stelorderRes.response.json().catch(() => ({}));
+        if (data.data || data.pdf) {
+          const base64Str = data.data || data.pdf;
+          const cleanBase64 = base64Str.replace(/^data:application\/pdf;base64,/, "");
+          const buffer = Buffer.from(cleanBase64, 'base64');
+          return new NextResponse(buffer, {
+            status: 200,
+            headers: {
+              "Content-Type": "application/pdf",
+              "Content-Disposition": `inline; filename="Factura_${combinedSale.stelorderInvoiceNum || combinedSale.id}.pdf"`
+            }
+          });
+        }
+      }
+
+      const pdfBuffer = await stelorderRes.response.arrayBuffer();
+      return new NextResponse(Buffer.from(pdfBuffer), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="Factura_${combinedSale.stelorderInvoiceNum || combinedSale.id}.pdf"`
+        }
+      });
+    }
 
     if (provider === "ISBUE") {
       const isbueRes = await getIsbueInvoicePdf({

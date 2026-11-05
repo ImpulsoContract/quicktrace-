@@ -328,7 +328,22 @@
     "badge_allowed_all": "Sem restrições",
     "badge_blocked_all": "Restrição total",
     "badge_blocked_ingredients": "Ingredientes bloqueados",
-    "badge_blocked_goods": "Venda mercadorias bloqueada"
+    "badge_blocked_goods": "Venda mercadorias bloqueada",
+    "stelorder_section_title": "Integração STEL Order",
+    "stelorder_section_desc": "Conecte sua conta STEL Order para gerar faturas oficiais com um clique.",
+    "stelorder_api_key_label": "Chave API STEL Order",
+    "stelorder_api_key_placeholder": "Cole aqui sua chave API STEL Order",
+    "stelorder_verify_btn": "Verificar conexão com STEL Order",
+    "stelorder_verifying": "Verificando conexão...",
+    "stelorder_verified_badge": "Conectado com STEL Order",
+    "stelorder_invalid_key": "A chave API inserida é inválida ou não conseguiu conectar ao STEL Order.",
+    "stelorder_tax_label": "Taxa de IVA padrão para faturas",
+    "stelorder_tax_help": "Selecione a porcentagem de IVA a ser aplicada às faturas geradas.",
+    "stelorder_series_label": "Série de faturamento STEL Order",
+    "stelorder_series_default": "Padrão do STEL Order",
+    "stelorder_series_help": "Escolha a série com a qual as faturas serão emitidas pelo QuickTrace.",
+    "stelorder_disconnect_btn": "Desconectar STEL Order",
+    "stelorder_disconnect_confirm": "Tem certeza de que deseja desconectar a integração com o STEL Order?"
   },
   "dashboard": {
     "welcome": "Olá",

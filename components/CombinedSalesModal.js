@@ -704,8 +704,13 @@ export default function CombinedSalesModal({
 
   // Generate invoice for combined sale
   const handleInvoiceCombined = async (cs, autoCreate = false) => {
-    if (!profile?.holdedApiKey?.trim()) {
-      alert(t('combined_sales.holded_api_required') || "Debes configurar tu API Key de Holded en la sección de 'Configuración del negocio' para poder emitir facturas.");
+    const provider = profile?.invoicingProvider || (profile?.stelorderApiKey ? "STELORDER" : (profile?.isbueApiKey ? "ISBUE" : "HOLDED"));
+    const hasKey = provider === "STELORDER" 
+      ? !!profile?.stelorderApiKey?.trim() 
+      : (provider === "ISBUE" ? !!profile?.isbueApiKey?.trim() : !!profile?.holdedApiKey?.trim());
+
+    if (!hasKey) {
+      alert(t('combined_sales.holded_api_required') || "Debes configurar tu API Key del programa de facturación en la sección de 'Configuración del negocio' para poder emitir facturas.");
       return;
     }
 
@@ -736,7 +741,7 @@ export default function CombinedSalesModal({
           customerNif: data.customerNif || cs.customer?.nif || ""
         });
       } else {
-        alert(data.error || "Error al generar factura en Holded");
+        alert(data.error || "Error al generar la factura");
       }
     } catch (err) {
       console.error("Error invoicing combined sale:", err);
@@ -1191,7 +1196,7 @@ export default function CombinedSalesModal({
                           )}
 
                           {/* Invoice status / buttons */}
-                          {cs.holdedInvoiceId ? (
+                          {(cs.stelorderInvoiceId || cs.isbueInvoiceId || cs.holdedInvoiceId) ? (
                             <button
                               type="button"
                               onClick={() => handleDownloadInvoice(cs)}
@@ -1211,7 +1216,7 @@ export default function CombinedSalesModal({
                               title="Descargar PDF de la factura"
                             >
                               <FileText size={14} />
-                              {(t('combined_sales.invoice_badge') || "Factura: {num}").replace('{num}', cs.holdedInvoiceNum || cs.holdedInvoiceId)}
+                              {(t('combined_sales.invoice_badge') || "Factura: {num}").replace('{num}', cs.stelorderInvoiceNum || cs.isbueInvoiceNum || cs.holdedInvoiceNum || cs.stelorderInvoiceId || cs.isbueInvoiceId || cs.holdedInvoiceId)}
                             </button>
                           ) : cs.isDraft ? (
                             <button

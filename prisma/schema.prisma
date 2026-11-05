@@ -144,6 +144,11 @@ model ClientProfile {
   isbueSeriesId              String?
   isbueSeriesName            String?
 
+  stelorderApiKey            String?
+  stelorderTax               Float?            @default(10)
+  stelorderSeriesId          String?
+  stelorderSeriesName        String?
+
   // Low stock alerts for goods for sale
   goodsLowStockAlertEnabled   Boolean           @default(false)
   goodsLowStockThreshold      Float?            @default(2)
@@ -368,6 +373,8 @@ model ElaborationSale {
   holdedInvoiceNum String?
   isbueInvoiceId   String?
   isbueInvoiceNum  String?
+  stelorderInvoiceId  String?
+  stelorderInvoiceNum String?
   invoicedAt       DateTime?
 
   combinedSaleId   Int?
@@ -407,6 +414,8 @@ model CombinedSale {
   holdedInvoiceNum String?
   isbueInvoiceId   String?
   isbueInvoiceNum  String?
+  stelorderInvoiceId  String?
+  stelorderInvoiceNum String?
   invoicedAt       DateTime?
 
   clientProfileId Int

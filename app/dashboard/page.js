@@ -2696,7 +2696,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.hasWaterSection !== undefined || updates.hasWasteSection !== undefined || updates.blockOutOfStockLots !== undefined || updates.blockOutOfStockGoodsSales !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.invoicingProvider !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.hasWaterSection !== undefined || updates.hasWasteSection !== undefined || updates.blockOutOfStockLots !== undefined || updates.blockOutOfStockGoodsSales !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.stelorderApiKey !== undefined || updates.invoicingProvider !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -14598,7 +14598,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [goodsLowStockEmail, setGoodsLowStockEmail] = useState(profile?.goodsLowStockEmail || false);
 
   // Invoicing program & provider state
-  const [invoicingTab, setInvoicingTab] = useState(profile?.invoicingProvider === "ISBUE" ? "isbue" : "holded");
+  const [invoicingTab, setInvoicingTab] = useState(profile?.invoicingProvider === "STELORDER" ? "stelorder" : (profile?.invoicingProvider === "ISBUE" ? "isbue" : "holded"));
   const [invoicingProvider, setInvoicingProvider] = useState(profile?.invoicingProvider || "HOLDED");
 
   // Holded state
@@ -14624,6 +14624,17 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [isbueTestError, setIsbueTestError] = useState("");
   const [isbueTestSuccess, setIsbueTestSuccess] = useState(false);
 
+  // STEL Order state
+  const [stelorderApiKey, setStelorderApiKey] = useState(profile?.stelorderApiKey || "");
+  const [stelorderTax, setStelorderTax] = useState(profile?.stelorderTax !== undefined && profile?.stelorderTax !== null ? profile.stelorderTax : 10);
+  const [stelorderSeriesId, setStelorderSeriesId] = useState(profile?.stelorderSeriesId || "");
+  const [stelorderSeriesName, setStelorderSeriesName] = useState(profile?.stelorderSeriesName || "");
+  const [stelorderVerified, setStelorderVerified] = useState(!!profile?.stelorderApiKey);
+  const [stelorderSeriesList, setStelorderSeriesList] = useState([]);
+  const [stelorderTesting, setStelorderTesting] = useState(false);
+  const [stelorderTestError, setStelorderTestError] = useState("");
+  const [stelorderTestSuccess, setStelorderTestSuccess] = useState(false);
+
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
     .sort((a, b) => a.code.localeCompare(b.code));
@@ -14648,7 +14659,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setGoodsLowStockInApp(profile.goodsLowStockInApp ?? true);
       setGoodsLowStockEmail(profile.goodsLowStockEmail || false);
       setInvoicingProvider(profile.invoicingProvider || "HOLDED");
-      setInvoicingTab(profile.invoicingProvider === "ISBUE" ? "isbue" : "holded");
+      setInvoicingTab(profile.invoicingProvider === "STELORDER" ? "stelorder" : (profile.invoicingProvider === "ISBUE" ? "isbue" : "holded"));
       setHoldedApiKey(profile.holdedApiKey || "");
       setHoldedTax(profile.holdedTax !== undefined && profile.holdedTax !== null ? profile.holdedTax : 10);
       setHoldedSeriesId(profile.holdedSeriesId || "");
@@ -14660,8 +14671,14 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setIsbueSeriesId(profile.isbueSeriesId || "");
       setIsbueSeriesName(profile.isbueSeriesName || "");
       setIsbueVerified(!!profile.isbueApiKey);
+      setStelorderApiKey(profile.stelorderApiKey || "");
+      setStelorderTax(profile.stelorderTax !== undefined && profile.stelorderTax !== null ? profile.stelorderTax : 10);
+      setStelorderSeriesId(profile.stelorderSeriesId || "");
+      setStelorderSeriesName(profile.stelorderSeriesName || "");
+      setStelorderVerified(!!profile.stelorderApiKey);
       setHoldedTestError("");
       setIsbueTestError("");
+      setStelorderTestError("");
     }
   };
 
@@ -14725,6 +14742,24 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       .catch(e => console.error("Error loading Isbue series:", e));
     }
   }, [profile?.isbueApiKey, profile?.isbueApiUrl]);
+
+  useEffect(() => {
+    if (profile?.stelorderApiKey) {
+      fetch("/api/client/stelorder/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: profile.stelorderApiKey })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.series)) {
+          setStelorderSeriesList(data.series);
+          setStelorderVerified(true);
+        }
+      })
+      .catch(e => console.error("Error loading STEL Order series:", e));
+    }
+  }, [profile?.stelorderApiKey]);
 
   const handleVerifyHolded = async () => {
     const key = holdedApiKey.trim();
@@ -14817,6 +14852,51 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     }
   };
 
+  const handleVerifyStelorder = async () => {
+    const key = stelorderApiKey.trim();
+    if (!key) {
+      setStelorderTestError(t('business_config.stelorder_invalid_key') || "Debes introducir una clave API.");
+      return;
+    }
+    setStelorderTesting(true);
+    setStelorderTestError("");
+    setStelorderTestSuccess(false);
+    try {
+      const res = await fetch("/api/client/stelorder/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStelorderVerified(true);
+        setStelorderTestSuccess(true);
+        setStelorderSeriesList(data.series || []);
+      } else {
+        setStelorderVerified(false);
+        setStelorderTestError(data.error || t('business_config.stelorder_invalid_key') || "API Key de STEL Order inválida o error al conectar.");
+      }
+    } catch (err) {
+      console.error("Error testing STEL Order connection:", err);
+      setStelorderVerified(false);
+      setStelorderTestError("Error de conexión al verificar con STEL Order.");
+    } finally {
+      setStelorderTesting(false);
+    }
+  };
+
+  const handleDisconnectStelorder = () => {
+    if (confirm(t('business_config.stelorder_disconnect_confirm') || "¿Estás seguro de que deseas desconectar la integración con STEL Order?")) {
+      setStelorderApiKey("");
+      setStelorderSeriesId("");
+      setStelorderSeriesName("");
+      setStelorderVerified(false);
+      setStelorderSeriesList([]);
+      setStelorderTestSuccess(false);
+      setStelorderTestError("");
+    }
+  };
+
   const handleSave = async (options = { closeModal: true }) => {
     const success = await onUpdate({ 
       currency: selectedCurrency,
@@ -14844,7 +14924,11 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       isbueApiUrl: isbueApiUrl.trim() || null,
       isbueTax: parseFloat(isbueTax) || 0,
       isbueSeriesId: isbueSeriesId || null,
-      isbueSeriesName: isbueSeriesName || null
+      isbueSeriesName: isbueSeriesName || null,
+      stelorderApiKey: stelorderApiKey.trim() || null,
+      stelorderTax: parseFloat(stelorderTax) || 0,
+      stelorderSeriesId: stelorderSeriesId || null,
+      stelorderSeriesName: stelorderSeriesName || null
     });
     if (success && options.closeModal) {
       setActiveModal(null);
@@ -15008,16 +15092,16 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     {
       id: "invoicing_programs",
       title: t('business_config.invoicing_programs_title') || "Programas de facturación",
-      description: t('business_config.invoicing_programs_desc') || "Conecta Holded o Isbue para emitir facturas oficiales de tus ventas.",
+      description: t('business_config.invoicing_programs_desc') || "Conecta Holded, Isbue o STEL Order para emitir facturas oficiales de tus ventas.",
       icon: <FileText size={24} />,
       badge: {
-        text: `${invoicingProvider === "ISBUE" ? "Isbue" : "Holded"}${
-          (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified) 
+        text: `${invoicingProvider === "STELORDER" ? "STEL Order" : (invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}${
+          (invoicingProvider === "STELORDER" ? stelorderVerified : (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified)) 
             ? ` (${t('business_config.connected_status') || 'Conectado'})` 
             : ` (${t('business_config.badge_disconnected') || 'Sin conectar'})`
         }`,
-        bg: (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified) ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
-        color: (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified) ? '#16a34a' : '#64748b'
+        bg: (invoicingProvider === "STELORDER" ? stelorderVerified : (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified)) ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+        color: (invoicingProvider === "STELORDER" ? stelorderVerified : (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified)) ? '#16a34a' : '#64748b'
       }
     }
   ];
@@ -15791,6 +15875,24 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                 >
                   Isbue {isbueVerified ? '✓' : ''}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setInvoicingProvider("STELORDER")}
+                  style={{
+                    border: 'none',
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: '0.4rem',
+                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    background: invoicingProvider === "STELORDER" ? 'white' : 'transparent',
+                    color: invoicingProvider === "STELORDER" ? 'var(--corp-green)' : 'var(--text-muted)',
+                    boxShadow: invoicingProvider === "STELORDER" ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  STEL Order {stelorderVerified ? '✓' : ''}
+                </button>
               </div>
             </div>
           </div>
@@ -15863,6 +15965,43 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             >
               <span>Isbue</span>
               {isbueVerified && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.25rem', 
+                  background: 'rgba(34, 197, 94, 0.12)', 
+                  color: '#16a34a', 
+                  padding: '0.15rem 0.5rem', 
+                  borderRadius: '1rem', 
+                  fontSize: '0.72rem', 
+                  fontWeight: '800' 
+                }}>
+                  <Check size={11} /> {t('business_config.connected_status') || "Conectado"}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setInvoicingTab("stelorder")}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderBottom: invoicingTab === "stelorder" ? '3px solid var(--corp-green)' : '3px solid transparent',
+                marginBottom: '-2px',
+                padding: '0.75rem 1.25rem',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                color: invoicingTab === "stelorder" ? 'var(--corp-green)' : 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <span>STEL Order</span>
+              {stelorderVerified && (
                 <span style={{ 
                   display: 'inline-flex', 
                   alignItems: 'center', 
@@ -16183,6 +16322,157 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                   >
                     <Trash2 size={14} />
                     {t('business_config.isbue_disconnect_btn') || "Desconectar Isbue"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 3: STEL Order */}
+          {invoicingTab === "stelorder" && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.2s ease' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+                {t('business_config.stelorder_section_desc') || "Conecta tu cuenta de STEL Order para generar facturas oficiales de tus ventas con un solo clic."}
+              </p>
+
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>
+                  {t('business_config.stelorder_api_key_label') || "API Key de STEL Order"}
+                </label>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <input 
+                    type="password"
+                    className="input-field"
+                    style={{ flex: 1, minWidth: '260px' }}
+                    placeholder={t('business_config.stelorder_api_key_placeholder') || "Pega aquí tu clave API de STEL Order"}
+                    value={stelorderApiKey}
+                    onChange={(e) => {
+                      setStelorderApiKey(e.target.value);
+                      if (stelorderVerified && e.target.value !== profile?.stelorderApiKey) {
+                        setStelorderVerified(false);
+                        setStelorderTestSuccess(false);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyStelorder}
+                    disabled={stelorderTesting || !stelorderApiKey.trim()}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}
+                  >
+                    {stelorderTesting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                    {stelorderTesting 
+                      ? (t('business_config.stelorder_verifying') || "Verificando...") 
+                      : (t('business_config.stelorder_verify_btn') || "Verificar conexión")}
+                  </button>
+                </div>
+
+                {stelorderTestError && (
+                  <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <AlertCircle size={15} />
+                    <span>{stelorderTestError}</span>
+                  </div>
+                )}
+                {stelorderTestSuccess && (
+                  <div style={{ color: '#16a34a', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Check size={15} />
+                    <span>{t('business_config.connected_status') || "Conexión con STEL Order establecida correctamente."}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* VAT and Series Configuration */}
+              <div style={{ 
+                background: '#f8fafc', 
+                padding: '1.25rem', 
+                borderRadius: '0.85rem', 
+                border: '1px solid var(--border)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '1.25rem'
+              }}>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.stelorder_tax_label') || "Tipo de IVA predeterminado para las facturas"}
+                  </label>
+                  <select
+                    className="input-field"
+                    value={stelorderTax}
+                    onChange={(e) => setStelorderTax(parseFloat(e.target.value))}
+                    style={{ background: 'white' }}
+                  >
+                    <option value={0}>0% (Exento / Sin IVA)</option>
+                    <option value={4}>4% (Superreducido - alimentos básicos)</option>
+                    <option value={10}>10% (Reducido - alimentos en general)</option>
+                    <option value={21}>21% (General)</option>
+                  </select>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('business_config.stelorder_tax_help') || "Porcentaje que se aplicará a las facturas generadas."}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                    {t('business_config.stelorder_series_label') || "Serie de facturación STEL Order"}
+                  </label>
+                  {stelorderSeriesList.length > 0 ? (
+                    <select
+                      className="input-field"
+                      value={stelorderSeriesId}
+                      onChange={(e) => {
+                        const selId = e.target.value;
+                        setStelorderSeriesId(selId);
+                        const found = stelorderSeriesList.find(s => s.id === selId);
+                        setStelorderSeriesName(found ? found.name : "");
+                      }}
+                      style={{ background: 'white' }}
+                    >
+                      <option value="">{t('business_config.stelorder_series_default') || "Predeterminada de STEL Order"}</option>
+                      {stelorderSeriesList.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} {s.prefix ? `(${s.prefix})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ background: 'white' }}
+                      placeholder={t('business_config.stelorder_series_default') || "Predeterminada (ID de serie en STEL Order)"}
+                      value={stelorderSeriesId}
+                      onChange={(e) => {
+                        setStelorderSeriesId(e.target.value);
+                        setStelorderSeriesName(e.target.value);
+                      }}
+                    />
+                  )}
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('business_config.stelorder_series_help') || "Elige la serie con la que se emitirán las facturas desde QuickTrace."}
+                  </span>
+                </div>
+              </div>
+
+              {(stelorderApiKey || stelorderVerified) && (
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectStelorder}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: 0
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    {t('business_config.stelorder_disconnect_btn') || "Desconectar STEL Order"}
                   </button>
                 </div>
               )}
@@ -22321,8 +22611,8 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
   const [showHoldedConfigModal, setShowHoldedConfigModal] = useState(false);
 
   const handleGenerateInvoice = async (sale, autoCreate = false) => {
-    const isIsbue = currentProfile?.invoicingProvider === "ISBUE";
-    const hasKey = isIsbue ? !!currentProfile?.isbueApiKey : (!!currentProfile?.holdedApiKey || !!currentProfile?.isbueApiKey);
+    const provider = currentProfile?.invoicingProvider || (currentProfile?.stelorderApiKey ? "STELORDER" : (currentProfile?.isbueApiKey ? "ISBUE" : "HOLDED"));
+    const hasKey = provider === "STELORDER" ? !!currentProfile?.stelorderApiKey : (provider === "ISBUE" ? !!currentProfile?.isbueApiKey : (!!currentProfile?.holdedApiKey || !!currentProfile?.isbueApiKey || !!currentProfile?.stelorderApiKey));
     if (!hasKey) {
       setShowHoldedPromoModal(true);
       return;
@@ -22340,6 +22630,10 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
           ...s, 
           holdedInvoiceId: data.invoiceId, 
           holdedInvoiceNum: data.invoiceNum, 
+          isbueInvoiceId: data.invoiceId,
+          isbueInvoiceNum: data.invoiceNum,
+          stelorderInvoiceId: data.invoiceId,
+          stelorderInvoiceNum: data.invoiceNum,
           invoicedAt: data.invoicedAt 
         } : s));
         setHoldedConfirmCustomer({ isOpen: false, sale: null, customerName: "", customerNif: "" });
@@ -22725,7 +23019,7 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {sale.holdedInvoiceNum ? (
+                        {(sale.stelorderInvoiceNum || sale.isbueInvoiceNum || sale.holdedInvoiceNum || sale.stelorderInvoiceId || sale.isbueInvoiceId || sale.holdedInvoiceId) ? (
                           <button
                             type="button"
                             onClick={() => handleDownloadInvoice(sale)}
@@ -22745,7 +23039,7 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
                             }}
                           >
                             <FileText size={13} />
-                            {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', sale.holdedInvoiceNum)}
+                            {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', sale.stelorderInvoiceNum || sale.isbueInvoiceNum || sale.holdedInvoiceNum || sale.stelorderInvoiceId || sale.isbueInvoiceId || sale.holdedInvoiceId)}
                           </button>
                         ) : (
                           <button
@@ -22836,11 +23130,11 @@ function CustomerSalesModal({ customer, profile, onClose, onViewSaleDetails, onP
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)', marginBottom: '1rem' }}>
                 <FileText size={24} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-                  {(t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
+                  {(t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded").replace('Holded', currentProfile?.invoicingProvider === "STELORDER" ? "STEL Order" : (currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded"))}
                 </h3>
               </div>
               <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
-                {(t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
+                {(t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?").replace('Holded', currentProfile?.invoicingProvider === "STELORDER" ? "STEL Order" : (currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded"))}
               </p>
               <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
                 <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{holdedConfirmCustomer.customerName}</div>
@@ -22932,8 +23226,8 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   const [showHoldedConfigModal, setShowHoldedConfigModal] = useState(false);
 
   const handleGenerateInvoice = async (sale, autoCreate = false) => {
-    const isIsbue = currentProfile?.invoicingProvider === "ISBUE";
-    const hasKey = isIsbue ? !!currentProfile?.isbueApiKey : (!!currentProfile?.holdedApiKey || !!currentProfile?.isbueApiKey);
+    const provider = currentProfile?.invoicingProvider || (currentProfile?.stelorderApiKey ? "STELORDER" : (currentProfile?.isbueApiKey ? "ISBUE" : "HOLDED"));
+    const hasKey = provider === "STELORDER" ? !!currentProfile?.stelorderApiKey : (provider === "ISBUE" ? !!currentProfile?.isbueApiKey : (!!currentProfile?.holdedApiKey || !!currentProfile?.isbueApiKey || !!currentProfile?.stelorderApiKey));
     if (!hasKey) {
       setShowHoldedPromoModal(true);
       return;
@@ -22955,6 +23249,10 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
           ...s, 
           holdedInvoiceId: data.invoiceId, 
           holdedInvoiceNum: data.invoiceNum, 
+          isbueInvoiceId: data.invoiceId,
+          isbueInvoiceNum: data.invoiceNum,
+          stelorderInvoiceId: data.invoiceId,
+          stelorderInvoiceNum: data.invoiceNum,
           invoicedAt: data.invoicedAt 
         } : s));
         setHoldedConfirmCustomer({ isOpen: false, sale: null, customerName: "", customerNif: "" });
@@ -23642,7 +23940,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                       </td>
                       <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          {s.holdedInvoiceNum ? (
+                          {(s.stelorderInvoiceNum || s.isbueInvoiceNum || s.holdedInvoiceNum || s.stelorderInvoiceId || s.isbueInvoiceId || s.holdedInvoiceId) ? (
                             <button
                               type="button"
                               onClick={() => handleDownloadInvoice(s)}
@@ -23662,7 +23960,7 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                               }}
                             >
                               <FileText size={13} />
-                              {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', s.holdedInvoiceNum)}
+                              {(t('elaboration_sales.invoice_badge') || "Factura: {num}").replace('{num}', s.stelorderInvoiceNum || s.isbueInvoiceNum || s.holdedInvoiceNum || s.stelorderInvoiceId || s.isbueInvoiceId || s.holdedInvoiceId)}
                             </button>
                           ) : (
                             <button
@@ -23744,11 +24042,11 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--corp-green)', marginBottom: '1rem' }}>
                 <FileText size={24} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>
-                  {(t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
+                  {(t('elaboration_sales.contact_not_found_title') || "Cliente no registrado en Holded").replace('Holded', currentProfile?.invoicingProvider === "STELORDER" ? "STEL Order" : (currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded"))}
                 </h3>
               </div>
               <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
-                {(t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?").replace('Holded', currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded")}
+                {(t('elaboration_sales.contact_not_found_prompt') || "El cliente no existe en Holded. ¿Deseas darlo de alta automáticamente?").replace('Holded', currentProfile?.invoicingProvider === "STELORDER" ? "STEL Order" : (currentProfile?.invoicingProvider === "ISBUE" ? "Isbue" : "Holded"))}
               </p>
               <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
                 <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{holdedConfirmCustomer.customerName}</div>
