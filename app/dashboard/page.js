@@ -488,6 +488,9 @@ export default function ClientDashboard() {
   const [viewingImage, setViewingImage] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [profile, setProfile] = useState(null);
+  const currencySymbol = useMemo(() => {
+    return ALL_CURRENCIES.find(c => c.code === (profile?.currency || "EUR"))?.symbol || "€";
+  }, [profile?.currency]);
   const [isEmailVerificationModalOpen, setIsEmailVerificationModalOpen] = useState(false);
   const [verificationModalFeature, setVerificationModalFeature] = useState("");
   const [showVerificationHelpConfirm, setShowVerificationHelpConfirm] = useState(false);
@@ -14269,7 +14272,7 @@ export default function ClientDashboard() {
                   <p style={{ margin: '0.25rem 0 0 0', fontWeight: '700', fontSize: '0.95rem', color: '#065f46' }}>
                     {goodsReceiptDetailModalData.goodsForSale.name}
                     {goodsReceiptDetailModalData.goodsForSaleQuantity != null && ` (${goodsReceiptDetailModalData.goodsForSaleQuantity} ${goodsReceiptDetailModalData.goodsForSale.unit})`}
-                    {goodsReceiptDetailModalData.goodsForSaleCostPrice != null && ` — Coste: ${goodsReceiptDetailModalData.goodsForSaleCostPrice} ${currencySymbol}/${goodsReceiptDetailModalData.goodsForSale.unit}`}
+                    {goodsReceiptDetailModalData.goodsForSaleCostPrice != null && ` — Coste: ${goodsReceiptDetailModalData.goodsForSaleCostPrice} ${currencySymbol || "€"}/${goodsReceiptDetailModalData.goodsForSale.unit}`}
                   </p>
                 </div>
               )}
