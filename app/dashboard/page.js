@@ -4899,7 +4899,7 @@ export default function ClientDashboard() {
         return;
       }
 
-      if (profile?.blockOutOfStockLots) {
+      if (profile?.blockOutOfStockLots && !profile?.isSimpleVersion) {
         for (const ing of (selectedRecipe?.ingredients || [])) {
           const currentData = elaboracionForm.ingredientes[ing.id];
           if (!currentData) continue;
@@ -6734,8 +6734,8 @@ export default function ClientDashboard() {
                                         const lot = getLotString(item);
                                         const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
                                         const isSelected = elaboracionForm.ingredientes[ing.id]?.lote === lot;
-                                        const isOutOfStock = typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
-                                        const isBlocked = profile?.blockOutOfStockLots && isOutOfStock;
+                                        const isOutOfStock = !profile?.isSimpleVersion && typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
+                                        const isBlocked = !profile?.isSimpleVersion && profile?.blockOutOfStockLots && isOutOfStock;
 
                                         return (
                                           <span
@@ -6782,7 +6782,7 @@ export default function ClientDashboard() {
                                                 ({dateStr})
                                               </span>
                                             )}
-                                            {typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && (
+                                            {!profile?.isSimpleVersion && typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && (
                                               <span style={{ 
                                                 color: item.remainingStock > 0 ? '#166534' : '#991b1b', 
                                                 fontWeight: '700', 
@@ -7061,8 +7061,8 @@ export default function ClientDashboard() {
                                                 const lot = getLotString(item);
                                                 const dateStr = typeof item === 'object' && item !== null ? formatLoteDate(item.date) : "";
                                                 const isSelected = extra.lote === lot;
-                                                const isOutOfStock = typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
-                                                const isBlocked = profile?.blockOutOfStockLots && isOutOfStock;
+                                                const isOutOfStock = !profile?.isSimpleVersion && typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
+                                                const isBlocked = !profile?.isSimpleVersion && profile?.blockOutOfStockLots && isOutOfStock;
 
                                                 return (
                                                   <span
@@ -14013,9 +14013,11 @@ export default function ClientDashboard() {
                     <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)' }}>
                       {t('traceability_form.col_date') || "Fecha"}
                     </th>
-                    <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)', textAlign: 'right' }}>
-                      {t('inventory.col_remaining') || "Stock Restante"}
-                    </th>
+                    {!profile?.isSimpleVersion && (
+                      <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)', textAlign: 'right' }}>
+                        {t('inventory.col_remaining') || "Stock Restante"}
+                      </th>
+                    )}
                     <th style={{ padding: '0.75rem 1rem', fontWeight: '700', color: 'var(--text-main)', textAlign: 'right' }}>
                       {t('dashboard.actions') || "Acciones"}
                     </th>
@@ -14030,8 +14032,8 @@ export default function ClientDashboard() {
                       const isCurrentLot = (moreGoodsModalData.extraIdx !== null && moreGoodsModalData.extraIdx !== undefined)
                         ? elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.extraLots?.[moreGoodsModalData.extraIdx]?.lote === lotVal
                         : elaboracionForm.ingredientes[moreGoodsModalData.ingredientId]?.lote === lotVal;
-                      const isOutOfStock = typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
-                      const isBlocked = profile?.blockOutOfStockLots && isOutOfStock;
+                      const isOutOfStock = !profile?.isSimpleVersion && typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null && item.remainingStock <= 0;
+                      const isBlocked = !profile?.isSimpleVersion && profile?.blockOutOfStockLots && isOutOfStock;
 
                       return (
                         <tr 
@@ -14082,22 +14084,24 @@ export default function ClientDashboard() {
                           <td style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)' }}>
                             {formatLoteDate(dateVal) || "-"}
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
-                            {typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null ? (
-                              <span style={{
-                                fontWeight: '700',
-                                fontSize: '0.82rem',
-                                color: item.remainingStock > 0 ? '#166534' : '#94a3b8',
-                                background: item.remainingStock > 0 ? '#dcfce7' : '#f1f5f9',
-                                padding: '0.15rem 0.5rem',
-                                borderRadius: '4px'
-                              }}>
-                                {item.remainingStock}
-                              </span>
-                            ) : (
-                              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
-                            )}
-                          </td>
+                          {!profile?.isSimpleVersion && (
+                            <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
+                              {typeof item === 'object' && item !== null && item.remainingStock !== undefined && item.remainingStock !== null ? (
+                                <span style={{
+                                  fontWeight: '700',
+                                  fontSize: '0.82rem',
+                                  color: item.remainingStock > 0 ? '#166534' : '#94a3b8',
+                                  background: item.remainingStock > 0 ? '#dcfce7' : '#f1f5f9',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '4px'
+                                }}>
+                                  {item.remainingStock}
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
+                              )}
+                            </td>
+                          )}
                           <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                             <button
                               type="button"
