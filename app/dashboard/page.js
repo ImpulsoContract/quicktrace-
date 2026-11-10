@@ -292,7 +292,10 @@ const generateLotNumber = (format, recipe, nextElabNum, date = new Date()) => {
   const recipeName = recipe?.name || "";
   const elabNum = (nextElabNum != null && nextElabNum > 0 ? nextElabNum : 1).toString();
 
-  return lotFormat.replace(/(YYYY|YY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g, (match) => {
+  return lotFormat.replace(/(\[[^\]]*\]|YYYY|YY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g, (match) => {
+    if (match.startsWith("[") && match.endsWith("]")) {
+      return match.slice(1, -1);
+    }
     switch (match) {
       case "YYYY": return year;
       case "YY": return year2;
@@ -14592,6 +14595,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [merchantTypes, setMerchantTypes] = useState(profile?.merchantTypes || []);
   const [newMerchantType, setNewMerchantType] = useState("");
   const [lotFormat, setLotFormat] = useState(profile?.lotFormat || DEFAULT_LOT_FORMAT);
+  const [customLotText, setCustomLotText] = useState("");
   const [hasCuttingTraceability, setHasCuttingTraceability] = useState(profile?.hasCuttingTraceability || false);
   const [hasOilCollection, setHasOilCollection] = useState(profile?.hasOilCollection || false);
   const [hasVegetableDisinfection, setHasVegetableDisinfection] = useState(profile?.hasVegetableDisinfection || false);
@@ -14654,6 +14658,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setMerchantTypes(profile.merchantTypes || []);
       setNewMerchantType("");
       setLotFormat(profile.lotFormat || DEFAULT_LOT_FORMAT);
+      setCustomLotText("");
       setHasCuttingTraceability(profile.hasCuttingTraceability || false);
       setHasOilCollection(profile.hasOilCollection || false);
       setHasVegetableDisinfection(profile.hasVegetableDisinfection || false);
@@ -14979,8 +14984,16 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
     setLotFormat(prev => (prev || "") + token);
   };
 
+  const handleAddCustomText = (position = "end") => {
+    const cleanText = customLotText.replace(/[\[\]]/g, "");
+    if (!cleanText.trim()) return;
+    const token = `[${cleanText}]`;
+    setLotFormat(prev => position === "start" ? token + (prev || "") : (prev || "") + token);
+    setCustomLotText("");
+  };
+
   const handleDeleteLastToken = () => {
-    const tokens = (lotFormat || "").match(/(YYYY|YY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-)/g) || [];
+    const tokens = (lotFormat || "").match(/(\[[^\]]*\]|YYYY|YY|MM|DD|WW|SEM|SEMANA|HH|mm|NUM|RECETA|INICIALES|-|.+?)/g) || [];
     if (tokens.length > 0) {
       tokens.pop();
       setLotFormat(tokens.join(""));
@@ -15050,7 +15063,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       description: t('business_config.lot_format_desc') || "Personaliza la estructura y nomenclatura automática para los números de lote.",
       icon: <Hash size={24} />,
       badge: {
-        text: lotFormat || DEFAULT_LOT_FORMAT,
+        text: (lotFormat || DEFAULT_LOT_FORMAT).replace(/\[([^\]]*)\]/g, '"$1"'),
         bg: 'rgba(66, 98, 22, 0.08)',
         color: 'var(--corp-green)'
       }
@@ -15454,6 +15467,74 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           </div>
 
+          <div style={{ marginBottom: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+              {t('business_config.custom_text_label') || "Añadir texto fijo personalizado"}
+            </label>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                className="input-field"
+                placeholder={t('business_config.custom_text_placeholder') || "Escribe un texto fijo (ej: alfa)..."}
+                value={customLotText}
+                onChange={(e) => setCustomLotText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomText("end");
+                  }
+                }}
+                style={{ flex: '1 1 200px', padding: '0.55rem 0.85rem', fontSize: '0.9rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => handleAddCustomText("end")}
+                disabled={!customLotText.replace(/[\[\]]/g, "").trim()}
+                className="btn-primary"
+                style={{
+                  padding: '0.55rem 1rem',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  borderRadius: '0.5rem',
+                  whiteSpace: 'nowrap',
+                  opacity: customLotText.replace(/[\[\]]/g, "").trim() ? 1 : 0.5,
+                  cursor: customLotText.replace(/[\[\]]/g, "").trim() ? 'pointer' : 'not-allowed',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Plus size={15} />
+                {t('business_config.btn_add_custom_text') || "Añadir texto"}
+              </button>
+              {lotFormat && (
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomText("start")}
+                  disabled={!customLotText.replace(/[\[\]]/g, "").trim()}
+                  style={{
+                    padding: '0.55rem 0.9rem',
+                    fontSize: '0.82rem',
+                    fontWeight: '600',
+                    borderRadius: '0.5rem',
+                    border: '1.5px solid var(--corp-green)',
+                    background: 'white',
+                    color: 'var(--corp-green)',
+                    whiteSpace: 'nowrap',
+                    opacity: customLotText.replace(/[\[\]]/g, "").trim() ? 1 : 0.5,
+                    cursor: customLotText.replace(/[\[\]]/g, "").trim() ? 'pointer' : 'not-allowed',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <Plus size={15} />
+                  {t('business_config.btn_add_custom_text_start') || "Añadir al inicio"}
+                </button>
+              )}
+            </div>
+          </div>
+
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
             <button
               type="button"
@@ -15536,7 +15617,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
                 display: 'flex',
                 alignItems: 'center'
               }}>
-                {lotFormat || <span style={{ fontStyle: 'italic', fontWeight: '400', fontSize: '0.9rem' }}>({t('modals.none') || 'Vacío'})</span>}
+                {lotFormat ? lotFormat.replace(/\[([^\]]*)\]/g, '"$1"') : <span style={{ fontStyle: 'italic', fontWeight: '400', fontSize: '0.9rem' }}>({t('modals.none') || 'Vacío'})</span>}
               </div>
             </div>
 
