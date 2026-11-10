@@ -26650,42 +26650,36 @@ function InventoryModal({ isOpen, onClose }) {
                 <p style={{ fontSize: '0.95rem' }}>{t('common.no_results') || "No se encontraron ingredientes que coincidan con la búsqueda."}</p>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <div>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'auto' }}>
                   <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                     <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                        {t('inventory.col_ingredient') || "Ingrediente"}
+                      <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                        {t('inventory.col_ingredient_unit') || "Ingrediente / Unidad"}
                       </th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '100px' }}>
-                        {t('inventory.col_unit') || "Unidad"}
-                      </th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                         {t('inventory.col_recipes') || "Recetas Relacionadas"}
                       </th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '170px' }}>
-                        {t('goods_ingredient_link.col_linked') || "Enlazado con"}
-                      </th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', width: '180px' }}>
-                        {t('inventory.col_lot') || "Stock por lote"}
-                      </th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '180px' }}>
+                      <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>
                         {t('inventory.col_stock') || "Stock Actual"}
+                      </th>
+                      <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>
+                        {t('inventory.col_actions') || t('dashboard.actions') || "Acciones"}
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredInventory.map((item, idx) => (
                       <tr key={`${item.name}_${item.unit}_${idx}`} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
-                        <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                          {item.name}
+                        <td style={{ padding: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <span>{item.name}</span>
+                            <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                              {item.unit || "-"}
+                            </span>
+                          </div>
                         </td>
-                        <td style={{ padding: '0.85rem 1rem' }}>
-                          <span style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
-                            {item.unit || "-"}
-                          </span>
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        <td style={{ padding: '0.85rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                           {item.recipes && item.recipes.length > 0 ? (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
                               {item.recipes.map((r, rIdx) => (
@@ -26698,86 +26692,85 @@ function InventoryModal({ isOpen, onClose }) {
                             <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
                           )}
                         </td>
-                        <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                          {item.linkedGoods ? (
+                        <td style={{ padding: '0.85rem', textAlign: 'right' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                            <input 
+                              type="number" 
+                              step="any" 
+                              min="0"
+                              className="input-field" 
+                              style={{ width: '95px', textAlign: 'right', padding: '0.4rem 0.55rem', fontWeight: 700, fontSize: '0.92rem' }}
+                              value={item.stock === null || item.stock === undefined ? "" : item.stock}
+                              onChange={(e) => handleStockChange(item.name, item.unit, e.target.value)}
+                              placeholder="0"
+                            />
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'left', fontWeight: 600 }}>
+                              {item.unit}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.85rem', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            {item.linkedGoods ? (
+                              <button
+                                type="button"
+                                onClick={() => setLinkingTarget({ item, type: "ingredient" })}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  background: '#ecfdf5',
+                                  color: '#047857',
+                                  border: '1px solid #a7f3d0',
+                                  padding: '0.3rem 0.55rem',
+                                  borderRadius: '6px',
+                                  fontSize: '0.76rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer'
+                                }}
+                                title={t('goods_ingredient_link.badge_linked_with', { name: item.linkedGoods.name }) || ('Enlazado con: ' + item.linkedGoods.name)}
+                              >
+                                <Link2 size={13} />
+                                <span>{item.linkedGoods.name}</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setLinkingTarget({ item, type: "ingredient" })}
+                                className="btn-secondary"
+                                style={{
+                                  padding: '0.3rem 0.55rem',
+                                  fontSize: '0.76rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  borderRadius: '6px',
+                                  fontWeight: 600
+                                }}
+                                title={t('goods_ingredient_link.btn_link_goods') || "Enlazar con mercancía"}
+                              >
+                                <Link2 size={13} style={{ color: 'var(--corp-green)' }} />
+                                <span>{t('goods_ingredient_link.btn_link_goods') || "Enlazar"}</span>
+                              </button>
+                            )}
                             <button
                               type="button"
-                              onClick={() => setLinkingTarget({ item, type: "ingredient" })}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.3rem',
-                                background: '#ecfdf5',
-                                color: '#047857',
-                                border: '1px solid #a7f3d0',
-                                padding: '0.3rem 0.55rem',
-                                borderRadius: '6px',
-                                fontSize: '0.78rem',
-                                fontWeight: 700,
-                                cursor: 'pointer'
-                              }}
-                              title={t('goods_ingredient_link.badge_linked_with', { name: item.linkedGoods.name }) || ('Enlazado con: ' + item.linkedGoods.name)}
-                            >
-                              <Link2 size={13} />
-                              <span>{item.linkedGoods.name}</span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setLinkingTarget({ item, type: "ingredient" })}
+                              onClick={() => setSelectedLotIngredient(item)}
                               className="btn-secondary"
                               style={{
                                 padding: '0.3rem 0.55rem',
-                                fontSize: '0.78rem',
+                                fontSize: '0.76rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.3rem',
                                 borderRadius: '6px',
                                 fontWeight: 600
                               }}
-                              title={t('goods_ingredient_link.btn_link_goods') || "Enlazar con mercancía"}
+                              title={t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}
                             >
-                              <Link2 size={13} style={{ color: 'var(--corp-green)' }} />
-                              <span>{t('goods_ingredient_link.btn_link_goods') || "Enlazar"}</span>
+                              <Layers size={13} style={{ color: 'var(--corp-green)' }} />
+                              <span>{t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}</span>
                             </button>
-                          )}
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedLotIngredient(item)}
-                            className="btn-secondary"
-                            style={{
-                              padding: '0.35rem 0.65rem',
-                              fontSize: '0.78rem',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.35rem',
-                              borderRadius: '6px',
-                              whiteSpace: 'nowrap',
-                              fontWeight: 600
-                            }}
-                            title={t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}
-                          >
-                            <Layers size={14} style={{ color: 'var(--corp-green)' }} />
-                            <span>{t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}</span>
-                          </button>
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                            <input 
-                              type="number" 
-                              step="any" 
-                              min="0"
-                              className="input-field" 
-                              style={{ width: '110px', textAlign: 'right', padding: '0.45rem 0.6rem', fontWeight: 700, fontSize: '0.95rem' }}
-                              value={item.stock === null || item.stock === undefined ? "" : item.stock}
-                              onChange={(e) => handleStockChange(item.name, item.unit, e.target.value)}
-                              placeholder="0"
-                            />
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', minWidth: '24px', textAlign: 'left', fontWeight: 600 }}>
-                              {item.unit}
-                            </span>
                           </div>
                         </td>
                       </tr>
