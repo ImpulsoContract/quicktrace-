@@ -6780,85 +6780,45 @@ export default function ClientDashboard() {
                 </span>
               </button>
             </div>
-
-            {/* Botón de WhatsApp (Ventas / Soporte) */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsWhatsAppMenuOpen((prev) => !prev);
-              }}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.45rem',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '0.5rem',
-                background: 'linear-gradient(135deg, #25D366 0%, #16a34a 100%)',
-                border: '1px solid #16a34a',
-                color: '#ffffff',
-                fontSize: '0.76rem',
-                fontWeight: '800',
-                cursor: 'pointer',
-                minHeight: '36px',
-                boxShadow: '0 2px 8px rgba(37, 211, 102, 0.3)',
-                transition: 'all 0.18s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 211, 102, 0.42)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(37, 211, 102, 0.3)';
-              }}
-              title={t('whatsapp.button_label') || "Contactar por WhatsApp"}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
-              </svg>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {t('whatsapp.button_label') || "Contactar por WhatsApp"}
-              </span>
-            </button>
           </div>
         </aside>
 
-        {/* Botón flotante de WhatsApp en esquina inferior izquierda cuando el menú lateral está cerrado */}
-        {!isSidebarOpen && (
-          <button
-            type="button"
-            onClick={() => setIsWhatsAppMenuOpen((prev) => !prev)}
-            style={{
-              position: 'fixed',
-              bottom: '1.25rem',
-              left: '1.25rem',
-              zIndex: 9990,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              padding: '0.7rem 1.05rem',
-              borderRadius: '999px',
-              background: 'linear-gradient(135deg, #25D366 0%, #16a34a 100%)',
-              border: '2px solid #ffffff',
-              color: '#ffffff',
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              cursor: 'pointer',
-              boxShadow: '0 8px 20px rgba(37, 211, 102, 0.45)',
-              transition: 'all 0.2s ease'
-            }}
-            title={t('whatsapp.button_label') || "Contactar por WhatsApp"}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
-            </svg>
-            <span>WhatsApp</span>
-          </button>
-        )}
+        {/* Botón flotante de WhatsApp en esquina inferior derecha */}
+        <button
+          type="button"
+          onClick={() => setIsWhatsAppMenuOpen((prev) => !prev)}
+          style={{
+            position: 'fixed',
+            bottom: '1.5rem',
+            right: '1.5rem',
+            zIndex: 9990,
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #25D366 0%, #16a34a 100%)',
+            border: '2px solid #ffffff',
+            color: '#ffffff',
+            cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(37, 211, 102, 0.45)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.07)';
+            e.currentTarget.style.boxShadow = '0 10px 28px rgba(37, 211, 102, 0.6)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(37, 211, 102, 0.45)';
+          }}
+          title={t('whatsapp.button_label') || "Contactar por WhatsApp"}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
+          </svg>
+        </button>
 
         {/* Popup de elección de WhatsApp: Ventas o Soporte */}
         {isWhatsAppMenuOpen && (
@@ -6868,7 +6828,7 @@ export default function ClientDashboard() {
               position: 'fixed',
               inset: 0,
               zIndex: 99995,
-              background: 'rgba(15, 23, 42, 0.25)',
+              background: 'rgba(15, 23, 42, 0.2)',
               backdropFilter: 'blur(2px)'
             }}
           >
@@ -6877,9 +6837,9 @@ export default function ClientDashboard() {
               className="animate-fade-in"
               style={{
                 position: 'fixed',
-                bottom: '4.5rem',
-                left: '1rem',
-                width: 'calc(100vw - 2rem)',
+                bottom: '5.5rem',
+                right: '1.5rem',
+                width: 'calc(100vw - 3rem)',
                 maxWidth: '300px',
                 background: 'white',
                 borderRadius: '1.15rem',
