@@ -2269,5 +2269,8 @@
     "reactivate_confirm_desc": "Confirmez-vous vouloir réactiver votre version Démo gratuite pour 20 jours supplémentaires ?",
     "confirm_reactivate_btn": "Confirmer la réactivation (20 jours)",
     "reactivated_success": "Votre version Démo a été réactivée pour 20 jours supplémentaires !"
+  },
+  "learn_video_modal": {
+    "title": "Apprenez QuickTrace en regardant cette courte vidéo"
   }
 }

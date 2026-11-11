@@ -24,7 +24,9 @@ import {
   List,
   Table,
   LayoutGrid,
-  ShieldAlert
+  ShieldAlert,
+  HelpCircle,
+  CheckCircle
 } from "lucide-react";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
@@ -564,8 +566,22 @@ export default function ClientDashboard() {
   };
   const [videoModal, setVideoModal] = useState({ isOpen: false, videoId: "" });
   const [selectingOnboardingMode, setSelectingOnboardingMode] = useState(null);
+  const [isLearnVideoModalOpen, setIsLearnVideoModalOpen] = useState(false);
+  const [isMinimizingLearnVideo, setIsMinimizingLearnVideo] = useState(false);
+  const [highlightHelpIcon, setHighlightHelpIcon] = useState(false);
   const [reactivatingDemo, setReactivatingDemo] = useState(false);
   const [showReactivateConfirm, setShowReactivateConfirm] = useState(false);
+
+  const handleCloseLearnVideoModal = () => {
+    if (isMinimizingLearnVideo) return;
+    setIsMinimizingLearnVideo(true);
+    setTimeout(() => {
+      setIsLearnVideoModalOpen(false);
+      setIsMinimizingLearnVideo(false);
+      setHighlightHelpIcon(true);
+      setTimeout(() => setHighlightHelpIcon(false), 1600);
+    }, 460);
+  };
 
   const isUserOnDemo = Boolean(
     profile && (!profile.planId || profile.planId === "1" || (profile.plan?.name && profile.plan.name.toLowerCase().includes("demo")))
@@ -594,9 +610,13 @@ export default function ClientDashboard() {
       } else {
         setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true, demoActivatedAt: activatedDate } : prev);
       }
+      setIsMinimizingLearnVideo(false);
+      setIsLearnVideoModalOpen(true);
     } catch (err) {
       console.error("Error selecting mode:", err);
       setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true, demoActivatedAt: prev.demoActivatedAt || new Date().toISOString() } : prev);
+      setIsMinimizingLearnVideo(false);
+      setIsLearnVideoModalOpen(true);
     } finally {
       setSelectingOnboardingMode(null);
     }
@@ -5907,6 +5927,157 @@ export default function ClientDashboard() {
         onOpenGoodsModal={() => setIsGoodsForSaleModalOpen(true)} 
         onOpenInventory={() => setIsInventoryModalOpen(true)}
       />
+
+      {/* Floating Help (?) Icon in top-right corner to reopen Tutorial Video */}
+      <button
+        type="button"
+        onClick={() => {
+          setIsMinimizingLearnVideo(false);
+          setIsLearnVideoModalOpen(true);
+        }}
+        title={t("learn_video_modal.title") || "Aprende QuickTrace viendo este breve vídeo"}
+        aria-label={t("learn_video_modal.title") || "Aprende QuickTrace viendo este breve vídeo"}
+        style={{
+          position: "fixed",
+          top: "1.5rem",
+          right: (!profile?.isSimpleVersion && profile?.goodsLowStockAlertEnabled && profile?.goodsLowStockInApp) ? "10.6rem" : "7.2rem",
+          zIndex: 10000,
+          width: "34px",
+          height: "34px",
+          borderRadius: "50%",
+          background: highlightHelpIcon ? "var(--corp-green)" : "rgba(255, 255, 255, 0.85)",
+          color: highlightHelpIcon ? "#ffffff" : "var(--corp-green)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          border: highlightHelpIcon ? "2px solid var(--corp-green)" : "1px solid var(--border)",
+          boxShadow: highlightHelpIcon
+            ? "0 0 0 6px rgba(66, 98, 22, 0.25), 0 6px 16px rgba(66, 98, 22, 0.35)"
+            : "0 4px 12px rgba(0, 0, 0, 0.1)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          outline: "none",
+          transform: highlightHelpIcon ? "scale(1.22)" : "scale(1)",
+          transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+        }}
+      >
+        <HelpCircle size={18} strokeWidth={2.4} />
+      </button>
+
+      {/* Closable Tutorial Video Popup with minimize-to-top-right-corner animation */}
+      {isLearnVideoModalOpen && (
+        <div
+          onClick={handleCloseLearnVideoModal}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isMinimizingLearnVideo ? "rgba(15, 23, 42, 0)" : "rgba(15, 23, 42, 0.72)",
+            backdropFilter: isMinimizingLearnVideo ? "blur(0px)" : "blur(5px)",
+            zIndex: 99997,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1.25rem",
+            overflow: "hidden",
+            transition: "background 0.45s ease, backdrop-filter 0.45s ease"
+          }}
+        >
+          <div
+            className="glass-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "740px",
+              padding: "2rem 2rem 1.75rem 2rem",
+              background: "white",
+              borderRadius: isMinimizingLearnVideo ? "50%" : "1.5rem",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+              textAlign: "center",
+              position: "relative",
+              transform: isMinimizingLearnVideo
+                ? "translate(calc(50vw - 8.5rem), calc(-50vh + 2.2rem)) scale(0.04)"
+                : "translate(0, 0) scale(1)",
+              opacity: isMinimizingLearnVideo ? 0.1 : 1,
+              transition: "transform 0.46s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.44s ease, border-radius 0.46s ease"
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCloseLearnVideoModal}
+              title={t("common.close") || "Cerrar"}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "#f1f5f9",
+                border: "none",
+                color: "var(--text-main)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer"
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <h2 style={{ fontSize: "1.4rem", fontWeight: "900", color: "var(--corp-green)", marginBottom: "1.25rem", paddingRight: "2rem" }}>
+              {t("learn_video_modal.title") || "Aprende QuickTrace viendo este breve vídeo"}
+            </h2>
+
+            <div style={{
+              position: "relative",
+              width: "100%",
+              paddingBottom: "56.25%",
+              height: 0,
+              borderRadius: "1rem",
+              overflow: "hidden",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
+              marginBottom: "1.5rem",
+              background: "#000"
+            }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${profile?.isSimpleVersion ? "TpOcZ4sYqiA" : "VUwLgnIXzQE"}?rel=0`}
+                title={t("learn_video_modal.title") || "Aprende QuickTrace viendo este breve vídeo"}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button
+                type="button"
+                onClick={handleCloseLearnVideoModal}
+                className="btn-primary"
+                style={{
+                  padding: "0.75rem 2.25rem",
+                  borderRadius: "0.75rem",
+                  fontWeight: "800",
+                  fontSize: "0.95rem",
+                  cursor: "pointer"
+                }}
+              >
+                {t("common.close") || "Cerrar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {profile && !profile.hasSelectedMode && (!profile.planId || profile.planId === "1" || profile.plan?.name === "Demo") && session?.user?.role !== "WORKER" && session?.user?.role !== "ADMIN" && (
         <div

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { 
   Check, X, Crown, Star, 
   Zap, Shield, Plus, ArrowLeft,
-  ChefHat, Thermometer, Brush, Package, History, Loader2, Droplets, Truck, Send, CheckCircle2
+  ChefHat, Thermometer, Brush, Package, History, Loader2, Droplets, Truck, Send, CheckCircle2, HelpCircle
 } from "lucide-react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -24,6 +24,19 @@ export default function PlansPage() {
 
   // Onboarding mode selection modal if Demo client hasn't chosen mode yet
   const [selectingMode, setSelectingMode] = useState(null);
+  const [isLearnVideoModalOpen, setIsLearnVideoModalOpen] = useState(false);
+  const [isMinimizingLearnVideo, setIsMinimizingLearnVideo] = useState(false);
+  const [highlightHelpIcon, setHighlightHelpIcon] = useState(false);
+
+  const handleCloseLearnVideoModal = () => {
+    setIsMinimizingLearnVideo(true);
+    setTimeout(() => {
+      setIsLearnVideoModalOpen(false);
+      setIsMinimizingLearnVideo(false);
+      setHighlightHelpIcon(true);
+      setTimeout(() => setHighlightHelpIcon(false), 1200);
+    }, 520);
+  };
 
   const fetchPlans = async () => {
     try {
@@ -64,12 +77,15 @@ export default function PlansPage() {
         const updated = await res.json();
         setProfile({ ...updated, isSimpleVersion: isSimple, hasSelectedMode: true });
         await fetchPlans();
+        setIsLearnVideoModalOpen(true);
       } else {
         setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
+        setIsLearnVideoModalOpen(true);
       }
     } catch (e) {
       console.error("Error selecting mode:", e);
       setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
+      setIsLearnVideoModalOpen(true);
     } finally {
       setSelectingMode(null);
     }
@@ -628,6 +644,119 @@ export default function PlansPage() {
                 {selectingMode === "simple" && <Loader2 size={18} className="animate-spin" />}
                 <span>{t('auth.btn_simple_version') || "Quiero la versión sencilla para llevar mis registros"}</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Help (?) button in top-right corner */}
+      <div style={{ position: 'fixed', top: '1.5rem', right: '7.2rem', zIndex: 10000 }}>
+        <button
+          type="button"
+          onClick={() => {
+            setIsMinimizingLearnVideo(false);
+            setIsLearnVideoModalOpen(true);
+          }}
+          title={t('learn_video_modal.title') || "Aprende QuickTrace viendo este breve vídeo"}
+          style={{
+            background: highlightHelpIcon ? 'var(--corp-green)' : 'white',
+            color: highlightHelpIcon ? 'white' : 'var(--corp-green)',
+            border: '2px solid var(--corp-green)',
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: highlightHelpIcon ? '0 0 0 6px rgba(107, 142, 35, 0.35)' : '0 4px 12px rgba(0,0,0,0.1)',
+            transform: highlightHelpIcon ? 'scale(1.18)' : 'scale(1)',
+            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}
+        >
+          <HelpCircle size={22} />
+        </button>
+      </div>
+
+      {/* Tutorial Video Popup (closable, minimizes to top-right ? icon) */}
+      {isLearnVideoModalOpen && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10002,
+            background: isMinimizingLearnVideo ? 'rgba(15, 23, 42, 0)' : 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: isMinimizingLearnVideo ? 'blur(0px)' : 'blur(6px)',
+            transition: 'background 0.45s ease, backdrop-filter 0.45s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem',
+            pointerEvents: isMinimizingLearnVideo ? 'none' : 'auto'
+          }}
+          onClick={handleCloseLearnVideoModal}
+        >
+          <div
+            className="modal-content glass-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '740px',
+              padding: '2rem',
+              background: 'white',
+              borderRadius: isMinimizingLearnVideo ? '50%' : '1.5rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              position: 'relative',
+              transformOrigin: 'top right',
+              transform: isMinimizingLearnVideo
+                ? 'translate(calc(50vw - 9.5rem), calc(-50vh + 3rem)) scale(0.05)'
+                : 'translate(0, 0) scale(1)',
+              opacity: isMinimizingLearnVideo ? 0.15 : 1,
+              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.48s ease, border-radius 0.5s ease'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f0fdf4', color: 'var(--corp-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <HelpCircle size={20} />
+                </div>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
+                  {t('learn_video_modal.title') || "Aprende QuickTrace viendo este breve vídeo"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseLearnVideoModal}
+                style={{
+                  background: '#f1f5f9',
+                  border: 'none',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#475569',
+                  flexShrink: 0
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: '0.85rem', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', background: '#0f172a' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${profile?.isSimpleVersion ? "TpOcZ4sYqiA" : "VUwLgnIXzQE"}?rel=0`}
+                title={t('learn_video_modal.title') || "Aprende QuickTrace viendo este breve vídeo"}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>
