@@ -103,7 +103,10 @@
     "error_invalid": "Invalid credentials. Please try again.",
     "error_generic": "An error occurred while trying to log in.",
     "logout": "Logout",
-    "back_to_login": "Back to login"
+    "back_to_login": "Back to login",
+    "onboarding_title": "Welcome to QuickTrace! Choose how you want to start",
+    "btn_erp_full": "I want a complete ERP solution",
+    "btn_simple_version": "I want the simple version to keep my records"
   },
   "sidebar": {
     "traceability": "Traceability",

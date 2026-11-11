@@ -103,7 +103,10 @@
     "error_invalid": "Credenziali non valide. Riprova.",
     "error_generic": "Si è verificato un errore durante il tentativo di accesso.",
     "logout": "Chiudi sessione",
-    "back_to_login": "Torna al login"
+    "back_to_login": "Torna al login",
+    "onboarding_title": "Benvenuto su QuickTrace! Scegli come vuoi iniziare",
+    "btn_erp_full": "Voglio una soluzione ERP completa",
+    "btn_simple_version": "Voglio la versione semplice per tenere i miei registri"
   },
   "sidebar": {
     "traceability": "Tracciabilità",

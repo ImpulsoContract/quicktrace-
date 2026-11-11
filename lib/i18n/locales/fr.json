@@ -103,7 +103,10 @@
     "error_invalid": "Identifiants invalides. Veuillez réessayer.",
     "error_generic": "Une erreur est survenue lors de la tentative de connexion.",
     "logout": "Déconnexion",
-    "back_to_login": "Retour à la connexion"
+    "back_to_login": "Retour à la connexion",
+    "onboarding_title": "Bienvenue sur QuickTrace ! Choisissez comment vous souhaitez commencer",
+    "btn_erp_full": "Je veux une solution ERP complète",
+    "btn_simple_version": "Je veux la version simple pour tenir mes registres"
   },
   "sidebar": {
     "traceability": "Traçabilité",

@@ -103,7 +103,10 @@
     "error_invalid": "Credenciales inválidas. Por favor, inténtalo de nuevo.",
     "error_generic": "Ha ocurrido un error al intentar iniciar sesión.",
     "logout": "Cerrar Sesión",
-    "back_to_login": "Volver al login"
+    "back_to_login": "Volver al login",
+    "onboarding_title": "¡Bienvenido a QuickTrace! Elige cómo quieres empezar",
+    "btn_erp_full": "Quiero una solución ERP completa",
+    "btn_simple_version": "Quiero la versión sencilla para llevar mis registros"
   },
   "sidebar": {
     "traceability": "Trazabilidad",

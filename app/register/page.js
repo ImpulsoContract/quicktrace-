@@ -63,6 +63,8 @@ function RegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [signedInOk, setSignedInOk] = useState(false);
+  const [selectingMode, setSelectingMode] = useState(null);
   const [error, setError] = useState("");
 
   const [utmData, setUtmData] = useState({
@@ -167,32 +169,112 @@ function RegisterForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error");
 
-      // Iniciar sesión directamente y entrar al dashboard sin esperar email
+      // Iniciar sesión directamente para elegir versión y entrar al dashboard
       const signInRes = await signIn("credentials", {
         redirect: false,
         email: formData.email.toLowerCase().trim(),
         password: formData.password
       });
 
-      if (signInRes?.ok) {
-        router.push("/dashboard");
-      } else {
-        router.push("/login?registered=true");
-      }
+      setSignedInOk(!!signInRes?.ok);
+      setSuccess(true);
+      setLoading(false);
     } catch (err) {
       setError(err.message || "Error");
       setLoading(false);
     }
   };
 
+  const handleSelectMode = async (isSimple) => {
+    setSelectingMode(isSimple ? "simple" : "erp");
+    try {
+      if (signedInOk) {
+        await fetch("/api/client/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isSimpleVersion: isSimple })
+        });
+      }
+    } catch (e) {
+      console.error("Error setting account mode:", e);
+    } finally {
+      if (signedInOk) {
+        router.push("/dashboard");
+      } else {
+        router.push("/login?registered=true");
+      }
+    }
+  };
+
   if (success) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '1.5rem' }}>
-        <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '3rem', background: 'white', textAlign: 'center' }}>
-          <CheckCircle2 size={60} color="#166534" style={{ margin: '0 auto 2rem' }} />
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem' }}>¡Registro Completado!</h2>
-          <p style={{ color: '#64748b', marginBottom: '2rem' }}>Hemos enviado un email a su cuenta para activar el acceso.</p>
-          <button onClick={() => router.push("/login")} className="btn-primary" style={{ width: '100%' }}>Volver al Login</button>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '1.5rem' }}>
+        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}><LanguageSwitcher /></div>
+        <div className="glass-card" style={{ width: '100%', maxWidth: '720px', padding: '2.5rem', background: 'white', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--corp-green)', marginBottom: '1.5rem' }}>
+            {t('auth.onboarding_title') || "¡Bienvenido a QuickTrace! Elige cómo quieres empezar"}
+          </h2>
+
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: '0.75rem', overflow: 'hidden', marginBottom: '2rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', background: '#0f172a' }}>
+            <iframe
+              src="https://www.youtube.com/embed/75XEViseAA4?rel=0"
+              title="QuickTrace Onboarding Video"
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <button
+              type="button"
+              onClick={() => handleSelectMode(false)}
+              disabled={selectingMode !== null}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '1rem 1.5rem',
+                fontSize: '1rem',
+                fontWeight: '800',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.6rem',
+                cursor: selectingMode !== null ? 'not-allowed' : 'pointer',
+                opacity: selectingMode !== null && selectingMode !== "erp" ? 0.6 : 1
+              }}
+            >
+              {selectingMode === "erp" && <Loader2 size={18} className="animate-spin" />}
+              <span>{t('auth.btn_erp_full') || "Quiero una solución ERP completa"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectMode(true)}
+              disabled={selectingMode !== null}
+              style={{
+                width: '100%',
+                padding: '1rem 1.5rem',
+                fontSize: '1rem',
+                fontWeight: '800',
+                borderRadius: '0.75rem',
+                border: '2px solid var(--corp-green)',
+                background: 'white',
+                color: 'var(--corp-green)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.6rem',
+                cursor: selectingMode !== null ? 'not-allowed' : 'pointer',
+                opacity: selectingMode !== null && selectingMode !== "simple" ? 0.6 : 1,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {selectingMode === "simple" && <Loader2 size={18} className="animate-spin" />}
+              <span>{t('auth.btn_simple_version') || "Quiero la versión sencilla para llevar mis registros"}</span>
+            </button>
+          </div>
         </div>
       </div>
     );
