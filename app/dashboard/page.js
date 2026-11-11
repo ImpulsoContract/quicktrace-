@@ -6610,8 +6610,8 @@ export default function ClientDashboard() {
               }}>
                 {profile?.personName?.[0] || session?.user?.name?.[0] || 'U'}
               </div>
-              <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden', color: 'var(--text-main)' }}>
+              <div style={{ overflow: 'hidden', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden', color: 'var(--text-main)', width: '100%' }}>
                   {profile?.personName || session?.user?.name}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800', lineHeight: '1.2' }}>
@@ -6623,10 +6623,11 @@ export default function ClientDashboard() {
                     fontWeight: '800',
                     color: demoDaysRemaining <= 5 ? '#b45309' : '#0369a1',
                     background: demoDaysRemaining <= 5 ? '#fef3c7' : '#e0f2fe',
-                    padding: '0.15rem 0.45rem',
+                    padding: '0.18rem 0.5rem',
                     borderRadius: '0.35rem',
-                    display: 'inline-block',
-                    marginTop: '0.15rem',
+                    display: 'block',
+                    width: 'fit-content',
+                    marginTop: '0.25rem',
                     lineHeight: '1.2'
                   }}>
                     ⏱ {demoDaysRemaining} {demoDaysRemaining === 1 ? (t('demo_banner.day_left_short') || "día restante") : (t('demo_banner.days_left_short') || "días restantes")}
@@ -6656,6 +6657,7 @@ export default function ClientDashboard() {
                       border: '1px solid rgba(255, 255, 255, 0.15)',
                       cursor: 'pointer',
                       lineHeight: '1.2',
+                      maxWidth: '100%',
                       transition: 'all 0.18s ease'
                     }}
                     onMouseEnter={(e) => {
