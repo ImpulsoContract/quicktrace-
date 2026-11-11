@@ -129,7 +129,8 @@
     "vegetable_disinfection": "Vegetable disinfection",
     "sales": "Sales",
     "product_families": "Product Families",
-    "manage_license": "Upgrade my license"
+    "manage_license": "Upgrade my license",
+    "summary": "Summary"
   },
   "inventory": {
     "title": "Inventory Management",
@@ -2293,5 +2294,32 @@
   },
   "learn_video_modal": {
     "title": "Learn QuickTrace by watching this short video"
+  },
+  "summary": {
+    "title": "Summary",
+    "subtitle": "Overview of elaborations, active recipes, and controls recorded in your business.",
+    "today_elaborations": "Elaborations recorded today",
+    "today_elaborations_sub": "Elaborations completed today",
+    "active_recipes": "Active recipes",
+    "active_recipes_sub": "Currently configured recipes",
+    "today_controls": "Controls recorded today",
+    "today_controls_sub": "Control records today",
+    "view_details": "View details",
+    "details_modal_title": "Breakdown of controls recorded today",
+    "total_controls_today": "Total controls today",
+    "weekly_activity_title": "Weekly activity",
+    "weekly_activity_sub": "Select the records you want to display in the daily chart",
+    "current_week": "This week",
+    "prev_week": "Previous week",
+    "next_week": "Next week",
+    "cat_elaborations": "Elaborations",
+    "cat_goods": "Goods receipts",
+    "cat_temperatures": "Temperatures",
+    "cat_cleaning": "Cleaning",
+    "cat_water": "Water",
+    "cat_waste": "Waste",
+    "cat_cutting": "Cutting traceability",
+    "cat_oil": "Frying oils",
+    "cat_vegetables": "Vegetable disinfection"
   }
 }

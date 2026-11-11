@@ -26,7 +26,8 @@ import {
   LayoutGrid,
   ShieldAlert,
   HelpCircle,
-  CheckCircle
+  CheckCircle,
+  BarChart3
 } from "lucide-react";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
@@ -49,6 +50,7 @@ import RelateGoodsReceiptModal from "@/components/RelateGoodsReceiptModal";
 import DeliveryNoteModal from "@/components/DeliveryNoteModal";
 import { generateDeliveryNotePDF } from "@/lib/deliveryNoteGenerator";
 import ProductFamiliesView from "@/components/ProductFamiliesView";
+import SummaryView from "@/components/SummaryView";
 import { normalizeProviderName, matchProviderNames, roundTemperature } from "@/lib/utils";
 
 const ALL_CURRENCIES = [
@@ -374,6 +376,7 @@ const mergeLabelConfig = (rawConfig) => {
 };
 
 const DASHBOARD_TABS = [
+  "resumen",
   "trazabilidad",
   "gestionar-recetas",
   "trabajadores",
@@ -6441,6 +6444,12 @@ export default function ClientDashboard() {
           </div>
 
           <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
+            <SidebarBtn 
+              icon={<BarChart3 size={20} />} 
+              label={t('sidebar.summary') || "Resumen"} 
+              active={activeTab === "resumen"} 
+              onClick={() => { setActiveTab("resumen"); setSelectedRecipe(null); setSelectedRecords([]); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} 
+            />
             {session?.user?.role === "CLIENT" && (
               <>
                 <SidebarBtn 
@@ -9743,6 +9752,8 @@ export default function ClientDashboard() {
                 </div>
               )}
             </div>
+          ) : activeTab === 'resumen' ? (
+            <SummaryView />
           ) : activeTab === 'proveedores' ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
               <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>

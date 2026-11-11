@@ -129,7 +129,8 @@
     "vegetable_disinfection": "Désinfection des végétaux",
     "sales": "Ventes",
     "product_families": "Familles de produits",
-    "manage_license": "Améliorer ma licence"
+    "manage_license": "Améliorer ma licence",
+    "summary": "Résumé"
   },
   "inventory": {
     "title": "Gestion des Stocks",
@@ -2288,5 +2289,32 @@
   },
   "learn_video_modal": {
     "title": "Apprenez QuickTrace en regardant cette courte vidéo"
+  },
+  "summary": {
+    "title": "Résumé",
+    "subtitle": "Vue d'ensemble des élaborations, recettes actives et contrôles enregistrés dans votre entreprise.",
+    "today_elaborations": "Élaborations enregistrées aujourd'hui",
+    "today_elaborations_sub": "Élaborations réalisées aujourd'hui",
+    "active_recipes": "Recettes actives",
+    "active_recipes_sub": "Recettes configurées actuellement",
+    "today_controls": "Contrôles enregistrés aujourd'hui",
+    "today_controls_sub": "Enregistrements de contrôle aujourd'hui",
+    "view_details": "Voir les détails",
+    "details_modal_title": "Détail des contrôles enregistrés aujourd'hui",
+    "total_controls_today": "Total des contrôles aujourd'hui",
+    "weekly_activity_title": "Activité de la semaine",
+    "weekly_activity_sub": "Sélectionnez les enregistrements à afficher dans le graphique quotidien",
+    "current_week": "Cette semaine",
+    "prev_week": "Semaine précédente",
+    "next_week": "Semaine suivante",
+    "cat_elaborations": "Élaborations",
+    "cat_goods": "Réceptions de marchandises",
+    "cat_temperatures": "Températures",
+    "cat_cleaning": "Nettoyage",
+    "cat_water": "Eau",
+    "cat_waste": "Déchets",
+    "cat_cutting": "Traçabilité de découpe",
+    "cat_oil": "Huiles de friture",
+    "cat_vegetables": "Désinfection des végétaux"
   }
 }
