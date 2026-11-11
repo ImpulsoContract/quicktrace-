@@ -1039,7 +1039,14 @@
     "switch_to_yearly": "Pasar a Pago Anual",
     "switch_to_monthly": "Pasar a Pago Mensual",
     "currently_monthly": "Tu plan actual (modalidad mensual)",
-    "currently_yearly": "Tu plan actual (modalidad anual)"
+    "currently_yearly": "Tu plan actual (modalidad anual)",
+    "annual_savings_hint": "Opción anual por {yearlyPrice}€ / año — ¡Ahorra 2 meses seleccionando aquí la opción anual!",
+    "need_more_complete_btn": "Si necesitas un software más completo, haz clic aquí",
+    "erp_upgrade_modal_title": "¿Quieres probar nuestra solución ERP completa?",
+    "erp_upgrade_modal_desc": "Vamos a enviar un email a nuestro equipo de ventas para que te llamen y te informen sin compromiso para probar el software ERP más completo. ¿Quieres enviar el mensaje?",
+    "erp_upgrade_modal_confirm": "Sí, enviar mensaje",
+    "erp_upgrade_sent_success": "¡Mensaje enviado! Nuestro equipo de ventas se pondrá en contacto contigo muy pronto.",
+    "badge_erp_unlimited": "Todo Ilimitado · Gestión ERP Completa"
   },
   "allergens": {
     "title": "Alérgenos",

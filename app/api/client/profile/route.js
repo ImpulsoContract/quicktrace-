@@ -44,20 +44,14 @@ export async function GET() {
         }
         const nextRenewalStr = stripeDate ? new Date(stripeDate * 1000).toISOString() : null;
         
-        // Comprobar si está cancelada y al final del periodo o cancelada directamente
-        const isCanceled = subscription.cancel_at_period_end || subscription.status === 'canceled';
-
-        const currentStripePriceId = subscription.items?.data?.[0]?.price?.id;
-
-        const dateChanged = profile.stripeCurrentPeriodEnd !== nextRenewalStr;
-        const cancelStatusChanged = profile.stripeCancelAtPeriodEnd !== isCanceled;
-        const priceChanged = currentStripePriceId && profile.stripePriceId !== currentStripePriceId;
-
-        // Si los datos de Stripe están más actualizados que la base de datos local, sincronizamos de inmediato
-        if (dateChanged || cancelStatusChanged || priceChanged) {
+        // Si la suscripción ya ha terminado por completo en Stripe ('canceled'), devolver a plan Demo y pedir selección de modo
+        if (subscription.status === 'canceled') {
+          const demoPlan = await prisma.pricingPlan.findFirst({
+            where: { name: { equals: "Demo", mode: "insensitive" } }
+          });
           profile = await prisma.clientProfile.update({
             where: { id: profile.id },
-            include: { 
+            include: {
               plan: true,
               user: {
                 select: {
@@ -70,12 +64,49 @@ export async function GET() {
               }
             },
             data: {
-              stripeCancelAtPeriodEnd: isCanceled,
-              stripeCurrentPeriodEnd: nextRenewalStr,
-              ...(priceChanged ? { stripePriceId: currentStripePriceId } : {})
+              planId: demoPlan?.id || "1",
+              stripeSubscriptionId: null,
+              stripePriceId: null,
+              stripeCurrentPeriodEnd: null,
+              stripeCancelAtPeriodEnd: false,
+              hasSelectedMode: false
             }
           });
-          console.log(`[Profile Live Sync] Sincronizado estado para el usuario ${session.user.email}.`);
+          console.log(`[Profile Live Sync] Suscripción terminada para ${session.user.email}, devuelto a Demo.`);
+        } else {
+          // Comprobar si está programada la cancelación al final del periodo
+          const isCanceled = Boolean(subscription.cancel_at_period_end);
+
+          const currentStripePriceId = subscription.items?.data?.[0]?.price?.id;
+
+          const dateChanged = profile.stripeCurrentPeriodEnd !== nextRenewalStr;
+          const cancelStatusChanged = profile.stripeCancelAtPeriodEnd !== isCanceled;
+          const priceChanged = currentStripePriceId && profile.stripePriceId !== currentStripePriceId;
+
+          // Si los datos de Stripe están más actualizados que la base de datos local, sincronizamos de inmediato
+          if (dateChanged || cancelStatusChanged || priceChanged) {
+            profile = await prisma.clientProfile.update({
+              where: { id: profile.id },
+              include: { 
+                plan: true,
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    emailVerified: true,
+                    createdAt: true
+                  }
+                }
+              },
+              data: {
+                stripeCancelAtPeriodEnd: isCanceled,
+                stripeCurrentPeriodEnd: nextRenewalStr,
+                ...(priceChanged ? { stripePriceId: currentStripePriceId } : {})
+              }
+            });
+            console.log(`[Profile Live Sync] Sincronizado estado para el usuario ${session.user.email}.`);
+          }
         }
       } catch (stripeErr) {
         console.error("Error comprobando estado en vivo Stripe:", stripeErr);
@@ -146,6 +177,7 @@ export async function PATCH(request) {
       isPreparationTimeMandatory,
       lotFormat,
       isSimpleVersion,
+      hasSelectedMode,
       hasCuttingTraceability,
       hasOilCollection,
       hasVegetableDisinfection,
@@ -192,6 +224,7 @@ export async function PATCH(request) {
         isPreparationTimeMandatory: isPreparationTimeMandatory !== undefined ? isPreparationTimeMandatory : undefined,
         lotFormat: lotFormat !== undefined ? lotFormat : undefined,
         isSimpleVersion: isSimpleVersion !== undefined ? Boolean(isSimpleVersion) : undefined,
+        hasSelectedMode: hasSelectedMode !== undefined ? Boolean(hasSelectedMode) : undefined,
         hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined,
         hasOilCollection: hasOilCollection !== undefined ? hasOilCollection : undefined,
         hasVegetableDisinfection: hasVegetableDisinfection !== undefined ? hasVegetableDisinfection : undefined,

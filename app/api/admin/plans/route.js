@@ -39,9 +39,9 @@ export async function POST(req) {
 
     const data = await req.json();
     
-    // Validar nombre único
-    const existing = await prisma.pricingPlan.findUnique({
-      where: { name: data.name }
+    // Validar nombre
+    const existing = await prisma.pricingPlan.findFirst({
+      where: { name: data.name, planGroup: data.planGroup || "LEGACY" }
     });
     if (existing) {
       return NextResponse.json({ error: "Ya existe un plan con ese nombre" }, { status: 400 });

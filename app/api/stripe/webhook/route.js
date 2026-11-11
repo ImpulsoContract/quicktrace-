@@ -59,6 +59,7 @@ export async function POST(req) {
             stripeCurrentPeriodEnd: nextRenewalStr,
             planId: planId,
             stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+            hasSelectedMode: true,
           };
 
           if (collectedTaxId) {
@@ -360,10 +361,7 @@ export async function POST(req) {
       
       const fallbackPlan = await prisma.pricingPlan.findFirst({
         where: { 
-          OR: [
-            { name: { contains: "Básico", mode: 'insensitive' } },
-            { name: { contains: "Demo", mode: 'insensitive' } }
-          ]
+          name: { equals: "Demo", mode: 'insensitive' }
         }
       });
 
@@ -371,11 +369,12 @@ export async function POST(req) {
         where: { stripeSubscriptionId: subscription.id },
         include: { user: true },
         data: {
-          planId: fallbackPlan?.id || null,
+          planId: fallbackPlan?.id || "1",
           stripeSubscriptionId: null,
           stripeCurrentPeriodEnd: null,
           stripePriceId: null,
-          stripeCancelAtPeriodEnd: false
+          stripeCancelAtPeriodEnd: false,
+          hasSelectedMode: false
         },
       });
 

@@ -12,8 +12,36 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    let targetGroups = ["COMMON", "ERP"];
+
+    if (session.user.profileId || session.user.id) {
+      const profile = await prisma.clientProfile.findFirst({
+        where: session.user.profileId
+          ? { id: Number(session.user.profileId) }
+          : { userId: Number(session.user.id) },
+        include: { plan: true }
+      });
+
+      if (profile) {
+        const isLegacyPaidClient =
+          profile.plan?.planGroup === "LEGACY" ||
+          ["2", "3", "4"].includes(String(profile.planId));
+
+        if (isLegacyPaidClient) {
+          targetGroups = ["COMMON", "LEGACY"];
+        } else if (profile.isSimpleVersion || profile.plan?.planGroup === "SIMPLE") {
+          targetGroups = ["COMMON", "SIMPLE"];
+        } else {
+          targetGroups = ["COMMON", "ERP"];
+        }
+      }
+    }
+
     const plans = await prisma.pricingPlan.findMany({
-      orderBy: { priceYearly: 'asc' }
+      where: {
+        planGroup: { in: targetGroups }
+      },
+      orderBy: { priceYearly: "asc" }
     });
 
     return NextResponse.json(plans);

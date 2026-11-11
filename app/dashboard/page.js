@@ -563,6 +563,25 @@ export default function ClientDashboard() {
     return recipes.length > limit;
   };
   const [videoModal, setVideoModal] = useState({ isOpen: false, videoId: "" });
+  const [selectingOnboardingMode, setSelectingOnboardingMode] = useState(null);
+
+  const handleSelectOnboardingMode = async (isSimple) => {
+    setSelectingOnboardingMode(isSimple ? "simple" : "erp");
+    try {
+      const res = await fetch("/api/client/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isSimpleVersion: isSimple, hasSelectedMode: true })
+      });
+      if (res.ok) {
+        setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
+      }
+    } catch (err) {
+      console.error("Error selecting mode:", err);
+    } finally {
+      setSelectingOnboardingMode(null);
+    }
+  };
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [elabFilters, setElabFilters] = useState({
     lote: "",
@@ -5846,6 +5865,123 @@ export default function ClientDashboard() {
         onOpenGoodsModal={() => setIsGoodsForSaleModalOpen(true)} 
         onOpenInventory={() => setIsInventoryModalOpen(true)}
       />
+
+      {profile && !profile.hasSelectedMode && (!profile.planId || profile.planId === "1" || profile.plan?.name === "Demo") && session?.user?.role !== "WORKER" && session?.user?.role !== "ADMIN" && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(15, 23, 42, 0.78)",
+            backdropFilter: "blur(6px)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1.25rem",
+            overflowY: "auto"
+          }}
+        >
+          <div
+            className="glass-card animate-fade-in"
+            style={{
+              width: "100%",
+              maxWidth: "720px",
+              padding: "2.25rem 2rem",
+              background: "white",
+              borderRadius: "1.5rem",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.3)",
+              textAlign: "center"
+            }}
+          >
+            <h2 style={{ fontSize: "1.6rem", fontWeight: "900", color: "var(--text-main)", marginBottom: "0.5rem" }}>
+              {t("auth.register.onboarding_title")}
+            </h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "1.5rem", lineHeight: 1.5 }}>
+              {t("auth.register.onboarding_subtitle")}
+            </p>
+
+            <div style={{
+              position: "relative",
+              width: "100%",
+              paddingBottom: "56.25%",
+              height: 0,
+              borderRadius: "1rem",
+              overflow: "hidden",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
+              marginBottom: "1.75rem",
+              background: "#000"
+            }}>
+              <iframe
+                src="https://www.youtube.com/embed/75XEViseAA4?rel=0"
+                title="Onboarding QuickTrace"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+              <button
+                type="button"
+                onClick={() => handleSelectOnboardingMode(false)}
+                disabled={selectingOnboardingMode !== null}
+                className="btn-primary"
+                style={{
+                  width: "100%",
+                  padding: "1rem 1.25rem",
+                  fontSize: "0.98rem",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.6rem",
+                  cursor: selectingOnboardingMode !== null ? "not-allowed" : "pointer",
+                  opacity: selectingOnboardingMode === "simple" ? 0.6 : 1
+                }}
+              >
+                {selectingOnboardingMode === "erp" ? <Loader2 className="animate-spin" size={20} /> : null}
+                <span>{t("auth.register.btn_erp_full")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectOnboardingMode(true)}
+                disabled={selectingOnboardingMode !== null}
+                style={{
+                  width: "100%",
+                  padding: "1rem 1.25rem",
+                  fontSize: "0.98rem",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.6rem",
+                  borderRadius: "0.75rem",
+                  border: "2px solid var(--corp-green)",
+                  background: "rgba(66, 98, 22, 0.08)",
+                  color: "var(--corp-green)",
+                  cursor: selectingOnboardingMode !== null ? "not-allowed" : "pointer",
+                  opacity: selectingOnboardingMode === "erp" ? 0.6 : 1,
+                  transition: "all 0.2s ease"
+                }}
+              >
+                {selectingOnboardingMode === "simple" ? <Loader2 className="animate-spin" size={20} /> : null}
+                <span>{t("auth.register.btn_simple_version")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Mobile Top Header */}
       <div className="mobile-header" style={{ padding: '0.75rem 1.25rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

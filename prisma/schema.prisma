@@ -130,6 +130,7 @@ model ClientProfile {
   sellers                    Seller[]
   hasPosMode                 Boolean           @default(false)
   isSimpleVersion            Boolean           @default(false)
+  hasSelectedMode            Boolean           @default(false)
   productFamilies            ProductFamily[]
 
   holdedApiKey               String?
@@ -218,7 +219,8 @@ model AffiliateSettlement {
 
 model PricingPlan {
   id                   String  @id @default(cuid())
-  name                 String  @unique
+  name                 String
+  planGroup            String  @default("LEGACY")
   priceMonthly         Float   @default(0)
   priceYearly          Float   @default(0)
   stripePriceIdMonthly String?

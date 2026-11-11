@@ -192,7 +192,7 @@ function RegisterForm() {
         await fetch("/api/client/profile", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isSimpleVersion: isSimple })
+          body: JSON.stringify({ isSimpleVersion: isSimple, hasSelectedMode: true })
         });
       }
     } catch (e) {
