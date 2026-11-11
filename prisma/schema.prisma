@@ -131,6 +131,7 @@ model ClientProfile {
   hasPosMode                 Boolean           @default(false)
   isSimpleVersion            Boolean           @default(false)
   hasSelectedMode            Boolean           @default(false)
+  hasSeenTutorialVideo       Boolean           @default(false)
   useLegacyPricing           Boolean           @default(false)
   demoActivatedAt            DateTime?
   demoReactivationCount      Int               @default(0)

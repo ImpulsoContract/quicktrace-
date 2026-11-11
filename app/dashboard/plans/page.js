@@ -30,6 +30,13 @@ export default function PlansPage() {
 
   const handleCloseLearnVideoModal = () => {
     setIsMinimizingLearnVideo(true);
+    setProfile(prev => prev ? { ...prev, hasSeenTutorialVideo: true } : prev);
+    fetch("/api/client/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify({ hasSeenTutorialVideo: true })
+    }).catch(() => {});
     setTimeout(() => {
       setIsLearnVideoModalOpen(false);
       setIsMinimizingLearnVideo(false);

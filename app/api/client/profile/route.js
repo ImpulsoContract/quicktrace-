@@ -73,6 +73,7 @@ export async function GET() {
               stripeCurrentPeriodEnd: null,
               stripeCancelAtPeriodEnd: false,
               hasSelectedMode: false,
+              hasSeenTutorialVideo: false,
               useLegacyPricing: false,
               demoActivatedAt: null
             }
@@ -211,6 +212,7 @@ export async function PATCH(request) {
       lotFormat,
       isSimpleVersion,
       hasSelectedMode,
+      hasSeenTutorialVideo,
       hasCuttingTraceability,
       hasOilCollection,
       hasVegetableDisinfection,
@@ -270,6 +272,7 @@ export async function PATCH(request) {
         lotFormat: lotFormat !== undefined ? lotFormat : undefined,
         isSimpleVersion: isSimpleVersion !== undefined ? Boolean(isSimpleVersion) : undefined,
         hasSelectedMode: hasSelectedMode !== undefined ? Boolean(hasSelectedMode) : (isSimpleVersion !== undefined ? true : undefined),
+        hasSeenTutorialVideo: hasSeenTutorialVideo !== undefined ? Boolean(hasSeenTutorialVideo) : undefined,
         ...(shouldSetDemoActivatedAt ? { demoActivatedAt: new Date() } : {}),
         hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined,
         hasOilCollection: hasOilCollection !== undefined ? hasOilCollection : undefined,

@@ -569,12 +569,22 @@ export default function ClientDashboard() {
   const [isLearnVideoModalOpen, setIsLearnVideoModalOpen] = useState(false);
   const [isMinimizingLearnVideo, setIsMinimizingLearnVideo] = useState(false);
   const [highlightHelpIcon, setHighlightHelpIcon] = useState(false);
+  const hasDismissedTutorialRef = useRef(false);
   const [reactivatingDemo, setReactivatingDemo] = useState(false);
   const [showReactivateConfirm, setShowReactivateConfirm] = useState(false);
 
   const handleCloseLearnVideoModal = () => {
     if (isMinimizingLearnVideo) return;
+    hasDismissedTutorialRef.current = true;
     setIsMinimizingLearnVideo(true);
+    setProfile(prev => prev ? { ...prev, hasSeenTutorialVideo: true } : prev);
+    fetch("/api/client/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify({ hasSeenTutorialVideo: true })
+    }).catch((err) => console.error("Error saving hasSeenTutorialVideo:", err));
+
     setTimeout(() => {
       setIsLearnVideoModalOpen(false);
       setIsMinimizingLearnVideo(false);
@@ -593,6 +603,17 @@ export default function ClientDashboard() {
     isUserOnDemo && profile?.hasSelectedMode && profile?.demoActivatedAt && elapsedDemoMs >= demoDurationMs
   );
   const demoDaysRemaining = Math.max(0, Math.ceil((demoDurationMs - elapsedDemoMs) / (24 * 60 * 60 * 1000)));
+
+  useEffect(() => {
+    if (!profile) return;
+    if (session?.user?.role === "WORKER" || session?.user?.role === "ADMIN") return;
+    const needsOnboarding = isUserOnDemo && !profile.hasSelectedMode;
+    if (needsOnboarding || isDemoExpired) return;
+    if (!profile.hasSeenTutorialVideo && !hasDismissedTutorialRef.current && !isLearnVideoModalOpen && !isMinimizingLearnVideo) {
+      setIsMinimizingLearnVideo(false);
+      setIsLearnVideoModalOpen(true);
+    }
+  }, [profile, isUserOnDemo, isDemoExpired, session]);
 
   const handleSelectOnboardingMode = async (isSimple) => {
     setSelectingOnboardingMode(isSimple ? "simple" : "erp");
@@ -1120,7 +1141,7 @@ export default function ClientDashboard() {
       const res = await fetch(`/api/client/profile?t=${Date.now()}`, { cache: "no-store" });
       const data = await res.json();
       if (!data.error) {
-        setProfile(data);
+        setProfile(hasDismissedTutorialRef.current ? { ...data, hasSeenTutorialVideo: true } : data);
         if (data.isAffiliate) {
           setAffiliateData(prev => ({ 
             ...prev, 
