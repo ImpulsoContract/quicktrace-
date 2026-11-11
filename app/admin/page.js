@@ -760,59 +760,50 @@ export default function AdminDashboard() {
                  <div style={{ padding: '5rem', textAlign: 'center' }}><Loader2 className="animate-spin" size={32} color="var(--corp-green)" /></div>
               ) : (
                 <>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
+                  <div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                          <th onClick={() => handleSort('name')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                          <th onClick={() => handleSort('name')} style={{ padding: '0.85rem 0.65rem', color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
                             {t('admin.list.col_client')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
-                          <th onClick={() => handleSort('emailVerified')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            {t('admin.list.col_email_verified') || "Email Verif."} {sortConfig.key === 'emailVerified' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          <th onClick={() => handleSort('plan')} style={{ padding: '0.85rem 0.65rem', color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
+                            {t('admin.list.col_plan')} / {t('admin.list.col_email_verified') || "Email Verif."} {sortConfig.key === 'plan' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
-                          <th onClick={() => handleSort('plan')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            {t('admin.list.col_plan')} {sortConfig.key === 'plan' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
-                          </th>
-                          <th onClick={() => handleSort('demoReactivations')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                          <th onClick={() => handleSort('demoReactivations')} style={{ padding: '0.85rem 0.65rem', color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
                             {t('admin.list.col_demo_reactivations') || "Reactiv. Demo"} {sortConfig.key === 'demoReactivations' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
-                          <th onClick={() => handleSort('lastDemoReactivation')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
-                            {t('admin.list.col_last_demo_reactivation') || "Últ. Reactivación"} {sortConfig.key === 'lastDemoReactivation' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
-                          </th>
-                          <th onClick={() => handleSort('recipes')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                          <th onClick={() => handleSort('recipes')} style={{ padding: '0.85rem 0.65rem', color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
                             {t('admin.list.col_recipes')} {sortConfig.key === 'recipes' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
-                          <th onClick={() => handleSort('created')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                          <th onClick={() => handleSort('created')} style={{ padding: '0.85rem 0.65rem', color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
                             {t('admin.list.col_registered')} {sortConfig.key === 'created' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
-                          <th onClick={() => handleSort('login')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                          <th onClick={() => handleSort('login')} style={{ padding: '0.85rem 0.65rem', color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
                             {t('admin.list.col_last_login')} {sortConfig.key === 'login' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
-                          <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                            Origen
-                          </th>
-                          <th onClick={() => handleSort('renewal')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                          <th onClick={() => handleSort('renewal')} style={{ padding: '0.85rem 0.65rem', color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
                             {t('admin.list.col_renewal')} {sortConfig.key === 'renewal' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
-                          <th style={{ padding: '1rem', textAlign: 'right' }}></th>
+                          <th style={{ padding: '0.85rem 0.5rem', textAlign: 'right' }}></th>
                         </tr>
                       </thead>
                       <tbody>
                         {currentClients.map((client) => (
                           <tr key={client.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
-                            <td style={{ padding: '1.25rem 1rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <span style={{ fontWeight: '700', color: '#1e293b' }}>{client.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</span>
+                            <td style={{ padding: '0.95rem 0.65rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                <span style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.9rem' }}>{client.clientProfile?.razonSocial || t('admin.list.no_razon_social')}</span>
                                 {client.clientProfile?.isSimpleVersion && (
                                   <span style={{
                                     background: '#fef3c7',
                                     color: '#92400e',
-                                    fontSize: '0.65rem',
+                                    fontSize: '0.62rem',
                                     fontWeight: '800',
-                                    padding: '0.15rem 0.5rem',
+                                    padding: '0.12rem 0.45rem',
                                     borderRadius: '0.35rem',
                                     textTransform: 'uppercase',
-                                    letterSpacing: '0.04em'
+                                    letterSpacing: '0.03em'
                                   }}>
                                     {t('admin.list.simple_version_badge') || "Versión sencilla"}
                                   </span>
@@ -821,112 +812,21 @@ export default function AdminDashboard() {
                                   <span style={{
                                     background: '#e0f2fe',
                                     color: '#0369a1',
-                                    fontSize: '0.65rem',
+                                    fontSize: '0.62rem',
                                     fontWeight: '800',
-                                    padding: '0.15rem 0.5rem',
+                                    padding: '0.12rem 0.45rem',
                                     borderRadius: '0.35rem',
                                     textTransform: 'uppercase',
-                                    letterSpacing: '0.04em'
+                                    letterSpacing: '0.03em'
                                   }}>
                                     {t('admin.list.legacy_pricing_badge') || "Precios antiguos"}
                                   </span>
                                 )}
                               </div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{client.email}</div>
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem' }}>
-                              {client.emailVerified ? (
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{client.email}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.3rem' }}>
                                 <span style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '0.3rem',
-                                  padding: '0.25rem 0.65rem',
-                                  borderRadius: '2rem',
-                                  fontSize: '0.72rem',
-                                  fontWeight: '700',
-                                  background: '#dcfce7',
-                                  color: '#15803d',
-                                  whiteSpace: 'nowrap'
-                                }}>
-                                  <Check size={13} />
-                                  {t('admin.list.email_verified_yes') || "Verificado"}
-                                </span>
-                              ) : (
-                                <span style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '0.3rem',
-                                  padding: '0.25rem 0.65rem',
-                                  borderRadius: '2rem',
-                                  fontSize: '0.72rem',
-                                  fontWeight: '700',
-                                  background: '#fee2e2',
-                                  color: '#b91c1c',
-                                  whiteSpace: 'nowrap'
-                                }}>
-                                  <X size={13} />
-                                  {t('admin.list.email_verified_no') || "No verificado"}
-                                </span>
-                              )}
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem' }}>
-                              <span style={{
-                                padding: '0.35rem 0.85rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: '700',
-                                background: '#dcfce7',
-                                color: '#15803d',
-                                textTransform: 'uppercase'
-                              }}>
-                                {client.clientProfile?.plan?.name || t('admin.list.sin_plan_badge')}
-                              </span>
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '700' }}>
-                              {(client.clientProfile?.demoReactivationCount || 0) > 0 ? (
-                                <span style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  padding: '0.25rem 0.65rem',
-                                  borderRadius: '2rem',
-                                  fontSize: '0.78rem',
-                                  fontWeight: '800',
-                                  background: '#fef3c7',
-                                  color: '#92400e'
-                                }}>
-                                  {client.clientProfile.demoReactivationCount}
-                                </span>
-                              ) : (
-                                <span style={{ color: '#94a3b8', fontWeight: '600' }}>0</span>
-                              )}
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.88rem', color: '#475569' }}>
-                              {(client.clientProfile?.demoReactivationCount || 0) > 0 && client.clientProfile?.demoActivatedAt ? (
-                                new Date(client.clientProfile.demoActivatedAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                              ) : (
-                                <span style={{ color: '#94a3b8' }}>-</span>
-                              )}
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '600' }}>
-                              {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
-                              {client.createdAt ? new Date(client.createdAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
-                              {client.lastLogin ? (
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                  <span>{new Date(client.lastLogin).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                  {client.lastLoginLanguage && (
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--corp-green)', fontWeight: '700', textTransform: 'uppercase' }}>
-                                      {client.lastLoginLanguage}
-                                    </span>
-                                  )}
-                                </div>
-                              ) : <span style={{ color: '#94a3b8' }}>-</span>}
-                            </td>
-                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.8rem' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span style={{
-                                  padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: '800', width: 'fit-content',
+                                  padding: '0.15rem 0.45rem', borderRadius: '0.25rem', fontSize: '0.65rem', fontWeight: '800', width: 'fit-content',
                                   background: client.clientProfile?.origin === 'META' ? '#dbeafe' : client.clientProfile?.origin === 'GOOGLE' ? '#fef2f2' : client.clientProfile?.origin === 'AFFILIATE' ? '#fde68a' : client.clientProfile?.origin === 'BING' ? '#ecfeff' : client.clientProfile?.origin === 'TIKTOK' ? '#f5f3ff' : '#f1f5f9',
                                   color: client.clientProfile?.origin === 'META' ? '#1e40af' : client.clientProfile?.origin === 'GOOGLE' ? '#991b1b' : client.clientProfile?.origin === 'AFFILIATE' ? '#92400e' : client.clientProfile?.origin === 'BING' ? '#083344' : client.clientProfile?.origin === 'TIKTOK' ? '#4c1d95' : '#64748b',
                                   textTransform: 'uppercase'
@@ -934,22 +834,114 @@ export default function AdminDashboard() {
                                   {client.clientProfile?.origin || 'DIRECT'}
                                 </span>
                                 {(client.clientProfile?.origin === 'META' || client.clientProfile?.origin === 'GOOGLE') && (
-                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', lineHeight: '1.2' }}>
-                                    <div style={{ fontWeight: '600' }}>C: {client.clientProfile.utmCampaign || '-'}</div>
-                                    <div>{client.clientProfile.origin === 'META' ? 'A: ' : 'S: '}{client.clientProfile.origin === 'META' ? (client.clientProfile.utmContent || '-') : (client.clientProfile.utmSource || '-')}</div>
-                                  </div>
+                                  <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: '1.2' }}>
+                                    <strong style={{ fontWeight: '600' }}>C:</strong> {client.clientProfile.utmCampaign || '-'} · <strong>{client.clientProfile.origin === 'META' ? 'A:' : 'S:'}</strong> {client.clientProfile.origin === 'META' ? (client.clientProfile.utmContent || '-') : (client.clientProfile.utmSource || '-')}
+                                  </span>
                                 )}
                                 {client.clientProfile?.origin === 'OTHER' && (
-                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', lineHeight: '1.2' }}>
-                                    <div>S: {client.clientProfile.utmSource || '-'}</div>
-                                  </div>
+                                  <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: '1.2' }}>
+                                    S: {client.clientProfile.utmSource || '-'}
+                                  </span>
                                 )}
                               </div>
                             </td>
-                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', color: '#475569' }}>
+                            <td style={{ padding: '0.95rem 0.65rem' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.35rem' }}>
+                                <span style={{
+                                  padding: '0.25rem 0.65rem', borderRadius: '2rem', fontSize: '0.7rem', fontWeight: '700',
+                                  background: '#dcfce7',
+                                  color: '#15803d',
+                                  textTransform: 'uppercase',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  {client.clientProfile?.plan?.name || t('admin.list.sin_plan_badge')}
+                                </span>
+                                {client.emailVerified ? (
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    padding: '0.2rem 0.55rem',
+                                    borderRadius: '2rem',
+                                    fontSize: '0.68rem',
+                                    fontWeight: '700',
+                                    background: '#dcfce7',
+                                    color: '#15803d',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    <Check size={12} />
+                                    {t('admin.list.email_verified_yes') || "Verificado"}
+                                  </span>
+                                ) : (
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    padding: '0.2rem 0.55rem',
+                                    borderRadius: '2rem',
+                                    fontSize: '0.68rem',
+                                    fontWeight: '700',
+                                    background: '#fee2e2',
+                                    color: '#b91c1c',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    <X size={12} />
+                                    {t('admin.list.email_verified_no') || "No verificado"}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td style={{ padding: '0.95rem 0.65rem' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem' }}>
+                                {(client.clientProfile?.demoReactivationCount || 0) > 0 ? (
+                                  <>
+                                    <span style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      padding: '0.2rem 0.6rem',
+                                      borderRadius: '2rem',
+                                      fontSize: '0.74rem',
+                                      fontWeight: '800',
+                                      background: '#fef3c7',
+                                      color: '#92400e',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {client.clientProfile.demoReactivationCount} {client.clientProfile.demoReactivationCount === 1 ? 'vez' : 'veces'}
+                                    </span>
+                                    {client.clientProfile?.demoActivatedAt && (
+                                      <span style={{ fontSize: '0.75rem', color: '#475569', whiteSpace: 'nowrap' }}>
+                                        {new Date(client.clientProfile.demoActivatedAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span style={{ color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem' }}>0</span>
+                                )}
+                              </div>
+                            </td>
+                            <td style={{ padding: '0.95rem 0.65rem', fontSize: '0.85rem', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                              {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}
+                            </td>
+                            <td style={{ padding: '0.95rem 0.65rem', fontSize: '0.82rem', color: '#475569', whiteSpace: 'nowrap' }}>
+                              {client.createdAt ? new Date(client.createdAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                            </td>
+                            <td style={{ padding: '0.95rem 0.65rem', fontSize: '0.82rem', color: '#475569', whiteSpace: 'nowrap' }}>
+                              {client.lastLogin ? (
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span>{new Date(client.lastLogin).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                  {client.lastLoginLanguage && (
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '700', textTransform: 'uppercase' }}>
+                                      {client.lastLoginLanguage}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : <span style={{ color: '#94a3b8' }}>-</span>}
+                            </td>
+                            <td style={{ padding: '0.95rem 0.65rem', fontSize: '0.82rem', color: '#475569', whiteSpace: 'nowrap' }}>
                               {client.clientProfile?.stripeCurrentPeriodEnd ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <Globe size={14} color="var(--corp-green)" />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  <Globe size={13} color="var(--corp-green)" />
                                   {(() => {
                                     const raw = client.clientProfile.stripeCurrentPeriodEnd;
                                     try {
@@ -964,7 +956,7 @@ export default function AdminDashboard() {
                                 <span style={{ color: '#94a3b8' }}>-</span>
                               )}
                             </td>
-                            <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
+                            <td style={{ padding: '0.95rem 0.5rem', textAlign: 'right' }}>
                               <button
                                 onClick={(e) => {
                                   const rect = e.currentTarget.getBoundingClientRect();
