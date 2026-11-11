@@ -399,7 +399,7 @@ export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState("trazabilidad");
   const [wasteCollections, setWasteCollections] = useState([]);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
-  const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "", observations: "" });
+  const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "", wasteType: "RSU", commercialDocNumber: "", observations: "" });
   const [editingWasteRecord, setEditingWasteRecord] = useState(null);
 
   const [oilCollections, setOilCollections] = useState([]);
@@ -5313,6 +5313,22 @@ export default function ClientDashboard() {
     }
   };
 
+  const getWasteTypeLabel = (type) => {
+    switch (type) {
+      case "SANDACH":
+        return t('waste.type_sandach') || "SANDACH Categoría 3";
+      case "CARDBOARD":
+        return t('waste.type_cardboard') || "Cartón / Papel";
+      case "PLASTIC":
+        return t('waste.type_plastic') || "Plástico";
+      case "OTHER":
+        return t('waste.type_other') || "Otro tipo de residuos";
+      case "RSU":
+      default:
+        return t('waste.type_rsu') || "Basura general / RSU";
+    }
+  };
+
   const handleOpenWasteModal = () => {
     if (isRecipeLimitExceeded()) {
       setIsRecipeOverlimitModalOpen(true);
@@ -5320,7 +5336,7 @@ export default function ClientDashboard() {
     }
     const lastPerson = wasteCollections.length > 0 ? wasteCollections[0].personName : (profile?.personName || session?.user?.name || "");
     setEditingWasteRecord(null);
-    setWasteForm({ date: new Date().toISOString().slice(0, 10), personName: lastPerson, kilos: "", observations: "" });
+    setWasteForm({ date: new Date().toISOString().slice(0, 10), personName: lastPerson, kilos: "", wasteType: "RSU", commercialDocNumber: "", observations: "" });
     setIsWasteModalOpen(true);
   };
 
@@ -5330,6 +5346,8 @@ export default function ClientDashboard() {
       date: new Date(record.date).toISOString().slice(0, 10),
       personName: record.personName,
       kilos: record.kilos,
+      wasteType: record.wasteType || "RSU",
+      commercialDocNumber: record.commercialDocNumber || "",
       observations: record.observations || ""
     });
     setIsWasteModalOpen(true);
@@ -9530,25 +9548,44 @@ export default function ClientDashboard() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_date') || "Fecha"}</th>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_person') || "Responsable"}</th>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_kilos') || "Kilos (kg)"}</th>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_observations') || "Observaciones"}</th>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_date') || "Fecha"}</th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_person') || "Responsable"}</th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_kilos') || "Kilos (kg)"}</th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_waste_type') || "Tipo de Residuo"}</th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_commercial_doc') || "Nº Doc. Comercial / Albarán"}</th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('waste.table_observations') || "Observaciones"}</th>
+                          <th style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {wasteCollections.map(record => (
                           <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
-                            <td style={{ padding: '1rem 1.5rem', fontWeight: '500' }}>
+                            <td style={{ padding: '1rem 1.25rem', fontWeight: '500', whiteSpace: 'nowrap' }}>
                               {new Date(record.date).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                             </td>
-                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{record.personName}</td>
-                            <td style={{ padding: '1rem 1.5rem', fontWeight: '600' }}>{record.kilos} kg</td>
-                            <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.observations || ""}>
+                            <td style={{ padding: '1rem 1.25rem', color: 'var(--text-muted)' }}>{record.personName}</td>
+                            <td style={{ padding: '1rem 1.25rem', fontWeight: '600', whiteSpace: 'nowrap' }}>{record.kilos} kg</td>
+                            <td style={{ padding: '1rem 1.25rem' }}>
+                              <span style={{
+                                display: 'inline-block',
+                                padding: '0.25rem 0.65rem',
+                                borderRadius: '0.5rem',
+                                fontSize: '0.8rem',
+                                fontWeight: '700',
+                                background: record.wasteType === 'SANDACH' ? '#fef3c7' : '#f1f5f9',
+                                color: record.wasteType === 'SANDACH' ? '#92400e' : '#334155',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {getWasteTypeLabel(record.wasteType)}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1rem 1.25rem', color: 'var(--text-main)', fontWeight: '500' }}>
+                              {record.wasteType === 'SANDACH' && record.commercialDocNumber ? record.commercialDocNumber : "-"}
+                            </td>
+                            <td style={{ padding: '1rem 1.25rem', color: 'var(--text-muted)', maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={record.observations || ""}>
                               {record.observations || "-"}
                             </td>
-                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                            <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                 <button onClick={() => handleEditWaste(record)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
                                   <Edit size={18} />
@@ -13169,10 +13206,10 @@ export default function ClientDashboard() {
       `}</style>
       {isWasteModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-          <div style={{ background: 'white', padding: '2rem', borderRadius: '1.5rem', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s ease' }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '1.5rem', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s ease', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Recycle size={24} color="var(--corp-green)" /> {t('waste.new_collection') || "Nueva retirada de residuos"}
+                <Recycle size={24} color="var(--corp-green)" /> {editingWasteRecord ? (t('waste.edit_collection') || "Modificar retirada de residuos") : (t('waste.new_collection') || "Nueva retirada de residuos")}
               </h3>
               <button onClick={() => setIsWasteModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={24} />
@@ -13223,6 +13260,46 @@ export default function ClientDashboard() {
                   <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: '600' }}>kg</span>
                 </div>
               </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                  {t('waste.waste_type_label') || "Tipo de Residuo"} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <select
+                  className="input-field"
+                  value={wasteForm.wasteType || "RSU"}
+                  onChange={(e) => {
+                    const nextType = e.target.value;
+                    setWasteForm({
+                      ...wasteForm,
+                      wasteType: nextType,
+                      commercialDocNumber: nextType === "SANDACH" ? (wasteForm.commercialDocNumber || "") : ""
+                    });
+                  }}
+                  required
+                >
+                  <option value="RSU">{t('waste.type_rsu') || "Basura general / RSU"}</option>
+                  <option value="SANDACH">{t('waste.type_sandach') || "SANDACH Categoría 3"}</option>
+                  <option value="CARDBOARD">{t('waste.type_cardboard') || "Cartón / Papel"}</option>
+                  <option value="PLASTIC">{t('waste.type_plastic') || "Plástico"}</option>
+                  <option value="OTHER">{t('waste.type_other') || "Otro tipo de residuos"}</option>
+                </select>
+              </div>
+
+              {wasteForm.wasteType === "SANDACH" && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                    {t('waste.commercial_doc_label') || "Nº de Documento Comercial / Albarán"}
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={wasteForm.commercialDocNumber || ""}
+                    onChange={(e) => setWasteForm({ ...wasteForm, commercialDocNumber: e.target.value })}
+                    placeholder={t('waste.commercial_doc_placeholder') || "Introduce el nº de documento o albarán..."}
+                  />
+                </div>
+              )}
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '700' }}>

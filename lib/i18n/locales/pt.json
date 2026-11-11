@@ -1418,7 +1418,18 @@
     "delete_confirm": "Tem certeza de que deseja excluir este registro?",
     "observations": "Observações",
     "observations_placeholder": "Observações sobre a recolha...",
-    "table_observations": "Observações"
+    "table_observations": "Observações",
+    "edit_collection": "Editar recolha de resíduos",
+    "waste_type_label": "Tipo de Resíduo",
+    "type_rsu": "Lixo geral / RSU",
+    "type_sandach": "SANDACH Categoria 3",
+    "type_cardboard": "Cartão / Papel",
+    "type_plastic": "Plástico",
+    "type_other": "Outro tipo de resíduos",
+    "commercial_doc_label": "Nº de Documento Comercial / Guia de Remessa",
+    "commercial_doc_placeholder": "Introduza o nº do documento ou guia de remessa...",
+    "table_waste_type": "Tipo de Resíduo",
+    "table_commercial_doc": "Nº Doc. Comercial / Guia"
   },
   "cleaning": {
     "product_sheets_btn": "Fichas técnicas dos produtos de limpeza",

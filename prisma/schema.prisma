@@ -641,13 +641,15 @@ model Worker {
 }
 
 model WasteCollection {
-  id              Int           @id @default(autoincrement())
-  date            DateTime      @default(now())
-  personName      String
-  kilos           Float
-  observations    String?       @db.Text
+  id                  Int           @id @default(autoincrement())
+  date                DateTime      @default(now())
+  personName          String
+  kilos               Float
+  wasteType           String        @default("RSU")
+  commercialDocNumber String?
+  observations        String?       @db.Text
   
-  clientProfileId Int
+  clientProfileId     Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
   createdAt       DateTime      @default(now())

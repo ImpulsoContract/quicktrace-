@@ -61,9 +61,9 @@ export async function POST(request) {
     }
 
     const data = await request.json();
-    const { date, personName, kilos, observations } = data;
+    const { date, personName, kilos, wasteType, commercialDocNumber, observations } = data;
 
-    if (!date || !personName || kilos === undefined) {
+    if (!date || !personName || kilos === undefined || !wasteType) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
 
@@ -84,11 +84,18 @@ export async function POST(request) {
       return NextResponse.json({ error: "RECIPES_LIMIT_EXCEEDED" }, { status: 403 });
     }
 
+    const selectedWasteType = wasteType || "RSU";
+    const docNum = selectedWasteType === "SANDACH" && commercialDocNumber && commercialDocNumber.toString().trim()
+      ? commercialDocNumber.toString().trim()
+      : null;
+
     const newCollection = await prisma.wasteCollection.create({
       data: {
         date: new Date(date),
         personName,
         kilos: parseFloat(kilos),
+        wasteType: selectedWasteType,
+        commercialDocNumber: docNum,
         observations: observations ? observations.toString() : null,
         clientProfileId: profile.id
       }
@@ -173,9 +180,9 @@ export async function PATCH(request) {
     }
 
     const data = await request.json();
-    const { id, date, personName, kilos, observations } = data;
+    const { id, date, personName, kilos, wasteType, commercialDocNumber, observations } = data;
 
-    if (!id || !date || !personName || kilos === undefined) {
+    if (!id || !date || !personName || kilos === undefined || !wasteType) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
 
@@ -197,12 +204,19 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "No encontrado o sin permiso" }, { status: 403 });
     }
 
+    const selectedWasteType = wasteType || "RSU";
+    const docNum = selectedWasteType === "SANDACH" && commercialDocNumber && commercialDocNumber.toString().trim()
+      ? commercialDocNumber.toString().trim()
+      : null;
+
     const updatedCollection = await prisma.wasteCollection.update({
       where: { id: parseInt(id) },
       data: {
         date: new Date(date),
         personName,
         kilos: parseFloat(kilos),
+        wasteType: selectedWasteType,
+        commercialDocNumber: docNum,
         observations: observations !== undefined ? (observations ? observations.toString() : null) : undefined,
       }
     });

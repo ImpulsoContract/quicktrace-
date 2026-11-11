@@ -1424,7 +1424,18 @@
     "delete_confirm": "Are you sure you want to delete this record?",
     "observations": "Observations",
     "observations_placeholder": "Observations on collection...",
-    "table_observations": "Observations"
+    "table_observations": "Observations",
+    "edit_collection": "Edit waste collection",
+    "waste_type_label": "Waste Type",
+    "type_rsu": "General waste / MSW",
+    "type_sandach": "ABP (SANDACH) Category 3",
+    "type_cardboard": "Cardboard / Paper",
+    "type_plastic": "Plastic",
+    "type_other": "Other type of waste",
+    "commercial_doc_label": "Commercial Document / Delivery Note No.",
+    "commercial_doc_placeholder": "Enter document or delivery note number...",
+    "table_waste_type": "Waste Type",
+    "table_commercial_doc": "Commercial Doc. / Delivery Note No."
   },
   "cleaning": {
     "product_sheets_btn": "Technical sheets of cleaning products",

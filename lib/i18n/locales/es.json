@@ -1424,7 +1424,18 @@
     "delete_confirm": "¿Seguro que quieres eliminar este registro?",
     "observations": "Observaciones",
     "observations_placeholder": "Observaciones sobre la retirada...",
-    "table_observations": "Observaciones"
+    "table_observations": "Observaciones",
+    "edit_collection": "Modificar retirada de residuos",
+    "waste_type_label": "Tipo de Residuo",
+    "type_rsu": "Basura general / RSU",
+    "type_sandach": "SANDACH Categoría 3",
+    "type_cardboard": "Cartón / Papel",
+    "type_plastic": "Plástico",
+    "type_other": "Otro tipo de residuos",
+    "commercial_doc_label": "Nº de Documento Comercial / Albarán",
+    "commercial_doc_placeholder": "Introduce el nº de documento o albarán...",
+    "table_waste_type": "Tipo de Residuo",
+    "table_commercial_doc": "Nº Doc. Comercial / Albarán"
   },
   "cleaning": {
     "product_sheets_btn": "Fichas técnicas de los productos de limpieza",

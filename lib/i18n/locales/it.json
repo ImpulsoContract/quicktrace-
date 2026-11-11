@@ -1419,7 +1419,18 @@
     "delete_confirm": "Sei sicuro di voler eliminare questo record?",
     "observations": "Osservazioni",
     "observations_placeholder": "Osservazioni sul ritiro...",
-    "table_observations": "Osservazioni"
+    "table_observations": "Osservazioni",
+    "edit_collection": "Modifica raccolta rifiuti",
+    "waste_type_label": "Tipo di Rifiuto",
+    "type_rsu": "Rifiuti generali / RSU",
+    "type_sandach": "SOA (SANDACH) Categoria 3",
+    "type_cardboard": "Cartone / Carta",
+    "type_plastic": "Plastica",
+    "type_other": "Altro tipo di rifiuti",
+    "commercial_doc_label": "Nº Documento Commerciale / DDT",
+    "commercial_doc_placeholder": "Inserisci il nº di documento o DDT...",
+    "table_waste_type": "Tipo di Rifiuto",
+    "table_commercial_doc": "Nº Doc. Commerciale / DDT"
   },
   "cleaning": {
     "product_sheets_btn": "Schede tecniche dei prodotti per la pulizia",

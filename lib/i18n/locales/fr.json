@@ -1419,7 +1419,18 @@
     "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement ?",
     "observations": "Observations",
     "observations_placeholder": "Observations sur l'enlèvement...",
-    "table_observations": "Observations"
+    "table_observations": "Observations",
+    "edit_collection": "Modifier la collecte de déchets",
+    "waste_type_label": "Type de Déchet",
+    "type_rsu": "Déchets généraux / RSU",
+    "type_sandach": "SANDACH Catégorie 3",
+    "type_cardboard": "Carton / Papier",
+    "type_plastic": "Plastique",
+    "type_other": "Autre type de déchets",
+    "commercial_doc_label": "Nº de Document Commercial / Bon de livraison",
+    "commercial_doc_placeholder": "Saisissez le nº de document ou bon de livraison...",
+    "table_waste_type": "Type de Déchet",
+    "table_commercial_doc": "Nº Doc. Commercial / Bon"
   },
   "cleaning": {
     "product_sheets_btn": "Fiches techniques des produits de nettoyage",
