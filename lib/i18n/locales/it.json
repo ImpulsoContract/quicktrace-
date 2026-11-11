@@ -2316,5 +2316,11 @@
     "cat_cutting": "Tracciabilità di sezionamento",
     "cat_oil": "Oli di frittura",
     "cat_vegetables": "Disinfezione dei vegetali"
+  },
+  "whatsapp": {
+    "button_label": "Contatta su WhatsApp",
+    "modal_title": "Con chi desideri parlare?",
+    "contact_sales": "Contatta le vendite",
+    "contact_support": "Contatta il supporto"
   }
 }

@@ -2321,5 +2321,11 @@
     "cat_cutting": "Trazabilidad de despiece",
     "cat_oil": "Aceites de fritura",
     "cat_vegetables": "Desinfección de vegetales"
+  },
+  "whatsapp": {
+    "button_label": "Contactar por WhatsApp",
+    "modal_title": "¿Con quién deseas hablar?",
+    "contact_sales": "Contactar con ventas",
+    "contact_support": "Contactar con soporte"
   }
 }

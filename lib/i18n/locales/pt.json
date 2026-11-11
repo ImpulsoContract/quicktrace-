@@ -2315,5 +2315,11 @@
     "cat_cutting": "Rastreabilidade de desmanche",
     "cat_oil": "Óleos de fritura",
     "cat_vegetables": "Desinfeção de vegetais"
+  },
+  "whatsapp": {
+    "button_label": "Contactar por WhatsApp",
+    "modal_title": "Com quem deseja falar?",
+    "contact_sales": "Contactar vendas",
+    "contact_support": "Contactar suporte"
   }
 }

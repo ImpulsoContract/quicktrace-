@@ -2321,5 +2321,11 @@
     "cat_cutting": "Cutting traceability",
     "cat_oil": "Frying oils",
     "cat_vegetables": "Vegetable disinfection"
+  },
+  "whatsapp": {
+    "button_label": "Contact via WhatsApp",
+    "modal_title": "Who would you like to talk to?",
+    "contact_sales": "Contact Sales",
+    "contact_support": "Contact Support"
   }
 }

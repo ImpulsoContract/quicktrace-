@@ -575,6 +575,7 @@ export default function ClientDashboard() {
   const hasDismissedTutorialRef = useRef(false);
   const [reactivatingDemo, setReactivatingDemo] = useState(false);
   const [showReactivateConfirm, setShowReactivateConfirm] = useState(false);
+  const [isWhatsAppMenuOpen, setIsWhatsAppMenuOpen] = useState(false);
 
   const handleCloseLearnVideoModal = () => {
     if (isMinimizingLearnVideo) return;
@@ -6779,8 +6780,266 @@ export default function ClientDashboard() {
                 </span>
               </button>
             </div>
+
+            {/* Botón de WhatsApp (Ventas / Soporte) */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsWhatsAppMenuOpen((prev) => !prev);
+              }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.45rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '0.5rem',
+                background: 'linear-gradient(135deg, #25D366 0%, #16a34a 100%)',
+                border: '1px solid #16a34a',
+                color: '#ffffff',
+                fontSize: '0.76rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                minHeight: '36px',
+                boxShadow: '0 2px 8px rgba(37, 211, 102, 0.3)',
+                transition: 'all 0.18s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 211, 102, 0.42)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(37, 211, 102, 0.3)';
+              }}
+              title={t('whatsapp.button_label') || "Contactar por WhatsApp"}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
+              </svg>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {t('whatsapp.button_label') || "Contactar por WhatsApp"}
+              </span>
+            </button>
           </div>
         </aside>
+
+        {/* Botón flotante de WhatsApp en esquina inferior izquierda cuando el menú lateral está cerrado */}
+        {!isSidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setIsWhatsAppMenuOpen((prev) => !prev)}
+            style={{
+              position: 'fixed',
+              bottom: '1.25rem',
+              left: '1.25rem',
+              zIndex: 9990,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '0.7rem 1.05rem',
+              borderRadius: '999px',
+              background: 'linear-gradient(135deg, #25D366 0%, #16a34a 100%)',
+              border: '2px solid #ffffff',
+              color: '#ffffff',
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 8px 20px rgba(37, 211, 102, 0.45)',
+              transition: 'all 0.2s ease'
+            }}
+            title={t('whatsapp.button_label') || "Contactar por WhatsApp"}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
+            </svg>
+            <span>WhatsApp</span>
+          </button>
+        )}
+
+        {/* Popup de elección de WhatsApp: Ventas o Soporte */}
+        {isWhatsAppMenuOpen && (
+          <div
+            onClick={() => setIsWhatsAppMenuOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 99995,
+              background: 'rgba(15, 23, 42, 0.25)',
+              backdropFilter: 'blur(2px)'
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="animate-fade-in"
+              style={{
+                position: 'fixed',
+                bottom: '4.5rem',
+                left: '1rem',
+                width: 'calc(100vw - 2rem)',
+                maxWidth: '300px',
+                background: 'white',
+                borderRadius: '1.15rem',
+                boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.28)',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden',
+                zIndex: 99996
+              }}
+            >
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #25D366 0%, #16a34a 100%)',
+                  padding: '0.9rem 1rem',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
+                  </svg>
+                  <span style={{ fontWeight: '800', fontSize: '0.92rem' }}>
+                    {t('whatsapp.modal_title') || "¿Con quién deseas hablar?"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsWhatsAppMenuOpen(false)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '26px',
+                    height: '26px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              <div style={{ padding: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                <a
+                  href={`https://wa.me/34604526339?text=${encodeURIComponent("Necesito resolver una duda sobre Quicktrace")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsWhatsAppMenuOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.75rem',
+                    padding: '0.8rem 0.9rem',
+                    borderRadius: '0.75rem',
+                    background: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    textDecoration: 'none',
+                    color: '#14532d',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#dcfce7';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#f0fdf4';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                    <span style={{ fontWeight: '800', fontSize: '0.88rem', color: '#15803d' }}>
+                      {t('whatsapp.contact_sales') || "Contactar con ventas"}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#166534', fontWeight: '600' }}>
+                      +34 604 52 63 39
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: '#25D366',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
+                    </svg>
+                  </div>
+                </a>
+
+                <a
+                  href={`https://wa.me/34679728752?text=${encodeURIComponent("Necesito resolver una duda sobre Quicktrace")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsWhatsAppMenuOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.75rem',
+                    padding: '0.8rem 0.9rem',
+                    borderRadius: '0.75rem',
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    textDecoration: 'none',
+                    color: '#0f172a',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f1f5f9';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#f8fafc';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                    <span style={{ fontWeight: '800', fontSize: '0.88rem', color: '#0f172a' }}>
+                      {t('whatsapp.contact_support') || "Contactar con soporte"}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: '600' }}>
+                      +34 679 72 87 52
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: '#25D366',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-2.284 4.967 5.147-2.212c1.922 1.395 4.288 2.212 6.853 2.212 6.627 0 12-5.373 12-12s-5.373-12-12-12z" />
+                    </svg>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <main ref={mainContentRef} style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', minWidth: 0, transition: 'padding 0.3s ease' }}>

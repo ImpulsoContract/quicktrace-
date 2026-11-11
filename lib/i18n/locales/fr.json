@@ -2316,5 +2316,11 @@
     "cat_cutting": "Traçabilité de découpe",
     "cat_oil": "Huiles de friture",
     "cat_vegetables": "Désinfection des végétaux"
+  },
+  "whatsapp": {
+    "button_label": "Contacter par WhatsApp",
+    "modal_title": "Avec qui souhaitez-vous parler ?",
+    "contact_sales": "Contacter les ventes",
+    "contact_support": "Contacter le support"
   }
 }
