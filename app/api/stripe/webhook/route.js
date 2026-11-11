@@ -374,7 +374,8 @@ export async function POST(req) {
           stripeCurrentPeriodEnd: null,
           stripePriceId: null,
           stripeCancelAtPeriodEnd: false,
-          hasSelectedMode: false
+          hasSelectedMode: false,
+          useLegacyPricing: false
         },
       });
 

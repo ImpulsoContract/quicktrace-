@@ -147,7 +147,7 @@ export default function PlansPage() {
   })();
 
   const isUserOnDemo = !profile?.planId || (profile?.plan?.name && profile.plan.name.toLowerCase().includes('demo'));
-  const isLegacyPaidClient = profile?.plan?.planGroup === "LEGACY" || ["2", "3", "4"].includes(String(profile?.planId));
+  const isLegacyPaidClient = Boolean(profile?.useLegacyPricing);
   const needsModeSelection = profile && isUserOnDemo && !profile.hasSelectedMode;
 
   if (loading) {

@@ -72,7 +72,8 @@ export async function GET() {
               stripePriceId: null,
               stripeCurrentPeriodEnd: null,
               stripeCancelAtPeriodEnd: false,
-              hasSelectedMode: false
+              hasSelectedMode: false,
+              useLegacyPricing: false
             }
           });
           console.log(`[Profile Live Sync] Suscripción terminada para ${session.user.email}, devuelto a Demo.`);

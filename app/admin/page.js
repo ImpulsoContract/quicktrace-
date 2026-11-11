@@ -415,6 +415,36 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleLegacyPricing = async (client) => {
+    const currentVal = Boolean(client.clientProfile?.useLegacyPricing);
+    const newVal = !currentVal;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/clients/update/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useLegacyPricing: newVal })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(
+          newVal
+            ? (t('admin.actions.switched_to_legacy_pricing') || "Plan de precios antiguo asignado al cliente.")
+            : (t('admin.actions.switched_to_new_pricing') || "Plan de precios nuevo asignado al cliente.")
+        );
+        setActiveMenu(null);
+        await fetchClients();
+      } else {
+        alert(data.error || "Error al actualizar el plan de precios del cliente");
+      }
+    } catch (err) {
+      console.error("Error toggling legacy pricing:", err);
+      alert("Error de conexión al actualizar el plan de precios");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleTogglePosMode = async (client) => {
     const currentVal = Boolean(client.clientProfile?.hasPosMode);
     const newVal = !currentVal;
@@ -762,6 +792,20 @@ export default function AdminDashboard() {
                                     {t('admin.list.simple_version_badge') || "Versión sencilla"}
                                   </span>
                                 )}
+                                {client.clientProfile?.useLegacyPricing && (
+                                  <span style={{
+                                    background: '#e0f2fe',
+                                    color: '#0369a1',
+                                    fontSize: '0.65rem',
+                                    fontWeight: '800',
+                                    padding: '0.15rem 0.5rem',
+                                    borderRadius: '0.35rem',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.04em'
+                                  }}>
+                                    {t('admin.list.legacy_pricing_badge') || "Precios antiguos"}
+                                  </span>
+                                )}
                               </div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{client.email}</div>
                             </td>
@@ -997,6 +1041,15 @@ export default function AdminDashboard() {
               icon={<Layers size={16} />} 
               text={activeMenu.clientProfile?.isSimpleVersion ? (t('admin.actions.switch_to_full') || "Cambiar a versión completa") : (t('admin.actions.switch_to_simple') || "Cambiar a versión sencilla")} 
               onClick={() => handleToggleSimpleVersion(activeMenu)} 
+            />
+            <MenuBtn 
+              icon={<Tag size={16} />} 
+              text={
+                activeMenu.clientProfile?.useLegacyPricing
+                  ? (t('admin.actions.switch_to_new_pricing') || "Cambiar a plan de precios nuevo")
+                  : (t('admin.actions.switch_to_legacy_pricing') || "Cambiar a plan de precios antiguo")
+              } 
+              onClick={() => handleToggleLegacyPricing(activeMenu)} 
             />
             <MenuBtn icon={<Edit size={16} />} text={t('admin.actions.edit')} onClick={() => { setEditClientModal({ id: activeMenu.id, form: { ...activeMenu, ...activeMenu.clientProfile, personName: activeMenu.clientProfile?.personName || activeMenu.name || "" } }); setActiveMenu(null); }} />
             <MenuBtn

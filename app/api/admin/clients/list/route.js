@@ -44,6 +44,7 @@ export async function GET() {
             hasIaGoods: true,
             hasPosMode: true,
             isSimpleVersion: true,
+            useLegacyPricing: true,
             apiKey: true,
             apiKeyCreatedAt: true,
             _count: {

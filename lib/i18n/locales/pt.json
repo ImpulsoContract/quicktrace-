@@ -1161,7 +1161,8 @@
       "no_razon_social": "Sem Razão Social",
       "sin_plan_badge": "SEM PLANO",
       "showing_info": "Mostrando {start} - {end} de {total} clientes",
-      "simple_version_badge": "Versão simples"
+      "simple_version_badge": "Versão simples",
+      "legacy_pricing_badge": "Preços antigos"
     },
     "actions": {
       "title": "Ações",
@@ -1176,7 +1177,11 @@
       "delete_client": "ELIMINAR CLIENTE",
       "manage_api_key": "Gerenciar chave de API",
       "switch_to_simple": "Mudar para versão simples",
-      "switch_to_full": "Mudar para versão completa"
+      "switch_to_full": "Mudar para versão completa",
+      "switch_to_new_pricing": "Mudar para novo plano de preços",
+      "switch_to_legacy_pricing": "Mudar para plano de preços antigo",
+      "switched_to_new_pricing": "Novo plano de preços atribuído ao cliente.",
+      "switched_to_legacy_pricing": "Plano de preços antigo atribuído ao cliente."
     },
     "delete": {
       "confirm_msg": "Confirmar eliminação total de datos para {name}? As suas receitas, elaborações, registos e conta serão apagados permanentemente.",

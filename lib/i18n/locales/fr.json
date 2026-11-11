@@ -1162,7 +1162,8 @@
       "no_razon_social": "Sans Raison Sociale",
       "sin_plan_badge": "SANS PLAN",
       "showing_info": "Affichage de {start} - {end} sur {total} clients",
-      "simple_version_badge": "Version simple"
+      "simple_version_badge": "Version simple",
+      "legacy_pricing_badge": "Anciens tarifs"
     },
     "actions": {
       "title": "Actions",
@@ -1177,7 +1178,11 @@
       "delete_client": "SUPPRIMER CLIENT",
       "manage_api_key": "Gérer la clé API",
       "switch_to_simple": "Passer à la version simple",
-      "switch_to_full": "Passer à la version complète"
+      "switch_to_full": "Passer à la version complète",
+      "switch_to_new_pricing": "Passer au nouveau plan tarifaire",
+      "switch_to_legacy_pricing": "Passer à l'ancien plan tarifaire",
+      "switched_to_new_pricing": "Nouveau plan tarifaire attribué au client.",
+      "switched_to_legacy_pricing": "Ancien plan tarifaire attribué au client."
     },
     "delete": {
       "confirm_msg": "Confirmer la suppression totale des données pour {name} ? Ses recettes, élaborations, enregistrements et son compte seront définitivement supprimés.",

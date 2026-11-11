@@ -1162,7 +1162,8 @@
       "no_razon_social": "Senza Ragione Sociale",
       "sin_plan_badge": "SENZA PIANO",
       "showing_info": "Mostrando {start} - {end} di {total} clienti",
-      "simple_version_badge": "Versione semplice"
+      "simple_version_badge": "Versione semplice",
+      "legacy_pricing_badge": "Prezzi vecchi"
     },
     "actions": {
       "title": "Azioni",
@@ -1177,7 +1178,11 @@
       "delete_client": "ELIMINA CLIENTE",
       "manage_api_key": "Gestisci chiave API",
       "switch_to_simple": "Passa alla versione semplice",
-      "switch_to_full": "Passa alla versione completa"
+      "switch_to_full": "Passa alla versione completa",
+      "switch_to_new_pricing": "Passa al nuovo piano di prezzi",
+      "switch_to_legacy_pricing": "Passa al vecchio piano di prezzi",
+      "switched_to_new_pricing": "Nuovo piano di prezzi assegnato al cliente.",
+      "switched_to_legacy_pricing": "Vecchio piano di prezzi assegnato al cliente."
     },
     "delete": {
       "confirm_msg": "Confermare l'eliminazione totale dei dati per {name}? Le sue ricette, lavorazioni, record e account verranno eliminati in modo permanente.",

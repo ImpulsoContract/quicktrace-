@@ -1167,7 +1167,8 @@
       "no_razon_social": "No Business Name",
       "sin_plan_badge": "NO PLAN",
       "showing_info": "Showing {start} - {end} of {total} clients",
-      "simple_version_badge": "Simple version"
+      "simple_version_badge": "Simple version",
+      "legacy_pricing_badge": "Legacy pricing"
     },
     "actions": {
       "title": "Actions",
@@ -1182,7 +1183,11 @@
       "delete_client": "DELETE CLIENT",
       "manage_api_key": "Manage API Key",
       "switch_to_simple": "Switch to simple version",
-      "switch_to_full": "Switch to full version"
+      "switch_to_full": "Switch to full version",
+      "switch_to_new_pricing": "Switch to new pricing plan",
+      "switch_to_legacy_pricing": "Switch to legacy pricing plan",
+      "switched_to_new_pricing": "New pricing plan assigned to client.",
+      "switched_to_legacy_pricing": "Legacy pricing plan assigned to client."
     },
     "delete": {
       "confirm_msg": "Confirm total data deletion for {name}? Their recipes, elaborations, records and account will be permanently deleted.",

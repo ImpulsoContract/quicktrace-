@@ -23,11 +23,7 @@ export async function GET() {
       });
 
       if (profile) {
-        const isLegacyPaidClient =
-          profile.plan?.planGroup === "LEGACY" ||
-          ["2", "3", "4"].includes(String(profile.planId));
-
-        if (isLegacyPaidClient) {
+        if (profile.useLegacyPricing) {
           targetGroups = ["COMMON", "LEGACY"];
         } else if (profile.isSimpleVersion || profile.plan?.planGroup === "SIMPLE") {
           targetGroups = ["COMMON", "SIMPLE"];

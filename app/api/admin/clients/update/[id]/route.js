@@ -21,7 +21,8 @@ export async function PATCH(req, { params }) {
       stripeSubscriptionId, stripeCustomerId, stripeCurrentPeriodEnd,
       hasIaGoods,
       hasPosMode,
-      isSimpleVersion
+      isSimpleVersion,
+      useLegacyPricing
     } = body;
 
     const userId = parseInt(id);
@@ -66,6 +67,9 @@ export async function PATCH(req, { params }) {
       if (isSimpleVersion !== undefined) {
         profileData.isSimpleVersion = Boolean(isSimpleVersion);
         profileData.hasSelectedMode = true;
+      }
+      if (useLegacyPricing !== undefined) {
+        profileData.useLegacyPricing = Boolean(useLegacyPricing);
       }
 
       if (Object.keys(profileData).length > 0) {
