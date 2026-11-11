@@ -6642,20 +6642,35 @@ export default function ClientDashboard() {
                     style={{ 
                       display: 'inline-flex', 
                       alignItems: 'center', 
-                      gap: '0.25rem', 
-                      fontSize: '0.7rem', 
-                      color: 'var(--corp-green)', 
-                      fontWeight: '700', 
-                      textDecoration: 'underline',
-                      marginTop: '0.1rem',
+                      justifyContent: 'center',
+                      gap: '0.35rem', 
+                      fontSize: '0.74rem', 
+                      color: '#ffffff', 
+                      background: 'linear-gradient(135deg, var(--corp-green) 0%, #5a841f 100%)',
+                      fontWeight: '800', 
+                      textDecoration: 'none',
+                      marginTop: '0.35rem',
+                      padding: '0.38rem 0.7rem',
+                      borderRadius: '0.45rem',
+                      boxShadow: '0 2px 6px rgba(66, 98, 22, 0.28)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
                       cursor: 'pointer',
-                      lineHeight: '1.2'
+                      lineHeight: '1.2',
+                      transition: 'all 0.18s ease'
                     }}
-                    title={t('sidebar.manage_license') || "Gestionar mi licencia"}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 10px rgba(66, 98, 22, 0.38)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(66, 98, 22, 0.28)';
+                    }}
+                    title={t('sidebar.manage_license') || "Ampliar mi licencia"}
                   >
-                    <Crown size={11} style={{ flexShrink: 0 }} />
+                    <Crown size={13} color="#fde047" style={{ flexShrink: 0 }} />
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {t('sidebar.manage_license') || "Gestionar mi licencia"}
+                      {t('sidebar.manage_license') || "Ampliar mi licencia"}
                     </span>
                   </Link>
                 )}
