@@ -6384,13 +6384,8 @@ export default function ClientDashboard() {
       )}
       {/* Mobile Top Header */}
       <div className="mobile-header" style={{ padding: '0.75rem 1.25rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ position: 'relative', width: '28px', height: '28px' }}>
-            <img src="/images/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          </div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)', margin: 0 }}>
-            QuickTrace
-          </h1>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <img src="/images/logo-horizontal.jpg" alt="QuickTrace" style={{ height: '38px', width: 'auto', maxWidth: '175px', objectFit: 'contain', display: 'block' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {profile?.hasPosMode && (
@@ -6434,14 +6429,12 @@ export default function ClientDashboard() {
           display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh',
           overflow: 'hidden', whiteSpace: 'nowrap'
         }} className={`sidebar-responsive ${isSidebarOpen ? 'open' : ''}`}>
-          <div className="desktop-logo" style={{ padding: '2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ position: 'relative', width: '32px', height: '32px' }}>
-              <Image src="/images/logo.jpg"
- alt="Logo" fill style={{ objectFit: 'contain' }} />
-            </div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-              QuickTrace
-            </h1>
+          <div className="desktop-logo" style={{ padding: '1.35rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+            <img
+              src="/images/logo-horizontal.jpg"
+              alt="QuickTrace"
+              style={{ height: '52px', width: 'auto', maxWidth: '210px', objectFit: 'contain', display: 'block' }}
+            />
           </div>
 
           <nav style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
@@ -7013,7 +7006,13 @@ export default function ClientDashboard() {
               >
                 <Menu size={20} />
               </button>
-              {!isSidebarOpen && <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--corp-green)' }}>QuickTrace</h2>}
+              {!isSidebarOpen && (
+                <img
+                  src="/images/logo-horizontal.jpg"
+                  alt="QuickTrace"
+                  style={{ height: '38px', width: 'auto', objectFit: 'contain', display: 'block' }}
+                />
+              )}
             </div>
 
             {profile?.hasPosMode && (
