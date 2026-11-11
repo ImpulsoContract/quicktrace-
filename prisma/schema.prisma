@@ -132,6 +132,8 @@ model ClientProfile {
   isSimpleVersion            Boolean           @default(false)
   hasSelectedMode            Boolean           @default(false)
   useLegacyPricing           Boolean           @default(false)
+  demoActivatedAt            DateTime?
+  demoReactivationCount      Int               @default(0)
   productFamilies            ProductFamily[]
 
   holdedApiKey               String?

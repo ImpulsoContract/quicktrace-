@@ -2261,5 +2261,18 @@
     "selected_lot": "Selected lot:",
     "no_lot_selected": "No lot selected",
     "select_this_lot": "Select lot"
+  },
+  "demo_banner": {
+    "days_remaining_msg": "You have {days} days left on your free Demo version.",
+    "day_remaining_msg": "You have 1 day left on your free Demo version.",
+    "days_left_short": "days left",
+    "day_left_short": "day left",
+    "view_plans_btn": "View plans & pricing",
+    "expired_title": "Your Demo trial period has ended",
+    "expired_desc": "Your 20-day free Demo version has ended. You can subscribe to a plan to enjoy QuickTrace without limits or reactivate your Demo for 20 more days.",
+    "reactivate_btn": "Reactivate Demo for 20 more days",
+    "reactivate_confirm_desc": "Do you confirm that you want to reactivate your free Demo version for 20 additional days?",
+    "confirm_reactivate_btn": "Confirm reactivation (20 days)",
+    "reactivated_success": "Your Demo version has been reactivated for 20 more days!"
   }
 }

@@ -73,7 +73,8 @@ export async function GET() {
               stripeCurrentPeriodEnd: null,
               stripeCancelAtPeriodEnd: false,
               hasSelectedMode: false,
-              useLegacyPricing: false
+              useLegacyPricing: false,
+              demoActivatedAt: null
             }
           });
           console.log(`[Profile Live Sync] Suscripción terminada para ${session.user.email}, devuelto a Demo.`);
@@ -116,6 +117,25 @@ export async function GET() {
         console.error("Error comprobando estado en vivo Stripe:", stripeErr);
         // Si hay una caída de red o error de Stripe, permitimos continuar y mostramos el perfil de la BD local antigua por seguridad.
       }
+    }
+
+    if ((!profile.planId || profile.planId === "1" || profile.plan?.name?.toLowerCase().includes("demo")) && profile.hasSelectedMode && !profile.demoActivatedAt) {
+      profile = await prisma.clientProfile.update({
+        where: { id: profile.id },
+        data: { demoActivatedAt: new Date() },
+        include: {
+          plan: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              emailVerified: true,
+              createdAt: true
+            }
+          }
+        }
+      });
     }
 
     const totalElaborations = await prisma.elaboration.count({
@@ -222,6 +242,14 @@ export async function PATCH(request) {
       ? { id: Number(session.user.profileId) }
       : { userId: parseInt(session.user.id) };
 
+    const existingProfile = await prisma.clientProfile.findFirst({
+      where: whereClause,
+      select: { id: true, demoActivatedAt: true, hasSelectedMode: true }
+    });
+
+    const isActivatingMode = Boolean(hasSelectedMode) || isSimpleVersion !== undefined;
+    const shouldSetDemoActivatedAt = isActivatingMode && !existingProfile?.demoActivatedAt;
+
     const updatedProfile = await prisma.clientProfile.update({
       where: whereClause,
       data: {
@@ -242,6 +270,7 @@ export async function PATCH(request) {
         lotFormat: lotFormat !== undefined ? lotFormat : undefined,
         isSimpleVersion: isSimpleVersion !== undefined ? Boolean(isSimpleVersion) : undefined,
         hasSelectedMode: hasSelectedMode !== undefined ? Boolean(hasSelectedMode) : (isSimpleVersion !== undefined ? true : undefined),
+        ...(shouldSetDemoActivatedAt ? { demoActivatedAt: new Date() } : {}),
         hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined,
         hasOilCollection: hasOilCollection !== undefined ? hasOilCollection : undefined,
         hasVegetableDisinfection: hasVegetableDisinfection !== undefined ? hasVegetableDisinfection : undefined,

@@ -564,6 +564,19 @@ export default function ClientDashboard() {
   };
   const [videoModal, setVideoModal] = useState({ isOpen: false, videoId: "" });
   const [selectingOnboardingMode, setSelectingOnboardingMode] = useState(null);
+  const [reactivatingDemo, setReactivatingDemo] = useState(false);
+  const [showReactivateConfirm, setShowReactivateConfirm] = useState(false);
+
+  const isUserOnDemo = Boolean(
+    profile && (!profile.planId || profile.planId === "1" || (profile.plan?.name && profile.plan.name.toLowerCase().includes("demo")))
+  );
+  const demoDurationMs = 20 * 24 * 60 * 60 * 1000;
+  const demoStartMs = profile?.demoActivatedAt ? new Date(profile.demoActivatedAt).getTime() : Date.now();
+  const elapsedDemoMs = Date.now() - demoStartMs;
+  const isDemoExpired = Boolean(
+    isUserOnDemo && profile?.hasSelectedMode && profile?.demoActivatedAt && elapsedDemoMs >= demoDurationMs
+  );
+  const demoDaysRemaining = Math.max(0, Math.ceil((demoDurationMs - elapsedDemoMs) / (24 * 60 * 60 * 1000)));
 
   const handleSelectOnboardingMode = async (isSimple) => {
     setSelectingOnboardingMode(isSimple ? "simple" : "erp");
@@ -575,16 +588,40 @@ export default function ClientDashboard() {
         body: JSON.stringify({ isSimpleVersion: isSimple, hasSelectedMode: true })
       });
       const data = await res.json().catch(() => ({}));
+      const activatedDate = data?.demoActivatedAt || profile?.demoActivatedAt || new Date().toISOString();
       if (res.ok && !data.error) {
-        setProfile(prev => prev ? { ...prev, ...data, isSimpleVersion: isSimple, hasSelectedMode: true } : data);
+        setProfile(prev => prev ? { ...prev, ...data, isSimpleVersion: isSimple, hasSelectedMode: true, demoActivatedAt: activatedDate } : data);
       } else {
-        setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
+        setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true, demoActivatedAt: activatedDate } : prev);
       }
     } catch (err) {
       console.error("Error selecting mode:", err);
-      setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
+      setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true, demoActivatedAt: prev.demoActivatedAt || new Date().toISOString() } : prev);
     } finally {
       setSelectingOnboardingMode(null);
+    }
+  };
+
+  const handleReactivateDemo = async () => {
+    setReactivatingDemo(true);
+    try {
+      const res = await fetch("/api/client/reactivate-demo", {
+        method: "POST",
+        cache: "no-store"
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && !data.error) {
+        setProfile(prev => prev ? { ...prev, ...data } : data);
+        setShowReactivateConfirm(false);
+        alert(t("demo_banner.reactivated_success") || "¡Tu versión Demo se ha reactivado por 20 días más!");
+      } else {
+        alert(data.error || "Error al reactivar la demo");
+      }
+    } catch (err) {
+      console.error("Error reactivating demo:", err);
+      alert(t("alerts.connection_error") || "Error de conexión");
+    } finally {
+      setReactivatingDemo(false);
     }
   };
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -5985,6 +6022,152 @@ export default function ClientDashboard() {
           </div>
         </div>
       )}
+
+      {/* Popup: Demo 20 days expired */}
+      {isDemoExpired && session?.user?.role !== "ADMIN" && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(15, 23, 42, 0.82)",
+            backdropFilter: "blur(6px)",
+            zIndex: 99998,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1.25rem",
+            overflowY: "auto"
+          }}
+        >
+          <div
+            className="glass-card animate-fade-in"
+            style={{
+              width: "100%",
+              maxWidth: "560px",
+              padding: "2.5rem 2.25rem",
+              background: "white",
+              borderRadius: "1.5rem",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+              textAlign: "center"
+            }}
+          >
+            <div style={{
+              width: "68px",
+              height: "68px",
+              borderRadius: "50%",
+              background: "#fef3c7",
+              color: "#d97706",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.25rem auto"
+            }}>
+              <Clock size={34} />
+            </div>
+
+            <h2 style={{ fontSize: "1.55rem", fontWeight: "900", color: "var(--text-main)", marginBottom: "0.75rem" }}>
+              {t("demo_banner.expired_title") || "Tu periodo de prueba Demo ha finalizado"}
+            </h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "1.75rem" }}>
+              {t("demo_banner.expired_desc") || "Han transcurrido los 20 días de tu versión Demo gratuita. Puedes contratar un plan para disfrutar de QuickTrace sin límites o reactivar tu Demo durante 20 días más."}
+            </p>
+
+            {showReactivateConfirm ? (
+              <div style={{
+                background: "#f8fafc",
+                border: "1.5px solid #e2e8f0",
+                borderRadius: "1rem",
+                padding: "1.35rem",
+                marginTop: "0.5rem"
+              }}>
+                <p style={{ fontWeight: "700", color: "var(--text-main)", fontSize: "0.95rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
+                  {t("demo_banner.reactivate_confirm_desc") || "¿Confirmas que deseas reactivar tu versión Demo gratuita por 20 días adicionales?"}
+                </p>
+                <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowReactivateConfirm(false)}
+                    disabled={reactivatingDemo}
+                    className="btn-secondary"
+                    style={{ flex: 1, minWidth: "130px", padding: "0.85rem 1rem", borderRadius: "0.75rem", fontWeight: "700" }}
+                  >
+                    {t("common.cancel") || "Cancelar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleReactivateDemo}
+                    disabled={reactivatingDemo}
+                    className="btn-primary"
+                    style={{
+                      flex: 1,
+                      minWidth: "180px",
+                      padding: "0.85rem 1.25rem",
+                      borderRadius: "0.75rem",
+                      fontWeight: "800",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem"
+                    }}
+                  >
+                    {reactivatingDemo ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                    <span>{t("demo_banner.confirm_reactivate_btn") || "Confirmar reactivación (20 días)"}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowReactivateConfirm(true)}
+                  className="btn-primary"
+                  style={{
+                    width: "100%",
+                    padding: "1rem 1.5rem",
+                    fontSize: "1rem",
+                    fontWeight: "800",
+                    borderRadius: "0.75rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.6rem"
+                  }}
+                >
+                  <Clock size={18} />
+                  <span>{t("demo_banner.reactivate_btn") || "Reactivar Demo por 20 días más"}</span>
+                </button>
+
+                {session?.user?.role !== "WORKER" && (
+                  <Link
+                    href="/dashboard/plans"
+                    style={{
+                      width: "100%",
+                      padding: "0.95rem 1.5rem",
+                      fontSize: "0.95rem",
+                      fontWeight: "800",
+                      borderRadius: "0.75rem",
+                      border: "2px solid var(--corp-green)",
+                      background: "white",
+                      color: "var(--corp-green)",
+                      textDecoration: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem"
+                    }}
+                  >
+                    <Crown size={18} />
+                    <span>{t("demo_banner.view_plans_btn") || "Ver planes y precios"}</span>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Mobile Top Header */}
       <div className="mobile-header" style={{ padding: '0.75rem 1.25rem', background: 'white', borderBottom: '1px solid var(--border)', display: 'none', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -6242,6 +6425,21 @@ export default function ClientDashboard() {
                 <div style={{ fontSize: '0.7rem', color: 'var(--corp-green)', fontWeight: '800', lineHeight: '1.2' }}>
                   {t('sidebar.plan')} {profile?.plan?.name || '...'}
                 </div>
+                {isUserOnDemo && profile?.hasSelectedMode && !isDemoExpired && (
+                  <div style={{
+                    fontSize: '0.68rem',
+                    fontWeight: '800',
+                    color: demoDaysRemaining <= 5 ? '#b45309' : '#0369a1',
+                    background: demoDaysRemaining <= 5 ? '#fef3c7' : '#e0f2fe',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '0.35rem',
+                    display: 'inline-block',
+                    marginTop: '0.15rem',
+                    lineHeight: '1.2'
+                  }}>
+                    ⏱ {demoDaysRemaining} {demoDaysRemaining === 1 ? (t('demo_banner.day_left_short') || "día restante") : (t('demo_banner.days_left_short') || "días restantes")}
+                  </div>
+                )}
                 {session?.user?.role !== "WORKER" && (
                   <Link 
                     href="/dashboard/plans" 
@@ -6387,6 +6585,67 @@ export default function ClientDashboard() {
               </button>
             )}
           </div>
+
+          {/* Always-visible Demo active days remaining banner */}
+          {isUserOnDemo && profile?.hasSelectedMode && !isDemoExpired && session?.user?.role !== "ADMIN" && (
+            <div style={{
+              background: demoDaysRemaining <= 5
+                ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)'
+                : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              border: demoDaysRemaining <= 5 ? '1.5px solid #fcd34d' : '1.5px solid #bae6fd',
+              borderLeft: demoDaysRemaining <= 5 ? '5px solid #f59e0b' : '5px solid #0284c7',
+              borderRadius: '0.85rem',
+              padding: '0.95rem 1.35rem',
+              marginBottom: '1.5rem',
+              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  background: demoDaysRemaining <= 5 ? '#fef3c7' : '#e0f2fe',
+                  color: demoDaysRemaining <= 5 ? '#d97706' : '#0284c7',
+                  padding: '0.45rem',
+                  borderRadius: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Clock size={20} />
+                </div>
+                <div style={{ fontWeight: '800', color: demoDaysRemaining <= 5 ? '#92400e' : '#0c4a6e', fontSize: '0.92rem' }}>
+                  {demoDaysRemaining === 1
+                    ? (t('demo_banner.day_remaining_msg') || "Te queda 1 día de tu versión Demo gratuita.")
+                    : (t('demo_banner.days_remaining_msg', { days: demoDaysRemaining }) || `Te quedan ${demoDaysRemaining} días de tu versión Demo gratuita.`)}
+                </div>
+              </div>
+              {session?.user?.role !== "WORKER" && (
+                <Link
+                  href="/dashboard/plans"
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.6rem',
+                    background: 'var(--corp-green)',
+                    color: 'white',
+                    fontWeight: '800',
+                    fontSize: '0.82rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Crown size={15} />
+                  <span>{t('demo_banner.view_plans_btn') || "Ver planes y precios"}</span>
+                </Link>
+              )}
+            </div>
+          )}
 
           {/* Always-visible email verification banner (within 5 days) */}
           {!isEmailVerified && !isBlocked5Days && (
