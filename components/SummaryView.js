@@ -284,7 +284,7 @@ export default function SummaryView() {
             letterSpacing: "-0.03em"
           }}
         >
-          {t("summary.title") || "Resumen"}
+          {t("summary.title") || "Todo listo para un buen día"}
         </h2>
         <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", margin: "0.25rem 0 0 0" }}>
           {t("summary.subtitle") || "Vista general de las elaboraciones, recetas y controles registrados en tu negocio."}

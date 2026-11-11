@@ -399,7 +399,7 @@ const DASHBOARD_TABS = [
 export default function ClientDashboard() {
   const { t, locale } = useI18n();
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState("trazabilidad");
+  const [activeTab, setActiveTab] = useState("resumen");
   const [wasteCollections, setWasteCollections] = useState([]);
   const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
   const [wasteForm, setWasteForm] = useState({ date: new Date().toISOString().slice(0, 10), personName: "", kilos: "", wasteType: "RSU", commercialDocNumber: "", observations: "" });
@@ -1009,7 +1009,7 @@ export default function ClientDashboard() {
 
     const handlePopState = (event) => {
       const params = new URLSearchParams(window.location.search);
-      const tabFromUrl = params.get("tab") || (event.state && event.state.tab) || "trazabilidad";
+      const tabFromUrl = params.get("tab") || (event.state && event.state.tab) || "resumen";
       if (DASHBOARD_TABS.includes(tabFromUrl)) {
         setActiveTab(tabFromUrl);
         setSelectedRecipe(null);
@@ -1030,7 +1030,7 @@ export default function ClientDashboard() {
 
     if (currentTabInUrl !== activeTab) {
       url.searchParams.set("tab", activeTab);
-      if (!currentTabInUrl && activeTab === "trazabilidad") {
+      if (!currentTabInUrl && activeTab === "resumen") {
         window.history.replaceState({ tab: activeTab }, "", url.pathname + url.search);
       } else {
         window.history.pushState({ tab: activeTab }, "", url.pathname + url.search);
