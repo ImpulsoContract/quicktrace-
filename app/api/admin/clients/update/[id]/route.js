@@ -50,13 +50,23 @@ export async function PATCH(req, { params }) {
       if (city !== undefined) profileData.city = city;
       if (province !== undefined) profileData.province = province;
       if (country !== undefined) profileData.country = country;
-      if (planId !== undefined) profileData.planId = planId || null;
+      if (planId !== undefined) {
+        profileData.planId = planId || null;
+        if (planId && planId !== "1") {
+          profileData.hasSelectedMode = true;
+        } else if (planId === "1") {
+          profileData.hasSelectedMode = false;
+        }
+      }
       if (stripeSubscriptionId !== undefined) profileData.stripeSubscriptionId = stripeSubscriptionId || null;
       if (stripeCustomerId !== undefined) profileData.stripeCustomerId = stripeCustomerId || null;
       if (stripeCurrentPeriodEnd !== undefined) profileData.stripeCurrentPeriodEnd = stripeCurrentPeriodEnd || null;
       if (hasIaGoods !== undefined) profileData.hasIaGoods = Boolean(hasIaGoods);
       if (hasPosMode !== undefined) profileData.hasPosMode = Boolean(hasPosMode);
-      if (isSimpleVersion !== undefined) profileData.isSimpleVersion = Boolean(isSimpleVersion);
+      if (isSimpleVersion !== undefined) {
+        profileData.isSimpleVersion = Boolean(isSimpleVersion);
+        profileData.hasSelectedMode = true;
+      }
 
       if (Object.keys(profileData).length > 0) {
         await tx.clientProfile.update({

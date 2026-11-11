@@ -4,6 +4,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   const session = await getServerSession(authOptions);
 
@@ -136,15 +139,24 @@ export async function GET() {
     const userEmail = profile.user?.email || "";
     const userCreatedAt = profile.user?.createdAt || null;
 
-    return NextResponse.json({ 
-      ...safeProfile, 
-      hasApiKey: !!profile.apiKey, 
-      totalElaborations, 
-      billingCycle,
-      emailVerified,
-      userEmail,
-      userCreatedAt
-    });
+    return NextResponse.json(
+      { 
+        ...safeProfile, 
+        hasApiKey: !!profile.apiKey, 
+        totalElaborations, 
+        billingCycle,
+        emailVerified,
+        userEmail,
+        userCreatedAt
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        }
+      }
+    );
   } catch (error) {
     console.error("Error fetching client profile:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -205,8 +217,12 @@ export async function PATCH(request) {
       stelorderSeriesName
     } = body;
 
+    const whereClause = session.user.profileId
+      ? { id: Number(session.user.profileId) }
+      : { userId: parseInt(session.user.id) };
+
     const updatedProfile = await prisma.clientProfile.update({
-      where: { userId: parseInt(session.user.id) },
+      where: whereClause,
       data: {
         personName: personName !== undefined ? personName : undefined,
         razonSocial: razonSocial !== undefined ? razonSocial : undefined,
@@ -224,7 +240,7 @@ export async function PATCH(request) {
         isPreparationTimeMandatory: isPreparationTimeMandatory !== undefined ? isPreparationTimeMandatory : undefined,
         lotFormat: lotFormat !== undefined ? lotFormat : undefined,
         isSimpleVersion: isSimpleVersion !== undefined ? Boolean(isSimpleVersion) : undefined,
-        hasSelectedMode: hasSelectedMode !== undefined ? Boolean(hasSelectedMode) : undefined,
+        hasSelectedMode: hasSelectedMode !== undefined ? Boolean(hasSelectedMode) : (isSimpleVersion !== undefined ? true : undefined),
         hasCuttingTraceability: hasCuttingTraceability !== undefined ? hasCuttingTraceability : undefined,
         hasOilCollection: hasOilCollection !== undefined ? hasOilCollection : undefined,
         hasVegetableDisinfection: hasVegetableDisinfection !== undefined ? hasVegetableDisinfection : undefined,
@@ -269,13 +285,20 @@ export async function PATCH(request) {
       where: { recipe: { clientProfileId: updatedProfile.id } }
     });
 
-    return NextResponse.json({ 
-      ...updatedProfile, 
-      totalElaborations,
-      emailVerified: updatedProfile.user?.emailVerified ?? true,
-      userEmail: updatedProfile.user?.email || "",
-      userCreatedAt: updatedProfile.user?.createdAt || null
-    });
+    return NextResponse.json(
+      { 
+        ...updatedProfile, 
+        totalElaborations,
+        emailVerified: updatedProfile.user?.emailVerified ?? true,
+        userEmail: updatedProfile.user?.email || "",
+        userCreatedAt: updatedProfile.user?.createdAt || null
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate"
+        }
+      }
+    );
   } catch (error) {
     console.error("Error updating client profile:", error);
     return NextResponse.json({ error: "Error al actualizar el perfil" }, { status: 500 });

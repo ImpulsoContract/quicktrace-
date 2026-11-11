@@ -571,13 +571,18 @@ export default function ClientDashboard() {
       const res = await fetch("/api/client/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        cache: "no-store",
         body: JSON.stringify({ isSimpleVersion: isSimple, hasSelectedMode: true })
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && !data.error) {
+        setProfile(prev => prev ? { ...prev, ...data, isSimpleVersion: isSimple, hasSelectedMode: true } : data);
+      } else {
         setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
       }
     } catch (err) {
       console.error("Error selecting mode:", err);
+      setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
     } finally {
       setSelectingOnboardingMode(null);
     }
@@ -1055,7 +1060,7 @@ export default function ClientDashboard() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("/api/client/profile");
+      const res = await fetch(`/api/client/profile?t=${Date.now()}`, { cache: "no-store" });
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
@@ -5896,12 +5901,9 @@ export default function ClientDashboard() {
               textAlign: "center"
             }}
           >
-            <h2 style={{ fontSize: "1.6rem", fontWeight: "900", color: "var(--text-main)", marginBottom: "0.5rem" }}>
-              {t("auth.register.onboarding_title")}
+            <h2 style={{ fontSize: "1.45rem", fontWeight: "900", color: "var(--corp-green)", marginBottom: "1.25rem" }}>
+              {t("auth.onboarding_title") || "¡Bienvenido a QuickTrace! Elige cómo quieres empezar"}
             </h2>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "1.5rem", lineHeight: 1.5 }}>
-              {t("auth.register.onboarding_subtitle")}
-            </p>
 
             <div style={{
               position: "relative",
@@ -5930,7 +5932,7 @@ export default function ClientDashboard() {
               />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
               <button
                 type="button"
                 onClick={() => handleSelectOnboardingMode(false)}
@@ -5938,9 +5940,10 @@ export default function ClientDashboard() {
                 className="btn-primary"
                 style={{
                   width: "100%",
-                  padding: "1rem 1.25rem",
-                  fontSize: "0.98rem",
-                  fontWeight: "700",
+                  padding: "1rem 1.5rem",
+                  fontSize: "1rem",
+                  fontWeight: "800",
+                  borderRadius: "0.75rem",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -5950,7 +5953,7 @@ export default function ClientDashboard() {
                 }}
               >
                 {selectingOnboardingMode === "erp" ? <Loader2 className="animate-spin" size={20} /> : null}
-                <span>{t("auth.register.btn_erp_full")}</span>
+                <span>{t("auth.btn_erp_full") || "Quiero una solución ERP completa"}</span>
               </button>
 
               <button
@@ -5959,16 +5962,16 @@ export default function ClientDashboard() {
                 disabled={selectingOnboardingMode !== null}
                 style={{
                   width: "100%",
-                  padding: "1rem 1.25rem",
-                  fontSize: "0.98rem",
-                  fontWeight: "700",
+                  padding: "1rem 1.5rem",
+                  fontSize: "1rem",
+                  fontWeight: "800",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "0.6rem",
                   borderRadius: "0.75rem",
                   border: "2px solid var(--corp-green)",
-                  background: "rgba(66, 98, 22, 0.08)",
+                  background: "white",
                   color: "var(--corp-green)",
                   cursor: selectingOnboardingMode !== null ? "not-allowed" : "pointer",
                   opacity: selectingOnboardingMode === "erp" ? 0.6 : 1,
@@ -5976,7 +5979,7 @@ export default function ClientDashboard() {
                 }}
               >
                 {selectingOnboardingMode === "simple" ? <Loader2 className="animate-spin" size={20} /> : null}
-                <span>{t("auth.register.btn_simple_version")}</span>
+                <span>{t("auth.btn_simple_version") || "Quiero la versión sencilla para llevar mis registros"}</span>
               </button>
             </div>
           </div>

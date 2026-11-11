@@ -169,14 +169,36 @@ function RegisterForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error");
 
-      // Iniciar sesión directamente para elegir versión y entrar al dashboard
+      // Disparar evento de conversión de Google Ads antes de redirigir
+      if (typeof window !== 'undefined' && window.gtag) {
+        const adsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || 'AW-18129247983';
+        const label = process.env.NEXT_PUBLIC_GOOGLE_ADS_REGISTRATION_LABEL;
+        if (adsId && label) {
+          window.gtag('set', 'user_data', {
+            'email': formData.email,
+            'phone_number': formData.phone
+          });
+          window.gtag('event', 'conversion', {
+            'send_to': `${adsId}/${label}`,
+            'value': 1.0,
+            'currency': 'EUR'
+          });
+        }
+      }
+
+      // Iniciar sesión directamente para entrar al dashboard (donde verá el vídeo de bienvenida y elegirá modo)
       const signInRes = await signIn("credentials", {
         redirect: false,
         email: formData.email.toLowerCase().trim(),
         password: formData.password
       });
 
-      setSignedInOk(!!signInRes?.ok);
+      if (signInRes?.ok) {
+        router.push("/dashboard");
+        return;
+      }
+
+      setSignedInOk(false);
       setSuccess(true);
       setLoading(false);
     } catch (err) {

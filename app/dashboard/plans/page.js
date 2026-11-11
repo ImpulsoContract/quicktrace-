@@ -27,7 +27,7 @@ export default function PlansPage() {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch("/api/plans");
+      const res = await fetch(`/api/plans?t=${Date.now()}`, { cache: "no-store" });
       const data = await res.json();
       if (!data.error) setPlans(data);
     } catch (e) {
@@ -37,7 +37,7 @@ export default function PlansPage() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("/api/client/profile");
+      const res = await fetch(`/api/client/profile?t=${Date.now()}`, { cache: "no-store" });
       const data = await res.json();
       if (!data.error) setProfile(data);
     } catch (e) {
@@ -57,15 +57,19 @@ export default function PlansPage() {
       const res = await fetch("/api/client/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        cache: "no-store",
         body: JSON.stringify({ isSimpleVersion: isSimple, hasSelectedMode: true })
       });
       if (res.ok) {
         const updated = await res.json();
-        setProfile(updated);
+        setProfile({ ...updated, isSimpleVersion: isSimple, hasSelectedMode: true });
         await fetchPlans();
+      } else {
+        setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
       }
     } catch (e) {
       console.error("Error selecting mode:", e);
+      setProfile(prev => prev ? { ...prev, isSimpleVersion: isSimple, hasSelectedMode: true } : prev);
     } finally {
       setSelectingMode(null);
     }
