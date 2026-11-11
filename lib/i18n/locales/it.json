@@ -353,7 +353,17 @@
     "stelorder_series_default": "Predefinita di STEL Order",
     "stelorder_series_help": "Scegli la serie con cui verranno emesse le fatture da QuickTrace.",
     "stelorder_disconnect_btn": "Disconnetti STEL Order",
-    "stelorder_disconnect_confirm": "Sei sicuro di voler disconnettere l'integrazione con STEL Order?"
+    "stelorder_disconnect_confirm": "Sei sicuro di voler disconnettere l'integrazione con STEL Order?",
+    "delivery_note_numbering_title": "Numerazione documenti di trasporto (DDT)",
+    "delivery_note_numbering_desc": "Personalizza il prefisso e il numero progressivo del prossimo documento di trasporto.",
+    "delivery_note_numbering_help": "Configura il prefisso e il numero del prossimo documento di trasporto. Ogni volta che confermi una nuova vendita, il numero verrà assegnato automaticamente e incrementato in modo progressivo.",
+    "delivery_note_prefix_label": "Prefisso del documento",
+    "delivery_note_prefix_help": "Predefinito ALB-. Puoi modificarlo (es. ALB-2026-, DDT-, ecc.).",
+    "delivery_note_next_number_label": "Numero del prossimo documento",
+    "delivery_note_next_number_help": "Il prossimo documento avrà questo numero e i successivi continueranno in modo progressivo.",
+    "delivery_note_preview_label": "Anteprima del prossimo documento",
+    "delivery_note_following_label": "Successivi:",
+    "delivery_note_reset_prefix": "Ripristina prefisso (ALB-)"
   },
   "dashboard": {
     "welcome": "Ciao",

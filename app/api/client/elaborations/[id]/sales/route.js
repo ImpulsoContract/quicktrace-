@@ -195,19 +195,37 @@ export async function POST(req, { params }) {
       }
     }
 
-    const newSale = await prisma.elaborationSale.create({
-      data: {
-        elaborationId,
-        customerId: validCustomerId,
-        quantity: parsedQuantity != null ? Math.round(parsedQuantity * 1000) / 1000 : null,
-        percentage: Math.round(parsedPercentage * 100) / 100,
-        price: parsedPrice,
-        date: date ? new Date(date) : new Date(),
-        clientProfileId: profileId
-      },
-      include: {
-        customer: true
-      }
+    const targetProfileId = elaboration.recipe.clientProfileId || profileId;
+
+    const newSale = await prisma.$transaction(async (tx) => {
+      const profileForNumbering = await tx.clientProfile.findUnique({
+        where: { id: targetProfileId },
+        select: { deliveryNotePrefix: true, nextDeliveryNoteNumber: true }
+      });
+      const prefix = profileForNumbering?.deliveryNotePrefix ?? "ALB-";
+      const nextNum = profileForNumbering?.nextDeliveryNoteNumber ?? 1;
+      const assignedDeliveryNoteNumber = `${prefix}${nextNum}`;
+
+      await tx.clientProfile.update({
+        where: { id: targetProfileId },
+        data: { nextDeliveryNoteNumber: nextNum + 1 }
+      });
+
+      return tx.elaborationSale.create({
+        data: {
+          elaborationId,
+          customerId: validCustomerId,
+          quantity: parsedQuantity != null ? Math.round(parsedQuantity * 1000) / 1000 : null,
+          percentage: Math.round(parsedPercentage * 100) / 100,
+          price: parsedPrice,
+          date: date ? new Date(date) : new Date(),
+          deliveryNoteNumber: assignedDeliveryNoteNumber,
+          clientProfileId: targetProfileId
+        },
+        include: {
+          customer: true
+        }
+      });
     });
 
     return NextResponse.json({ success: true, data: newSale });

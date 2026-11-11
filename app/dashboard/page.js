@@ -2808,7 +2808,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!data.error) {
         setProfile(data);
-        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.hasWaterSection !== undefined || updates.hasWasteSection !== undefined || updates.blockOutOfStockLots !== undefined || updates.blockOutOfStockGoodsSales !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.stelorderApiKey !== undefined || updates.invoicingProvider !== undefined) {
+        if (updates.currency || updates.lotFormat !== undefined || updates.laborCostHourlyRate !== undefined || updates.isPreparationTimeMandatory !== undefined || updates.merchantTypes || updates.hasCuttingTraceability !== undefined || updates.hasOilCollection !== undefined || updates.hasVegetableDisinfection !== undefined || updates.hasWaterSection !== undefined || updates.hasWasteSection !== undefined || updates.blockOutOfStockLots !== undefined || updates.blockOutOfStockGoodsSales !== undefined || updates.goodsLowStockAlertEnabled !== undefined || updates.goodsLowStockThreshold !== undefined || updates.goodsLowStockInApp !== undefined || updates.goodsLowStockEmail !== undefined || updates.holdedApiKey !== undefined || updates.isbueApiKey !== undefined || updates.stelorderApiKey !== undefined || updates.invoicingProvider !== undefined || updates.deliveryNotePrefix !== undefined || updates.nextDeliveryNoteNumber !== undefined) {
           alert(t('business_config.save_success'));
         }
         return true;
@@ -15521,6 +15521,14 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [goodsLowStockInApp, setGoodsLowStockInApp] = useState(profile?.goodsLowStockInApp ?? true);
   const [goodsLowStockEmail, setGoodsLowStockEmail] = useState(profile?.goodsLowStockEmail || false);
 
+  // Delivery note numbering state
+  const [deliveryNotePrefix, setDeliveryNotePrefix] = useState(
+    profile?.deliveryNotePrefix !== undefined && profile?.deliveryNotePrefix !== null ? profile.deliveryNotePrefix : "ALB-"
+  );
+  const [nextDeliveryNoteNumber, setNextDeliveryNoteNumber] = useState(
+    profile?.nextDeliveryNoteNumber !== undefined && profile?.nextDeliveryNoteNumber !== null ? profile.nextDeliveryNoteNumber : 1
+  );
+
   // Invoicing program & provider state
   const [invoicingTab, setInvoicingTab] = useState(profile?.invoicingProvider === "STELORDER" ? "stelorder" : (profile?.invoicingProvider === "ISBUE" ? "isbue" : "holded"));
   const [invoicingProvider, setInvoicingProvider] = useState(profile?.invoicingProvider || "HOLDED");
@@ -15583,6 +15591,8 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setGoodsLowStockThreshold(profile.goodsLowStockThreshold ?? 2);
       setGoodsLowStockInApp(profile.goodsLowStockInApp ?? true);
       setGoodsLowStockEmail(profile.goodsLowStockEmail || false);
+      setDeliveryNotePrefix(profile.deliveryNotePrefix !== undefined && profile.deliveryNotePrefix !== null ? profile.deliveryNotePrefix : "ALB-");
+      setNextDeliveryNoteNumber(profile.nextDeliveryNoteNumber !== undefined && profile.nextDeliveryNoteNumber !== null ? profile.nextDeliveryNoteNumber : 1);
       setInvoicingProvider(profile.invoicingProvider || "HOLDED");
       setInvoicingTab(profile.invoicingProvider === "STELORDER" ? "stelorder" : (profile.invoicingProvider === "ISBUE" ? "isbue" : "holded"));
       setHoldedApiKey(profile.holdedApiKey || "");
@@ -15606,6 +15616,12 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       setStelorderTestError("");
     }
   };
+
+  useEffect(() => {
+    if (onProfileRefresh) {
+      onProfileRefresh();
+    }
+  }, []);
 
   useEffect(() => {
     resetToProfile();
@@ -15853,7 +15869,9 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       stelorderApiKey: stelorderApiKey.trim() || null,
       stelorderTax: parseFloat(stelorderTax) || 0,
       stelorderSeriesId: stelorderSeriesId || null,
-      stelorderSeriesName: stelorderSeriesName || null
+      stelorderSeriesName: stelorderSeriesName || null,
+      deliveryNotePrefix: deliveryNotePrefix !== undefined ? String(deliveryNotePrefix) : "ALB-",
+      nextDeliveryNoteNumber: Math.max(1, parseInt(nextDeliveryNoteNumber, 10) || 1)
     });
     if (success && options.closeModal) {
       setActiveModal(null);
@@ -16036,6 +16054,17 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
         bg: (invoicingProvider === "STELORDER" ? stelorderVerified : (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified)) ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
         color: (invoicingProvider === "STELORDER" ? stelorderVerified : (invoicingProvider === "ISBUE" ? isbueVerified : holdedVerified)) ? '#16a34a' : '#64748b'
       }
+    },
+    {
+      id: "delivery_note_numbering",
+      title: t('business_config.delivery_note_numbering_title') || "Numeración de albaranes",
+      description: t('business_config.delivery_note_numbering_desc') || "Personaliza el prefijo y el número correlativo del próximo albarán de entrega.",
+      icon: <Truck size={24} />,
+      badge: {
+        text: `${deliveryNotePrefix !== undefined && deliveryNotePrefix !== null ? deliveryNotePrefix : "ALB-"}${Math.max(1, parseInt(nextDeliveryNoteNumber, 10) || 1)}`,
+        bg: 'rgba(66, 98, 22, 0.08)',
+        color: 'var(--corp-green)'
+      }
     }
   ];
 
@@ -16080,6 +16109,11 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
         return {
           title: t('business_config.invoicing_programs_title') || "Programas de facturación",
           icon: <FileText size={22} />
+        };
+      case "delivery_note_numbering":
+        return {
+          title: t('business_config.delivery_note_numbering_title') || "Numeración de albaranes",
+          icon: <Truck size={22} />
         };
       default:
         return null;
@@ -17489,6 +17523,110 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       );
     }
 
+    if (activeModal === "delivery_note_numbering") {
+      const parsedNextNum = Math.max(1, parseInt(nextDeliveryNoteNumber, 10) || 1);
+      const previewPrefix = deliveryNotePrefix !== undefined && deliveryNotePrefix !== null ? deliveryNotePrefix : "ALB-";
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', margin: 0, lineHeight: '1.5' }}>
+            {t('business_config.delivery_note_numbering_help') || "Configura el prefijo y el número del próximo albarán de entrega. Cada vez que confirmes una nueva venta, el número se asignará automáticamente y aumentará de forma correlativa."}
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1.25rem',
+            background: '#f8fafc',
+            padding: '1.25rem',
+            borderRadius: '0.85rem',
+            border: '1px solid var(--border)'
+          }}>
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                {t('business_config.delivery_note_prefix_label') || "Prefijo del albarán"}
+              </label>
+              <input
+                type="text"
+                className="input-field"
+                style={{ background: 'white' }}
+                placeholder="ALB-"
+                value={deliveryNotePrefix}
+                onChange={(e) => setDeliveryNotePrefix(e.target.value)}
+              />
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                {t('business_config.delivery_note_prefix_help') || "Por defecto es ALB-. Puedes cambiarlo (ej. ALB-2026-, A-, etc.)."}
+              </span>
+            </div>
+
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '700' }}>
+                {t('business_config.delivery_note_next_number_label') || "Número del próximo albarán"}
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                className="input-field"
+                style={{ background: 'white' }}
+                placeholder="1"
+                value={nextDeliveryNoteNumber}
+                onChange={(e) => setNextDeliveryNoteNumber(e.target.value)}
+              />
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                {t('business_config.delivery_note_next_number_help') || "El siguiente albarán tendrá este número y los posteriores seguirán correlativamente."}
+              </span>
+            </div>
+          </div>
+
+          {/* Preview Box */}
+          <div style={{
+            background: 'rgba(66, 98, 22, 0.05)',
+            border: '1px solid rgba(66, 98, 22, 0.2)',
+            borderRadius: '0.85rem',
+            padding: '1.15rem 1.35rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>
+                {t('business_config.delivery_note_preview_label') || "Vista previa del próximo albarán"}
+              </div>
+              <div style={{ fontSize: '1.35rem', fontWeight: '900', color: 'var(--corp-green)', letterSpacing: '-0.01em' }}>
+                {previewPrefix}{parsedNextNum}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                {t('business_config.delivery_note_following_label') || "Siguientes:"}{' '}
+                <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                  {previewPrefix}{parsedNextNum + 1}, {previewPrefix}{parsedNextNum + 2}...
+                </span>
+              </div>
+            </div>
+
+            {deliveryNotePrefix !== "ALB-" && (
+              <button
+                type="button"
+                onClick={() => setDeliveryNotePrefix("ALB-")}
+                className="btn-secondary"
+                style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+              >
+                {t('business_config.delivery_note_reset_prefix') || "Restaurar prefijo (ALB-)"}
+              </button>
+            )}
+          </div>
+
+          <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b82f6', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+              <AlertCircle size={16} /> {t('business_config.save_reminder')}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -17510,7 +17648,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
         gap: '1.25rem'
       }}>
         {(profile?.isSimpleVersion 
-          ? blocks.filter(b => !["currency", "labor_cost", "out_of_stock_lots", "goods_low_stock", "invoicing_programs"].includes(b.id))
+          ? blocks.filter(b => !["currency", "labor_cost", "out_of_stock_lots", "goods_low_stock", "invoicing_programs", "delivery_note_numbering"].includes(b.id))
           : blocks
         ).map(block => (
           <button

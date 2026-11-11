@@ -353,7 +353,17 @@
     "stelorder_series_default": "STEL Order default",
     "stelorder_series_help": "Choose the numbering series for invoices issued from QuickTrace.",
     "stelorder_disconnect_btn": "Disconnect STEL Order",
-    "stelorder_disconnect_confirm": "Are you sure you want to disconnect the STEL Order integration?"
+    "stelorder_disconnect_confirm": "Are you sure you want to disconnect the STEL Order integration?",
+    "delivery_note_numbering_title": "Delivery note numbering",
+    "delivery_note_numbering_desc": "Customize the prefix and sequential number for the next delivery note.",
+    "delivery_note_numbering_help": "Configure the prefix and the number of the next delivery note. Every time you confirm a new sale, the number will be assigned automatically and incremented sequentially.",
+    "delivery_note_prefix_label": "Delivery note prefix",
+    "delivery_note_prefix_help": "Default is ALB-. You can change it (e.g. ALB-2026-, DN-, etc.).",
+    "delivery_note_next_number_label": "Next delivery note number",
+    "delivery_note_next_number_help": "The next delivery note will use this number and subsequent ones will continue sequentially.",
+    "delivery_note_preview_label": "Preview of next delivery note",
+    "delivery_note_following_label": "Following:",
+    "delivery_note_reset_prefix": "Restore default prefix (ALB-)"
   },
   "dashboard": {
     "welcome": "Hello",

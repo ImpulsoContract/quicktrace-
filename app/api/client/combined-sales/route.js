@@ -307,6 +307,21 @@ export async function POST(req) {
 
     // Execute in transaction
     const result = await prisma.$transaction(async (tx) => {
+      let assignedDeliveryNoteNumber = null;
+      if (!isDraftSale && profileId) {
+        const profileForNumbering = await tx.clientProfile.findUnique({
+          where: { id: profileId },
+          select: { deliveryNotePrefix: true, nextDeliveryNoteNumber: true }
+        });
+        const prefix = profileForNumbering?.deliveryNotePrefix ?? "ALB-";
+        const nextNum = profileForNumbering?.nextDeliveryNoteNumber ?? 1;
+        assignedDeliveryNoteNumber = `${prefix}${nextNum}`;
+        await tx.clientProfile.update({
+          where: { id: profileId },
+          data: { nextDeliveryNoteNumber: nextNum + 1 }
+        });
+      }
+
       const combinedSale = await tx.combinedSale.create({
         data: {
           clientProfileId: profileId,
@@ -316,7 +331,8 @@ export async function POST(req) {
           date: saleDate,
           totalPrice: Math.round(totalPrice * 100) / 100,
           notes: notes ? notes.trim() : null,
-          isDraft: isDraftSale
+          isDraft: isDraftSale,
+          deliveryNoteNumber: assignedDeliveryNoteNumber
         }
       });
 
@@ -332,6 +348,7 @@ export async function POST(req) {
             price: item.price,
             date: saleDate,
             isDraft: isDraftSale,
+            deliveryNoteNumber: assignedDeliveryNoteNumber,
             clientProfileId: profileId
           }
         });

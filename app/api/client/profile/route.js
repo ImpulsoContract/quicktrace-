@@ -237,7 +237,9 @@ export async function PATCH(request) {
       stelorderApiKey,
       stelorderTax,
       stelorderSeriesId,
-      stelorderSeriesName
+      stelorderSeriesName,
+      deliveryNotePrefix,
+      nextDeliveryNoteNumber
     } = body;
 
     const whereClause = session.user.profileId
@@ -298,7 +300,9 @@ export async function PATCH(request) {
         stelorderApiKey: stelorderApiKey !== undefined ? stelorderApiKey : undefined,
         stelorderTax: stelorderTax !== undefined ? (stelorderTax === null ? null : parseFloat(stelorderTax)) : undefined,
         stelorderSeriesId: stelorderSeriesId !== undefined ? stelorderSeriesId : undefined,
-        stelorderSeriesName: stelorderSeriesName !== undefined ? stelorderSeriesName : undefined
+        stelorderSeriesName: stelorderSeriesName !== undefined ? stelorderSeriesName : undefined,
+        deliveryNotePrefix: deliveryNotePrefix !== undefined ? String(deliveryNotePrefix) : undefined,
+        nextDeliveryNoteNumber: nextDeliveryNoteNumber !== undefined ? Math.max(1, parseInt(nextDeliveryNoteNumber, 10) || 1) : undefined
       },
       include: { 
         plan: true,

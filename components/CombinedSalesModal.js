@@ -795,7 +795,8 @@ export default function CombinedSalesModal({
       const nif = (cs.customer?.nif || "").toLowerCase();
       const notes = (cs.notes || "").toLowerCase();
       const idStr = `#${cs.id}`;
-      if (!custName.includes(term) && !nif.includes(term) && !notes.includes(term) && !idStr.includes(term)) {
+      const albStr = (cs.deliveryNoteNumber || "").toLowerCase();
+      if (!custName.includes(term) && !nif.includes(term) && !notes.includes(term) && !idStr.includes(term) && !albStr.includes(term)) {
         return false;
       }
     }
@@ -1096,7 +1097,7 @@ export default function CombinedSalesModal({
                               fontWeight: '800', 
                               fontSize: '0.85rem' 
                             }}>
-                              #{cs.id}
+                              {cs.deliveryNoteNumber || `#${cs.id}`}
                             </span>
                             {cs.isDraft ? (
                               <span style={{ 

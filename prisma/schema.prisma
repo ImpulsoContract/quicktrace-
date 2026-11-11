@@ -159,6 +159,10 @@ model ClientProfile {
   goodsLowStockThreshold      Float?            @default(2)
   goodsLowStockInApp          Boolean           @default(true)
   goodsLowStockEmail          Boolean           @default(false)
+
+  // Delivery note numbering
+  deliveryNotePrefix          String            @default("ALB-")
+  nextDeliveryNoteNumber      Int               @default(1)
 }
 
 model Customer {
@@ -373,6 +377,7 @@ model ElaborationSale {
   price           Float         // Precio de venta
   date            DateTime      @default(now())
   isDraft         Boolean       @default(false)
+  deliveryNoteNumber String?
 
   invoicingProvider String?
   holdedInvoiceId  String?
@@ -404,6 +409,7 @@ model CombinedSale {
   totalPrice      Float             @default(0)
   notes           String?
   isDraft         Boolean           @default(false)
+  deliveryNoteNumber String?
 
   sellerId        Int?
   seller          Seller?           @relation(fields: [sellerId], references: [id], onDelete: SetNull)

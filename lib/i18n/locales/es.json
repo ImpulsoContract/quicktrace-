@@ -353,7 +353,17 @@
     "stelorder_series_default": "Predeterminada de STEL Order",
     "stelorder_series_help": "Elige la serie con la que se emitirán las facturas desde QuickTrace.",
     "stelorder_disconnect_btn": "Desconectar STEL Order",
-    "stelorder_disconnect_confirm": "¿Estás seguro de que deseas desconectar la integración con STEL Order?"
+    "stelorder_disconnect_confirm": "¿Estás seguro de que deseas desconectar la integración con STEL Order?",
+    "delivery_note_numbering_title": "Numeración de albaranes",
+    "delivery_note_numbering_desc": "Personaliza el prefijo y el número correlativo del próximo albarán de entrega.",
+    "delivery_note_numbering_help": "Configura el prefijo y el número del próximo albarán de entrega. Cada vez que confirmes una nueva venta, el número se asignará automáticamente y aumentará de forma correlativa.",
+    "delivery_note_prefix_label": "Prefijo del albarán",
+    "delivery_note_prefix_help": "Por defecto es ALB-. Puedes cambiarlo (ej. ALB-2026-, A-, etc.).",
+    "delivery_note_next_number_label": "Número del próximo albarán",
+    "delivery_note_next_number_help": "El siguiente albarán tendrá este número y los posteriores seguirán correlativamente.",
+    "delivery_note_preview_label": "Vista previa del próximo albarán",
+    "delivery_note_following_label": "Siguientes:",
+    "delivery_note_reset_prefix": "Restaurar prefijo (ALB-)"
   },
   "dashboard": {
     "welcome": "Hola",

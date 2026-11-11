@@ -353,7 +353,17 @@
     "stelorder_series_default": "Padrão do STEL Order",
     "stelorder_series_help": "Escolha a série com a qual as faturas serão emitidas pelo QuickTrace.",
     "stelorder_disconnect_btn": "Desconectar STEL Order",
-    "stelorder_disconnect_confirm": "Tem certeza de que deseja desconectar a integração com o STEL Order?"
+    "stelorder_disconnect_confirm": "Tem certeza de que deseja desconectar a integração com o STEL Order?",
+    "delivery_note_numbering_title": "Numeração de guias de remessa",
+    "delivery_note_numbering_desc": "Personalize o prefixo e o número sequencial da próxima guia de remessa.",
+    "delivery_note_numbering_help": "Configure o prefixo e o número da próxima guia de remessa. Sempre que confirmar uma nova venda, o número será atribuído automaticamente e incrementado sequencialmente.",
+    "delivery_note_prefix_label": "Prefixo da guia de remessa",
+    "delivery_note_prefix_help": "Por padrão é ALB-. Pode alterá-lo (ex. ALB-2026-, GR-, etc.).",
+    "delivery_note_next_number_label": "Número da próxima guia de remessa",
+    "delivery_note_next_number_help": "A próxima guia de remessa terá este número e as seguintes continuarão sequencialmente.",
+    "delivery_note_preview_label": "Pré-visualização da próxima guia",
+    "delivery_note_following_label": "Seguintes:",
+    "delivery_note_reset_prefix": "Restaurar prefixo (ALB-)"
   },
   "dashboard": {
     "welcome": "Olá",

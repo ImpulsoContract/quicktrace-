@@ -363,7 +363,23 @@ export async function PUT(req, { params }) {
         where: { combinedSaleId: id }
       });
 
-      // 3. Update CombinedSale header
+      // 3. Assign deliveryNoteNumber if confirming a draft that didn't have one yet
+      let finalDeliveryNoteNumber = existingCombinedSale.deliveryNoteNumber || null;
+      if (!isDraftSale && !finalDeliveryNoteNumber && existingCombinedSale.clientProfileId) {
+        const profileForNumbering = await tx.clientProfile.findUnique({
+          where: { id: existingCombinedSale.clientProfileId },
+          select: { deliveryNotePrefix: true, nextDeliveryNoteNumber: true }
+        });
+        const prefix = profileForNumbering?.deliveryNotePrefix ?? "ALB-";
+        const nextNum = profileForNumbering?.nextDeliveryNoteNumber ?? 1;
+        finalDeliveryNoteNumber = `${prefix}${nextNum}`;
+        await tx.clientProfile.update({
+          where: { id: existingCombinedSale.clientProfileId },
+          data: { nextDeliveryNoteNumber: nextNum + 1 }
+        });
+      }
+
+      // 4. Update CombinedSale header
       await tx.combinedSale.update({
         where: { id },
         data: {
@@ -373,11 +389,12 @@ export async function PUT(req, { params }) {
           date: saleDate,
           totalPrice: Math.round(totalPrice * 100) / 100,
           notes: notes ? notes.trim() : null,
-          isDraft: isDraftSale
+          isDraft: isDraftSale,
+          deliveryNoteNumber: finalDeliveryNoteNumber
         }
       });
 
-      // 4. Re-create elaboration sales
+      // 5. Re-create elaboration sales
       for (const item of validatedElabItems) {
         await tx.elaborationSale.create({
           data: {
@@ -389,6 +406,7 @@ export async function PUT(req, { params }) {
             price: item.price,
             date: saleDate,
             isDraft: isDraftSale,
+            deliveryNoteNumber: finalDeliveryNoteNumber,
             clientProfileId: existingCombinedSale.clientProfileId,
             holdedInvoiceId: existingCombinedSale.holdedInvoiceId || null,
             holdedInvoiceNum: existingCombinedSale.holdedInvoiceNum || null,
