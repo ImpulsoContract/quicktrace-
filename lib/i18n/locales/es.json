@@ -1168,7 +1168,12 @@
       "sin_plan_badge": "SIN PLAN",
       "showing_info": "Mostrando {start} - {end} de {total} clientes",
       "simple_version_badge": "Versión sencilla",
-      "legacy_pricing_badge": "Precios antiguos"
+      "legacy_pricing_badge": "Precios antiguos",
+      "col_email_verified": "Email Verif.",
+      "email_verified_yes": "Verificado",
+      "email_verified_no": "No verificado",
+      "col_demo_reactivations": "Reactiv. Demo",
+      "col_last_demo_reactivation": "Últ. Reactivación"
     },
     "actions": {
       "title": "Acciones",

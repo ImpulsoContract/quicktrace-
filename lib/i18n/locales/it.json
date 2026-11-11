@@ -1163,7 +1163,12 @@
       "sin_plan_badge": "SENZA PIANO",
       "showing_info": "Mostrando {start} - {end} di {total} clienti",
       "simple_version_badge": "Versione semplice",
-      "legacy_pricing_badge": "Prezzi vecchi"
+      "legacy_pricing_badge": "Prezzi vecchi",
+      "col_email_verified": "Email Verif.",
+      "email_verified_yes": "Verificato",
+      "email_verified_no": "Non verificato",
+      "col_demo_reactivations": "Riattiv. Demo",
+      "col_last_demo_reactivation": "Ult. Riattivazione"
     },
     "actions": {
       "title": "Azioni",

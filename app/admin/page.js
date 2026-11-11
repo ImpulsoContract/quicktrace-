@@ -104,6 +104,22 @@ export default function AdminDashboard() {
             aValue = new Date(a.lastLogin || 0).getTime();
             bValue = new Date(b.lastLogin || 0).getTime();
             break;
+          case 'emailVerified':
+            aValue = a.emailVerified ? 1 : 0;
+            bValue = b.emailVerified ? 1 : 0;
+            break;
+          case 'demoReactivations':
+            aValue = a.clientProfile?.demoReactivationCount || 0;
+            bValue = b.clientProfile?.demoReactivationCount || 0;
+            break;
+          case 'lastDemoReactivation':
+            aValue = (a.clientProfile?.demoReactivationCount || 0) > 0 && a.clientProfile?.demoActivatedAt
+              ? new Date(a.clientProfile.demoActivatedAt).getTime()
+              : 0;
+            bValue = (b.clientProfile?.demoReactivationCount || 0) > 0 && b.clientProfile?.demoActivatedAt
+              ? new Date(b.clientProfile.demoActivatedAt).getTime()
+              : 0;
+            break;
           default:
             aValue = ''; bValue = '';
         }
@@ -751,8 +767,17 @@ export default function AdminDashboard() {
                           <th onClick={() => handleSort('name')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
                             {t('admin.list.col_client')} {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
+                          <th onClick={() => handleSort('emailVerified')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            {t('admin.list.col_email_verified') || "Email Verif."} {sortConfig.key === 'emailVerified' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
                           <th onClick={() => handleSort('plan')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
                             {t('admin.list.col_plan')} {sortConfig.key === 'plan' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th onClick={() => handleSort('demoReactivations')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            {t('admin.list.col_demo_reactivations') || "Reactiv. Demo"} {sortConfig.key === 'demoReactivations' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
+                          </th>
+                          <th onClick={() => handleSort('lastDemoReactivation')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                            {t('admin.list.col_last_demo_reactivation') || "Últ. Reactivación"} {sortConfig.key === 'lastDemoReactivation' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
                           </th>
                           <th onClick={() => handleSort('recipes')} style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
                             {t('admin.list.col_recipes')} {sortConfig.key === 'recipes' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} style={{display:'inline'}}/> : <ChevronDown size={14} style={{display:'inline'}}/>)}
@@ -810,6 +835,41 @@ export default function AdminDashboard() {
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{client.email}</div>
                             </td>
                             <td style={{ padding: '1.25rem 1rem' }}>
+                              {client.emailVerified ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  padding: '0.25rem 0.65rem',
+                                  borderRadius: '2rem',
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  background: '#dcfce7',
+                                  color: '#15803d',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  <Check size={13} />
+                                  {t('admin.list.email_verified_yes') || "Verificado"}
+                                </span>
+                              ) : (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  padding: '0.25rem 0.65rem',
+                                  borderRadius: '2rem',
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  background: '#fee2e2',
+                                  color: '#b91c1c',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  <X size={13} />
+                                  {t('admin.list.email_verified_no') || "No verificado"}
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem' }}>
                               <span style={{
                                 padding: '0.35rem 0.85rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: '700',
                                 background: '#dcfce7',
@@ -818,6 +878,32 @@ export default function AdminDashboard() {
                               }}>
                                 {client.clientProfile?.plan?.name || t('admin.list.sin_plan_badge')}
                               </span>
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '700' }}>
+                              {(client.clientProfile?.demoReactivationCount || 0) > 0 ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  padding: '0.25rem 0.65rem',
+                                  borderRadius: '2rem',
+                                  fontSize: '0.78rem',
+                                  fontWeight: '800',
+                                  background: '#fef3c7',
+                                  color: '#92400e'
+                                }}>
+                                  {client.clientProfile.demoReactivationCount}
+                                </span>
+                              ) : (
+                                <span style={{ color: '#94a3b8', fontWeight: '600' }}>0</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '1.25rem 1rem', fontSize: '0.88rem', color: '#475569' }}>
+                              {(client.clientProfile?.demoReactivationCount || 0) > 0 && client.clientProfile?.demoActivatedAt ? (
+                                new Date(client.clientProfile.demoActivatedAt).toLocaleString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              ) : (
+                                <span style={{ color: '#94a3b8' }}>-</span>
+                              )}
                             </td>
                             <td style={{ padding: '1.25rem 1rem', fontSize: '0.9rem', fontWeight: '600' }}>
                               {client.clientProfile?._count?.recipes || 0} / {client.clientProfile?.plan?.recipesLimit || "∞"}

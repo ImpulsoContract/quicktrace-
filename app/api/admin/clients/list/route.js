@@ -3,7 +3,8 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-// Force Vercel redeploy trigger
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const session = await getServerSession(authOptions);
 
@@ -18,6 +19,7 @@ export async function GET() {
         id: true,
         email: true,
         name: true,
+        emailVerified: true,
         createdAt: true,
         lastLogin: true,
         lastLoginLanguage: true,
@@ -45,6 +47,8 @@ export async function GET() {
             hasPosMode: true,
             isSimpleVersion: true,
             useLegacyPricing: true,
+            demoActivatedAt: true,
+            demoReactivationCount: true,
             apiKey: true,
             apiKeyCreatedAt: true,
             _count: {
@@ -56,7 +60,6 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
 
-    // Logging only first client to check structure in Vercel logs
     if (clients.length > 0) {
       console.log(`[AdminList] First client profile sample:`, {
         email: clients[0].email,
