@@ -470,8 +470,39 @@ export default function PlansPage() {
 
       {/* Popup: Request Complete ERP Software Info */}
       {showErpInfoModal && (
-        <div className="modal-overlay" style={{ zIndex: 10000 }}>
-          <div className="modal-content glass-card" style={{ maxWidth: '520px', width: '92%', padding: '2.25rem', background: 'white', textAlign: 'center', position: 'relative' }}>
+        <div
+          className="modal-overlay"
+          onClick={() => !sendingErpInfo && setShowErpInfoModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem',
+            overflowY: 'auto'
+          }}
+        >
+          <div
+            className="modal-content glass-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '520px',
+              width: '100%',
+              padding: '2.25rem',
+              background: 'white',
+              borderRadius: '1.5rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
             <button
               type="button"
               onClick={() => setShowErpInfoModal(false)}
@@ -535,8 +566,36 @@ export default function PlansPage() {
 
       {/* Onboarding Video Modal if Demo user hasn't chosen mode yet */}
       {needsModeSelection && (
-        <div className="modal-overlay" style={{ zIndex: 11000 }}>
-          <div className="modal-content glass-card" style={{ width: '95%', maxWidth: '720px', padding: '2.25rem', background: 'white', textAlign: 'center' }}>
+        <div
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.78)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 11000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem',
+            overflowY: 'auto'
+          }}
+        >
+          <div
+            className="modal-content glass-card"
+            style={{
+              width: '100%',
+              maxWidth: '720px',
+              padding: '2.25rem',
+              background: 'white',
+              borderRadius: '1.5rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
+              textAlign: 'center'
+            }}
+          >
             <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--corp-green)', marginBottom: '1.25rem' }}>
               {t('auth.onboarding_title') || "¡Bienvenido a QuickTrace! Elige cómo quieres empezar"}
             </h2>
