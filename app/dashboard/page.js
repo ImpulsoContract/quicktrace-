@@ -24456,7 +24456,8 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
   const [saleForm, setSaleForm] = useState({
     customerId: "",
     quantity: "",
-    price: "",
+    unitPrice: Number(elaboration?.unitPrice) > 0 ? Number(elaboration.unitPrice).toString() : "",
+    price: "0.00",
     date: new Date().toISOString().slice(0, 10)
   });
 
@@ -24477,6 +24478,17 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
         setSales(data.sales);
         if (data.unitPrice !== undefined) {
           setCurrentElab(prev => ({ ...prev, unitPrice: data.unitPrice }));
+          if (!editingSaleId) {
+            setSaleForm(prev => {
+              if (prev.unitPrice === "" && Number(data.unitPrice) > 0) {
+                const uP = Number(data.unitPrice);
+                const qtyNum = parseFloat((prev.quantity || "").toString().replace(',', '.'));
+                const newTotal = (!isNaN(qtyNum) && qtyNum > 0) ? (Math.round(qtyNum * uP * 100) / 100).toFixed(2) : "0.00";
+                return { ...prev, unitPrice: uP.toString(), price: newTotal };
+              }
+              return prev;
+            });
+          }
         }
       }
     } catch (e) {
@@ -24571,13 +24583,18 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
     }
     setEditingSaleId(s.id);
     setShowSaleForm(true);
-    const qty = s.quantity != null 
-      ? s.quantity.toString() 
-      : (totalProduced != null && s.percentage != null ? ((totalProduced * s.percentage) / 100).toString() : "");
+    const qtyNum = s.quantity != null 
+      ? Number(s.quantity) 
+      : (totalProduced != null && s.percentage != null ? ((totalProduced * s.percentage) / 100) : 0);
+    const qty = qtyNum > 0 ? qtyNum.toString() : "";
+    const calcUnitPrice = (qtyNum > 0 && s.price != null)
+      ? (Math.round((Number(s.price) / qtyNum) * 100) / 100).toString()
+      : (Number(currentElab?.unitPrice) > 0 ? Number(currentElab.unitPrice).toString() : "0");
     setSaleForm({
       customerId: s.customerId ? s.customerId.toString() : "",
       quantity: qty,
-      price: s.price.toString(),
+      unitPrice: calcUnitPrice,
+      price: s.price != null ? Number(s.price).toFixed(2) : "0.00",
       date: s.date ? new Date(s.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
     });
   };
@@ -24588,23 +24605,40 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
     setSaleForm({
       customerId: "",
       quantity: "",
-      price: "",
+      unitPrice: Number(currentElab?.unitPrice) > 0 ? Number(currentElab.unitPrice).toString() : "",
+      price: "0.00",
       date: new Date().toISOString().slice(0, 10)
     });
   };
 
   const handleSaleQuantityChange = (newQty) => {
-    const qtyNum = parseFloat(newQty.toString().replace(',', '.'));
-    const unitP = parseFloat(currentElab?.unitPrice);
-    if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP > 0) {
-      setSaleForm(prev => ({
+    setSaleForm(prev => {
+      const qtyNum = parseFloat((newQty ?? "").toString().replace(',', '.'));
+      const unitP = parseFloat((prev.unitPrice ?? "").toString().replace(',', '.'));
+      const newTotal = (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP >= 0)
+        ? (Math.round(qtyNum * unitP * 100) / 100).toFixed(2)
+        : "0.00";
+      return {
         ...prev,
         quantity: newQty,
-        price: (Math.round(qtyNum * unitP * 100) / 100).toFixed(2)
-      }));
-    } else {
-      setSaleForm(prev => ({ ...prev, quantity: newQty }));
-    }
+        price: newTotal
+      };
+    });
+  };
+
+  const handleSaleUnitPriceChange = (newUnitPrice) => {
+    setSaleForm(prev => {
+      const qtyNum = parseFloat((prev.quantity ?? "").toString().replace(',', '.'));
+      const unitP = parseFloat((newUnitPrice ?? "").toString().replace(',', '.'));
+      const newTotal = (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP >= 0)
+        ? (Math.round(qtyNum * unitP * 100) / 100).toFixed(2)
+        : "0.00";
+      return {
+        ...prev,
+        unitPrice: newUnitPrice,
+        price: newTotal
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -24948,13 +24982,13 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                 />
               </div>
 
-              {/* Precio de venta */}
+              {/* Precio unitario (editable) */}
               <div>
                 <label className="label">
-                  {t('elaboration_sales.sale_price') || "Precio de venta"} ({profile?.currency || 'EUR'}) <span style={{ color: '#ef4444' }}>*</span>
+                  {t('elaboration_sales.unit_price_label') || "Precio unitario"} ({profile?.currency || 'EUR'}{unit ? `/${unit}` : ''}) <span style={{ color: '#ef4444' }}>*</span>
                   {Number(currentElab?.unitPrice) > 0 && (
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '0.5rem' }}>
-                      ({t('traceability_form.unit_price') || "PVP"}: {Number(currentElab.unitPrice).toFixed(2)} {profile?.currency || 'EUR'}{unit ? `/${unit}` : ''})
+                      ({t('traceability_form.unit_price') || "PVP"}: {Number(currentElab.unitPrice).toFixed(2)} {profile?.currency || 'EUR'})
                     </span>
                   )}
                 </label>
@@ -24963,15 +24997,30 @@ function ElaborationSaleModal({ elaboration, customers = [], profile, onClose, o
                   step="0.01" 
                   min="0"
                   className="input-field" 
-                  value={saleForm.price} 
-                  onChange={(e) => setSaleForm({ ...saleForm, price: e.target.value })} 
+                  value={saleForm.unitPrice} 
+                  onChange={(e) => handleSaleUnitPriceChange(e.target.value)} 
                   placeholder={t('elaboration_sales.price_placeholder') || "0.00"}
                   required 
                 />
               </div>
 
+              {/* Precio total (fijo / calculado) */}
+              <div>
+                <label className="label">
+                  {t('elaboration_sales.total_price_label') || "Precio total"} ({profile?.currency || 'EUR'})
+                </label>
+                <input 
+                  type="text" 
+                  readOnly
+                  disabled
+                  className="input-field" 
+                  value={saleForm.price || "0.00"} 
+                  style={{ background: '#f1f5f9', fontWeight: '800', color: 'var(--corp-green)', cursor: 'not-allowed' }}
+                />
+              </div>
+
               {/* Fecha */}
-              <div style={{ gridColumn: 'span 2' }}>
+              <div>
                 <label className="label">{t('elaboration_sales.sale_date') || "Fecha de la venta"}</label>
                 <input 
                   type="date" 

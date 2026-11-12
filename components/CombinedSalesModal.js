@@ -193,6 +193,7 @@ export default function CombinedSalesModal({
         : (totalProduced > 0 && s.percentage != null ? (totalProduced * s.percentage / 100) : 0);
       const effectiveStock = cs.isDraft ? currentAvailable : Math.max(0, Math.round((currentAvailable + saleQty) * 1000) / 1000);
       const uPrice = (foundInAvailable && foundInAvailable.unitPrice) || elab?.unitPrice || 0;
+      const calcUnitP = (saleQty > 0 && s.price != null) ? (Math.round((Number(s.price) / saleQty) * 100) / 100) : uPrice;
 
       return {
         id: `elab-${s.id}-${Math.random()}`,
@@ -203,9 +204,9 @@ export default function CombinedSalesModal({
         recipeName: elab?.recipe?.name || "Receta",
         availableStock: effectiveStock,
         unit: elab?.quantityUnit || "unidades",
-        unitPrice: uPrice,
+        unitPrice: calcUnitP !== undefined && calcUnitP !== null ? calcUnitP.toString() : "0",
         quantity: s.quantity != null ? s.quantity.toString() : "",
-        price: s.price != null ? s.price.toString() : "",
+        price: s.price != null ? Number(s.price).toFixed(2) : "0.00",
         searchQuery: ''
       };
     });
@@ -217,6 +218,7 @@ export default function CombinedSalesModal({
       const saleQty = gs.quantity || 0;
       const effectiveStock = Math.max(0, Math.round((currentAvailable + saleQty) * 1000) / 1000);
       const uPrice = (foundInAvailable && foundInAvailable.salePrice) || gfs?.salePrice || 0;
+      const calcUnitP = (saleQty > 0 && gs.price != null) ? (Math.round((Number(gs.price) / saleQty) * 100) / 100) : uPrice;
 
       return {
         id: `gfs-${gs.id}-${Math.random()}`,
@@ -227,9 +229,9 @@ export default function CombinedSalesModal({
         recipeName: '',
         availableStock: effectiveStock,
         unit: gfs?.unit || "unidades",
-        unitPrice: uPrice,
+        unitPrice: calcUnitP !== undefined && calcUnitP !== null ? calcUnitP.toString() : "0",
         quantity: gs.quantity != null ? gs.quantity.toString() : "",
-        price: gs.price != null ? gs.price.toString() : "",
+        price: gs.price != null ? Number(gs.price).toFixed(2) : "0.00",
         searchQuery: '',
         lotAllocations: Array.isArray(gs.lotAllocations) ? gs.lotAllocations : []
       };
@@ -279,9 +281,9 @@ export default function CombinedSalesModal({
           recipeName: '',
           availableStock: 0,
           unit: '',
-          unitPrice: 0,
+          unitPrice: '',
           quantity: '',
-          price: '',
+          price: '0.00',
           searchQuery: ''
         }
       ];
@@ -304,9 +306,9 @@ export default function CombinedSalesModal({
           recipeName: '',
           availableStock: 0,
           unit: '',
-          unitPrice: 0,
+          unitPrice: '',
           quantity: '',
-          price: '',
+          price: '0.00',
           searchQuery: '',
           lotAllocations: []
         }
@@ -321,18 +323,23 @@ export default function CombinedSalesModal({
     setSaleItems(prev => {
       const updated = [...prev];
       const item = { ...updated[index] };
+      const defaultUnitP = elab.unitPrice != null ? Number(elab.unitPrice) : 0;
       item.elaborationId = elab.id;
       item.name = elab.name;
       item.recipeName = elab.recipeName;
       item.availableStock = elab.availableStock;
       item.unit = elab.quantityUnit || "unidades";
-      item.unitPrice = elab.unitPrice || 0;
+      item.unitPrice = defaultUnitP.toString();
       item.searchQuery = '';
       if (item.quantity) {
         const qtyNum = parseFloat(item.quantity.toString().replace(',', '.'));
-        if (!isNaN(qtyNum) && qtyNum > 0 && item.unitPrice > 0) {
-          item.price = (Math.round(qtyNum * item.unitPrice * 100) / 100).toFixed(2);
+        if (!isNaN(qtyNum) && qtyNum > 0 && defaultUnitP >= 0) {
+          item.price = (Math.round(qtyNum * defaultUnitP * 100) / 100).toFixed(2);
+        } else {
+          item.price = "0.00";
         }
+      } else {
+        item.price = "0.00";
       }
       updated[index] = item;
       return updated;
@@ -347,12 +354,13 @@ export default function CombinedSalesModal({
     setSaleItems(prev => {
       const updated = [...prev];
       const item = { ...updated[index] };
+      const defaultUnitP = gfs.salePrice != null ? Number(gfs.salePrice) : 0;
       item.goodsForSaleId = gfs.id;
       item.name = gfs.name;
       item.recipeName = '';
       item.availableStock = gfs.stock || 0;
       item.unit = gfs.unit || "unidades";
-      item.unitPrice = gfs.salePrice || 0;
+      item.unitPrice = defaultUnitP.toString();
       item.searchQuery = '';
       item.barcode = preselectedLot?.barcode || gfs.barcode || null;
 
@@ -371,9 +379,13 @@ export default function CombinedSalesModal({
 
       if (item.quantity) {
         const qtyNum = parseFloat(item.quantity.toString().replace(',', '.'));
-        if (!isNaN(qtyNum) && qtyNum > 0 && item.unitPrice > 0) {
-          item.price = (Math.round(qtyNum * item.unitPrice * 100) / 100).toFixed(2);
+        if (!isNaN(qtyNum) && qtyNum > 0 && defaultUnitP >= 0) {
+          item.price = (Math.round(qtyNum * defaultUnitP * 100) / 100).toFixed(2);
+        } else {
+          item.price = "0.00";
         }
+      } else {
+        item.price = "0.00";
       }
       updated[index] = item;
       return updated;
@@ -419,7 +431,7 @@ export default function CombinedSalesModal({
         const item = { ...updated[idx] };
         item.lotAllocations = allocations;
         item.quantity = totalQty.toString();
-        const unitP = parseFloat(item.unitPrice) || 0;
+        const unitP = parseFloat((item.unitPrice ?? "").toString().replace(',', '.')) || 0;
         item.price = (Math.round(totalQty * unitP * 100) / 100).toFixed(2);
         if (allocations && allocations.length === 1) {
           const allocLot = (goodsLotModal.goods?.goodsReceipts || []).find(r => r.id === allocations[0].receiptId);
@@ -443,7 +455,7 @@ export default function CombinedSalesModal({
         item.lotAllocations = [];
         if (qty != null && qty > 0) {
           item.quantity = qty.toString();
-          const unitP = parseFloat(item.unitPrice) || 0;
+          const unitP = parseFloat((item.unitPrice ?? "").toString().replace(',', '.')) || 0;
           item.price = (Math.round(qty * unitP * 100) / 100).toFixed(2);
         }
         updated[idx] = item;
@@ -453,17 +465,21 @@ export default function CombinedSalesModal({
     setGoodsLotModal({ isOpen: false, rowIndex: null, goods: null, initialQuantity: null, initialAllocations: null });
   };
 
-  // Update item field (quantity or price or searchQuery)
+  // Update item field (quantity or unitPrice or searchQuery)
   const handleUpdateItem = (index, field, value) => {
     setSaleItems(prev => {
       const updated = [...prev];
       const item = { ...updated[index], [field]: value };
 
-      if (field === "quantity") {
-        const qtyNum = parseFloat(value.toString().replace(',', '.'));
-        const unitP = parseFloat(item.unitPrice);
-        if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP > 0) {
+      if (field === "quantity" || field === "unitPrice") {
+        const qtyStr = field === "quantity" ? value : item.quantity;
+        const unitPStr = field === "unitPrice" ? value : item.unitPrice;
+        const qtyNum = parseFloat((qtyStr ?? "").toString().replace(',', '.'));
+        const unitP = parseFloat((unitPStr ?? "").toString().replace(',', '.'));
+        if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(unitP) && unitP >= 0) {
           item.price = (Math.round(qtyNum * unitP * 100) / 100).toFixed(2);
+        } else {
+          item.price = "0.00";
         }
       }
 
@@ -1566,11 +1582,14 @@ export default function CombinedSalesModal({
                         <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '130px' }}>
                           {t('combined_sales.col_available_stock') || "Stock disponible"}
                         </th>
-                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '170px' }}>
+                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '150px' }}>
                           {t('combined_sales.col_quantity') || "Cantidad a vender"}
                         </th>
-                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '160px' }}>
-                          {t('combined_sales.col_price') || "Precio de venta"}
+                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '150px' }}>
+                          {t('combined_sales.col_unit_price') || "Precio unitario"}
+                        </th>
+                        <th style={{ padding: '0.6rem 0.85rem', fontWeight: '800', width: '140px' }}>
+                          {t('combined_sales.col_total_price') || "Precio total"}
                         </th>
                         <th style={{ padding: '0.6rem 0.85rem', width: '45px', textAlign: 'center' }}></th>
                       </tr>
@@ -1960,7 +1979,7 @@ export default function CombinedSalesModal({
                               </div>
                             </td>
 
-                            {/* Column 4: Price */}
+                            {/* Column 4: Unit Price (editable) */}
                             <td style={{ padding: '0.75rem 0.85rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                                 <input
@@ -1969,8 +1988,8 @@ export default function CombinedSalesModal({
                                   min="0"
                                   disabled={!isSelected}
                                   className="input-field"
-                                  value={item.price}
-                                  onChange={(e) => handleUpdateItem(idx, "price", e.target.value)}
+                                  value={item.unitPrice}
+                                  onChange={(e) => handleUpdateItem(idx, "unitPrice", e.target.value)}
                                   placeholder="0.00"
                                   required
                                   style={{
@@ -1978,6 +1997,31 @@ export default function CombinedSalesModal({
                                     padding: '0.4rem 0.6rem',
                                     fontSize: '0.85rem',
                                     background: !isSelected ? '#f8fafc' : '#ffffff'
+                                  }}
+                                />
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                                  {currencySymbol}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Column 5: Total Price (fixed / calculated) */}
+                            <td style={{ padding: '0.75rem 0.85rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <input
+                                  type="text"
+                                  readOnly
+                                  disabled
+                                  className="input-field"
+                                  value={item.price || "0.00"}
+                                  style={{
+                                    margin: 0,
+                                    padding: '0.4rem 0.6rem',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '800',
+                                    color: 'var(--corp-green)',
+                                    background: '#f1f5f9',
+                                    cursor: 'not-allowed'
                                   }}
                                 />
                                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>
