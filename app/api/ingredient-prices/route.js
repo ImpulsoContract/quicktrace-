@@ -223,3 +223,85 @@ export async function POST(req) {
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
+
+export async function DELETE(req) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role === "WORKER" && !session.user.permissions?.hasGoods) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    let profileId = session.user.profileId;
+    if (!profileId && session.user.role === "ADMIN") {
+      const firstProfile = await prisma.clientProfile.findFirst({
+        orderBy: { id: "asc" }
+      });
+      profileId = firstProfile?.id;
+    }
+
+    if (!profileId) return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+
+    const body = await req.json();
+    const { name, unit, alsoDeleteStock } = body;
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: "Nombre de ingrediente inválido" }, { status: 400 });
+    }
+
+    const cleanName = name.trim();
+    const cleanUnit = (unit || "").trim();
+
+    const usedInRecipe = await prisma.ingredient.findFirst({
+      where: {
+        recipe: { clientProfileId: profileId },
+        name: { equals: cleanName, mode: "insensitive" },
+        unit: { equals: cleanUnit, mode: "insensitive" }
+      }
+    });
+
+    if (usedInRecipe) {
+      return NextResponse.json(
+        { error: "No se puede eliminar un ingrediente que está asociado a una receta." },
+        { status: 400 }
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ingredientPrice.deleteMany({
+        where: {
+          clientProfileId: profileId,
+          name: { equals: cleanName, mode: "insensitive" },
+          unit: { equals: cleanUnit, mode: "insensitive" }
+        }
+      });
+
+      if (alsoDeleteStock) {
+        await tx.ingredientStock.deleteMany({
+          where: {
+            clientProfileId: profileId,
+            name: { equals: cleanName, mode: "insensitive" },
+            unit: { equals: cleanUnit, mode: "insensitive" }
+          }
+        });
+      }
+
+      // Unlink any GoodsForSale linked to this ingredient while keeping the GoodsForSale record
+      await tx.goodsForSale.updateMany({
+        where: {
+          clientProfileId: profileId,
+          linkedIngredientName: { equals: cleanName, mode: "insensitive" }
+        },
+        data: { linkedIngredientName: null }
+      });
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error DELETE /api/ingredient-prices:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}

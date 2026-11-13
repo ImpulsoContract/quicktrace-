@@ -12634,6 +12634,7 @@ export default function ClientDashboard() {
         <InventoryModal 
           isOpen={isInventoryModalOpen} 
           onClose={() => setIsInventoryModalOpen(false)} 
+          onRefreshPrices={fetchIngredientPrices}
         />
       )}
 
@@ -12645,6 +12646,7 @@ export default function ClientDashboard() {
             setCostModalSingleIngredient(null);
           }}
           onSave={handleSaveIngredientPrices}
+          onRefreshPrices={fetchIngredientPrices}
           ingredientPrices={ingredientPrices}
           selectedElaboration={selectedElaborationForCosts}
           singleIngredient={costModalSingleIngredient}
@@ -17882,10 +17884,13 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   );
 }
 
-function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElaboration, singleIngredient, loading, currency }) {
+function IngredientCostModal({ onClose, onSave, onRefreshPrices, ingredientPrices, selectedElaboration, singleIngredient, loading, currency }) {
   const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState("ingredients");
   const [localPrices, setLocalPrices] = useState([]);
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState(null);
+  const [alsoDeleteFromInventory, setAlsoDeleteFromInventory] = useState(true);
+  const [deletingIngredient, setDeletingIngredient] = useState(false);
 
   // Goods for sale tab state
   const [goodsForSaleList, setGoodsForSaleList] = useState([]);
@@ -18009,6 +18014,39 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
     const updated = [...localPrices];
     updated[index].price = value;
     setLocalPrices(updated);
+  };
+
+  const handleConfirmDeleteIngredient = async () => {
+    if (!deleteConfirmTarget) return;
+    try {
+      setDeletingIngredient(true);
+      const res = await fetch("/api/ingredient-prices", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: deleteConfirmTarget.name,
+          unit: deleteConfirmTarget.unit || "",
+          alsoDeleteStock: alsoDeleteFromInventory
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setLocalPrices(prev => prev.filter(p => !(
+          (p.name || "").trim().toLowerCase() === (deleteConfirmTarget.name || "").trim().toLowerCase() &&
+          (p.unit || "").trim().toLowerCase() === (deleteConfirmTarget.unit || "").trim().toLowerCase()
+        )));
+        setDeleteConfirmTarget(null);
+        fetchGoodsForSale();
+        if (onRefreshPrices) onRefreshPrices();
+      } else {
+        alert(data.error || t('alerts.delete_error') || "Error al eliminar el ingrediente");
+      }
+    } catch (err) {
+      console.error("Error deleting ingredient cost:", err);
+      alert(t('alerts.connection_error') || "Error de conexión");
+    } finally {
+      setDeletingIngredient(false);
+    }
   };
 
   const filteredGoodsForSale = useMemo(() => {
@@ -18294,7 +18332,36 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                               ))}
                             </div>
                           ) : (
-                            <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.35rem' }}>
+                              <span style={{ fontStyle: 'italic', color: '#94a3b8', fontSize: '0.8rem' }}>
+                                {t('inventory.no_related_recipe') || "Sin receta relacionada"}
+                              </span>
+                              {!singleIngredient && !selectedElaboration && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setDeleteConfirmTarget(item);
+                                    setAlsoDeleteFromInventory(true);
+                                  }}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem',
+                                    background: '#fef2f2',
+                                    color: '#dc2626',
+                                    border: '1px solid #fecaca',
+                                    padding: '0.22rem 0.55rem',
+                                    borderRadius: '5px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                  <span>{t('common.delete') || "Eliminar"}</span>
+                                </button>
+                              )}
+                            </div>
                           )}
                         </td>
                         <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
@@ -18702,6 +18769,82 @@ function IngredientCostModal({ onClose, onSave, ingredientPrices, selectedElabor
                 .catch(() => {});
             }}
           />
+        )}
+
+        {deleteConfirmTarget && (
+          <div className="modal-overlay" style={{ zIndex: 11500 }}>
+            <div className="modal-content" style={{ maxWidth: '500px', width: '92%', padding: '1.75rem', borderRadius: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <AlertTriangle size={22} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-main)' }}>
+                  {t('inventory.delete_ingredient_title') || "Eliminar ingrediente permanentemente"}
+                </h3>
+              </div>
+
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.92rem', color: 'var(--text-main)', lineHeight: '1.5' }}>
+                {(t('inventory.delete_ingredient_confirm_msg') || "¿Estás seguro de que deseas eliminar el ingrediente \"{name}\" ({unit})? Esta eliminación es permanente y no se puede deshacer.")
+                  .replace('{name}', deleteConfirmTarget.name)
+                  .replace('{unit}', deleteConfirmTarget.unit || '-')}
+              </p>
+
+              {deleteConfirmTarget.linkedGoods && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.65rem', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.84rem', color: '#1e40af', lineHeight: '1.45' }}>
+                  {(t('inventory.delete_ingredient_linked_goods_note') || "Nota: Este ingrediente está vinculado con la mercancía en venta \"{goods}\". Se eliminará solo el ingrediente y su vinculación, manteniendo la mercancía en venta.")
+                    .replace('{goods}', deleteConfirmTarget.linkedGoods.name)}
+                </div>
+              )}
+
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                <p style={{ margin: '0 0 0.6rem 0', fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                  {t('modals.delete_also_from_inventory_question') || "¿Quieres eliminarlo también del listado de inventario de ingredientes?"}
+                </p>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.86rem', color: '#334155', fontWeight: '600' }}>
+                  <input
+                    type="checkbox"
+                    checked={alsoDeleteFromInventory}
+                    onChange={(e) => setAlsoDeleteFromInventory(e.target.checked)}
+                    style={{ width: '1.1rem', height: '1.1rem', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                  />
+                  <span>{t('modals.delete_also_from_inventory_label') || "Sí, eliminar también del listado de inventario de ingredientes"}</span>
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmTarget(null)}
+                  disabled={deletingIngredient}
+                  className="btn-secondary"
+                  style={{ padding: '0.6rem 1.25rem', fontSize: '0.88rem', fontWeight: '700' }}
+                >
+                  {t('common.cancel') || "Cancelar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteIngredient}
+                  disabled={deletingIngredient}
+                  style={{
+                    padding: '0.6rem 1.35rem',
+                    fontSize: '0.88rem',
+                    fontWeight: '800',
+                    background: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem'
+                  }}
+                >
+                  {deletingIngredient ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  <span>{t('inventory.confirm_permanent_delete_btn') || "Eliminar permanentemente"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -27376,7 +27519,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
   );
 }
 
-function InventoryModal({ isOpen, onClose }) {
+function InventoryModal({ isOpen, onClose, onRefreshPrices }) {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("ingredients");
 
@@ -27387,6 +27530,9 @@ function InventoryModal({ isOpen, onClose }) {
   const [search, setSearch] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedLotIngredient, setSelectedLotIngredient] = useState(null);
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState(null);
+  const [alsoDeleteFromCosts, setAlsoDeleteFromCosts] = useState(true);
+  const [deletingIngredient, setDeletingIngredient] = useState(false);
 
   // Goods for sale tab state
   const [goodsForSaleList, setGoodsForSaleList] = useState([]);
@@ -27452,6 +27598,39 @@ function InventoryModal({ isOpen, onClose }) {
       }
       return item;
     }));
+  };
+
+  const handleConfirmDeleteIngredient = async () => {
+    if (!deleteConfirmTarget) return;
+    try {
+      setDeletingIngredient(true);
+      const res = await fetch("/api/client/inventory", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: deleteConfirmTarget.name,
+          unit: deleteConfirmTarget.unit || "",
+          alsoDeleteCostPrice: alsoDeleteFromCosts
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInventory(prev => prev.filter(p => !(
+          (p.name || "").trim().toLowerCase() === (deleteConfirmTarget.name || "").trim().toLowerCase() &&
+          (p.unit || "").trim().toLowerCase() === (deleteConfirmTarget.unit || "").trim().toLowerCase()
+        )));
+        setDeleteConfirmTarget(null);
+        fetchGoodsForSale();
+        if (onRefreshPrices) onRefreshPrices();
+      } else {
+        alert(data.error || t('alerts.delete_error') || "Error al eliminar el ingrediente");
+      }
+    } catch (err) {
+      console.error("Error deleting ingredient stock:", err);
+      alert(t('alerts.connection_error') || "Error de conexión");
+    } finally {
+      setDeletingIngredient(false);
+    }
   };
 
   const handleSave = async () => {
@@ -27789,7 +27968,34 @@ function InventoryModal({ isOpen, onClose }) {
                               ))}
                             </div>
                           ) : (
-                            <span style={{ fontStyle: 'italic', opacity: 0.6 }}>-</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.35rem' }}>
+                              <span style={{ fontStyle: 'italic', color: '#94a3b8', fontSize: '0.8rem' }}>
+                                {t('inventory.no_related_recipe') || "Sin receta relacionada"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeleteConfirmTarget(item);
+                                  setAlsoDeleteFromCosts(true);
+                                }}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  background: '#fef2f2',
+                                  color: '#dc2626',
+                                  border: '1px solid #fecaca',
+                                  padding: '0.22rem 0.55rem',
+                                  borderRadius: '5px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                <Trash2 size={12} />
+                                <span>{t('common.delete') || "Eliminar"}</span>
+                              </button>
+                            </div>
                           )}
                         </td>
                         <td style={{ padding: '0.85rem', textAlign: 'right' }}>
@@ -28220,6 +28426,82 @@ function InventoryModal({ isOpen, onClose }) {
               fetchGoodsForSale();
             }}
           />
+        )}
+
+        {deleteConfirmTarget && (
+          <div className="modal-overlay" style={{ zIndex: 11500 }}>
+            <div className="modal-content" style={{ maxWidth: '500px', width: '92%', padding: '1.75rem', borderRadius: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <AlertTriangle size={22} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-main)' }}>
+                  {t('inventory.delete_ingredient_title') || "Eliminar ingrediente permanentemente"}
+                </h3>
+              </div>
+
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.92rem', color: 'var(--text-main)', lineHeight: '1.5' }}>
+                {(t('inventory.delete_ingredient_confirm_msg') || "¿Estás seguro de que deseas eliminar el ingrediente \"{name}\" ({unit})? Esta eliminación es permanente y no se puede deshacer.")
+                  .replace('{name}', deleteConfirmTarget.name)
+                  .replace('{unit}', deleteConfirmTarget.unit || '-')}
+              </p>
+
+              {deleteConfirmTarget.linkedGoods && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.65rem', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.84rem', color: '#1e40af', lineHeight: '1.45' }}>
+                  {(t('inventory.delete_ingredient_linked_goods_note') || "Nota: Este ingrediente está vinculado con la mercancía en venta \"{goods}\". Se eliminará solo el ingrediente y su vinculación, manteniendo la mercancía en venta.")
+                    .replace('{goods}', deleteConfirmTarget.linkedGoods.name)}
+                </div>
+              )}
+
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                <p style={{ margin: '0 0 0.6rem 0', fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                  {t('inventory.delete_also_from_costs_question') || "¿Quieres eliminarlo también del listado de precios de coste de ingredientes?"}
+                </p>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.86rem', color: '#334155', fontWeight: '600' }}>
+                  <input
+                    type="checkbox"
+                    checked={alsoDeleteFromCosts}
+                    onChange={(e) => setAlsoDeleteFromCosts(e.target.checked)}
+                    style={{ width: '1.1rem', height: '1.1rem', accentColor: 'var(--corp-green)', cursor: 'pointer' }}
+                  />
+                  <span>{t('inventory.delete_also_from_costs_label') || "Sí, eliminar también del listado de precios de coste de ingredientes"}</span>
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmTarget(null)}
+                  disabled={deletingIngredient}
+                  className="btn-secondary"
+                  style={{ padding: '0.6rem 1.25rem', fontSize: '0.88rem', fontWeight: '700' }}
+                >
+                  {t('common.cancel') || "Cancelar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteIngredient}
+                  disabled={deletingIngredient}
+                  style={{
+                    padding: '0.6rem 1.35rem',
+                    fontSize: '0.88rem',
+                    fontWeight: '800',
+                    background: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem'
+                  }}
+                >
+                  {deletingIngredient ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  <span>{t('inventory.confirm_permanent_delete_btn') || "Eliminar permanentemente"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
