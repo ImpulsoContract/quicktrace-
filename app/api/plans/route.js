@@ -67,6 +67,12 @@ export async function GET() {
       });
     }
 
+    // Asegurar que el plan Gold tiene recetas ilimitadas
+    await prisma.pricingPlan.updateMany({
+      where: { name: { contains: 'Gold', mode: 'insensitive' }, recipesLimit: { not: null } },
+      data: { recipesLimit: null }
+    }).catch(() => {});
+
     const plans = await prisma.pricingPlan.findMany({
       where: {
         planGroup: { in: targetGroups }
