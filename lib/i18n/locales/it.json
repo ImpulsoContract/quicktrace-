@@ -1042,6 +1042,7 @@
     "custom_plan_desc": "Se la tua attività ha esigenze specifiche o richiedi un volume maggiore di record, contattaci per progettare un piano su misura.",
     "contact_sales": "Contatta le Vendite",
     "badges": {
+      "starter": "Per le piccole imprese",
       "starting": "Per chi sta iniziando",
       "popular": "Il più popolare",
       "producers": "Per i grandi produttori"
@@ -1056,6 +1057,7 @@
     "currently_monthly": "Il tuo piano attuale (mensile)",
     "currently_yearly": "Il tuo piano attuale (annuale)",
     "annual_savings_hint": "Opzione annuale a {yearlyPrice}€ / anno — Risparmia 2 mesi selezionando qui l'opzione annuale!",
+    "annual_savings_starter_hint": "Opzione annuale a {yearlyPrice}€ / anno — Ottienilo a un prezzo inferiore selezionando qui l'opzione annuale!",
     "need_more_complete_btn": "Se hai bisogno di un software più completo, clicca qui",
     "erp_upgrade_modal_title": "Vuoi provare la nostra soluzione ERP completa?",
     "erp_upgrade_modal_desc": "Invieremo un'email al nostro team di vendita affinché ti chiamino e ti informino per provare il software ERP più completo. Vuoi inviare il messaggio?",

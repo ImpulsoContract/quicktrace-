@@ -1041,6 +1041,7 @@
     "custom_plan_desc": "Se o seu negócio tem necessidades específicas ou se necessita de um volume maior de registos, contacte-nos para concebermos um plano à sua medida.",
     "contact_sales": "Contactar Vendas",
     "badges": {
+      "starter": "Para pequenos negócios",
       "starting": "Para quem está a começar",
       "popular": "O mais popular",
       "producers": "Para os maiores produtores"
@@ -1055,6 +1056,7 @@
     "currently_monthly": "O seu plano atual (mensal)",
     "currently_yearly": "O seu plano atual (anual)",
     "annual_savings_hint": "Opção anual por {yearlyPrice}€ / ano — Poupe 2 meses selecionando aqui a opção anual!",
+    "annual_savings_starter_hint": "Opção anual por {yearlyPrice}€ / ano — Consiga mais barato selecionando aqui a opção anual!",
     "need_more_complete_btn": "Se precisa de um software mais completo, clique aqui",
     "erp_upgrade_modal_title": "Deseja experimentar a nossa solução ERP completa?",
     "erp_upgrade_modal_desc": "Vamos enviar um e-mail à nossa equipa de vendas para que lhe liguem e o informem sobre como experimentar o software ERP mais completo. Queres enviar a mensagem?",

@@ -611,8 +611,18 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (!profile) return;
     if (session?.user?.role === "WORKER" || session?.user?.role === "ADMIN") return;
-    const needsOnboarding = isUserOnDemo && !profile.hasSelectedMode;
-    if (needsOnboarding || isDemoExpired) return;
+    if (!profile.hasSelectedMode) {
+      // Activar automáticamente la versión completa para todos los usuarios
+      fetch("/api/client/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ isSimpleVersion: false, hasSelectedMode: true })
+      }).catch(() => {});
+      setProfile(prev => prev ? { ...prev, isSimpleVersion: false, hasSelectedMode: true, demoActivatedAt: prev.demoActivatedAt || new Date().toISOString() } : prev);
+      return;
+    }
+    if (isDemoExpired) return;
     if (!profile.hasSeenTutorialVideo && !hasDismissedTutorialRef.current && !isLearnVideoModalOpen && !isMinimizingLearnVideo) {
       setIsMinimizingLearnVideo(false);
       setIsLearnVideoModalOpen(true);
@@ -6122,120 +6132,7 @@ export default function ClientDashboard() {
         </div>
       )}
 
-      {profile && !profile.hasSelectedMode && (!profile.planId || profile.planId === "1" || profile.plan?.name === "Demo") && session?.user?.role !== "WORKER" && session?.user?.role !== "ADMIN" && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(15, 23, 42, 0.78)",
-            backdropFilter: "blur(6px)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "1.25rem",
-            overflowY: "auto"
-          }}
-        >
-          <div
-            className="glass-card animate-fade-in"
-            style={{
-              width: "100%",
-              maxWidth: "720px",
-              padding: "2.25rem 2rem",
-              background: "white",
-              borderRadius: "1.5rem",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.3)",
-              textAlign: "center"
-            }}
-          >
-            <h2 style={{ fontSize: "1.45rem", fontWeight: "900", color: "var(--corp-green)", marginBottom: "1.25rem" }}>
-              {t("auth.onboarding_title") || "¡Bienvenido a QuickTrace! Elige cómo quieres empezar"}
-            </h2>
 
-            <div style={{
-              position: "relative",
-              width: "100%",
-              paddingBottom: "56.25%",
-              height: 0,
-              borderRadius: "1rem",
-              overflow: "hidden",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
-              marginBottom: "1.75rem",
-              background: "#000"
-            }}>
-              <iframe
-                src="https://www.youtube.com/embed/75XEViseAA4?rel=0"
-                title="Onboarding QuickTrace"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  border: 0
-                }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
-              <button
-                type="button"
-                onClick={() => handleSelectOnboardingMode(false)}
-                disabled={selectingOnboardingMode !== null}
-                className="btn-primary"
-                style={{
-                  width: "100%",
-                  padding: "1rem 1.5rem",
-                  fontSize: "1rem",
-                  fontWeight: "800",
-                  borderRadius: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.6rem",
-                  cursor: selectingOnboardingMode !== null ? "not-allowed" : "pointer",
-                  opacity: selectingOnboardingMode === "simple" ? 0.6 : 1
-                }}
-              >
-                {selectingOnboardingMode === "erp" ? <Loader2 className="animate-spin" size={20} /> : null}
-                <span>{t("auth.btn_erp_full") || "Quiero una solución ERP completa"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectOnboardingMode(true)}
-                disabled={selectingOnboardingMode !== null}
-                style={{
-                  width: "100%",
-                  padding: "1rem 1.5rem",
-                  fontSize: "1rem",
-                  fontWeight: "800",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.6rem",
-                  borderRadius: "0.75rem",
-                  border: "2px solid var(--corp-green)",
-                  background: "white",
-                  color: "var(--corp-green)",
-                  cursor: selectingOnboardingMode !== null ? "not-allowed" : "pointer",
-                  opacity: selectingOnboardingMode === "erp" ? 0.6 : 1,
-                  transition: "all 0.2s ease"
-                }}
-              >
-                {selectingOnboardingMode === "simple" ? <Loader2 className="animate-spin" size={20} /> : null}
-                <span>{t("auth.btn_simple_version") || "Quiero la versión sencilla para llevar mis registros"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Popup: Demo 20 days expired */}
       {isDemoExpired && session?.user?.role !== "ADMIN" && (

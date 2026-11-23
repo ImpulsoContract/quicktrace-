@@ -59,7 +59,19 @@ export default function PlansPage() {
     try {
       const res = await fetch(`/api/client/profile?t=${Date.now()}`, { cache: "no-store" });
       const data = await res.json();
-      if (!data.error) setProfile(data);
+      if (!data.error) {
+        if (!data.hasSelectedMode) {
+          fetch("/api/client/profile", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({ isSimpleVersion: false, hasSelectedMode: true })
+          }).catch(() => {});
+          data.hasSelectedMode = true;
+          data.isSimpleVersion = false;
+        }
+        setProfile(data);
+      }
     } catch (e) {
       console.error("Error loading profile:", e);
     }
@@ -144,6 +156,7 @@ export default function PlansPage() {
 
   const getPlanBadge = (planName) => {
     const name = planName.toLowerCase();
+    if (name.includes('starter')) return t('plans.badges.starter') || "Para los pequeños negocios";
     if (name.includes('erp')) return t('plans.badge_erp_unlimited') || "Todo Ilimitado · Gestión ERP Completa";
     if (name.includes('básico') || name.includes('basic')) return t('plans.badges.starting');
     if (name.includes('premium')) return t('plans.badges.popular');
@@ -298,7 +311,7 @@ export default function PlansPage() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
           gap: '2rem',
           alignItems: 'stretch',
-          maxWidth: plans.length <= 2 ? '820px' : '1200px',
+          maxWidth: plans.length <= 2 ? '820px' : '1500px',
           margin: '0 auto'
         }}>
           {plans.map((plan) => {
@@ -398,8 +411,11 @@ export default function PlansPage() {
                         transition: 'all 0.15s ease'
                       }}
                     >
-                      💡 {(t('plans.annual_savings_hint') || "Opción anual por {yearlyPrice}€ / año — ¡Ahorra 2 meses seleccionando aquí la opción anual!")
-                        .replace('{yearlyPrice}', yearlyDisplay)}
+                      💡 {(
+                        plan.name.toLowerCase().includes('starter')
+                          ? (t('plans.annual_savings_starter_hint') || "Opción anual por {yearlyPrice}€ / año — ¡Consíguelo más barato seleccionando aquí la opción anual!")
+                          : (t('plans.annual_savings_hint') || "Opción anual por {yearlyPrice}€ / año — ¡Ahorra 2 meses seleccionando aquí la opción anual!")
+                      ).replace('{yearlyPrice}', yearlyDisplay)}
                     </button>
                   )}
                 </div>
@@ -587,74 +603,7 @@ export default function PlansPage() {
         </div>
       )}
 
-      {/* Onboarding Video Modal if Demo user hasn't chosen mode yet */}
-      {needsModeSelection && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(15, 23, 42, 0.78)',
-            backdropFilter: 'blur(6px)',
-            zIndex: 11000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.25rem',
-            overflowY: 'auto'
-          }}
-        >
-          <div
-            className="modal-content glass-card"
-            style={{
-              width: '100%',
-              maxWidth: '720px',
-              padding: '2.25rem',
-              background: 'white',
-              borderRadius: '1.5rem',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
-              textAlign: 'center'
-            }}
-          >
-            <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--corp-green)', marginBottom: '1.25rem' }}>
-              {t('auth.onboarding_title') || "¡Bienvenido a QuickTrace! Elige cómo quieres empezar"}
-            </h2>
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: '0.75rem', overflow: 'hidden', marginBottom: '1.75rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', background: '#0f172a' }}>
-              <iframe
-                src="https://www.youtube.com/embed/75XEViseAA4?rel=0"
-                title="QuickTrace Onboarding Video"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <button
-                type="button"
-                onClick={() => handleSelectMode(false)}
-                disabled={selectingMode !== null}
-                className="btn-primary"
-                style={{ width: '100%', padding: '1rem 1.5rem', fontSize: '1rem', fontWeight: '800', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}
-              >
-                {selectingMode === "erp" && <Loader2 size={18} className="animate-spin" />}
-                <span>{t('auth.btn_erp_full') || "Quiero una solución ERP completa"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectMode(true)}
-                disabled={selectingMode !== null}
-                style={{ width: '100%', padding: '1rem 1.5rem', fontSize: '1rem', fontWeight: '800', borderRadius: '0.75rem', border: '2px solid var(--corp-green)', background: 'white', color: 'var(--corp-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', cursor: 'pointer' }}
-              >
-                {selectingMode === "simple" && <Loader2 size={18} className="animate-spin" />}
-                <span>{t('auth.btn_simple_version') || "Quiero la versión sencilla para llevar mis registros"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Floating Help (?) button in top-right corner */}
       <div style={{ position: 'fixed', top: '1.5rem', right: '7.2rem', zIndex: 10000 }}>

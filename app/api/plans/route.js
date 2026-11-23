@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    let targetGroups = ["COMMON", "ERP"];
+    let targetGroups = ["COMMON", "SIMPLE"];
 
     if (session.user.profileId || session.user.id) {
       const profile = await prisma.clientProfile.findFirst({
@@ -25,12 +25,46 @@ export async function GET() {
       if (profile) {
         if (profile.useLegacyPricing) {
           targetGroups = ["COMMON", "LEGACY"];
-        } else if (profile.isSimpleVersion || profile.plan?.planGroup === "SIMPLE") {
-          targetGroups = ["COMMON", "SIMPLE"];
         } else {
-          targetGroups = ["COMMON", "ERP"];
+          targetGroups = ["COMMON", "SIMPLE"];
         }
       }
+    }
+
+    // Asegurar que el plan Starter existe con los IDs de Stripe correspondientes
+    const starterPlan = await prisma.pricingPlan.findFirst({
+      where: {
+        OR: [
+          { stripePriceIdMonthly: "price_1UeygJFXbV1PkWSmxb4PA2ZR" },
+          { stripePriceIdYearly: "price_1UeyhTFXbV1PkWSmNdEmifGO" },
+          { name: "Starter" }
+        ]
+      }
+    });
+
+    if (!starterPlan) {
+      await prisma.pricingPlan.create({
+        data: {
+          name: "Starter",
+          planGroup: "SIMPLE",
+          priceMonthly: 25,
+          priceYearly: 280,
+          stripePriceIdMonthly: "price_1UeygJFXbV1PkWSmxb4PA2ZR",
+          stripePriceIdYearly: "price_1UeyhTFXbV1PkWSmNdEmifGO",
+          stripePriceId: "price_1UeyhTFXbV1PkWSmNdEmifGO",
+          recipesLimit: 30,
+          elaborationsLimit: null,
+          hasCleaning: true,
+          cleaningLimit: null,
+          hasGoods: true,
+          goodsLimit: null,
+          hasTemperatures: true,
+          temperaturesLimit: null,
+          hasWater: true,
+          waterLimit: null,
+          hasProviders: true
+        }
+      });
     }
 
     const plans = await prisma.pricingPlan.findMany({

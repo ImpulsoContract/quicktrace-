@@ -1047,6 +1047,7 @@
     "custom_plan_desc": "If your business has specific needs or requires a higher volume of records, contact us to design a tailored plan.",
     "contact_sales": "Contact Sales",
     "badges": {
+      "starter": "For small businesses",
       "starting": "For those starting out",
       "popular": "Most popular",
       "producers": "For top producers"
@@ -1061,6 +1062,7 @@
     "currently_monthly": "Your current plan (monthly)",
     "currently_yearly": "Your current plan (yearly)",
     "annual_savings_hint": "Annual option for {yearlyPrice}€ / year — Save 2 months by clicking here for the annual option!",
+    "annual_savings_starter_hint": "Annual option for {yearlyPrice}€ / year — Get it cheaper by selecting the annual option here!",
     "need_more_complete_btn": "If you need more complete software, click here",
     "erp_upgrade_modal_title": "Would you like to try our complete ERP solution?",
     "erp_upgrade_modal_desc": "We will send an email to our sales team so they can call you and give you all the information to try our most complete ERP software. Do you want to send the message?",

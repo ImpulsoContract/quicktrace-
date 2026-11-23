@@ -1042,6 +1042,7 @@
     "custom_plan_desc": "Si votre entreprise a des besoins spécifiques ou nécessite un volume d'enregistrements plus important, contactez-nous pour concevoir un plan sur mesure.",
     "contact_sales": "Contacter les Ventes",
     "badges": {
+      "starter": "Pour les petites entreprises",
       "starting": "Pour celui qui commence",
       "popular": "Le plus populaire",
       "producers": "Pour les plus gros producteurs"
@@ -1056,6 +1057,7 @@
     "currently_monthly": "Votre forfait actuel (mensuel)",
     "currently_yearly": "Votre forfait actuel (annuel)",
     "annual_savings_hint": "Option annuelle à {yearlyPrice}€ / an — Économisez 2 mois en sélectionnant l'option annuelle ici !",
+    "annual_savings_starter_hint": "Option annuelle à {yearlyPrice}€ / an — Obtenez-le moins cher en sélectionnant l'option annuelle ici !",
     "need_more_complete_btn": "Si vous avez besoin d'un logiciel plus complet, cliquez ici",
     "erp_upgrade_modal_title": "Souhaitez-vous essayer notre solution ERP complète ?",
     "erp_upgrade_modal_desc": "Nous allons envoyer un e-mail à notre équipe commerciale afin qu'elle vous appelle et vous informe pour tester notre logiciel ERP le plus complet. Voulez-vous envoyer le message ?",
