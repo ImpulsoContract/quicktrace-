@@ -34,7 +34,7 @@ export async function POST(req) {
     // Check recipe limits
     const profile = await prisma.clientProfile.findUnique({
       where: { id: profileId },
-      include: { _count: { select: { recipes: true } } }
+      include: { plan: true, _count: { select: { recipes: true } } }
     });
 
     if (!profile) {
@@ -42,9 +42,9 @@ export async function POST(req) {
     }
 
     const currentCount = profile._count.recipes;
-    let limit = profile.accountType.toUpperCase() === "DEMO" ? 3 : profile.recetasContratadas;
+    let limit = profile.plan ? profile.plan.recipesLimit : (profile.accountType.toUpperCase() === "DEMO" ? 3 : profile.recetasContratadas);
 
-    if (currentCount >= limit) {
+    if (limit !== null && currentCount >= limit) {
       return NextResponse.json({ 
         error: `Límite alcanzado. Máximo ${limit} recetas permitidas para este tipo de cuenta.` 
       }, { status: 403 });

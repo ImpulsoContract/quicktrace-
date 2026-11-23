@@ -1133,7 +1133,11 @@ export default function AdminDashboard() {
             <MenuBtn
               icon={<Plus size={16} />}
               text={t('admin.actions.add_recipe')}
-              disabled={(activeMenu.clientProfile?._count?.recipes || 0) >= (activeMenu.clientProfile?.accountType === 'demo' ? 3 : activeMenu.clientProfile?.recetasContratadas)}
+              disabled={
+                activeMenu.clientProfile?.plan?.recipesLimit !== undefined
+                  ? (activeMenu.clientProfile.plan.recipesLimit !== null && (activeMenu.clientProfile._count?.recipes || 0) >= activeMenu.clientProfile.plan.recipesLimit)
+                  : ((activeMenu.clientProfile?._count?.recipes || 0) >= (activeMenu.clientProfile?.accountType === 'demo' ? 3 : activeMenu.clientProfile?.recetasContratadas))
+              }
               onClick={() => { setAddRecipeModal(activeMenu.clientProfile); setActiveMenu(null); }}
             />
             <MenuBtn icon={<ChefHat size={16} />} text={t('admin.actions.manage_recipes')} onClick={() => { setManageRecipesModal(activeMenu.clientProfile); setActiveMenu(null); }} />
@@ -2436,21 +2440,32 @@ function AddRecipeModal({ profile, onClose, onRefresh, recipeToEdit = null }) {
           </div>
         </div>
 
-        <div style={{ 
-          padding: '0.75rem', 
-          background: (profile._count.recipes >= (profile.accountType === 'demo' ? 3 : profile.recetasContratadas)) && !recipeToEdit ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.05)', 
-          borderRadius: '0.5rem', fontSize: '0.8rem', color: (profile._count.recipes >= (profile.accountType === 'demo' ? 3 : profile.recetasContratadas)) && !recipeToEdit ? '#ef4444' : 'var(--text-muted)' 
-        }}>
-          {recipeToEdit ? t('admin.recipes.editing_existing') : t('admin.recipes.quota_usage', { used: profile._count.recipes, limit: profile.accountType === 'demo' ? 3 : profile.recetasContratadas })}
-        </div>
+        {(() => {
+          const planLimit = profile.plan?.recipesLimit !== undefined 
+            ? profile.plan.recipesLimit 
+            : (profile.accountType === 'demo' ? 3 : profile.recetasContratadas);
+          const isOverLimit = planLimit !== null && profile._count.recipes >= planLimit;
+          const displayLimit = planLimit === null ? '∞' : planLimit;
+          return (
+            <>
+              <div style={{ 
+                padding: '0.75rem', 
+                background: isOverLimit && !recipeToEdit ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.05)', 
+                borderRadius: '0.5rem', fontSize: '0.8rem', color: isOverLimit && !recipeToEdit ? '#ef4444' : 'var(--text-muted)' 
+              }}>
+                {recipeToEdit ? t('admin.recipes.editing_existing') : t('admin.recipes.quota_usage', { used: profile._count.recipes, limit: displayLimit })}
+              </div>
 
-        <button 
-          type="submit" 
-          className="btn-primary" 
-          disabled={loading || ((profile._count.recipes >= (profile.accountType === 'demo' ? 3 : profile.recetasContratadas)) && !recipeToEdit)}
-        >
-          {loading ? t('common.loading') : recipeToEdit ? t('admin.recipes.update_btn') : t('admin.recipes.create_btn')}
-        </button>
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={loading || (isOverLimit && !recipeToEdit)}
+              >
+                {loading ? t('common.loading') : recipeToEdit ? t('admin.recipes.update_btn') : t('admin.recipes.create_btn')}
+              </button>
+            </>
+          );
+        })()}
       </form>
     </Modal>
   );

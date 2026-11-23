@@ -67,10 +67,15 @@ export async function GET() {
       });
     }
 
-    // Asegurar que el plan Gold tiene recetas ilimitadas
+    // Asegurar que el plan Gold nuevo tiene recetas ilimitadas y el antiguo mantiene 150
     await prisma.pricingPlan.updateMany({
-      where: { name: { contains: 'Gold', mode: 'insensitive' }, recipesLimit: { not: null } },
+      where: { name: { contains: 'Gold', mode: 'insensitive' }, planGroup: 'SIMPLE', recipesLimit: { not: null } },
       data: { recipesLimit: null }
+    }).catch(() => {});
+
+    await prisma.pricingPlan.updateMany({
+      where: { name: { contains: 'Gold', mode: 'insensitive' }, planGroup: 'LEGACY', recipesLimit: { not: 150 } },
+      data: { recipesLimit: 150 }
     }).catch(() => {});
 
     const plans = await prisma.pricingPlan.findMany({
