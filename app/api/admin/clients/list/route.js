@@ -34,6 +34,7 @@ export async function GET() {
             accountType: true,
             recetasContratadas: true,
             stripeCurrentPeriodEnd: true,
+            contractedAt: true,
             origin: true,
             utmSource: true,
             utmMedium: true,

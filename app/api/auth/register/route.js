@@ -86,7 +86,7 @@ export async function POST(req) {
     }
 
     const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     const hashedPassword = await bcrypt.hash(password, 10);
 
     let referrer = null;
@@ -255,6 +255,7 @@ export async function POST(req) {
           </div>
           <p style="font-size: 0.9rem; color: #64748b;">Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
           <p style="word-break: break-all; color: #0284c7; font-size: 0.85rem;">${verificationUrl}</p>
+          <p style="font-size: 0.85rem; color: #475569; margin-top: 1rem; font-weight: 600;">Nota: Este enlace de verificación caduca en 24 horas.</p>
           <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;" />
           <p style="font-size: 0.85rem; color: #94a3b8;">Si no has solicitado este registro, puedes ignorar este correo.</p>
         </div>

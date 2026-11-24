@@ -22,6 +22,10 @@ export async function POST(req) {
       return NextResponse.json({ error: "Token inválido o ya verificado" }, { status: 400 });
     }
 
+    if (user.verificationTokenExpires && new Date(user.verificationTokenExpires) < new Date()) {
+      return NextResponse.json({ error: "El enlace de verificación ha caducado (validez: 24 horas). Solicita uno nuevo para verificar tu cuenta." }, { status: 400 });
+    }
+
     const updateData = {
       emailVerified: true,
       verificationToken: null,
@@ -60,6 +64,10 @@ export async function GET(req) {
 
     if (!user) {
       return NextResponse.json({ error: "Token inválido o ya verificado" }, { status: 400 });
+    }
+
+    if (user.verificationTokenExpires && new Date(user.verificationTokenExpires) < new Date()) {
+      return NextResponse.json({ error: "El enlace de verificación ha caducado (validez: 24 horas). Solicita uno nuevo para verificar tu cuenta." }, { status: 400 });
     }
 
     await prisma.user.update({

@@ -60,6 +60,7 @@ export async function POST(req) {
             planId: planId,
             stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
             hasSelectedMode: true,
+            ...(!currentProfile?.contractedAt ? { contractedAt: new Date(subscription.created ? subscription.created * 1000 : Date.now()) } : {})
           };
 
           if (collectedTaxId) {
@@ -100,6 +101,7 @@ export async function POST(req) {
                 stripeCurrentPeriodEnd: nextRenewalStr,
                 planId: planId,
                 stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+                ...(!currentProfile?.contractedAt ? { contractedAt: new Date(subscription.created ? subscription.created * 1000 : Date.now()) } : {})
               };
               if (collectedTaxId) updateData.nif = collectedTaxId;
               if (billingAddress && currentProfile) {

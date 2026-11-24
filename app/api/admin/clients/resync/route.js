@@ -101,7 +101,8 @@ export async function POST(req) {
         planId: plan?.id || undefined,
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
-        stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false
+        stripeCancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+        ...(subscription.created ? { contractedAt: new Date(subscription.created * 1000) } : {})
       }
     });
 

@@ -19,6 +19,7 @@ export async function PATCH(req, { params }) {
       email, name, razonSocial, nif, phone, urlClientify,
       planId, personName, address, postalCode, city, province, country,
       stripeSubscriptionId, stripeCustomerId, stripeCurrentPeriodEnd,
+      contractedAt,
       hasIaGoods,
       hasPosMode,
       isSimpleVersion,
@@ -62,6 +63,7 @@ export async function PATCH(req, { params }) {
       if (stripeSubscriptionId !== undefined) profileData.stripeSubscriptionId = stripeSubscriptionId || null;
       if (stripeCustomerId !== undefined) profileData.stripeCustomerId = stripeCustomerId || null;
       if (stripeCurrentPeriodEnd !== undefined) profileData.stripeCurrentPeriodEnd = stripeCurrentPeriodEnd || null;
+      if (contractedAt !== undefined) profileData.contractedAt = contractedAt ? new Date(contractedAt) : null;
       if (hasIaGoods !== undefined) profileData.hasIaGoods = Boolean(hasIaGoods);
       if (hasPosMode !== undefined) profileData.hasPosMode = Boolean(hasPosMode);
       if (isSimpleVersion !== undefined) {

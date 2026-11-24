@@ -939,22 +939,71 @@ export default function AdminDashboard() {
                               ) : <span style={{ color: '#94a3b8' }}>-</span>}
                             </td>
                             <td style={{ padding: '0.95rem 0.65rem', fontSize: '0.82rem', color: '#475569', whiteSpace: 'nowrap' }}>
-                              {client.clientProfile?.stripeCurrentPeriodEnd ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                  <Globe size={13} color="var(--corp-green)" />
-                                  {(() => {
-                                    const raw = client.clientProfile.stripeCurrentPeriodEnd;
-                                    try {
-                                      const d = new Date(raw);
-                                      return isNaN(d.getTime()) ? raw : d.toLocaleDateString();
-                                    } catch (e) {
-                                      return raw;
-                                    }
-                                  })()}
-                                </div>
-                              ) : (
-                                <span style={{ color: '#94a3b8' }}>-</span>
-                              )}
+                              {(() => {
+                                const profile = client.clientProfile;
+                                const isDemo = !profile?.planId || (profile?.plan?.name && profile.plan.name.toLowerCase().includes('demo'));
+
+                                // Fecha de contratación
+                                let contractDateStr = null;
+                                const rawContract = profile?.contractedAt;
+                                if (rawContract) {
+                                  try {
+                                    const d = new Date(rawContract);
+                                    contractDateStr = isNaN(d.getTime()) ? String(rawContract).split('T')[0] : d.toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES');
+                                  } catch (e) {
+                                    contractDateStr = String(rawContract);
+                                  }
+                                } else if (!isDemo && profile?.stripeCurrentPeriodEnd) {
+                                  try {
+                                    const endD = new Date(profile.stripeCurrentPeriodEnd);
+                                    const isMonthly = profile.plan?.stripePriceIdMonthly && profile.stripePriceId === profile.plan.stripePriceIdMonthly;
+                                    const startD = new Date(endD);
+                                    if (isMonthly) startD.setMonth(startD.getMonth() - 1);
+                                    else startD.setFullYear(startD.getFullYear() - 1);
+                                    contractDateStr = startD.toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES');
+                                  } catch (e) {
+                                    contractDateStr = null;
+                                  }
+                                }
+
+                                // Fecha de próxima renovación
+                                let renewalDateStr = null;
+                                const rawRenewal = profile?.stripeCurrentPeriodEnd;
+                                if (rawRenewal) {
+                                  try {
+                                    const d = new Date(rawRenewal);
+                                    renewalDateStr = isNaN(d.getTime()) ? String(rawRenewal).split('T')[0] : d.toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'it' ? 'it-IT' : locale === 'fr' ? 'fr-FR' : 'es-ES');
+                                  } catch (e) {
+                                    renewalDateStr = String(rawRenewal);
+                                  }
+                                }
+
+                                if (!contractDateStr && !renewalDateStr) {
+                                  return <span style={{ color: '#94a3b8' }}>-</span>;
+                                }
+
+                                return (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>
+                                        {t('admin.list.hired_date_short') || "Contr:"}
+                                      </span>
+                                      <span style={{ fontWeight: '700', color: '#1e293b' }}>
+                                        {contractDateStr || "-"}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>
+                                        {t('admin.list.renewal_date_short') || "Renov:"}
+                                      </span>
+                                      <span style={{ fontWeight: '700', color: 'var(--corp-green)', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                                        <Globe size={11} color="var(--corp-green)" />
+                                        {renewalDateStr || "-"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td style={{ padding: '0.95rem 0.5rem', textAlign: 'right' }}>
                               <button
@@ -1248,11 +1297,21 @@ export default function AdminDashboard() {
                   </select>
                 </div>
                 <div>
+                  <label className="label">{t('admin.list.col_contract_date') || "Fecha de contratación"}</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={editClientModal.form.contractedAt ? String(editClientModal.form.contractedAt).split('T')[0] : ""} 
+                    onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, contractedAt: e.target.value}})} 
+                    placeholder="YYYY-MM-DD..."
+                  />
+                </div>
+                <div>
                   <label className="label">{t('admin.list.col_renewal')}</label>
                   <input 
                     type="text" 
                     className="input-field" 
-                    value={editClientModal.form.stripeCurrentPeriodEnd || ""} 
+                    value={editClientModal.form.stripeCurrentPeriodEnd ? String(editClientModal.form.stripeCurrentPeriodEnd).split('T')[0] : ""} 
                     onChange={(e) => setEditClientModal({...editClientModal, form: {...editClientModal.form, stripeCurrentPeriodEnd: e.target.value}})} 
                     placeholder="YYYY-MM-DD..."
                   />
