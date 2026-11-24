@@ -165,6 +165,8 @@ model ClientProfile {
   // Delivery note numbering
   deliveryNotePrefix          String            @default("ALB-")
   nextDeliveryNoteNumber      Int               @default(1)
+
+  taskAlerts                  TaskAlert[]
 }
 
 model Customer {
@@ -885,6 +887,22 @@ model Seller {
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
   combinedSales   CombinedSale[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([clientProfileId])
+}
+
+model TaskAlert {
+  id              Int           @id @default(autoincrement())
+  clientProfileId Int
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+
+  alertType       String
+  daysOfWeek      Int[]
+  weeksOfMonth    Int[]
+  targetCount     Int           @default(1)
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

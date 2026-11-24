@@ -29,6 +29,7 @@ import {
   CheckCircle,
   BarChart3,
   Edit3,
+  CalendarCheck,
   Warehouse as WarehouseIcon
 } from "lucide-react";
 import ElaborationStockModal from "@/components/ElaborationStockModal";
@@ -37,6 +38,7 @@ import AssignWarehouseModal from "@/components/AssignWarehouseModal";
 import SelectWarehousesPdfModal from "@/components/SelectWarehousesPdfModal";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import AssignLotWarehouseModal from "@/components/AssignLotWarehouseModal";
+import TaskAlertsConfigModal from "@/components/TaskAlertsConfigModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import JsBarcode from "jsbarcode";
@@ -436,6 +438,7 @@ export default function ClientDashboard() {
   });
 
 
+  const [isNotificationsBellVisible, setIsNotificationsBellVisible] = useState(false);
   const [recipes, setRecipes] = useState([]);
   const [elaborations, setElaborations] = useState([]);
   const [cleaningLogs, setCleaningLogs] = useState([]);
@@ -6050,6 +6053,7 @@ export default function ClientDashboard() {
         profile={profile} 
         onOpenGoodsModal={() => setIsGoodsForSaleModalOpen(true)} 
         onOpenInventory={() => setIsInventoryModalOpen(true)}
+        onVisibilityChange={setIsNotificationsBellVisible}
       />
 
       {/* Floating Help (?) Icon in top-right corner to reopen Tutorial Video */}
@@ -6064,7 +6068,7 @@ export default function ClientDashboard() {
         style={{
           position: "fixed",
           top: "1.5rem",
-          right: (!profile?.isSimpleVersion && profile?.goodsLowStockAlertEnabled && profile?.goodsLowStockInApp) ? "10.6rem" : "7.2rem",
+          right: isNotificationsBellVisible ? "10.6rem" : "7.2rem",
           zIndex: 10000,
           width: "34px",
           height: "34px",
@@ -15920,6 +15924,24 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
   const [stelorderTestError, setStelorderTestError] = useState("");
   const [stelorderTestSuccess, setStelorderTestSuccess] = useState(false);
 
+  // Task Alerts state
+  const [taskAlerts, setTaskAlerts] = useState([]);
+  const fetchTaskAlerts = async () => {
+    try {
+      const res = await fetch("/api/client/task-alerts");
+      if (res.ok) {
+        const data = await res.json();
+        setTaskAlerts(Array.isArray(data.alerts) ? data.alerts : []);
+      }
+    } catch (err) {
+      console.error("Error fetching task alerts:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTaskAlerts();
+  }, []);
+
   const popular = ["EUR", "USD", "GBP"];
   const otherCurrencies = ALL_CURRENCIES.filter(c => !popular.includes(c.code))
     .sort((a, b) => a.code.localeCompare(b.code));
@@ -16417,6 +16439,17 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
         text: `${deliveryNotePrefix !== undefined && deliveryNotePrefix !== null ? deliveryNotePrefix : "ALB-"}${Math.max(1, parseInt(nextDeliveryNoteNumber, 10) || 1)}`,
         bg: 'rgba(66, 98, 22, 0.08)',
         color: 'var(--corp-green)'
+      }
+    },
+    {
+      id: "task_alerts",
+      title: t('business_config.task_alerts_title') || "Configurar alertas y calendario de tareas",
+      description: t('business_config.task_alerts_desc') || "Define alertas y frecuencias periódicas para el registro de tareas y controles sanitarios.",
+      icon: <CalendarCheck size={24} />,
+      badge: {
+        text: `${taskAlerts.length} ${t('business_config.alerts_badge') || 'alertas'}`,
+        bg: taskAlerts.length > 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+        color: taskAlerts.length > 0 ? '#16a34a' : '#64748b'
       }
     }
   ];
@@ -18097,7 +18130,7 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
       </div>
 
       {/* Modal Popup */}
-      {activeModal && (
+      {activeModal && activeModal !== "task_alerts" && (
         <div 
           style={{
             position: 'fixed',
@@ -18230,6 +18263,18 @@ function BusinessConfigView({ profile, chambers = [], onUpdate, onProfileRefresh
             </div>
           </div>
         </div>
+      )}
+
+      {activeModal === "task_alerts" && (
+        <TaskAlertsConfigModal 
+          isOpen={activeModal === "task_alerts"}
+          onClose={() => {
+            setActiveModal(null);
+            fetchTaskAlerts();
+          }}
+          profile={profile}
+          onAlertsUpdated={fetchTaskAlerts}
+        />
       )}
     </div>
   );
