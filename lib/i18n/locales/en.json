@@ -203,7 +203,17 @@
     "col_lot_number": "Lot",
     "col_receipt_date": "Receipt date",
     "col_provider_or_invoice": "Supplier / Delivery note",
-    "no_lot_assigned": "No lot"
+    "no_lot_assigned": "No lot",
+    "no_warehouses_created": "No warehouses created",
+    "btn_create_warehouse": "Create warehouse",
+    "filter_warehouse_label": "Filter by warehouse:",
+    "btn_assign_warehouse": "Assign warehouse",
+    "assign_warehouse_title_ingredient": "Assign warehouse to lots: {name}",
+    "assign_warehouse_title_goods": "Assign warehouse to lots: {name}",
+    "assign_warehouse_desc": "Locate each lot in its corresponding warehouse. Changes are saved automatically.",
+    "no_warehouses_create_prompt": "To assign locations to your lots, you must first create at least one warehouse.",
+    "no_lots_for_item": "No lot records for this item.",
+    "col_warehouse": "Warehouse"
   },
   "business_config": {
     "title": "Business Configuration",

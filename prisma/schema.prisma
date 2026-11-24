@@ -432,6 +432,7 @@ model Warehouse {
   clientProfileId Int
   clientProfile   ClientProfile  @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
   elaborations    Elaboration[]
+  goodsReceipts   GoodsReceipt[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
@@ -585,6 +586,9 @@ model GoodsReceipt {
   goodsForSaleQuantity  Float?
   goodsForSaleCostPrice Float?
 
+  warehouseId           Int?
+  warehouse             Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+
   clientProfileId Int
   clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
 
@@ -596,6 +600,10 @@ model GoodsReceipt {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([warehouseId])
+  @@index([clientProfileId])
+  @@index([goodsForSaleId])
 }
 
 model WaterMeasurement {

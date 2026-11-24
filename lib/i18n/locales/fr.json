@@ -203,7 +203,17 @@
     "col_lot_number": "Lot",
     "col_receipt_date": "Date d'entrée",
     "col_provider_or_invoice": "Fournisseur / Bon de livraison",
-    "no_lot_assigned": "Sans lot"
+    "no_lot_assigned": "Sans lot",
+    "no_warehouses_created": "Aucun entrepôt créé",
+    "btn_create_warehouse": "Créer un entrepôt",
+    "filter_warehouse_label": "Filtrer par entrepôt :",
+    "btn_assign_warehouse": "Assigner un entrepôt",
+    "assign_warehouse_title_ingredient": "Assigner l'entrepôt aux lots : {name}",
+    "assign_warehouse_title_goods": "Assigner l'entrepôt aux lots : {name}",
+    "assign_warehouse_desc": "Placez chaque lot dans son entrepôt correspondant. Les modifications sont enregistrées automatiquement.",
+    "no_warehouses_create_prompt": "Pour pouvoir attribuer des emplacements à vos lots, vous devez d'abord créer au moins un entrepôt.",
+    "no_lots_for_item": "Aucun enregistrement de lot pour cet élément.",
+    "col_warehouse": "Entrepôt"
   },
   "business_config": {
     "title": "Configuration de l'Entreprise",

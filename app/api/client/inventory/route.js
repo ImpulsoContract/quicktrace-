@@ -72,7 +72,9 @@ export async function GET(req) {
         unit: unitKey,
         recipes: [],
         stock: stockRecord.stock,
-        linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null
+        linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null,
+        warehouseIds: [],
+        hasNoWarehouseLots: false
       };
     });
 
@@ -89,13 +91,79 @@ export async function GET(req) {
             unit: unitKey,
             recipes: [],
             stock: 0,
-            linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null
+            linkedGoods: linkedGoodsByIngName[nameKey.toLowerCase()] || null,
+            warehouseIds: [],
+            hasNoWarehouseLots: false
           };
         }
         if (!inventoryMap[lookupKey].recipes.includes(recipe.name)) {
           inventoryMap[lookupKey].recipes.push(recipe.name);
         }
       });
+    });
+
+    // 3. Process warehouse assignments from GoodsReceipt
+    const receipts = await prisma.goodsReceipt.findMany({
+      where: { clientProfileId: profileId },
+      select: {
+        id: true,
+        productName: true,
+        relatedIngredients: true,
+        relatedQuantities: true,
+        warehouseId: true
+      }
+    });
+
+    receipts.forEach(r => {
+      const matchedKeys = new Set();
+      const relatedQs = (r.relatedQuantities && typeof r.relatedQuantities === "object") ? r.relatedQuantities : {};
+      
+      for (const key of Object.keys(relatedQs)) {
+        const lastColon = key.lastIndexOf(":");
+        if (lastColon === -1) continue;
+        const kName = key.slice(0, lastColon).trim().toLowerCase();
+        const kUnit = key.slice(lastColon + 1).trim().toLowerCase();
+        matchedKeys.add(`${kName}_${kUnit}`);
+      }
+
+      if (Array.isArray(r.relatedIngredients)) {
+        r.relatedIngredients.forEach(ri => {
+          if (!ri) return;
+          const riName = ri.trim().toLowerCase();
+          Object.keys(inventoryMap).forEach(lk => {
+            if (lk.startsWith(`${riName}_`)) {
+              matchedKeys.add(lk);
+            }
+          });
+        });
+      }
+
+      if (r.productName) {
+        const pName = r.productName.trim().toLowerCase();
+        Object.keys(inventoryMap).forEach(lk => {
+          if (lk.startsWith(`${pName}_`)) {
+            matchedKeys.add(lk);
+          }
+        });
+      }
+
+      matchedKeys.forEach(lk => {
+        if (inventoryMap[lk]) {
+          if (r.warehouseId) {
+            if (!inventoryMap[lk].warehouseIds.includes(r.warehouseId)) {
+              inventoryMap[lk].warehouseIds.push(r.warehouseId);
+            }
+          } else {
+            inventoryMap[lk].hasNoWarehouseLots = true;
+          }
+        }
+      });
+    });
+
+    Object.values(inventoryMap).forEach(item => {
+      if (item.warehouseIds.length === 0) {
+        item.hasNoWarehouseLots = true;
+      }
     });
 
     const result = Object.values(inventoryMap).sort((a, b) => a.name.localeCompare(b.name));

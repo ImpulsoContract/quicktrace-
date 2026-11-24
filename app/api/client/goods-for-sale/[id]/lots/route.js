@@ -57,6 +57,9 @@ export async function GET(req, { params }) {
     const receipts = await prisma.goodsReceipt.findMany({
       where,
       include: {
+        warehouse: {
+          select: { id: true, name: true }
+        },
         goodsForSale: {
           select: { id: true, name: true, unit: true, salePrice: true, stock: true, barcode: true }
         }

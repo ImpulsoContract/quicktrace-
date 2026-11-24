@@ -38,11 +38,10 @@ export async function GET(req) {
       }
     });
 
-    // 2. Obtener todas las entradas de mercancías con lote
+    // 2. Obtener todas las entradas de mercancías
     const receipts = await prisma.goodsReceipt.findMany({
       where: {
-        clientProfileId: profileId,
-        NOT: [{ lote: null }, { lote: "" }]
+        clientProfileId: profileId
       },
       select: {
         id: true,
@@ -53,7 +52,11 @@ export async function GET(req) {
         quantity: true,
         date: true,
         relatedIngredients: true,
-        relatedQuantities: true
+        relatedQuantities: true,
+        warehouseId: true,
+        warehouse: {
+          select: { id: true, name: true }
+        }
       },
       orderBy: { date: "desc" }
     });
@@ -91,6 +94,7 @@ export async function GET(req) {
 
     // 4. Mapear y agrupar por lote
     const lotsMap = new Map();
+    const receiptLots = [];
 
     const getOrCreateLot = (lotStr) => {
       const cleanLot = lotStr.trim();
@@ -102,6 +106,8 @@ export async function GET(req) {
           remainingStock: 0,
           lastReceiptDate: null,
           providerName: null,
+          warehouseId: null,
+          warehouse: null,
           receipts: [],
           elaborations: []
         });
@@ -111,8 +117,7 @@ export async function GET(req) {
 
     // Procesar entradas de mercancías
     receipts.forEach(r => {
-      const lotStr = r.lote ? r.lote.trim() : "";
-      if (!lotStr) return;
+      const lotStr = r.lote ? r.lote.trim() : (r.invoiceNumber ? `Albarán ${r.invoiceNumber}` : "Sin lote");
 
       let addedQty = 0;
       let foundInRelatedQuantities = false;
@@ -151,18 +156,32 @@ export async function GET(req) {
       }
 
       if (addedQty > 0 || hasRelated) {
+        receiptLots.push({
+          id: r.id,
+          lote: lotStr,
+          date: r.date,
+          providerName: r.providerName || "-",
+          quantity: addedQty,
+          warehouseId: r.warehouseId || null,
+          warehouse: r.warehouse || null
+        });
+
         const lotObj = getOrCreateLot(lotStr);
         lotObj.initialStock = Math.round((lotObj.initialStock + addedQty) * 10000) / 10000;
         if (!lotObj.lastReceiptDate || new Date(r.date) > new Date(lotObj.lastReceiptDate)) {
           lotObj.lastReceiptDate = r.date;
           if (r.providerName) lotObj.providerName = r.providerName;
+          lotObj.warehouseId = r.warehouseId || null;
+          lotObj.warehouse = r.warehouse || null;
         }
         lotObj.receipts.push({
           id: r.id,
           date: r.date,
           invoiceNumber: r.invoiceNumber || "",
           providerName: r.providerName || "",
-          quantityAdded: addedQty
+          quantityAdded: addedQty,
+          warehouseId: r.warehouseId || null,
+          warehouse: r.warehouse || null
         });
       }
     });
@@ -221,7 +240,8 @@ export async function GET(req) {
         activeLotsCount,
         totalStockInLots
       },
-      lots
+      lots,
+      receiptLots
     });
   } catch (error) {
     console.error("Error GET /api/client/inventory/lots:", error);

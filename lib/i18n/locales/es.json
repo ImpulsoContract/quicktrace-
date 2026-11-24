@@ -203,7 +203,17 @@
     "col_lot_number": "Lote",
     "col_receipt_date": "Fecha de entrada",
     "col_provider_or_invoice": "Proveedor / Albarán",
-    "no_lot_assigned": "Sin lote"
+    "no_lot_assigned": "Sin lote",
+    "no_warehouses_created": "No hay almacenes creados",
+    "btn_create_warehouse": "Crear almacén",
+    "filter_warehouse_label": "Filtrar por almacén:",
+    "btn_assign_warehouse": "Asignar almacén",
+    "assign_warehouse_title_ingredient": "Asignar almacén a lotes: {name}",
+    "assign_warehouse_title_goods": "Asignar almacén a lotes: {name}",
+    "assign_warehouse_desc": "Ubica cada lote en su almacén correspondiente. Los cambios se guardan automáticamente.",
+    "no_warehouses_create_prompt": "Para poder asignar ubicaciones a tus lotes, primero debes crear al menos un almacén.",
+    "no_lots_for_item": "No hay registros de lotes para este elemento.",
+    "col_warehouse": "Almacén"
   },
   "business_config": {
     "title": "Configuración del Negocio",

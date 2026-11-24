@@ -51,7 +51,8 @@ export async function GET(req) {
             id: true,
             lote: true,
             barcode: true,
-            goodsForSaleQuantity: true
+            goodsForSaleQuantity: true,
+            warehouseId: true
           }
         }
       },

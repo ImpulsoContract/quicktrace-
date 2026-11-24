@@ -203,7 +203,17 @@
     "col_lot_number": "Lote",
     "col_receipt_date": "Data de entrada",
     "col_provider_or_invoice": "Fornecedor / Guia de remessa",
-    "no_lot_assigned": "Sem lote"
+    "no_lot_assigned": "Sem lote",
+    "no_warehouses_created": "Nenhum armazém criado",
+    "btn_create_warehouse": "Criar armazém",
+    "filter_warehouse_label": "Filtrar por armazém:",
+    "btn_assign_warehouse": "Atribuir armazém",
+    "assign_warehouse_title_ingredient": "Atribuir armazém aos lotes: {name}",
+    "assign_warehouse_title_goods": "Atribuir armazém aos lotes: {name}",
+    "assign_warehouse_desc": "Aloque cada lote no respetivo armazém. As alterações são guardadas automaticamente.",
+    "no_warehouses_create_prompt": "Para poder atribuir localizações aos seus lotes, deve primeiro criar pelo menos um armazém.",
+    "no_lots_for_item": "Não há registos de lotes para este item.",
+    "col_warehouse": "Armazém"
   },
   "business_config": {
     "title": "Configuração do Negócio",

@@ -203,7 +203,17 @@
     "col_lot_number": "Lotto",
     "col_receipt_date": "Data di entrata",
     "col_provider_or_invoice": "Fornitore / Bolla di consegna",
-    "no_lot_assigned": "Senza lotto"
+    "no_lot_assigned": "Senza lotto",
+    "no_warehouses_created": "Nessun magazzino creato",
+    "btn_create_warehouse": "Crea magazzino",
+    "filter_warehouse_label": "Filtra per magazzino:",
+    "btn_assign_warehouse": "Assegna magazzino",
+    "assign_warehouse_title_ingredient": "Assegna magazzino ai lotti: {name}",
+    "assign_warehouse_title_goods": "Assegna magazzino ai lotti: {name}",
+    "assign_warehouse_desc": "Colloca ciascun lotto nel rispettivo magazzino. Le modifiche vengono salvate automaticamente.",
+    "no_warehouses_create_prompt": "Per poter assegnare posizioni ai tuoi lotti, devi prima creare almeno un magazzino.",
+    "no_lots_for_item": "Nessun record di lotto per questo elemento.",
+    "col_warehouse": "Magazzino"
   },
   "business_config": {
     "title": "Configurazione dell'Attività",

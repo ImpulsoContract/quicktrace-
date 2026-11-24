@@ -36,6 +36,7 @@ import ManageWarehousesModal from "@/components/ManageWarehousesModal";
 import AssignWarehouseModal from "@/components/AssignWarehouseModal";
 import SelectWarehousesPdfModal from "@/components/SelectWarehousesPdfModal";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
+import AssignLotWarehouseModal from "@/components/AssignLotWarehouseModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import JsBarcode from "jsbarcode";
@@ -12931,6 +12932,8 @@ export default function ClientDashboard() {
           isOpen={isInventoryModalOpen} 
           onClose={() => setIsInventoryModalOpen(false)} 
           onRefreshPrices={fetchIngredientPrices}
+          warehouses={warehouses}
+          onOpenManageWarehouses={() => setIsManageWarehousesModalOpen(true)}
         />
       )}
 
@@ -27867,9 +27870,11 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
   );
 }
 
-function InventoryModal({ isOpen, onClose, onRefreshPrices }) {
+function InventoryModal({ isOpen, onClose, onRefreshPrices, warehouses = [], onOpenManageWarehouses }) {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("ingredients");
+  const [warehouseFilter, setWarehouseFilter] = useState("all");
+  const [assignWarehouseTarget, setAssignWarehouseTarget] = useState(null);
 
   // Ingredients tab state
   const [inventory, setInventory] = useState([]);
@@ -28009,22 +28014,50 @@ function InventoryModal({ isOpen, onClose, onRefreshPrices }) {
   };
 
   const filteredInventory = useMemo(() => {
-    if (!search.trim()) return inventory;
-    const term = search.toLowerCase().trim();
-    return inventory.filter(item => 
-      (item.name && item.name.toLowerCase().includes(term)) ||
-      (item.recipes && item.recipes.some(r => r.toLowerCase().includes(term)))
-    );
-  }, [inventory, search]);
+    let result = inventory;
+    if (search.trim()) {
+      const term = search.toLowerCase().trim();
+      result = result.filter(item => 
+        (item.name && item.name.toLowerCase().includes(term)) ||
+        (item.recipes && item.recipes.some(r => r.toLowerCase().includes(term)))
+      );
+    }
+    if (warehouseFilter && warehouseFilter !== "all") {
+      if (warehouseFilter === "none") {
+        result = result.filter(item => item.hasNoWarehouseLots || !item.warehouseIds || item.warehouseIds.length === 0);
+      } else {
+        const targetWId = parseInt(warehouseFilter, 10);
+        result = result.filter(item => Array.isArray(item.warehouseIds) && item.warehouseIds.includes(targetWId));
+      }
+    }
+    return result;
+  }, [inventory, search, warehouseFilter]);
 
   const filteredGoodsForSale = useMemo(() => {
-    if (!gfsSearch.trim()) return goodsForSaleList;
-    const term = gfsSearch.toLowerCase().trim();
-    return goodsForSaleList.filter(item => 
-      (item.name && item.name.toLowerCase().includes(term)) ||
-      (item.unit && item.unit.toLowerCase().includes(term))
-    );
-  }, [goodsForSaleList, gfsSearch]);
+    let result = goodsForSaleList;
+    if (gfsSearch.trim()) {
+      const term = gfsSearch.toLowerCase().trim();
+      result = result.filter(item => 
+        (item.name && item.name.toLowerCase().includes(term)) ||
+        (item.unit && item.unit.toLowerCase().includes(term))
+      );
+    }
+    if (warehouseFilter && warehouseFilter !== "all") {
+      if (warehouseFilter === "none") {
+        result = result.filter(item => {
+          const receipts = item.goodsReceipts || [];
+          return receipts.some(r => !r.warehouseId) || receipts.length === 0;
+        });
+      } else {
+        const targetWId = parseInt(warehouseFilter, 10);
+        result = result.filter(item => {
+          const receipts = item.goodsReceipts || [];
+          return receipts.some(r => r.warehouseId === targetWId);
+        });
+      }
+    }
+    return result;
+  }, [goodsForSaleList, gfsSearch, warehouseFilter]);
 
   const fetchLotsForGfs = async (gfsId) => {
     setGfsLotsData(prev => ({
@@ -28227,6 +28260,97 @@ function InventoryModal({ isOpen, onClose, onRefreshPrices }) {
           </button>
         </div>
 
+        {/* Warehouse Filter or No Warehouses Banner */}
+        {warehouses.length === 0 ? (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            padding: '0.65rem 1rem',
+            background: '#f8fafc',
+            border: '1px solid var(--border)',
+            borderRadius: '0.75rem',
+            marginBottom: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <WarehouseIcon size={16} style={{ color: '#64748b' }} />
+              <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600 }}>
+                {t('inventory.no_warehouses_created') || "No hay almacenes creados"}
+              </span>
+            </div>
+            {onOpenManageWarehouses && (
+              <button
+                type="button"
+                onClick={onOpenManageWarehouses}
+                className="btn-primary"
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.78rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  borderRadius: '6px'
+                }}
+              >
+                <Plus size={13} />
+                <span>{t('inventory.btn_create_warehouse') || "Crear almacén"}</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '1rem',
+            flexWrap: 'wrap',
+            background: '#f8fafc',
+            border: '1px solid var(--border)',
+            borderRadius: '0.75rem',
+            padding: '0.65rem 1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.85rem', fontWeight: 700 }}>
+              <WarehouseIcon size={16} style={{ color: 'var(--corp-green)' }} />
+              <span>{t('inventory.filter_warehouse_label') || "Filtrar por almacén:"}</span>
+            </div>
+            <select
+              value={warehouseFilter}
+              onChange={(e) => setWarehouseFilter(e.target.value)}
+              className="input-field"
+              style={{
+                maxWidth: '240px',
+                padding: '0.35rem 0.75rem',
+                fontSize: '0.82rem',
+                fontWeight: 600
+              }}
+            >
+              <option value="all">{t('dashboard.all_warehouses') || "Todos los almacenes"}</option>
+              {warehouses.map(w => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+              <option value="none">{t('dashboard.without_warehouse') || "Sin almacén asignado"}</option>
+            </select>
+            {warehouseFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setWarehouseFilter("all")}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  fontSize: '0.76rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                {t('common.clear_filter') || "Mostrar todos"}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Search bar */}
         <div style={{ marginBottom: '1rem', position: 'relative' }}>
           <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -28425,6 +28549,24 @@ function InventoryModal({ isOpen, onClose, onRefreshPrices }) {
                               <Layers size={13} style={{ color: 'var(--corp-green)' }} />
                               <span>{t('inventory.btn_view_lots_stock') || "Ver stock de cada lote"}</span>
                             </button>
+                            <button
+                              type="button"
+                              onClick={() => setAssignWarehouseTarget({ item, type: "ingredient" })}
+                              className="btn-secondary"
+                              style={{
+                                padding: '0.3rem 0.55rem',
+                                fontSize: '0.76rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                borderRadius: '6px',
+                                fontWeight: 600
+                              }}
+                              title={t('inventory.btn_assign_warehouse') || "Asignar almacén"}
+                            >
+                              <WarehouseIcon size={13} style={{ color: 'var(--corp-green)' }} />
+                              <span>{t('inventory.btn_assign_warehouse') || "Asignar almacén"}</span>
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -28569,17 +28711,38 @@ function InventoryModal({ isOpen, onClose, onRefreshPrices }) {
                               </button>
                             </td>
                             <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                <span style={{
-                                  fontSize: '1.05rem',
-                                  fontWeight: 800,
-                                  color: (item.stock > 0 ? 'var(--corp-green)' : 'var(--text-muted)')
-                                }}>
-                                  {item.stock !== undefined && item.stock !== null ? item.stock : 0}
-                                </span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, minWidth: '24px', textAlign: 'left' }}>
-                                  {item.unit}
-                                </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                  <span style={{
+                                    fontSize: '1.05rem',
+                                    fontWeight: 800,
+                                    color: (item.stock > 0 ? 'var(--corp-green)' : 'var(--text-muted)')
+                                  }}>
+                                    {item.stock !== undefined && item.stock !== null ? item.stock : 0}
+                                  </span>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, minWidth: '24px', textAlign: 'left' }}>
+                                    {item.unit}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setAssignWarehouseTarget({ item, type: "goods" })}
+                                  className="btn-secondary"
+                                  style={{
+                                    padding: '0.25rem 0.5rem',
+                                    fontSize: '0.72rem',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    borderRadius: '5px',
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  title={t('inventory.btn_assign_warehouse') || "Asignar almacén"}
+                                >
+                                  <WarehouseIcon size={12} style={{ color: 'var(--corp-green)' }} />
+                                  <span>{t('inventory.btn_assign_warehouse') || "Asignar almacén"}</span>
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -28760,6 +28923,20 @@ function InventoryModal({ isOpen, onClose, onRefreshPrices }) {
           <IngredientLotStockModal 
             ingredient={selectedLotIngredient} 
             onClose={() => setSelectedLotIngredient(null)} 
+          />
+        )}
+
+        {assignWarehouseTarget && (
+          <AssignLotWarehouseModal 
+            isOpen={Boolean(assignWarehouseTarget)}
+            onClose={() => setAssignWarehouseTarget(null)}
+            target={assignWarehouseTarget}
+            warehouses={warehouses}
+            onOpenManageWarehouses={onOpenManageWarehouses}
+            onWarehouseAssigned={() => {
+              fetchInventory();
+              fetchGoodsForSale();
+            }}
           />
         )}
 
