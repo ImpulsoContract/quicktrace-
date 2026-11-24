@@ -1749,7 +1749,17 @@
     "stock_available": "Available stock",
     "no_records_stock": "No elaborations with available stock found in the selected period.",
     "generating": "Generating...",
-    "current_stock_label": "Current available stock"
+    "current_stock_label": "Current available stock",
+    "select_warehouses_title": "Select warehouses for inventory",
+    "select_warehouses_desc": "Choose which warehouses you want to include in the PDF report:",
+    "warehouses_list": "Available warehouses",
+    "btn_select_all": "Select all",
+    "btn_deselect_all": "Deselect all",
+    "btn_generate_pdf": "Generate PDF",
+    "err_select_at_least_one": "Please select at least one warehouse to generate the inventory.",
+    "no_records_in_selected_warehouses": "No elaborations with stock found in the selected warehouses.",
+    "location": "Location",
+    "no_location": "Unassigned"
   },
   "traceability_report": {
     "report_type": "Report type",

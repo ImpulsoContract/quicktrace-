@@ -1743,7 +1743,17 @@
     "stock_available": "Stock disponível",
     "no_records_stock": "Nenhuma elaboração com stock disponível encontrada no período selecionado.",
     "generating": "A gerar...",
-    "current_stock_label": "Stock atual disponível"
+    "current_stock_label": "Stock atual disponível",
+    "select_warehouses_title": "Selecionar armazéns para o inventário",
+    "select_warehouses_desc": "Escolha os armazéns que deseja incluir no relatório PDF:",
+    "warehouses_list": "Armazéns disponíveis",
+    "btn_select_all": "Selecionar todos",
+    "btn_deselect_all": "Desmarcar todos",
+    "btn_generate_pdf": "Gerar PDF",
+    "err_select_at_least_one": "Selecione pelo menos um armazém para gerar o inventário.",
+    "no_records_in_selected_warehouses": "Nenhuma elaboração com stock encontrada nos armazéns selecionados.",
+    "location": "Localização",
+    "no_location": "Não atribuído"
   },
   "traceability_report": {
     "report_type": "Tipo de relatório",

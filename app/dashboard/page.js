@@ -34,6 +34,7 @@ import {
 import ElaborationStockModal from "@/components/ElaborationStockModal";
 import ManageWarehousesModal from "@/components/ManageWarehousesModal";
 import AssignWarehouseModal from "@/components/AssignWarehouseModal";
+import SelectWarehousesPdfModal from "@/components/SelectWarehousesPdfModal";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -703,6 +704,7 @@ export default function ClientDashboard() {
   const [warehouses, setWarehouses] = useState([]);
   const [isManageWarehousesModalOpen, setIsManageWarehousesModalOpen] = useState(false);
   const [isAssignWarehouseModalOpen, setIsAssignWarehouseModalOpen] = useState(false);
+  const [isSelectWarehousesPdfModalOpen, setIsSelectWarehousesPdfModalOpen] = useState(false);
   const [elaborationForAssignWarehouse, setElaborationForAssignWarehouse] = useState(null);
 
   const fetchWarehouses = async () => {
@@ -4566,7 +4568,13 @@ export default function ClientDashboard() {
     }
   };
 
-  const generateInventoryReportPDF = async () => {
+  const generateInventoryReportPDF = async (warehouseIds = null) => {
+    // If user has created warehouses and warehouseIds not specified, open modal to choose warehouses
+    if (!Array.isArray(warehouseIds) && warehouses && warehouses.length > 0) {
+      setIsSelectWarehousesPdfModalOpen(true);
+      return;
+    }
+
     setInventoryReportLoading(true);
     try {
       const query = new URLSearchParams({
@@ -4583,8 +4591,17 @@ export default function ClientDashboard() {
       const data = await res.json();
       const rawElabs = data.data || [];
 
+      // Filter by selected warehouses if provided
+      let elabsToFilter = rawElabs;
+      if (Array.isArray(warehouseIds)) {
+        elabsToFilter = rawElabs.filter(el => {
+          if (warehouseIds.includes("none") && !el.warehouseId) return true;
+          return el.warehouseId && warehouseIds.some(id => String(id) === String(el.warehouseId));
+        });
+      }
+
       // Filter to guarantee only positive remaining stock
-      const filtered = rawElabs.filter(el => {
+      const filtered = elabsToFilter.filter(el => {
         const totalProduced = parseFloat(el.quantityProduced?.toString().replace(',', '.'));
         if (isNaN(totalProduced) || totalProduced <= 0) return false;
         const totalSold = (el.sales || []).reduce((sum, s) => {
@@ -4597,7 +4614,12 @@ export default function ClientDashboard() {
       });
 
       if (filtered.length === 0) {
-        alert(t('inventory_report.no_records_stock') || "No se encontraron elaboraciones con stock disponible en este momento.");
+        if (Array.isArray(warehouseIds)) {
+          alert(t('inventory_report.no_records_in_selected_warehouses') || "No se encontraron elaboraciones con stock en los almacenes seleccionados.");
+        } else {
+          alert(t('inventory_report.no_records_stock') || "No se encontraron elaboraciones con stock disponible en este momento.");
+        }
+        setIsSelectWarehousesPdfModalOpen(false);
         return;
       }
 
@@ -4754,7 +4776,16 @@ export default function ClientDashboard() {
         doc.text((t('inventory_report.stock_available') || "Stock disponible") + ":", 20, currentY);
         doc.text(`${remainingStock} ${unit}`.trim(), 90, currentY);
         doc.setTextColor(0, 0, 0);
-        currentY += 8;
+        currentY += 6.5;
+
+        doc.setFont("helvetica", "bold");
+        doc.text((t('inventory_report.location') || "Ubicación") + ":", 20, currentY);
+        doc.setFont("helvetica", "normal");
+        const warehouseLocation = el.warehouse?.name || (t('inventory_report.no_location') || "Sin asignar");
+        const locationLines = doc.splitTextToSize(warehouseLocation, 100);
+        doc.text(locationLines, 90, currentY);
+        const locLineHeight = locationLines.length > 1 ? (6.5 + (locationLines.length - 1) * 5) : 8;
+        currentY += locLineHeight;
 
         // Tabla de ingredientes
         doc.setFont("helvetica", "bold");
@@ -4791,8 +4822,10 @@ export default function ClientDashboard() {
       });
 
       doc.save(`Informe_Inventario_${new Date().toISOString().slice(0, 10)}.pdf`);
+      setIsSelectWarehousesPdfModalOpen(false);
     } catch (error) {
       console.error("Error generating inventory report:", error);
+      setIsSelectWarehousesPdfModalOpen(false);
       alert(`${t('alerts.connection_error') || "Error de conexión"} (${error.message})`);
     } finally {
       setInventoryReportLoading(false);
@@ -8617,7 +8650,7 @@ export default function ClientDashboard() {
                     )}
                     {!profile?.isSimpleVersion && (
                       <button 
-                        onClick={generateInventoryReportPDF}
+                        onClick={() => generateInventoryReportPDF()}
                         disabled={inventoryReportLoading}
                         className="btn-secondary"
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
@@ -13013,6 +13046,16 @@ export default function ClientDashboard() {
           onAssigned={() => {
             fetchElaborations();
           }}
+        />
+      )}
+
+      {isSelectWarehousesPdfModalOpen && (
+        <SelectWarehousesPdfModal 
+          warehouses={warehouses}
+          isOpen={isSelectWarehousesPdfModalOpen}
+          onClose={() => setIsSelectWarehousesPdfModalOpen(false)}
+          onGenerate={(selectedIds) => generateInventoryReportPDF(selectedIds)}
+          loading={inventoryReportLoading}
         />
       )}
 
