@@ -96,6 +96,9 @@ export async function GET(req) {
           sales: {
             include: { customer: true, combinedSale: true },
             orderBy: { date: 'desc' }
+          },
+          stockAdjustments: {
+            orderBy: { createdAt: 'desc' }
           }
         },
         orderBy: {
@@ -111,7 +114,8 @@ export async function GET(req) {
           if (s.percentage != null) return sum + (totalProduced * s.percentage / 100);
           return sum;
         }, 0);
-        return (totalProduced - totalSold) > 0.0001;
+        const totalAdjustments = (el.stockAdjustments || []).reduce((sum, a) => sum + (a.difference || 0), 0);
+        return (totalProduced - totalSold + totalAdjustments) > 0.0001;
       });
 
       const paginatedData = withStock.slice(skip, skip + limit);
@@ -143,6 +147,9 @@ export async function GET(req) {
           sales: {
             include: { customer: true, combinedSale: true },
             orderBy: { date: 'desc' }
+          },
+          stockAdjustments: {
+            orderBy: { createdAt: 'desc' }
           }
         },
         orderBy: {

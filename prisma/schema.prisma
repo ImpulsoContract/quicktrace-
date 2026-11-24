@@ -353,6 +353,7 @@ model Elaboration {
 
   ingredients ElaborationIngredient[]
   sales       ElaborationSale[]
+  stockAdjustments ElaborationStockAdjustment[]
 
   quantityProduced String?
   quantityUnit     String?
@@ -402,6 +403,21 @@ model ElaborationSale {
   @@index([customerId])
   @@index([combinedSaleId])
   @@index([clientProfileId])
+}
+
+model ElaborationStockAdjustment {
+  id              Int          @id @default(autoincrement())
+  elaborationId   Int
+  elaboration     Elaboration  @relation(fields: [elaborationId], references: [id], onDelete: Cascade)
+  previousStock   Float
+  newStock        Float
+  difference      Float        // newStock - previousStock
+  reason          String       // Caducado, Deteriorado, Devolución, Otra razón
+  customReason    String?
+  userName        String?
+  createdAt       DateTime     @default(now())
+
+  @@index([elaborationId])
 }
 
 model CombinedSale {

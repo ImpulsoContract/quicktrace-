@@ -154,7 +154,8 @@ export async function POST(req) {
         },
         include: {
           recipe: true,
-          sales: true
+          sales: true,
+          stockAdjustments: true
         }
       });
 
@@ -196,7 +197,8 @@ export async function POST(req) {
           return sum;
         }, 0);
 
-        const availableStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
+        const totalAdjustments = (elab.stockAdjustments || []).reduce((sum, a) => sum + (a.difference || 0), 0);
+        const availableStock = Math.max(0, Math.round((totalProduced - totalSold + totalAdjustments) * 1000) / 1000);
         const totalQtyForElab = totalRequestedElab.get(elabId) || 0;
 
         if (!isDraftSale && totalProduced > 0 && totalQtyForElab > availableStock + 0.0001) {

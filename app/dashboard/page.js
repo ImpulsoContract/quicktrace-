@@ -27,8 +27,10 @@ import {
   ShieldAlert,
   HelpCircle,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  Edit3
 } from "lucide-react";
+import ElaborationStockModal from "@/components/ElaborationStockModal";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -481,6 +483,12 @@ export default function ClientDashboard() {
   const [returnToElaborationFromCombined, setReturnToElaborationFromCombined] = useState(null);
   const [customerForSalesModal, setCustomerForSalesModal] = useState(null);
   const [returnToCustomerSales, setReturnToCustomerSales] = useState(null);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [stockModalElaboration, setStockModalElaboration] = useState(null);
+  const handleOpenStockModal = (elaboration) => {
+    setStockModalElaboration(elaboration);
+    setIsStockModalOpen(true);
+  };
   const handleOpenSaleModal = (elaboration) => {
     setSaleModalElaboration(elaboration);
     setIsSaleModalOpen(true);
@@ -4557,7 +4565,8 @@ export default function ClientDashboard() {
           if (s.percentage != null) return sum + (totalProduced * s.percentage / 100);
           return sum;
         }, 0);
-        return (totalProduced - totalSold) > 0.0001;
+        const totalAdjustments = (el.stockAdjustments || []).reduce((sum, a) => sum + (Number(a.difference) || 0), 0);
+        return (totalProduced - totalSold + totalAdjustments) > 0.0001;
       });
 
       if (filtered.length === 0) {
@@ -4696,7 +4705,8 @@ export default function ClientDashboard() {
           if (s.percentage != null) return sum + (totalProduced * s.percentage / 100);
           return sum;
         }, 0);
-        const remainingStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
+        const totalAdjustments = (el.stockAdjustments || []).reduce((sum, a) => sum + (Number(a.difference) || 0), 0);
+        const remainingStock = Math.max(0, Math.round((totalProduced - totalSold + totalAdjustments) * 1000) / 1000);
         const pctSold = Math.min(100, Math.round((totalSold / totalProduced) * 100));
 
         currentY += 2;
@@ -9046,7 +9056,8 @@ export default function ClientDashboard() {
                               return sum;
                             }, 0);
 
-                            const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty) * 1000) / 1000) : null;
+                            const totalAdjustments = (el.stockAdjustments || []).reduce((sum, a) => sum + (Number(a.difference) || 0), 0);
+                            const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty + totalAdjustments) * 1000) / 1000) : null;
                             const pctSold = hasProducedQty ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
                             const isOutOfStock = hasProducedQty && remainingStock <= 0.0001;
                             const isLowStock = hasProducedQty && !isOutOfStock && remainingStock <= totalProduced * 0.2;
@@ -9137,6 +9148,32 @@ export default function ClientDashboard() {
                                   >
                                     <Eye size={13} /> {t('dashboard.view_register_sales') || "Ver/registrar ventas"}
                                   </button>
+                                  {hasProducedQty && remainingStock > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenStockModal(el);
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        fontSize: '0.75rem',
+                                        color: '#0284c7',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline',
+                                        fontWeight: '700',
+                                        textAlign: 'left',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                        marginTop: '0.15rem'
+                                      }}
+                                    >
+                                      <Edit3 size={13} /> {t('dashboard.modify_stock_btn') || "Modificar stock"}
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             );
@@ -9463,7 +9500,8 @@ export default function ClientDashboard() {
                             return sum;
                           }, 0);
 
-                          const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty) * 1000) / 1000) : null;
+                          const totalAdjustments = (el.stockAdjustments || []).reduce((sum, a) => sum + (Number(a.difference) || 0), 0);
+                          const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty + totalAdjustments) * 1000) / 1000) : null;
                           const pctSold = hasProducedQty ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
                           const isOutOfStock = hasProducedQty && remainingStock <= 0.0001;
                           const isLowStock = hasProducedQty && !isOutOfStock && remainingStock <= totalProduced * 0.2;
@@ -9537,7 +9575,7 @@ export default function ClientDashboard() {
                                   </span>
                                 )}
                               </div>
-                              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.35rem' }}>
+                              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.35rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -9561,6 +9599,31 @@ export default function ClientDashboard() {
                                 >
                                   <Eye size={14} /> {t('dashboard.view_register_sales') || "Ver/registrar ventas"}
                                 </button>
+                                {hasProducedQty && remainingStock > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenStockModal(el);
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      padding: 0,
+                                      fontSize: '0.8rem',
+                                      color: '#0284c7',
+                                      cursor: 'pointer',
+                                      textDecoration: 'underline',
+                                      fontWeight: '700',
+                                      textAlign: 'left',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.35rem'
+                                    }}
+                                  >
+                                    <Edit3 size={14} /> {t('dashboard.modify_stock_btn') || "Modificar stock"}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
@@ -12242,7 +12305,8 @@ export default function ClientDashboard() {
                               return sum;
                             }, 0);
 
-                            const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty) * 1000) / 1000) : null;
+                            const totalAdjustments = (el.stockAdjustments || []).reduce((sum, a) => sum + (Number(a.difference) || 0), 0);
+                            const remainingStock = hasProducedQty ? Math.max(0, Math.round((totalProduced - totalSoldQty + totalAdjustments) * 1000) / 1000) : null;
                             const pctSold = hasProducedQty ? Math.min(100, Math.round((totalSoldQty / totalProduced) * 100)) : Math.round(elabSales.reduce((sum, s) => sum + (s.percentage || 0), 0) * 100) / 100;
                             const isOutOfStock = hasProducedQty && remainingStock <= 0.0001;
                             const isLowStock = hasProducedQty && !isOutOfStock && remainingStock <= totalProduced * 0.2;
@@ -12333,6 +12397,32 @@ export default function ClientDashboard() {
                                   >
                                     <Eye size={13} /> {t('dashboard.view_register_sales') || "Ver/registrar ventas"}
                                   </button>
+                                  {hasProducedQty && remainingStock > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenStockModal(elab);
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        fontSize: '0.75rem',
+                                        color: '#0284c7',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline',
+                                        fontWeight: '700',
+                                        textAlign: 'left',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                        marginTop: '0.15rem'
+                                      }}
+                                    >
+                                      <Edit3 size={13} /> {t('dashboard.modify_stock_btn') || "Modificar stock"}
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             );
@@ -12617,6 +12707,19 @@ export default function ClientDashboard() {
             setReturnToCustomerSales(customerForSalesModal);
             setCustomerForSalesModal(null);
             handleOpenSaleModal(sale.elaboration);
+          }}
+        />
+      )}
+
+      {isStockModalOpen && stockModalElaboration && session?.user?.role !== "WORKER" && (
+        <ElaborationStockModal 
+          elaboration={stockModalElaboration}
+          onClose={() => {
+            setIsStockModalOpen(false);
+            setStockModalElaboration(null);
+          }}
+          onStockUpdated={() => {
+            fetchElaborations();
           }}
         />
       )}

@@ -48,6 +48,11 @@ export async function GET(req) {
             percentage: true,
             isDraft: true
           }
+        },
+        stockAdjustments: {
+          select: {
+            difference: true
+          }
         }
       },
       orderBy: { date: 'desc' }
@@ -63,7 +68,8 @@ export async function GET(req) {
         return sum;
       }, 0);
 
-      const availableStock = Math.max(0, Math.round((totalProduced - totalSold) * 1000) / 1000);
+      const totalAdjustments = (el.stockAdjustments || []).reduce((sum, a) => sum + (a.difference || 0), 0);
+      const availableStock = Math.max(0, Math.round((totalProduced - totalSold + totalAdjustments) * 1000) / 1000);
 
       return {
         id: el.id,

@@ -22,7 +22,7 @@ export async function GET(req, { params }) {
 
     const elaboration = await prisma.elaboration.findUnique({
       where: { id: elaborationId },
-      include: { recipe: true }
+      include: { recipe: true, stockAdjustments: true }
     });
 
     if (!elaboration) {
@@ -63,7 +63,8 @@ export async function GET(req, { params }) {
       return sum;
     }, 0);
 
-    const availableQuantity = totalProduced != null ? Math.max(0, totalProduced - totalSoldQuantity) : null;
+    const totalAdjustments = (elaboration.stockAdjustments || []).reduce((sum, a) => sum + (a.difference || 0), 0);
+    const availableQuantity = totalProduced != null ? Math.max(0, Math.round((totalProduced - totalSoldQuantity + totalAdjustments) * 1000) / 1000) : null;
     const totalSoldPercentage = totalProduced != null && totalProduced > 0
       ? (totalSoldQuantity / totalProduced) * 100
       : sales.filter(s => !s.isDraft).reduce((sum, s) => sum + (s.percentage || 0), 0);
@@ -104,7 +105,7 @@ export async function POST(req, { params }) {
 
     const elaboration = await prisma.elaboration.findUnique({
       where: { id: elaborationId },
-      include: { recipe: true }
+      include: { recipe: true, stockAdjustments: true }
     });
 
     if (!elaboration) {
@@ -154,14 +155,16 @@ export async function POST(req, { params }) {
       where: { elaborationId }
     });
 
+    const totalAdjustments = (elaboration.stockAdjustments || []).reduce((sum, a) => sum + (a.difference || 0), 0);
+
     if (parsedQuantity != null && totalProduced != null && totalProduced > 0) {
       const currentSoldQuantity = existingSales.reduce((sum, s) => {
         if (s.quantity != null) return sum + s.quantity;
         return sum + (totalProduced * (s.percentage || 0) / 100);
       }, 0);
-      const availableQty = Math.max(0, Math.round((totalProduced - currentSoldQuantity) * 1000) / 1000);
+      const availableQty = Math.max(0, Math.round((totalProduced - currentSoldQuantity + totalAdjustments) * 1000) / 1000);
 
-      if (currentSoldQuantity + parsedQuantity > totalProduced + 0.001) {
+      if (parsedQuantity > availableQty + 0.001) {
         return NextResponse.json({
           error: "quantity_exceeded",
           message: `La cantidad vendida no puede superar el stock disponible (${availableQty} ${unit}).`,
