@@ -29,6 +29,7 @@ export async function GET(req) {
     const recipeId = searchParams.get("recipeId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const warehouseId = searchParams.get("warehouseId");
     const onlyWithStock = searchParams.get("onlyWithStock") === "true";
 
     const skip = (page - 1) * limit;
@@ -66,6 +67,17 @@ export async function GET(req) {
       where.recipeId = parseInt(recipeId);
     }
 
+    if (warehouseId && warehouseId !== "all") {
+      if (warehouseId === "none") {
+        where.warehouseId = null;
+      } else {
+        const parsedWId = parseInt(warehouseId);
+        if (!isNaN(parsedWId)) {
+          where.warehouseId = parsedWId;
+        }
+      }
+    }
+
     if (startDate || endDate) {
       where.date = {};
       if (startDate) {
@@ -99,7 +111,8 @@ export async function GET(req) {
           },
           stockAdjustments: {
             orderBy: { createdAt: 'desc' }
-          }
+          },
+          warehouse: true
         },
         orderBy: {
           date: 'desc'
@@ -150,7 +163,8 @@ export async function GET(req) {
           },
           stockAdjustments: {
             orderBy: { createdAt: 'desc' }
-          }
+          },
+          warehouse: true
         },
         orderBy: {
           date: 'desc'

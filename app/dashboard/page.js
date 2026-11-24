@@ -28,9 +28,12 @@ import {
   HelpCircle,
   CheckCircle,
   BarChart3,
-  Edit3
+  Edit3,
+  Warehouse as WarehouseIcon
 } from "lucide-react";
 import ElaborationStockModal from "@/components/ElaborationStockModal";
+import ManageWarehousesModal from "@/components/ManageWarehousesModal";
+import AssignWarehouseModal from "@/components/AssignWarehouseModal";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -694,8 +697,30 @@ export default function ClientDashboard() {
     startDate: "",
     endDate: "",
     recipeId: "all",
+    warehouseId: "all",
     onlyWithStock: false
   });
+  const [warehouses, setWarehouses] = useState([]);
+  const [isManageWarehousesModalOpen, setIsManageWarehousesModalOpen] = useState(false);
+  const [isAssignWarehouseModalOpen, setIsAssignWarehouseModalOpen] = useState(false);
+  const [elaborationForAssignWarehouse, setElaborationForAssignWarehouse] = useState(null);
+
+  const fetchWarehouses = async () => {
+    try {
+      const res = await fetch("/api/client/warehouses");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setWarehouses(data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching warehouses:", err);
+    }
+  };
+
+  const handleOpenAssignWarehouseModal = (elaboration) => {
+    setElaborationForAssignWarehouse(elaboration);
+    setIsAssignWarehouseModalOpen(true);
+  };
   const [cleaningFilters, setCleaningFilters] = useState({ startDate: "", endDate: "" });
 
   const sortedCleaningLogs = useMemo(() => {
@@ -1085,6 +1110,7 @@ export default function ClientDashboard() {
       fetchWaterMeasurements();
       fetchProviders();
       fetchCustomers();
+      fetchWarehouses();
       fetchProfile();
       fetchIngredientPrices();
     }
@@ -1402,6 +1428,7 @@ export default function ClientDashboard() {
         recipeId: elabFilters.recipeId,
         startDate: elabFilters.startDate,
         endDate: elabFilters.endDate,
+        ...(elabFilters.warehouseId && elabFilters.warehouseId !== "all" ? { warehouseId: elabFilters.warehouseId } : {}),
         ...(elabFilters.onlyWithStock ? { onlyWithStock: "true" } : {})
       });
       const res = await fetch(`/api/elaborations?${query}`);
@@ -8600,6 +8627,14 @@ export default function ClientDashboard() {
                       </button>
                     )}
                     <button 
+                      type="button"
+                      onClick={() => setIsManageWarehousesModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      <WarehouseIcon size={18} /> {t('dashboard.warehouses_btn') || "Almacenes"}
+                    </button>
+                    <button 
                       onClick={() => setIsLabelModalOpen(true)}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
@@ -8673,6 +8708,25 @@ export default function ClientDashboard() {
                     <option value="all">{t('dashboard.all_recipes')}</option>
                     {recipes.map(r => (
                       <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="label" style={{ fontSize: '0.75rem' }}>{t('dashboard.warehouse_filter') || "Almacén"}</label>
+                  <select 
+                    className="input-field" 
+                    value={elabFilters.warehouseId || "all"}
+                    onChange={(e) => {
+                      setElabFilters({...elabFilters, warehouseId: e.target.value});
+                      setCurrentPage(1);
+                    }}
+                    style={{ margin: 0 }}
+                  >
+                    <option value="all">{t('dashboard.all_warehouses') || "Todos los almacenes"}</option>
+                    <option value="none">{t('dashboard.without_warehouse') || "Sin almacén asignado"}</option>
+                    {warehouses.map(w => (
+                      <option key={w.id} value={w.id}>{w.name}</option>
                     ))}
                   </select>
                 </div>
@@ -8754,7 +8808,7 @@ export default function ClientDashboard() {
 
                 <button 
                   onClick={() => {
-                    setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all", onlyWithStock: false });
+                    setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all", warehouseId: "all", onlyWithStock: false });
                     setCurrentPage(1);
                   }}
                   style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '0.5rem' }}
@@ -8820,6 +8874,75 @@ export default function ClientDashboard() {
                               <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem' }}>
                                 {el.recipe?.name || '-'}
                               </span>
+                              {/* Almacén */}
+                              <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                {el.warehouse ? (
+                                  <>
+                                    <span style={{
+                                      fontSize: '0.75rem',
+                                      fontWeight: '700',
+                                      padding: '0.15rem 0.5rem',
+                                      borderRadius: '0.375rem',
+                                      background: '#eff6ff',
+                                      color: '#1d4ed8',
+                                      border: '1px solid #bfdbfe',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem'
+                                    }}>
+                                      <WarehouseIcon size={12} />
+                                      {el.warehouse.name}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenAssignWarehouseModal(el);
+                                      }}
+                                      title={t('dashboard.change_warehouse') || "Cambiar almacén"}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        fontSize: '0.72rem',
+                                        color: '#2563eb',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline',
+                                        fontWeight: '600'
+                                      }}
+                                    >
+                                      {t('dashboard.change_warehouse_short') || "Cambiar"}
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenAssignWarehouseModal(el);
+                                    }}
+                                    style={{
+                                      background: '#f8fafc',
+                                      border: '1px dashed #94a3b8',
+                                      color: '#475569',
+                                      padding: '0.2rem 0.5rem',
+                                      borderRadius: '0.375rem',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '600',
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem',
+                                      transition: 'all 0.15s ease'
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.color = '#2563eb'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.color = '#475569'; }}
+                                  >
+                                    <WarehouseIcon size={12} />
+                                    <span>{t('dashboard.assign_warehouse_btn') || "Asignar almacén"}</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td style={{ padding: '1.5rem 2rem', minWidth: '220px' }}>
@@ -9253,6 +9376,72 @@ export default function ClientDashboard() {
                           <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                             <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{t('dashboard.recipe_name') || "Receta"}:</span>
                             <span style={{ fontWeight: '700' }}>{el.recipe?.name || '-'}</span>
+                          </div>
+                          <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            {el.warehouse ? (
+                              <>
+                                <span style={{
+                                  fontSize: '0.75rem',
+                                  fontWeight: '700',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '0.375rem',
+                                  background: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  border: '1px solid #bfdbfe',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem'
+                                }}>
+                                  <WarehouseIcon size={12} />
+                                  {el.warehouse.name}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenAssignWarehouseModal(el);
+                                  }}
+                                  title={t('dashboard.change_warehouse') || "Cambiar almacén"}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 0,
+                                    fontSize: '0.72rem',
+                                    color: '#2563eb',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    fontWeight: '600'
+                                  }}
+                                >
+                                  {t('dashboard.change_warehouse_short') || "Cambiar"}
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenAssignWarehouseModal(el);
+                                }}
+                                style={{
+                                  background: '#f8fafc',
+                                  border: '1px dashed #94a3b8',
+                                  color: '#475569',
+                                  padding: '0.2rem 0.5rem',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  transition: 'all 0.15s ease'
+                                }}
+                              >
+                                <WarehouseIcon size={12} />
+                                <span>{t('dashboard.assign_warehouse_btn') || "Asignar almacén"}</span>
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -12113,6 +12302,25 @@ export default function ClientDashboard() {
                 </div>
 
                 <div>
+                  <label className="label" style={{ fontSize: '0.7rem' }}>{t('dashboard.warehouse_filter') || "Almacén"}</label>
+                  <select 
+                    className="input-field" 
+                    value={elabFilters.warehouseId || "all"}
+                    onChange={(e) => {
+                      setElabFilters({...elabFilters, warehouseId: e.target.value});
+                      setCurrentPage(1);
+                    }}
+                    style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem', appearance: 'auto' }}
+                  >
+                    <option value="all">{t('dashboard.all_warehouses') || "Todos los almacenes"}</option>
+                    <option value="none">{t('dashboard.without_warehouse') || "Sin almacén asignado"}</option>
+                    {warehouses.map(w => (
+                      <option key={w.id} value={w.id}>{w.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
                   <label className="label" style={{ fontSize: '0.7rem' }}>{t('dashboard.show')}</label>
                   <select 
                     className="input-field" 
@@ -12133,7 +12341,7 @@ export default function ClientDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button 
                     onClick={() => {
-                      setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all" });
+                      setElabFilters({ lote: "", loteElab: "", startDate: "", endDate: "", recipeId: "all", warehouseId: "all", onlyWithStock: false });
                       setCurrentPage(1);
                     }}
                     style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem' }}
@@ -12235,9 +12443,77 @@ export default function ClientDashboard() {
                             </div>
                           </td>
                           <td style={{ padding: '1.25rem 1.5rem' }}>
-                            <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
-                              {elab.recipe.name}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-start' }}>
+                              <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(66, 98, 22, 0.08)', color: 'var(--corp-green)', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700' }}>
+                                {elab.recipe.name}
+                              </span>
+                              <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                {elab.warehouse ? (
+                                  <>
+                                    <span style={{
+                                      fontSize: '0.75rem',
+                                      fontWeight: '700',
+                                      padding: '0.15rem 0.5rem',
+                                      borderRadius: '0.375rem',
+                                      background: '#eff6ff',
+                                      color: '#1d4ed8',
+                                      border: '1px solid #bfdbfe',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem'
+                                    }}>
+                                      <WarehouseIcon size={12} />
+                                      {elab.warehouse.name}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenAssignWarehouseModal(elab);
+                                      }}
+                                      title={t('dashboard.change_warehouse') || "Cambiar almacén"}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        fontSize: '0.72rem',
+                                        color: '#2563eb',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline',
+                                        fontWeight: '600'
+                                      }}
+                                    >
+                                      {t('dashboard.change_warehouse_short') || "Cambiar"}
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenAssignWarehouseModal(elab);
+                                    }}
+                                    style={{
+                                      background: '#f8fafc',
+                                      border: '1px dashed #94a3b8',
+                                      color: '#475569',
+                                      padding: '0.2rem 0.5rem',
+                                      borderRadius: '0.375rem',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '600',
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem',
+                                      transition: 'all 0.15s ease'
+                                    }}
+                                  >
+                                    <WarehouseIcon size={12} />
+                                    <span>{t('dashboard.assign_warehouse_btn') || "Asignar almacén"}</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </td>
                           {session?.user?.role !== "WORKER" && (() => {
                             const rawCost = Number(elab.costPrice) || 0;
@@ -12707,6 +12983,35 @@ export default function ClientDashboard() {
             setReturnToCustomerSales(customerForSalesModal);
             setCustomerForSalesModal(null);
             handleOpenSaleModal(sale.elaboration);
+          }}
+        />
+      )}
+
+      {isManageWarehousesModalOpen && (
+        <ManageWarehousesModal 
+          warehouses={warehouses}
+          onClose={() => setIsManageWarehousesModalOpen(false)}
+          onWarehousesUpdated={(newWarehouses) => {
+            setWarehouses(newWarehouses);
+            fetchElaborations();
+          }}
+        />
+      )}
+
+      {isAssignWarehouseModalOpen && elaborationForAssignWarehouse && (
+        <AssignWarehouseModal 
+          elaboration={elaborationForAssignWarehouse}
+          warehouses={warehouses}
+          onClose={() => {
+            setIsAssignWarehouseModalOpen(false);
+            setElaborationForAssignWarehouse(null);
+          }}
+          onOpenManageWarehouses={() => {
+            setIsAssignWarehouseModalOpen(false);
+            setIsManageWarehousesModalOpen(true);
+          }}
+          onAssigned={() => {
+            fetchElaborations();
           }}
         />
       )}

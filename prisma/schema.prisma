@@ -137,6 +137,7 @@ model ClientProfile {
   demoActivatedAt            DateTime?
   demoReactivationCount      Int               @default(0)
   productFamilies            ProductFamily[]
+  warehouses                 Warehouse[]
 
   holdedApiKey               String?
   holdedTax                  Float?            @default(10)
@@ -355,6 +356,9 @@ model Elaboration {
   sales       ElaborationSale[]
   stockAdjustments ElaborationStockAdjustment[]
 
+  warehouseId Int?
+  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+
   quantityProduced String?
   quantityUnit     String?
   netWeight        String?
@@ -366,6 +370,8 @@ model Elaboration {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([warehouseId])
 }
 
 model ElaborationSale {
@@ -418,6 +424,18 @@ model ElaborationStockAdjustment {
   createdAt       DateTime     @default(now())
 
   @@index([elaborationId])
+}
+
+model Warehouse {
+  id              Int            @id @default(autoincrement())
+  name            String
+  clientProfileId Int
+  clientProfile   ClientProfile  @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  elaborations    Elaboration[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([clientProfileId])
 }
 
 model CombinedSale {
