@@ -30,6 +30,7 @@ import {
   BarChart3,
   Edit3,
   CalendarCheck,
+  TrendingUp,
   Warehouse as WarehouseIcon
 } from "lucide-react";
 import ElaborationStockModal from "@/components/ElaborationStockModal";
@@ -906,6 +907,9 @@ export default function ClientDashboard() {
     extraInfo: "",
     ingredientes: {} // { ingredientId: { lote: "", cantidad: "" } }
   });
+
+  const [suggestedProfitMargin, setSuggestedProfitMargin] = useState(100);
+  const [highlightUnitPrice, setHighlightUnitPrice] = useState(false);
 
   // Cleaning Form State
   const [cleaningForm, setCleaningForm] = useState({
@@ -2480,6 +2484,7 @@ export default function ClientDashboard() {
       extraInfo: "",
       ingredientes: initialIngredientes
     });
+    setSuggestedProfitMargin(100);
 
     // Fetch last elaboration for this recipe to populate finalElaborationTemp and coolingTimeUnder10 if not present in memory
     try {
@@ -2612,6 +2617,7 @@ export default function ClientDashboard() {
       extraInfo: elab.extraInfo || "",
       ingredientes: initialIngredientes
     });
+    setSuggestedProfitMargin(100);
   };
 
   const handleViewElaborationOnly = (elab) => {
@@ -7223,6 +7229,7 @@ export default function ClientDashboard() {
                         <div>
                           <label className="input-label" style={{ fontWeight: '700', color: 'var(--text-main)' }}>{t('traceability_form.quantity_produced')}</label>
                           <input 
+                            id="elaboration-quantity-produced-input"
                             type="number" 
                             step="any"
                             min="0"
@@ -7244,6 +7251,7 @@ export default function ClientDashboard() {
                             {t('traceability_form.quantity_unit') || "Unidad de medida"}
                           </label>
                           <input 
+                            id="elaboration-quantity-unit-input"
                             type="text" 
                             className="input-field" 
                             value={elaboracionForm.quantityUnit || ""} 
@@ -7278,12 +7286,19 @@ export default function ClientDashboard() {
                         </span>
                       </label>
                       <input 
+                        id="elaboration-unit-price-input"
                         type="text" 
                         className="input-field" 
                         value={elaboracionForm.unitPrice} 
                         onChange={(e) => setElaboracionForm({...elaboracionForm, unitPrice: e.target.value})}
                         placeholder="Ej: 15.50"
                         disabled={isReadOnlyElab}
+                        style={{
+                          transition: 'all 0.3s ease',
+                          borderColor: highlightUnitPrice ? 'var(--corp-green)' : undefined,
+                          boxShadow: highlightUnitPrice ? '0 0 0 4px rgba(66, 98, 22, 0.25)' : undefined,
+                          background: highlightUnitPrice ? '#f0fdf4' : undefined
+                        }}
                       />
                     </div>
                     <div>
@@ -8062,8 +8077,23 @@ export default function ClientDashboard() {
                     const totalCost = rawCost + laborCost;
                     const currencySymbol = ALL_CURRENCIES.find(c => c.code === (profile?.currency || "EUR"))?.symbol || "€";
 
+                    const qtyProducedNum = parseFloat(String(elaboracionForm.quantityProduced || "").replace(',', '.'));
+                    const hasQtyProduced = !isNaN(qtyProducedNum) && qtyProducedNum > 0;
+                    const qtyUnitStr = (elaboracionForm.quantityUnit || "").trim();
+                    const hasQtyUnit = qtyUnitStr.length > 0;
+                    const hasQuantityAndUnit = hasQtyProduced && hasQtyUnit;
+                    const hasTotalCost = totalCost > 0;
+
+                    const costPerUnit = (hasQuantityAndUnit && hasTotalCost) ? (totalCost / qtyProducedNum) : 0;
+                    const multiplier = 1 + (suggestedProfitMargin / 100);
+                    const totalRevenue = totalCost * multiplier;
+                    const suggestedUnitPrice = (hasQuantityAndUnit && hasTotalCost) ? (totalRevenue / qtyProducedNum) : 0;
+                    const profitPerUnit = suggestedUnitPrice - costPerUnit;
+                    const totalProfit = totalRevenue - totalCost;
+
                     return (
-                      <div style={{
+                      <>
+                        <div style={{
                         marginTop: '2rem',
                         padding: '1.5rem',
                         background: '#ffffff',
@@ -8224,7 +8254,286 @@ export default function ClientDashboard() {
                           </div>
                         </div>
                       </div>
-                    );
+
+                      {/* Bloque de Sugerencia de Precio de Venta */}
+                      <div style={{
+                        marginTop: '1.5rem',
+                        padding: '1.5rem',
+                        background: '#ffffff',
+                        borderRadius: '1rem',
+                        border: '2px solid var(--corp-green)',
+                        boxShadow: '0 4px 16px rgba(66, 98, 22, 0.08)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1.25rem'
+                      }}>
+                        {/* Cabecera del bloque */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--corp-green)' }}>
+                            <TrendingUp size={22} />
+                            <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
+                              {t('traceability_form.suggested_price_title') || "Precio de venta sugerido"}
+                            </h4>
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            {t('traceability_form.suggested_price_desc') || "Calcula el precio recomendado por unidad según tus costes"}
+                          </div>
+                        </div>
+
+                        {/* Caso 1: Falta cantidad elaborada y/o unidad de medida */}
+                        {!hasQuantityAndUnit ? (
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            textAlign: 'center',
+                            gap: '0.75rem',
+                            padding: '1.5rem',
+                            background: '#f8fafc',
+                            borderRadius: '0.75rem',
+                            border: '1.5px dashed #cbd5e1'
+                          }}>
+                            <div style={{
+                              width: '42px',
+                              height: '42px',
+                              borderRadius: '50%',
+                              background: '#eff6ff',
+                              color: '#2563eb',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <Info size={22} />
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                                {!hasQtyProduced && !hasQtyUnit
+                                  ? (t('traceability_form.missing_qty_and_unit_msg') || "Para calcular el precio de venta sugerido, debes indicar la cantidad elaborada y la unidad de medida.")
+                                  : !hasQtyProduced
+                                    ? (t('traceability_form.missing_qty_msg') || "Para calcular el precio de venta sugerido, debes indicar la cantidad elaborada.")
+                                    : (t('traceability_form.missing_unit_msg') || "Para calcular el precio de venta sugerido, debes indicar la unidad de medida.")
+                                }
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                {t('traceability_form.missing_qty_and_unit_desc') || "Necesitamos saber cuántas unidades o kilos produce esta elaboración para calcular el precio unitario."}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const targetId = !hasQtyProduced ? 'elaboration-quantity-produced-input' : 'elaboration-quantity-unit-input';
+                                const el = document.getElementById(targetId);
+                                if (el) {
+                                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  el.focus();
+                                }
+                              }}
+                              style={{
+                                marginTop: '0.25rem',
+                                background: '#eff6ff',
+                                color: '#2563eb',
+                                border: '1px solid #bfdbfe',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '0.5rem',
+                                fontSize: '0.85rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <ArrowUpCircle size={16} />
+                              <span>{t('traceability_form.scroll_to_qty_btn') || "Ir al campo de cantidad y unidad de medida"}</span>
+                            </button>
+                          </div>
+                        ) : !hasTotalCost ? (
+                          /* Caso 2: Falta coste total de la elaboración */
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.85rem',
+                            padding: '1.25rem',
+                            background: '#fffbeb',
+                            borderRadius: '0.75rem',
+                            border: '1px solid #fde68a'
+                          }}>
+                            <div style={{
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '50%',
+                              background: '#fef3c7',
+                              color: '#b45309',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              <AlertTriangle size={20} />
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: '700', fontSize: '0.92rem', color: '#92400e' }}>
+                                {t('traceability_form.missing_total_cost_title') || "Coste total no disponible"}
+                              </div>
+                              <div style={{ fontSize: '0.82rem', color: '#b45309', marginTop: '0.2rem' }}>
+                                {t('traceability_form.missing_total_cost_msg') || "No podemos ayudarte a calcular un precio de venta sugerido sin el coste total de esta elaboración. Asigna precios a las materias primas o configura el tiempo y coste de personal."}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Caso 3: Tenemos todos los datos */
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            {/* Selector de margen de beneficio con slider */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem 1.25rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                <label style={{ fontWeight: '700', fontSize: '0.92rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  <span>{t('traceability_form.profit_margin_label') || "Margen de beneficio deseado:"}</span>
+                                </label>
+                                <div style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                  padding: '0.35rem 0.75rem',
+                                  borderRadius: '9999px',
+                                  background: suggestedProfitMargin === 100 ? 'rgba(66, 98, 22, 0.12)' : '#ffffff',
+                                  color: suggestedProfitMargin === 100 ? 'var(--corp-green)' : 'var(--text-main)',
+                                  fontWeight: '800',
+                                  fontSize: '0.95rem',
+                                  border: suggestedProfitMargin === 100 ? '1.5px solid var(--corp-green)' : '1px solid #cbd5e1'
+                                }}>
+                                  <span>+{suggestedProfitMargin}%</span>
+                                  {suggestedProfitMargin === 100 && (
+                                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--corp-green)' }}>
+                                      ({t('traceability_form.double_revenue_badge') || "Ingresos = 2x Gastos"})
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Barra deslizante (0 a 200%) */}
+                              <div style={{ position: 'relative', padding: '0.25rem 0' }}>
+                                <input 
+                                  type="range" 
+                                  min="0" 
+                                  max="200" 
+                                  step="1"
+                                  value={suggestedProfitMargin} 
+                                  onChange={(e) => setSuggestedProfitMargin(Number(e.target.value))}
+                                  style={{
+                                    width: '100%',
+                                    accentColor: 'var(--corp-green)',
+                                    cursor: 'pointer',
+                                    height: '8px'
+                                  }}
+                                />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontWeight: '600' }}>
+                                  <span>0% ({t('traceability_form.preset_cost') || "Al coste"})</span>
+                                  <span>50%</span>
+                                  <span style={{ color: suggestedProfitMargin === 100 ? 'var(--corp-green)' : undefined, fontWeight: '800' }}>100% ({t('traceability_form.preset_double') || "x2"})</span>
+                                  <span>150%</span>
+                                  <span>200% ({t('traceability_form.preset_triple') || "x3"})</span>
+                                </div>
+                              </div>
+
+                              {/* Botones de acceso rápido */}
+                              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
+                                {[0, 25, 50, 75, 100, 150, 200].map(val => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    onClick={() => setSuggestedProfitMargin(val)}
+                                    style={{
+                                      padding: '0.3rem 0.65rem',
+                                      borderRadius: '0.375rem',
+                                      fontSize: '0.78rem',
+                                      fontWeight: suggestedProfitMargin === val ? '800' : '600',
+                                      background: suggestedProfitMargin === val ? 'var(--corp-green)' : '#ffffff',
+                                      color: suggestedProfitMargin === val ? '#ffffff' : 'var(--text-muted)',
+                                      border: suggestedProfitMargin === val ? '1px solid var(--corp-green)' : '1px solid #e2e8f0',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s'
+                                    }}
+                                  >
+                                    {val === 0 ? `0% (${t('traceability_form.preset_cost') || 'Al coste'})` : val === 100 ? `100% (x2)` : `+${val}%`}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Card de Precio Sugerido y Acción */}
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '1.25rem 1.5rem',
+                              background: 'linear-gradient(135deg, rgba(66, 98, 22, 0.08) 0%, rgba(66, 98, 22, 0.03) 100%)',
+                              borderRadius: '0.75rem',
+                              border: '1.5px solid var(--corp-green)',
+                              flexWrap: 'wrap',
+                              gap: '1rem'
+                            }}>
+                              <div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                  {t('traceability_form.suggested_price_per_unit_label') || "Precio de venta sugerido por"} {qtyUnitStr}:
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.25rem' }}>
+                                  <span style={{ fontSize: '2.1rem', fontWeight: '900', color: 'var(--corp-green)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                                    {suggestedUnitPrice.toFixed(2)} {currencySymbol}
+                                  </span>
+                                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                                    / {qtyUnitStr}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.45rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
+                                  <span>{t('traceability_form.cost_per_unit_label') || "Coste unitario:"} <strong>{costPerUnit.toFixed(2)} {currencySymbol}</strong></span>
+                                  <span>·</span>
+                                  <span style={{ color: 'var(--corp-green)' }}>
+                                    +{profitPerUnit.toFixed(2)} {currencySymbol} {t('traceability_form.profit_per_unit_label') || "beneficio"}
+                                  </span>
+                                  <span>·</span>
+                                  <span>{t('traceability_form.total_revenue_label') || "Ingresos totales:"} <strong>{totalRevenue.toFixed(2)} {currencySymbol}</strong></span>
+                                </div>
+                              </div>
+
+                              {/* Botón Asignar este precio a esta elaboración */}
+                              {!isReadOnlyElab && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const finalPriceStr = suggestedUnitPrice.toFixed(2);
+                                    setElaboracionForm(prev => ({ ...prev, unitPrice: finalPriceStr }));
+                                    setHighlightUnitPrice(true);
+                                    setTimeout(() => setHighlightUnitPrice(false), 3000);
+                                    const el = document.getElementById('elaboration-unit-price-input');
+                                    if (el) {
+                                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                      el.focus();
+                                    }
+                                  }}
+                                  className="btn-primary"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    padding: '0.85rem 1.5rem',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '800',
+                                    borderRadius: '0.625rem',
+                                    boxShadow: '0 4px 12px rgba(66, 98, 22, 0.25)',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <Check size={18} />
+                                  <span>{t('traceability_form.assign_suggested_price_btn') || "Asignar este precio a esta elaboración"}</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
                   })()}
 
                   <div style={{ marginTop: '2rem' }}>
