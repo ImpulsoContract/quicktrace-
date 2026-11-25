@@ -59,7 +59,11 @@ export default function MenuConfigModal({
   });
 
   const [menuTitle, setMenuTitle] = useState(() => {
-    return parsedInitial.title || t("recipes.menu_default_title") || "CARTA DE PLATOS";
+    return parsedInitial.title !== undefined ? parsedInitial.title : (t("recipes.menu_default_title") || "CARTA DE PLATOS");
+  });
+
+  const [menuSubtitle, setMenuSubtitle] = useState(() => {
+    return parsedInitial.subtitle || "";
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -219,6 +223,7 @@ export default function MenuConfigModal({
     setSaveSuccess(false);
     const newConfig = {
       title: menuTitle,
+      subtitle: menuSubtitle,
       columns,
       recipeIds: selectedRecipeIds,
       recipePrices
@@ -242,6 +247,7 @@ export default function MenuConfigModal({
   const handleGeneratePDF = async (preview = false) => {
     const currentConfig = {
       title: menuTitle,
+      subtitle: menuSubtitle,
       columns,
       recipeIds: selectedRecipeIds,
       recipePrices
@@ -365,19 +371,35 @@ export default function MenuConfigModal({
 
           {/* SCROLLABLE CONTENT BODY */}
           <div style={{ flex: 1, overflowY: "auto", paddingRight: "0.5rem" }}>
-            {/* TITLE INPUT */}
-            <div style={{ marginBottom: "1.5rem", background: "#f8fafc", padding: "1rem 1.25rem", borderRadius: "1rem", border: "1px solid #e2e8f0" }}>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "var(--text-main)", marginBottom: "0.4rem" }}>
-                {t("recipes.menu_title_label") || "Título de la carta"}
-              </label>
-              <input 
-                type="text"
-                value={menuTitle}
-                onChange={(e) => setMenuTitle(e.target.value)}
-                placeholder="Ej: NUESTRA CARTA, MENÚ DEGUSTACIÓN..."
-                className="input-field"
-                style={{ width: "100%", maxWidth: "450px", height: "2.75rem", fontSize: "0.95rem", fontWeight: "700" }}
-              />
+            {/* TITLE & SUBTITLE INPUTS */}
+            <div style={{ marginBottom: "1.5rem", background: "#f8fafc", padding: "1.25rem", borderRadius: "1rem", border: "1px solid #e2e8f0" }}>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "var(--text-main)", marginBottom: "0.4rem" }}>
+                  {t("recipes.menu_title_label") || "Título de la carta"}
+                </label>
+                <input 
+                  type="text"
+                  value={menuTitle}
+                  onChange={(e) => setMenuTitle(e.target.value)}
+                  placeholder={t("recipes.menu_title_placeholder") || "Ej: NUESTRA CARTA, MENÚ DEGUSTACIÓN..."}
+                  className="input-field"
+                  style={{ width: "100%", maxWidth: "600px", height: "2.75rem", fontSize: "0.95rem", fontWeight: "700" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "var(--text-main)", marginBottom: "0.4rem" }}>
+                  {t("recipes.menu_subtitle_label") || "Subtítulo de la carta"}
+                </label>
+                <textarea 
+                  value={menuSubtitle}
+                  onChange={(e) => setMenuSubtitle(e.target.value)}
+                  placeholder={t("recipes.menu_subtitle_placeholder") || "Escribe aquí el texto que aparecerá debajo del título..."}
+                  rows={3}
+                  className="input-field"
+                  style={{ width: "100%", maxWidth: "600px", fontSize: "0.88rem", padding: "0.6rem 0.8rem", resize: "vertical", minHeight: "70px" }}
+                />
+              </div>
             </div>
 
             {/* SECTION 1: 4 COLUMNS CONFIGURATOR */}

@@ -2027,7 +2027,10 @@
     "download_pdf_btn": "Descarregar PDF",
     "save_menu_error": "Erro ao guardar a configuração da ementa",
     "no_recipes_selected_for_menu": "Deve incluir pelo menos uma receita na ementa.",
-    "pdf_generation_error": "Erro ao gerar o PDF da ementa."
+    "pdf_generation_error": "Erro ao gerar o PDF da ementa.",
+    "menu_subtitle_label": "Subtítulo da ementa",
+    "menu_title_placeholder": "Ex: A NOSSA EMENTA, MENU DEGUSTAÇÃO...",
+    "menu_subtitle_placeholder": "Escreva aqui o texto que aparecerá por baixo do título..."
   },
   "oil_collection": {
     "title": "Recolha de óleos de fritura",

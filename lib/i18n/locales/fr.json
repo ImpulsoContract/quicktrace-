@@ -2028,7 +2028,10 @@
     "download_pdf_btn": "Télécharger le PDF",
     "save_menu_error": "Erreur lors de l'enregistrement de la configuration de la carte",
     "no_recipes_selected_for_menu": "Vous devez inclure au moins une recette dans la carte.",
-    "pdf_generation_error": "Erreur lors de la génération du PDF de la carte."
+    "pdf_generation_error": "Erreur lors de la génération du PDF de la carte.",
+    "menu_subtitle_label": "Sous-titre de la carte",
+    "menu_title_placeholder": "Ex : NOTRE CARTE, MENU DÉGUSTATION...",
+    "menu_subtitle_placeholder": "Écrivez ici le texte qui apparaîtra sous le titre..."
   },
   "oil_collection": {
     "title": "Collecte des huiles de friture",

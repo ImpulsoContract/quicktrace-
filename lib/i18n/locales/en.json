@@ -2033,7 +2033,10 @@
     "download_pdf_btn": "Download PDF",
     "save_menu_error": "Error saving menu configuration",
     "no_recipes_selected_for_menu": "You must include at least one recipe in the menu.",
-    "pdf_generation_error": "Error generating menu PDF."
+    "pdf_generation_error": "Error generating menu PDF.",
+    "menu_subtitle_label": "Menu subtitle",
+    "menu_title_placeholder": "e.g. OUR MENU, TASTING MENU...",
+    "menu_subtitle_placeholder": "Enter the text that will appear below the title..."
   },
   "oil_collection": {
     "title": "Frying oil collection",

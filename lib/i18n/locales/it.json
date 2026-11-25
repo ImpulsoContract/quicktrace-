@@ -2028,7 +2028,10 @@
     "download_pdf_btn": "Scarica PDF",
     "save_menu_error": "Errore durante il salvataggio della configurazione del menu",
     "no_recipes_selected_for_menu": "È necessario includere almeno una ricetta nel menu.",
-    "pdf_generation_error": "Errore durante la generazione del PDF del menu."
+    "pdf_generation_error": "Errore durante la generazione del PDF del menu.",
+    "menu_subtitle_label": "Sottotitolo del menu",
+    "menu_title_placeholder": "Es: IL NOSTRO MENU, MENU DEGUSTAZIONE...",
+    "menu_subtitle_placeholder": "Scrivi qui il testo che apparirà sotto il titolo..."
   },
   "oil_collection": {
     "title": "Ritiro oli di frittura",

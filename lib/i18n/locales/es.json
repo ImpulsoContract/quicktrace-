@@ -2033,7 +2033,10 @@
     "download_pdf_btn": "Descargar PDF",
     "save_menu_error": "Error al guardar la configuración de la carta",
     "no_recipes_selected_for_menu": "Debes incluir al menos una receta en la carta.",
-    "pdf_generation_error": "Error al generar el PDF de la carta."
+    "pdf_generation_error": "Error al generar el PDF de la carta.",
+    "menu_subtitle_label": "Subtítulo de la carta",
+    "menu_title_placeholder": "Ej: NUESTRA CARTA, MENÚ DEGUSTACIÓN...",
+    "menu_subtitle_placeholder": "Escribe aquí el texto que aparecerá debajo del título..."
   },
   "oil_collection": {
     "title": "Retirada de aceites de fritura",
