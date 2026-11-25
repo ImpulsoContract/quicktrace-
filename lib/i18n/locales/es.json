@@ -831,7 +831,16 @@
     "type_oil": "Retirada de aceites",
     "type_vegetables": "Desinfección de vegetales",
     "permission_active": "Activo",
-    "no_permission": "Sin permiso"
+    "no_permission": "Sin permiso",
+    "empty_title": "¿Para qué sirve crear trabajadores en Quicktrace?",
+    "empty_desc": "Crea accesos individuales para los miembros de tu equipo con permisos a medida. Esto te permite gestionar la operativa de tu negocio de forma segura y eficiente.",
+    "benefit_records_title": "Registro directo de tareas",
+    "benefit_records_desc": "Tus empleados podrán registrar elaboraciones, limpiezas, temperaturas y recepciones directamente desde su teléfono o tablet en su puesto de trabajo.",
+    "benefit_security_title": "Protección de información sensible",
+    "benefit_security_desc": "Evitas compartir tu usuario y contraseña de administrador. Los trabajadores solo acceden a los módulos autorizados y jamás verán facturación, ventas, costes ni proveedores.",
+    "benefit_performance_title": "Mide el rendimiento de cada uno",
+    "benefit_performance_desc": "Cada registro queda asociado al trabajador. Podrás consultar estadísticas y medir con exactitud el número de tareas y registros completados por cada miembro del equipo.",
+    "add_first_btn": "Añadir tu primer trabajador"
   },
   "alerts": {
     "missing_data": "Faltan datos obligatorios:",

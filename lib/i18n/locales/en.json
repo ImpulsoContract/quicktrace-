@@ -831,7 +831,16 @@
     "type_oil": "Oil collection",
     "type_vegetables": "Vegetable disinfection",
     "permission_active": "Active",
-    "no_permission": "No permission"
+    "no_permission": "No permission",
+    "empty_title": "Why create worker accounts in Quicktrace?",
+    "empty_desc": "Create individual accounts for your team members with custom permissions. This allows you to manage your business operations securely and efficiently.",
+    "benefit_records_title": "Direct task logging",
+    "benefit_records_desc": "Your employees can directly record elaborations, cleanings, temperatures, and receipts from their phone or tablet at their workstation.",
+    "benefit_security_title": "Protect sensitive information",
+    "benefit_security_desc": "You avoid sharing your admin username and password. Workers only access authorized modules and will never see invoicing, sales, costs, or suppliers.",
+    "benefit_performance_title": "Measure individual performance",
+    "benefit_performance_desc": "Every record is attributed to the worker. You will be able to review statistics and accurately measure the tasks and records completed by each team member.",
+    "add_first_btn": "Add your first worker"
   },
   "alerts": {
     "missing_data": "Missing mandatory data:",

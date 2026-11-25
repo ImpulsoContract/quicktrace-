@@ -827,7 +827,16 @@
     "type_oil": "Ritiro oli",
     "type_vegetables": "Disinfezione vegetali",
     "permission_active": "Attivo",
-    "no_permission": "Senza permesso"
+    "no_permission": "Senza permesso",
+    "empty_title": "A cosa serve creare account per i lavoratori in Quicktrace?",
+    "empty_desc": "Crea accessi individuali per i membri del tuo team con autorizzazioni personalizzate per gestire le operazioni aziendali in modo sicuro ed efficiente.",
+    "benefit_records_title": "Registrazione diretta delle attività",
+    "benefit_records_desc": "I tuoi dipendenti potranno registrare preparazioni, pulizie, temperature e merci direttamente da smartphone o tablet dalla propria postazione.",
+    "benefit_security_title": "Protezione delle informazioni sensibili",
+    "benefit_security_desc": "Eviti di condividere il tuo nome utente e password di amministratore. I lavoratori accedono solo ai moduli autorizzati e non vedranno mai fatture, vendite né costi.",
+    "benefit_performance_title": "Misura il rendimento di ciascuno",
+    "benefit_performance_desc": "Ogni registrazione è attribuita al lavoratore. Potrai consultare statistiche dettagliate e misurare con precisione i registri completati da ciascun membro del team.",
+    "add_first_btn": "Aggiungi il tuo primo lavoratore"
   },
   "alerts": {
     "missing_data": "Mancano dati obbligatori:",

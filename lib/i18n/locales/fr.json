@@ -827,7 +827,16 @@
     "type_oil": "Collecte d'huile",
     "type_vegetables": "Désinfection des végétaux",
     "permission_active": "Actif",
-    "no_permission": "Sans permission"
+    "no_permission": "Sans permission",
+    "empty_title": "Pourquoi créer des comptes employés dans Quicktrace ?",
+    "empty_desc": "Créez des accès individuels pour les membres de votre équipe avec des autorisations sur mesure afin de gérer vos opérations en toute sécurité.",
+    "benefit_records_title": "Saisie directe des tâches",
+    "benefit_records_desc": "Vos employés peuvent enregistrer directement les préparations, nettoyages, températures et réceptions depuis leur smartphone ou tablette.",
+    "benefit_security_title": "Protection des informations sensibles",
+    "benefit_security_desc": "Évitez de partager vos identifiants administrateur. Les employés n'accèdent qu'aux modules autorisés et ne verront jamais la facturation, les ventes ni les coûts.",
+    "benefit_performance_title": "Mesurez la performance de chacun",
+    "benefit_performance_desc": "Chaque enregistrement est rattaché à l'employé. Vous pourrez consulter les statistiques et mesurer avec précision l'activité de chaque membre de l'équipe.",
+    "add_first_btn": "Ajouter votre premier employé"
   },
   "alerts": {
     "missing_data": "Données obligatoires manquantes :",

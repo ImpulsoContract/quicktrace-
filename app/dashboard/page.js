@@ -24,6 +24,7 @@ import {
   List,
   Table,
   LayoutGrid,
+  ShieldCheck,
   ShieldAlert,
   HelpCircle,
   CheckCircle,
@@ -11968,107 +11969,276 @@ export default function ClientDashboard() {
                 </div>
               </div>
 
-              <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                      <tr>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.name') || "Nombre"}</th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.user') || "Usuario/Email"}</th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.permissions') || "Permisos"}</th>
-                        <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {workers.length === 0 ? (
+              {workers.length === 0 ? (
+                <div
+                  className="glass-card"
+                  style={{
+                    background: 'white',
+                    padding: '3rem 2.5rem',
+                    borderRadius: '1.25rem',
+                    border: '1px solid var(--border, #e2e8f0)',
+                    boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                    textAlign: 'center'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '1.25rem',
+                      background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                      border: '1px solid #a7f3d0',
+                      color: 'var(--corp-green, #059669)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 1.5rem auto'
+                    }}
+                  >
+                    <Users size={32} />
+                  </div>
+
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-main, #0f172a)', marginBottom: '0.75rem' }}>
+                    {t('workers.empty_title') || "¿Para qué sirve crear trabajadores en Quicktrace?"}
+                  </h2>
+                  <p style={{ maxWidth: '680px', margin: '0 auto 2.5rem auto', color: 'var(--text-muted, #64748b)', fontSize: '1.05rem', lineHeight: '1.6' }}>
+                    {t('workers.empty_desc') || "Crea accesos individuales para los miembros de tu equipo con permisos a medida. Esto te permite gestionar la operativa de tu negocio de forma segura y eficiente."}
+                  </p>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                      gap: '1.5rem',
+                      textAlign: 'left',
+                      marginBottom: '2.5rem'
+                    }}
+                  >
+                    {/* Benefit 1: Put records */}
+                    <div
+                      style={{
+                        padding: '1.75rem',
+                        borderRadius: '1rem',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '0.75rem',
+                          background: '#eff6ff',
+                          border: '1px solid #bfdbfe',
+                          color: '#2563eb',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: '1rem'
+                        }}
+                      >
+                        <ClipboardList size={22} />
+                      </div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.5rem' }}>
+                        {t('workers.benefit_records_title') || "Registro directo de tareas"}
+                      </h3>
+                      <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: '1.5', margin: 0 }}>
+                        {t('workers.benefit_records_desc') || "Tus empleados podrán registrar elaboraciones, limpiezas, temperaturas y recepciones directamente desde su teléfono o tablet en su puesto de trabajo."}
+                      </p>
+                    </div>
+
+                    {/* Benefit 2: Protect sensitive info */}
+                    <div
+                      style={{
+                        padding: '1.75rem',
+                        borderRadius: '1rem',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '0.75rem',
+                          background: '#fef2f2',
+                          border: '1px solid #fecaca',
+                          color: '#dc2626',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: '1rem'
+                        }}
+                      >
+                        <ShieldCheck size={22} />
+                      </div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.5rem' }}>
+                        {t('workers.benefit_security_title') || "Protección de información sensible"}
+                      </h3>
+                      <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: '1.5', margin: 0 }}>
+                        {t('workers.benefit_security_desc') || "Evitas compartir tu usuario y contraseña de administrador. Los trabajadores solo acceden a los módulos autorizados y jamás verán facturación, ventas, costes ni proveedores."}
+                      </p>
+                    </div>
+
+                    {/* Benefit 3: Measure worker performance */}
+                    <div
+                      style={{
+                        padding: '1.75rem',
+                        borderRadius: '1rem',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '0.75rem',
+                          background: '#ecfdf5',
+                          border: '1px solid #a7f3d0',
+                          color: '#059669',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: '1rem'
+                        }}
+                      >
+                        <TrendingUp size={22} />
+                      </div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.5rem' }}>
+                        {t('workers.benefit_performance_title') || "Mide el rendimiento de cada uno"}
+                      </h3>
+                      <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: '1.5', margin: 0 }}>
+                        {t('workers.benefit_performance_desc') || "Cada registro queda asociado al trabajador. Podrás consultar estadísticas y medir con exactitud el número de tareas y registros completados por cada miembro del equipo."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingWorker(null);
+                      setWorkerForm({
+                        name: '', email: '', password: '', 
+                        permissions: { hasTraceability: false, hasCleaning: false, hasTemperatures: false, hasWater: false, hasGoods: false, hasCutting: false, hasWaste: false, hasOil: false, hasVegetables: false }
+                      });
+                      setIsWorkerModalOpen(true);
+                    }}
+                    className="btn-primary"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.9rem 2rem',
+                      fontSize: '1rem',
+                      fontWeight: '700',
+                      borderRadius: '0.75rem'
+                    }}
+                  >
+                    <UserPlus size={20} /> {t('workers.add_first_btn') || "Añadir tu primer trabajador"}
+                  </button>
+                </div>
+              ) : (
+                <div className="glass-card" style={{ background: 'white', overflow: 'hidden' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                         <tr>
-                          <td colSpan="4" style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            {t('workers.no_workers') || "No has añadido ningún trabajador todavía."}
-                          </td>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.name') || "Nombre"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.user') || "Usuario/Email"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase' }}>{t('workers.permissions') || "Permisos"}</th>
+                          <th style={{ padding: '1.25rem 2rem', fontWeight: '800', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', textAlign: 'right' }}>{t('dashboard.actions')}</th>
                         </tr>
-                      ) : (
-                        workers.map(worker => (
-                        <tr key={worker.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover-row">
-                          <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{worker.name}</td>
-                          <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{worker.user?.email}</td>
-                          <td style={{ padding: '1.5rem 2rem' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                              {worker.hasTraceability && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#ecfdf5', color: '#059669', fontSize: '0.7rem', fontWeight: '700' }}>Trazabilidad</span>}
-                              {worker.hasCutting && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fdf2f8', color: '#db2777', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.cutting_traceability') || "Despiece"}</span>}
-                              {worker.hasCleaning && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#eff6ff', color: '#2563eb', fontSize: '0.7rem', fontWeight: '700' }}>Limpieza</span>}
-                              {worker.hasTemperatures && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fef2f2', color: '#dc2626', fontSize: '0.7rem', fontWeight: '700' }}>Temperaturas</span>}
-                              {worker.hasWater && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#f0f9ff', color: '#0ea5e9', fontSize: '0.7rem', fontWeight: '700' }}>Agua</span>}
-                              {worker.hasGoods && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fefce8', color: '#ca8a04', fontSize: '0.7rem', fontWeight: '700' }}>Mercancías</span>}
-                              {worker.hasWaste && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fef3c7', color: '#d97706', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.waste') || "Residuos"}</span>}
-                              {worker.hasOil && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fffbeb', color: '#b45309', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.oil_collection') || "Aceites"}</span>}
-                              {worker.hasVegetables && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#f0fdf4', color: '#16a34a', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.vegetable_disinfection') || "Vegetales"}</span>}
-                            </div>
-                          </td>
-                          <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                              {session?.user?.role !== "WORKER" && (
+                      </thead>
+                      <tbody>
+                        {workers.map(worker => (
+                          <tr key={worker.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover-row">
+                            <td style={{ padding: '1.5rem 2rem', fontWeight: '700', color: 'var(--text-main)' }}>{worker.name}</td>
+                            <td style={{ padding: '1.5rem 2rem', color: 'var(--text-muted)' }}>{worker.user?.email}</td>
+                            <td style={{ padding: '1.5rem 2rem' }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                {worker.hasTraceability && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#ecfdf5', color: '#059669', fontSize: '0.7rem', fontWeight: '700' }}>Trazabilidad</span>}
+                                {worker.hasCutting && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fdf2f8', color: '#db2777', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.cutting_traceability') || "Despiece"}</span>}
+                                {worker.hasCleaning && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#eff6ff', color: '#2563eb', fontSize: '0.7rem', fontWeight: '700' }}>Limpieza</span>}
+                                {worker.hasTemperatures && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fef2f2', color: '#dc2626', fontSize: '0.7rem', fontWeight: '700' }}>Temperaturas</span>}
+                                {worker.hasWater && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#f0f9ff', color: '#0ea5e9', fontSize: '0.7rem', fontWeight: '700' }}>Agua</span>}
+                                {worker.hasGoods && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fefce8', color: '#ca8a04', fontSize: '0.7rem', fontWeight: '700' }}>Mercancías</span>}
+                                {worker.hasWaste && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fef3c7', color: '#d97706', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.waste') || "Residuos"}</span>}
+                                {worker.hasOil && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#fffbeb', color: '#b45309', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.oil_collection') || "Aceites"}</span>}
+                                {worker.hasVegetables && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '1rem', background: '#f0fdf4', color: '#16a34a', fontSize: '0.7rem', fontWeight: '700' }}>{t('sidebar.vegetable_disinfection') || "Vegetales"}</span>}
+                              </div>
+                            </td>
+                            <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                {session?.user?.role !== "WORKER" && (
+                                  <button 
+                                    type="button"
+                                    onClick={() => setSelectedWorkerForPerformance(worker)}
+                                    style={{
+                                      background: '#eff6ff',
+                                      border: '1px solid #bfdbfe',
+                                      color: '#2563eb',
+                                      padding: '0.45rem 0.75rem',
+                                      borderRadius: '0.5rem',
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.4rem',
+                                      fontSize: '0.85rem',
+                                      fontWeight: '600'
+                                    }}
+                                    title={t('workers.performance_btn') || "Rendimiento"}
+                                  >
+                                    <TrendingUp size={16} />
+                                    <span>{t('workers.performance_btn') || "Rendimiento"}</span>
+                                  </button>
+                                )}
                                 <button 
-                                  type="button"
-                                  onClick={() => setSelectedWorkerForPerformance(worker)}
-                                  style={{
-                                    background: '#eff6ff',
-                                    border: '1px solid #bfdbfe',
-                                    color: '#2563eb',
-                                    padding: '0.45rem 0.75rem',
-                                    borderRadius: '0.5rem',
-                                    cursor: 'pointer',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.4rem',
-                                    fontSize: '0.85rem',
-                                    fontWeight: '600'
+                                  onClick={() => {
+                                    setEditingWorker(worker);
+                                    setWorkerForm({
+                                      name: worker.name,
+                                      email: worker.user?.email,
+                                      password: '',
+                                      permissions: {
+                                        hasTraceability: Boolean(worker.hasTraceability),
+                                        hasCleaning: Boolean(worker.hasCleaning),
+                                        hasTemperatures: Boolean(worker.hasTemperatures),
+                                        hasWater: Boolean(worker.hasWater),
+                                        hasGoods: Boolean(worker.hasGoods),
+                                        hasCutting: Boolean(worker.hasCutting),
+                                        hasWaste: Boolean(worker.hasWaste),
+                                        hasOil: Boolean(worker.hasOil),
+                                        hasVegetables: Boolean(worker.hasVegetables)
+                                      }
+                                    });
+                                    setIsWorkerModalOpen(true);
                                   }}
-                                  title={t('workers.performance_btn') || "Rendimiento"}
+                                  style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
                                 >
-                                  <TrendingUp size={16} />
-                                  <span>{t('workers.performance_btn') || "Rendimiento"}</span>
+                                  <Edit size={16} />
                                 </button>
-                              )}
-                              <button 
-                                onClick={() => {
-                                  setEditingWorker(worker);
-                                  setWorkerForm({
-                                    name: worker.name,
-                                    email: worker.user?.email,
-                                    password: '',
-                                    permissions: {
-                                      hasTraceability: Boolean(worker.hasTraceability),
-                                      hasCleaning: Boolean(worker.hasCleaning),
-                                      hasTemperatures: Boolean(worker.hasTemperatures),
-                                      hasWater: Boolean(worker.hasWater),
-                                      hasGoods: Boolean(worker.hasGoods),
-                                      hasCutting: Boolean(worker.hasCutting),
-                                      hasWaste: Boolean(worker.hasWaste),
-                                      hasOil: Boolean(worker.hasOil),
-                                      hasVegetables: Boolean(worker.hasVegetables)
-                                    }
-                                  });
-                                  setIsWorkerModalOpen(true);
-                                }}
-                                style={{ background: 'white', border: '1px solid #e2e8f0', color: 'var(--corp-green)', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Edit size={16} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteWorker(worker.id)}
-                                style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                                <button 
+                                  onClick={() => handleDeleteWorker(worker.id)}
+                                  style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
           </div>
           ) : activeTab === 'gestionar-recetas' ? (
             <div>
