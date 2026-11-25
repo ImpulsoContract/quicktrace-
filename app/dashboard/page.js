@@ -43,6 +43,7 @@ import TaskAlertsConfigModal from "@/components/TaskAlertsConfigModal";
 import LabelTypeChoiceModal from "@/components/LabelTypeChoiceModal";
 import VitrinaLabelConfigModal, { mergeVitrinaLabelConfig } from "@/components/VitrinaLabelConfigModal";
 import MenuConfigModal from "@/components/MenuConfigModal";
+import WorkerPerformanceModal from "@/components/WorkerPerformanceModal";
 import { generateVitrinaLabelPDF } from "@/lib/vitrinaLabelGenerator";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -995,6 +996,7 @@ export default function ClientDashboard() {
   const [costModalSingleIngredient, setCostModalSingleIngredient] = useState(null);
   const [isManageMerchantTypesModalOpen, setIsManageMerchantTypesModalOpen] = useState(false);
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
+  const [selectedWorkerForPerformance, setSelectedWorkerForPerformance] = useState(null);
   const [workers, setWorkers] = useState([]);
   const [editingWorker, setEditingWorker] = useState(null);
   const [workerForm, setWorkerForm] = useState({
@@ -12003,7 +12005,30 @@ export default function ClientDashboard() {
                             </div>
                           </td>
                           <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                              {session?.user?.role !== "WORKER" && (
+                                <button 
+                                  type="button"
+                                  onClick={() => setSelectedWorkerForPerformance(worker)}
+                                  style={{
+                                    background: '#eff6ff',
+                                    border: '1px solid #bfdbfe',
+                                    color: '#2563eb',
+                                    padding: '0.45rem 0.75rem',
+                                    borderRadius: '0.5rem',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '600'
+                                  }}
+                                  title={t('workers.performance_btn') || "Rendimiento"}
+                                >
+                                  <TrendingUp size={16} />
+                                  <span>{t('workers.performance_btn') || "Rendimiento"}</span>
+                                </button>
+                              )}
                               <button 
                                 onClick={() => {
                                   setEditingWorker(worker);
@@ -15250,6 +15275,13 @@ export default function ClientDashboard() {
             </form>
           </div>
         </div>
+      )}
+
+      {selectedWorkerForPerformance && (
+        <WorkerPerformanceModal
+          worker={selectedWorkerForPerformance}
+          onClose={() => setSelectedWorkerForPerformance(null)}
+        />
       )}
 
       {isGoodsReportModalOpen && (
