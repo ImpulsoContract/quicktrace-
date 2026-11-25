@@ -68,6 +68,7 @@ model ClientProfile {
   canManageRecipes Boolean @default(true)
   labelConfig      Json?   @default("{}")
   vitrinaLabelConfig Json? @default("{}")
+  menuConfig       Json?   @default("{}")
   hasIaGoods       Boolean @default(true)
 
   // Referrals / Affiliates
@@ -314,6 +315,7 @@ model Recipe {
   productFamilyId Int?
   productFamily   ProductFamily? @relation(fields: [productFamilyId], references: [id], onDelete: SetNull)
 
+  price    Float?  @default(0)
   imageUrl String? @db.Text
 
   createdAt DateTime @default(now())

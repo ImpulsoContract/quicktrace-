@@ -42,6 +42,7 @@ import AssignLotWarehouseModal from "@/components/AssignLotWarehouseModal";
 import TaskAlertsConfigModal from "@/components/TaskAlertsConfigModal";
 import LabelTypeChoiceModal from "@/components/LabelTypeChoiceModal";
 import VitrinaLabelConfigModal, { mergeVitrinaLabelConfig } from "@/components/VitrinaLabelConfigModal";
+import MenuConfigModal from "@/components/MenuConfigModal";
 import { generateVitrinaLabelPDF } from "@/lib/vitrinaLabelGenerator";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -840,6 +841,7 @@ export default function ClientDashboard() {
   const [isRecipeManageModalOpen, setIsRecipeManageModalOpen] = useState(false);
   const [isMergeIngredientsModalOpen, setIsMergeIngredientsModalOpen] = useState(false);
   const [isRecipeListModalOpen, setIsRecipeListModalOpen] = useState(false);
+  const [isMenuConfigModalOpen, setIsMenuConfigModalOpen] = useState(false);
   const [recipeViewMode, setRecipeViewMode] = useState("cards"); // 'cards' | 'table'
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [recipeForm, setRecipeForm] = useState({ 
@@ -12075,6 +12077,14 @@ export default function ClientDashboard() {
                       <GitMerge size={18} /> {t('recipes.merge_ingredients_btn') || "Fusionar ingredientes"}
                     </button>
                     <button 
+                      type="button"
+                      onClick={() => setIsMenuConfigModalOpen(true)}
+                      className="btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                    >
+                      <BookOpen size={18} /> {t('recipes.generate_menu_btn') || "Generar carta"}
+                    </button>
+                    <button 
                       onClick={() => {
                         setEditingRecipe(null);
                         setRecipeForm({ 
@@ -14015,6 +14025,17 @@ export default function ClientDashboard() {
             };
             return generateVitrinaLabel(sampleElab, overrideConfig, true);
           }}
+        />
+      )}
+
+      {isMenuConfigModalOpen && (
+        <MenuConfigModal 
+          isOpen={isMenuConfigModalOpen}
+          onClose={() => setIsMenuConfigModalOpen(false)}
+          recipes={recipes}
+          initialConfig={profile?.menuConfig}
+          profile={profile}
+          onSave={(newConfig) => handleUpdateProfile({ menuConfig: newConfig })}
         />
       )}
 
