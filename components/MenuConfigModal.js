@@ -632,6 +632,25 @@ export default function MenuConfigModal({
                 </div>
               </div>
 
+              {/* PRICE CLARIFICATION NOTICE */}
+              <div style={{
+                background: "#ecfdf5",
+                border: "1px solid #a7f3d0",
+                borderRadius: "0.75rem",
+                padding: "0.7rem 1rem",
+                marginBottom: "1rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.6rem",
+                fontSize: "0.82rem",
+                color: "#065f46"
+              }}>
+                <Sparkles size={16} color="#059669" style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>{t("recipes.elem_price") || "Precio"}:</strong> {t("recipes.price_clarification_text") || "Este precio solo es para la carta de productos que puedes generar en PDF."}
+                </span>
+              </div>
+
               {/* TWO-COLUMN DRAG AND DROP CONTAINER */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 {/* LEFT: AVAILABLE RECIPES (NOT VISIBLE) */}
@@ -790,6 +809,42 @@ export default function MenuConfigModal({
                               <img src={recipe.imageUrl} alt="" style={{ width: "24px", height: "24px", borderRadius: "4px", objectFit: "cover" }} />
                             ) : null}
                             <span style={{ fontWeight: "800", color: "var(--text-main)" }}>{recipe.name}</span>
+                          </div>
+
+                          {/* INLINE PRICE INPUT */}
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            style={{ display: "flex", alignItems: "center", gap: "0.35rem", margin: "0 0.5rem" }}
+                          >
+                            <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#166534" }}>
+                              {t("recipes.elem_price") || "Precio"}:
+                            </span>
+                            <input 
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={recipePrices[recipe.id] !== undefined ? recipePrices[recipe.id] : (recipe.price !== null && recipe.price !== undefined && recipe.price !== 0 ? recipe.price : "")}
+                              onChange={(e) => {
+                                const val = e.target.value === "" ? "" : parseFloat(e.target.value) || 0;
+                                setRecipePrices(prev => ({ ...prev, [recipe.id]: val }));
+                              }}
+                              placeholder="0.00"
+                              style={{
+                                width: "70px",
+                                height: "1.85rem",
+                                fontSize: "0.82rem",
+                                fontWeight: "700",
+                                padding: "0.2rem 0.4rem",
+                                borderRadius: "0.35rem",
+                                border: "1px solid #86efac",
+                                background: "#ffffff",
+                                textAlign: "right"
+                              }}
+                            />
+                            <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b" }}>
+                              {profile?.currency === "USD" ? "$" : profile?.currency === "GBP" ? "£" : "€"}
+                            </span>
                           </div>
 
                           <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>

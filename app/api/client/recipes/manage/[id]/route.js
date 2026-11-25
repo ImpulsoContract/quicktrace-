@@ -84,6 +84,7 @@ export async function PATCH(req, { params }) {
         where: { id: recipeId },
         data: {
           name,
+          price: body.price !== undefined ? (body.price === null || body.price === "" ? 0 : parseFloat(String(body.price).replace(',', '.'))) : undefined,
           expiryDays: expiryDays ? parseInt(expiryDays) : 0,
           expiryType: expiryType || "EXPIRATION",
           hasDryingRoom: !!body.hasDryingRoom,

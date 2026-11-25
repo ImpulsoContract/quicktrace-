@@ -849,6 +849,7 @@ export default function ClientDashboard() {
     ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }],
     expiryDays: 0,
     expiryType: "EXPIRATION",
+    price: "",
     hasDryingRoom: false,
     elaborationInstructions: "",
     conservationInstructions: "",
@@ -1326,6 +1327,7 @@ export default function ClientDashboard() {
       })),
       expiryDays: recipe.expiryDays || 0,
       expiryType: recipe.expiryType || "EXPIRATION",
+      price: recipe.price !== undefined && recipe.price !== null ? recipe.price : "",
       hasDryingRoom: !!recipe.hasDryingRoom,
       elaborationInstructions: recipe.elaborationInstructions || "",
       conservationInstructions: recipe.conservationInstructions || "",
@@ -12090,6 +12092,7 @@ export default function ClientDashboard() {
                         setRecipeForm({ 
                           name: "", 
                           ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }], 
+                          price: "",
                           hasBarcode: false, 
                           barcode: "",
                           expiryDays: 0,
@@ -12348,6 +12351,7 @@ export default function ClientDashboard() {
                         setRecipeForm({ 
                           name: "", 
                           ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }], 
+                          price: "",
                           hasBarcode: false, 
                           barcode: "",
                           expiryDays: 0,
@@ -13865,7 +13869,8 @@ export default function ClientDashboard() {
             setRecipeForm({ 
               name: "", 
               ingredients: [{ name: "", amount: "", unit: "", loteMandatory: false, quantityMandatory: false, expandItem: false, expandedText: "", sellAsGood: false, goodsSalePrice: "", goodsBarcode: "" }], 
-              hasBarcode: false, 
+              price: "",
+                          hasBarcode: false, 
               barcode: "",
               expiryDays: 0,
               expiryType: "EXPIRATION",
@@ -21511,6 +21516,30 @@ function RecipeManageModal({ onClose, onSubmit, formData, setFormData, loading, 
           </div>
 
           <div>
+            <label className="label">
+              {t('recipes.recipe_price_label') || "Precio de venta en carta"}
+            </label>
+            <div style={{ position: 'relative', maxWidth: '320px' }}>
+              <input 
+                type="number" 
+                step="0.01"
+                min="0"
+                className="input-field" 
+                value={formData.price !== undefined && formData.price !== null ? formData.price : ""} 
+                onChange={(e) => setFormData({...formData, price: e.target.value === "" ? "" : parseFloat(e.target.value) || 0})} 
+                placeholder="0.00"
+                style={{ fontSize: '1.1rem', padding: '1rem', paddingRight: '2.5rem' }}
+              />
+              <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', fontWeight: '700', color: 'var(--text-muted)' }}>
+                {profile?.currency === "USD" ? "$" : profile?.currency === "GBP" ? "£" : "€"}
+              </span>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: '1.4' }}>
+              {t('recipes.price_clarification_text') || "Este precio solo es para la carta de productos que puedes generar en PDF."}
+            </p>
+          </div>
+
+          <div>
             <label className="label">{t('modals.expiry_type')}</label>
             <select 
               className="input-field" 

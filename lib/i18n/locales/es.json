@@ -2044,7 +2044,9 @@
     "col_header_allergens": "Alérgenos",
     "col_header_price": "Precio",
     "col_header_elaboration": "Elaboración",
-    "col_header_conservation": "Conservación"
+    "col_header_conservation": "Conservación",
+    "recipe_price_label": "Precio de venta en carta",
+    "price_clarification_text": "Este precio solo es para la carta de productos que puedes generar en PDF."
   },
   "oil_collection": {
     "title": "Retirada de aceites de fritura",

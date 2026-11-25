@@ -70,6 +70,7 @@ export async function POST(req, { params }) {
     const duplicatedRecipe = await prisma.recipe.create({
       data: {
         name,
+        price: originalRecipe.price || 0,
         clientProfileId: profile.id,
         lotesMandatory: originalRecipe.lotesMandatory,
         quantitiesMandatory: originalRecipe.quantitiesMandatory,

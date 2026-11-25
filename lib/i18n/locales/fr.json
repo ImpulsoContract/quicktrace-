@@ -2039,7 +2039,9 @@
     "col_header_allergens": "Allergènes",
     "col_header_price": "Prix",
     "col_header_elaboration": "Élaboration",
-    "col_header_conservation": "Conservation"
+    "col_header_conservation": "Conservation",
+    "recipe_price_label": "Prix de vente sur la carte",
+    "price_clarification_text": "Ce prix s'applique uniquement à la carte de produits que vous pouvez générer en PDF."
   },
   "oil_collection": {
     "title": "Collecte des huiles de friture",

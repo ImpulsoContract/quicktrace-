@@ -2038,7 +2038,9 @@
     "col_header_allergens": "Alérgenos",
     "col_header_price": "Preço",
     "col_header_elaboration": "Elaboração",
-    "col_header_conservation": "Conservação"
+    "col_header_conservation": "Conservação",
+    "recipe_price_label": "Preço de venda na ementa",
+    "price_clarification_text": "Este preço aplica-se apenas à ementa de produtos que pode gerar em PDF."
   },
   "oil_collection": {
     "title": "Recolha de óleos de fritura",

@@ -2039,7 +2039,9 @@
     "col_header_allergens": "Allergeni",
     "col_header_price": "Prezzo",
     "col_header_elaboration": "Preparazione",
-    "col_header_conservation": "Conservazione"
+    "col_header_conservation": "Conservazione",
+    "recipe_price_label": "Prezzo di vendita nel menu",
+    "price_clarification_text": "Questo prezzo è valido solo per il menu dei prodotti generabile in PDF."
   },
   "oil_collection": {
     "title": "Ritiro oli di frittura",

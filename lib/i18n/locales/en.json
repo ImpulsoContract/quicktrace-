@@ -2044,7 +2044,9 @@
     "col_header_allergens": "Allergens",
     "col_header_price": "Price",
     "col_header_elaboration": "Preparation",
-    "col_header_conservation": "Conservation"
+    "col_header_conservation": "Conservation",
+    "recipe_price_label": "Menu sale price",
+    "price_clarification_text": "This price is only for the product menu that you can generate in PDF."
   },
   "oil_collection": {
     "title": "Frying oil collection",

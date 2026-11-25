@@ -56,6 +56,7 @@ export async function POST(req) {
     const recipe = await prisma.recipe.create({
       data: {
         name,
+        price: body.price !== undefined && body.price !== null && body.price !== "" ? parseFloat(String(body.price).replace(',', '.')) : 0,
         expiryDays: expiryDays ? parseInt(expiryDays) : 0,
         expiryType: expiryType || "EXPIRATION",
         hasDryingRoom: !!body.hasDryingRoom,
