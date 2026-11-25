@@ -56,6 +56,7 @@ import NotificationsBell from "@/components/NotificationsBell";
 import CustomerImportModal from "@/components/CustomerImportModal";
 import MergeIngredientsModal from "@/components/MergeIngredientsModal";
 import RecipeListModal from "@/components/RecipeListModal";
+import RecipeImageModal from "@/components/RecipeImageModal";
 import CombinedSalesModal from "@/components/CombinedSalesModal";
 import PosDisplay from "@/components/PosDisplay";
 import GoodsForSaleModal from "@/components/GoodsForSaleModal";
@@ -868,6 +869,7 @@ export default function ClientDashboard() {
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
   const [isLabelChoiceModalOpen, setIsLabelChoiceModalOpen] = useState(false);
   const [isVitrinaLabelModalOpen, setIsVitrinaLabelModalOpen] = useState(false);
+  const [selectedRecipeForImage, setSelectedRecipeForImage] = useState(null);
   const [isTraceabilityReportModalOpen, setIsTraceabilityReportModalOpen] = useState(false);
   const [isSalesReportModalOpen, setIsSalesReportModalOpen] = useState(false);
   const [salesReportLoading, setSalesReportLoading] = useState(false);
@@ -12208,9 +12210,38 @@ export default function ClientDashboard() {
                               <tr key={recipe.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s' }} className="hover-row">
                                 <td style={{ padding: '1rem 1.25rem' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(66, 98, 22, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                      <ChefHat size={17} color="var(--corp-green)" />
-                                    </div>
+                                    <button 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedRecipeForImage(recipe);
+                                      }}
+                                      title={recipe.imageUrl ? (t('recipes.change_image_tooltip') || "Cambiar imagen de la receta") : (t('recipes.attach_image_tooltip') || "Adjuntar imagen a la receta")}
+                                      style={{ 
+                                        width: '36px', 
+                                        height: '36px', 
+                                        borderRadius: '8px', 
+                                        background: recipe.imageUrl ? 'transparent' : 'rgba(66, 98, 22, 0.08)', 
+                                        border: recipe.imageUrl ? '1px solid #cbd5e1' : '1px dashed transparent',
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        flexShrink: 0,
+                                        cursor: 'pointer',
+                                        padding: 0,
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                      onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'scale(1.06)'; }}
+                                      onMouseOut={(e) => { e.currentTarget.style.borderColor = recipe.imageUrl ? '#cbd5e1' : 'transparent'; e.currentTarget.style.transform = 'none'; }}
+                                    >
+                                      {recipe.imageUrl ? (
+                                        <img src={recipe.imageUrl} alt={recipe.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : (
+                                        <ChefHat size={17} color="var(--corp-green)" />
+                                      )}
+                                    </button>
                                     <div>
                                       <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '0.95rem' }}>{recipe.name}</div>
                                       {recipe.barcode && (
@@ -12338,9 +12369,38 @@ export default function ClientDashboard() {
                       <div key={recipe.id} className="glass-card" style={{ padding: '2rem', background: 'white', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: 'rgba(66, 98, 22, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <ChefHat size={20} color="var(--corp-green)" />
-                            </div>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRecipeForImage(recipe);
+                              }}
+                              title={recipe.imageUrl ? (t('recipes.change_image_tooltip') || "Cambiar imagen de la receta") : (t('recipes.attach_image_tooltip') || "Adjuntar imagen a la receta")}
+                              style={{ 
+                                width: '44px', 
+                                height: '44px', 
+                                borderRadius: '0.75rem', 
+                                background: recipe.imageUrl ? 'transparent' : 'rgba(66, 98, 22, 0.1)', 
+                                border: recipe.imageUrl ? '1px solid #cbd5e1' : '1px dashed transparent',
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                cursor: 'pointer',
+                                padding: 0,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'scale(1.06)'; }}
+                              onMouseOut={(e) => { e.currentTarget.style.borderColor = recipe.imageUrl ? '#cbd5e1' : 'transparent'; e.currentTarget.style.transform = 'none'; }}
+                            >
+                              {recipe.imageUrl ? (
+                                <img src={recipe.imageUrl} alt={recipe.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <ChefHat size={22} color="var(--corp-green)" />
+                              )}
+                            </button>
                             <div>
                               <h3 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0 }}>{recipe.name}</h3>
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{recipe.ingredients.length} Ingredientes</span>
@@ -13787,6 +13847,9 @@ export default function ClientDashboard() {
           onDelete={handleDeleteRecipe}
           onTechnicalSheet={setRecipeForTechnicalSheet}
           onElaborate={handleOpenRecipe}
+          onImageUpdated={(recipeId, newImageUrl) => {
+            setRecipes(prev => prev.map(r => r.id === recipeId ? { ...r, imageUrl: newImageUrl } : r));
+          }}
           onNewRecipe={() => {
             setEditingRecipe(null);
             setRecipeForm({ 
@@ -13810,6 +13873,18 @@ export default function ClientDashboard() {
               customLabelIngredients: ""
             });
             setIsRecipeManageModalOpen(true);
+          }}
+        />
+      )}
+
+      {selectedRecipeForImage && (
+        <RecipeImageModal 
+          isOpen={!!selectedRecipeForImage}
+          recipe={selectedRecipeForImage}
+          onClose={() => setSelectedRecipeForImage(null)}
+          onImageSaved={(recipeId, newImageUrl) => {
+            setRecipes(prev => prev.map(r => r.id === recipeId ? { ...r, imageUrl: newImageUrl } : r));
+            setSelectedRecipeForImage(null);
           }}
         />
       )}

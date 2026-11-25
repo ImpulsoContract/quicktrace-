@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { exportRecipesToExcel } from "@/lib/recipeExcelExporter";
+import RecipeImageModal from "@/components/RecipeImageModal";
 
 const formatDateDDMMYYYY = (dateInput) => {
   if (!dateInput) return "-";
@@ -32,13 +33,15 @@ export default function RecipeListModal({
   onDelete,
   onTechnicalSheet,
   onElaborate,
-  onNewRecipe
+  onNewRecipe,
+  onImageUpdated
 }) {
   const { t, locale } = useI18n();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("name"); // 'name' | 'ingredients' | 'createdAt' | 'elaborations'
   const [sortDirection, setSortDirection] = useState("asc"); // 'asc' | 'desc'
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedRecipeForImage, setSelectedRecipeForImage] = useState(null);
 
   const handleExportExcel = () => {
     setIsExporting(true);
@@ -433,18 +436,38 @@ export default function RecipeListModal({
                         {/* 1. NOMBRE DE LA RECETA */}
                         <td style={{ padding: '1rem 1.25rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ 
-                              width: '34px', 
-                              height: '34px', 
-                              borderRadius: '8px', 
-                              background: 'rgba(66, 98, 22, 0.08)', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center',
-                              flexShrink: 0
-                            }}>
-                              <ChefHat size={17} color="var(--corp-green)" />
-                            </div>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRecipeForImage(recipe);
+                              }}
+                              title={recipe.imageUrl ? (t('recipes.change_image_tooltip') || "Cambiar imagen de la receta") : (t('recipes.attach_image_tooltip') || "Adjuntar imagen a la receta")}
+                              style={{ 
+                                width: '36px', 
+                                height: '36px', 
+                                borderRadius: '8px', 
+                                background: recipe.imageUrl ? 'transparent' : 'rgba(66, 98, 22, 0.08)', 
+                                border: recipe.imageUrl ? '1px solid #cbd5e1' : '1px dashed transparent',
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                flexShrink: 0,
+                                cursor: 'pointer',
+                                padding: 0,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--corp-green)'; e.currentTarget.style.transform = 'scale(1.06)'; }}
+                              onMouseOut={(e) => { e.currentTarget.style.borderColor = recipe.imageUrl ? '#cbd5e1' : 'transparent'; e.currentTarget.style.transform = 'none'; }}
+                            >
+                              {recipe.imageUrl ? (
+                                <img src={recipe.imageUrl} alt={recipe.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <ChefHat size={17} color="var(--corp-green)" />
+                              )}
+                            </button>
                             <div>
                               <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '0.95rem' }}>
                                 {recipe.name}
@@ -653,6 +676,17 @@ export default function RecipeListModal({
           </div>
         </footer>
       </div>
-    </div>
+      {selectedRecipeForImage && (
+        <RecipeImageModal 
+          isOpen={!!selectedRecipeForImage}
+          recipe={selectedRecipeForImage}
+          onClose={() => setSelectedRecipeForImage(null)}
+          onImageSaved={(recipeId, newImageUrl) => {
+            if (onImageUpdated) onImageUpdated(recipeId, newImageUrl);
+            setSelectedRecipeForImage(null);
+          }}
+        />
+      )}
+</div>
   );
 }

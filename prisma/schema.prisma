@@ -314,6 +314,8 @@ model Recipe {
   productFamilyId Int?
   productFamily   ProductFamily? @relation(fields: [productFamilyId], references: [id], onDelete: SetNull)
 
+  imageUrl String? @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
