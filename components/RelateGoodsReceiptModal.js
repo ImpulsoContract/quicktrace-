@@ -11,6 +11,7 @@ export default function RelateGoodsReceiptModal({
   defaultQuantity = "",
   initialIngredients = [],
   initialQuantities = {},
+  initialCostPrices = {},
   initialGoodsForSaleId = null,
   initialGoodsForSaleQuantity = "",
   initialGoodsForSaleCostPrice = "",
@@ -33,6 +34,8 @@ export default function RelateGoodsReceiptModal({
   const [ingSearchTerm, setIngSearchTerm] = useState("");
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [quantities, setQuantities] = useState({});
+  const [costPrices, setCostPrices] = useState({});
+  const [existingPriceMap, setExistingPriceMap] = useState({});
 
   // Goods For Sale Tab State
   const [goodsSearchTerm, setGoodsSearchTerm] = useState("");
@@ -65,6 +68,11 @@ export default function RelateGoodsReceiptModal({
           ? { ...initialQuantities }
           : {}
       );
+      setCostPrices(
+        initialCostPrices && typeof initialCostPrices === "object"
+          ? { ...initialCostPrices }
+          : {}
+      );
       setSelectedGfsId(initialGoodsForSaleId ? parseInt(initialGoodsForSaleId, 10) : null);
       setGfsQuantity(
         initialGoodsForSaleQuantity !== null && initialGoodsForSaleQuantity !== undefined
@@ -85,11 +93,32 @@ export default function RelateGoodsReceiptModal({
     isOpen,
     initialIngredients,
     initialQuantities,
+    initialCostPrices,
     initialGoodsForSaleId,
     initialGoodsForSaleQuantity,
     initialGoodsForSaleCostPrice,
     initialBarcode
   ]);
+
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch("/api/ingredient-prices")
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const map = {};
+            data.forEach(p => {
+              if (p.name && p.unit) {
+                map[`${p.name.trim()}:${p.unit.trim()}`] = p.price;
+              }
+            });
+            setExistingPriceMap(map);
+          }
+        })
+        .catch(err => console.error("Error fetching ingredient prices:", err));
+    }
+  }, [isOpen]);
 
   const fetchGoodsForSale = async () => {
     setLoadingGoods(true);
@@ -322,6 +351,33 @@ export default function RelateGoodsReceiptModal({
     }
   };
 
+
+  const handleIngredientCostPriceChange = (key, val, ingName) => {
+    setCostPrices(prev => ({ ...prev, [key]: val }));
+    if (selectedGood && isLinked(selectedGood, ingName)) {
+      setGfsCostPrice(val);
+    }
+  };
+
+  const handleGfsCostPriceChange = (val) => {
+    setGfsCostPrice(val);
+    if (selectedGood) {
+      const linkedIng = findIngredientForGoods(selectedGood);
+      if (linkedIng) {
+        const units = getIngredientsWithUnits([linkedIng]);
+        if (units.length > 0) {
+          setCostPrices(prev => {
+            const next = { ...prev };
+            units.forEach(u => {
+              next[`${u.name}:${u.unit}`] = val;
+            });
+            return next;
+          });
+        }
+      }
+    }
+  };
+
   const handleIngredientQuantityChange = (key, val, ingName) => {
     setQuantities(prev => ({ ...prev, [key]: val }));
     if (selectedGood && isLinked(selectedGood, ingName)) {
@@ -395,6 +451,7 @@ export default function RelateGoodsReceiptModal({
       onSave({
         relatedIngredients: selectedIngredients,
         relatedQuantities: {},
+        relatedCostPrices: {},
         goodsForSaleId: null,
         goodsForSaleQuantity: null,
         goodsForSaleCostPrice: null,
@@ -411,6 +468,12 @@ export default function RelateGoodsReceiptModal({
     for (const key of validKeys) {
       if (quantities[key] !== undefined && quantities[key] !== "") {
         cleanedQuantities[key] = quantities[key];
+      }
+    }
+    const cleanedCostPrices = {};
+    for (const key of validKeys) {
+      if (costPrices[key] !== undefined && costPrices[key] !== "") {
+        cleanedCostPrices[key] = costPrices[key];
       }
     }
 
@@ -469,6 +532,7 @@ export default function RelateGoodsReceiptModal({
     onSave({
       relatedIngredients: selectedIngredients,
       relatedQuantities: cleanedQuantities,
+      relatedCostPrices: cleanedCostPrices,
       goodsForSaleId: selectedGfsId,
       goodsForSaleQuantity: parsedGfsQty,
       goodsForSaleCostPrice: parsedGfsCost,
@@ -889,7 +953,7 @@ export default function RelateGoodsReceiptModal({
                         min="0"
                         className="input-field"
                         value={gfsCostPrice}
-                        onChange={(e) => setGfsCostPrice(e.target.value)}
+                        onChange={(e) => handleGfsCostPriceChange(e.target.value)}
                         placeholder="0.00"
                         style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
                       />
@@ -940,30 +1004,84 @@ export default function RelateGoodsReceiptModal({
                   padding: '1.25rem',
                   flexShrink: 0
                 }}>
-                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: 'var(--corp-green)' }}>
-                    {t('goods_receipt_form.stock_control_title') || "Escribe las cantidades de stock que hay que añadir en cada ingrediente."}
+                  <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '800', color: 'var(--corp-green)' }}>
+                    {t('goods_receipt_form.stock_and_cost_title') || "Cantidades de stock y precio de coste por ingrediente"}
                   </h4>
-                  <p style={{ margin: '0.35rem 0 0.75rem 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                    {t('goods_receipt_form.stock_control_important') || "IMPORTANTE. Si ves que sale varios campos de un mismo ingrediente es porque lo has puesto en diferentes recetas con diferentes unidades de medida y por eso aparece en varias unidades de medida."}
+                  <p style={{ margin: '0.35rem 0 0.85rem 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                    {t('goods_receipt_form.stock_and_cost_desc') || "Indica la cantidad que suma al stock y el precio de coste por unidad de medida de esta entrada para mantener actualizados los escandallos de tus recetas."}
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {getIngredientsWithUnits(selectedIngredients).map((item, idx) => {
                       const key = `${item.name}:${item.unit}`;
-                      const val = quantities[key] !== undefined ? quantities[key] : (selectedGood && isLinked(selectedGood, item.name) ? gfsQuantity : "");
+                      const valQty = quantities[key] !== undefined ? quantities[key] : (selectedGood && isLinked(selectedGood, item.name) ? gfsQuantity : "");
+                      const valCost = costPrices[key] !== undefined ? costPrices[key] : (existingPriceMap[key] !== undefined ? existingPriceMap[key] : (selectedGood && isLinked(selectedGood, item.name) ? gfsCostPrice : ""));
                       return (
-                        <div className="form-group" key={`${item.name}_${item.unit}_${idx}`} style={{ margin: 0 }}>
-                          <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', fontWeight: '700' }}>
-                            {`Cantidad de ${item.name} (${item.unit})`}
-                          </label>
-                          <input
-                            type="number"
-                            step="any"
-                            className="input-field"
-                            value={val}
-                            onChange={(e) => handleIngredientQuantityChange(key, e.target.value, item.name)}
-                            placeholder={defaultQuantity || "0"}
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                          />
+                        <div 
+                          key={`${item.name}_${item.unit}_${idx}`}
+                          style={{
+                            background: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '0.65rem',
+                            padding: '0.75rem 0.9rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <span style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                                {item.name}
+                              </span>
+                              <span style={{
+                                background: '#ecfdf5',
+                                color: '#047857',
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                padding: '0.1rem 0.45rem',
+                                borderRadius: '0.35rem'
+                              }}>
+                                {item.unit}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                            {/* Cantidad añadida */}
+                            <div className="form-group" style={{ margin: 0 }}>
+                              <label className="label" style={{ fontSize: '0.72rem', marginBottom: '0.25rem', fontWeight: '700', color: '#475569' }}>
+                                {t('goods_receipt_form.stock_quantity_added') || "Cantidad añadida"} ({item.unit})
+                              </label>
+                              <input
+                                type="number"
+                                step="any"
+                                min="0"
+                                className="input-field"
+                                value={valQty}
+                                onChange={(e) => handleIngredientQuantityChange(key, e.target.value, item.name)}
+                                placeholder={defaultQuantity || "0"}
+                                style={{ padding: '0.45rem 0.65rem', fontSize: '0.82rem' }}
+                              />
+                            </div>
+
+                            {/* Precio de coste por unidad */}
+                            <div className="form-group" style={{ margin: 0 }}>
+                              <label className="label" style={{ fontSize: '0.72rem', marginBottom: '0.25rem', fontWeight: '700', color: '#475569' }}>
+                                {t('goods_receipt_form.cost_price_per_unit') || "Precio de coste"} ({currencySymbol}/{item.unit})
+                              </label>
+                              <input
+                                type="number"
+                                step="any"
+                                min="0"
+                                className="input-field"
+                                value={valCost}
+                                onChange={(e) => handleIngredientCostPriceChange(key, e.target.value, item.name)}
+                                placeholder="0.00"
+                                style={{ padding: '0.45rem 0.65rem', fontSize: '0.82rem' }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       );
                     })}

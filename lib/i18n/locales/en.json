@@ -1104,8 +1104,8 @@
     "empty_goods_for_sale": "You don't have any goods for sale created yet.",
     "no_goods_for_sale_match": "No goods found matching that name.",
     "goods_for_sale_selected_title": "Stock and cost data for selected goods for sale",
-    "stock_quantity_added": "Quantity added to stock",
-    "cost_price_per_unit": "Cost price per unit",
+    "stock_quantity_added": "Quantity added",
+    "cost_price_per_unit": "Cost price",
     "clear_selection": "Clear selection",
     "selected_good_help": "When saving this goods receipt, the stock of this good will be increased and this cost price will be assigned.",
     "modal_add_gfs_title": "New goods for sale",
@@ -1117,7 +1117,9 @@
     "barcode_help": "Optional. Specific barcode for this lot or receipt (for sales and POS).",
     "lot_barcode_help": "Optional. Specific barcode for this lot or receipt.",
     "general_barcode_inherited": "inherited from product",
-    "relate_entry_simple": "Relate this entry with ingredients"
+    "relate_entry_simple": "Relate this entry with ingredients",
+    "stock_and_cost_title": "Stock quantities and cost price per ingredient",
+    "stock_and_cost_desc": "Specify the stock amount to add and the cost price per unit of measure for this entry to keep recipe food costs updated."
   },
   "plans": {
     "title": "Pricing Plans",

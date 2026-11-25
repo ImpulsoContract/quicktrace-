@@ -13,6 +13,55 @@ import {
 } from "@/lib/stock-utils";
 import { normalizeProviderName, matchProviderNames } from "@/lib/utils";
 
+async function processRelatedCostPrices(profileId, relatedCostPrices) {
+  if (!relatedCostPrices || typeof relatedCostPrices !== "object") return;
+  for (const [key, costVal] of Object.entries(relatedCostPrices)) {
+    if (costVal === "" || costVal === null || costVal === undefined) continue;
+    const parsedCost = parseFloat(costVal.toString().replace(',', '.'));
+    if (isNaN(parsedCost) || parsedCost < 0) continue;
+
+    const lastColon = key.lastIndexOf(":");
+    if (lastColon === -1) continue;
+    const ingName = key.slice(0, lastColon).trim();
+    const ingUnit = key.slice(lastColon + 1).trim();
+
+    try {
+      await prisma.ingredientPrice.upsert({
+        where: {
+          clientProfileId_name_unit: {
+            clientProfileId: profileId,
+            name: ingName,
+            unit: ingUnit
+          }
+        },
+        update: { price: parsedCost },
+        create: {
+          clientProfileId: profileId,
+          name: ingName,
+          unit: ingUnit,
+          price: parsedCost
+        }
+      });
+
+      const linkedGfs = await prisma.goodsForSale.findFirst({
+        where: {
+          clientProfileId: profileId,
+          linkedIngredientName: { equals: ingName, mode: "insensitive" }
+        }
+      });
+      if (linkedGfs) {
+        await prisma.goodsForSale.update({
+          where: { id: linkedGfs.id },
+          data: { costPrice: parsedCost }
+        });
+      }
+    } catch (err) {
+      console.error("Error updating ingredient price from goods receipt:", err);
+    }
+  }
+}
+
+
 export async function GET(req) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user.role !== "CLIENT" && session.user.role !== "WORKER" && session.user.role !== "ADMIN")) {
@@ -156,6 +205,7 @@ export async function POST(req) {
       merchantTypes,
       relatedIngredients,
       relatedQuantities,
+      relatedCostPrices,
       scannedDeliveryNoteId,
       scannedItemId,
       goodsForSaleId,
@@ -195,6 +245,7 @@ export async function POST(req) {
         merchantTypes: merchantTypes || [],
         relatedIngredients: relatedIngredients || [],
         relatedQuantities: relatedQuantities || {},
+        relatedCostPrices: relatedCostPrices || {},
         goodsForSaleId: goodsForSaleId ? parseInt(goodsForSaleId, 10) : null,
         goodsForSaleQuantity: (goodsForSaleQuantity !== null && goodsForSaleQuantity !== undefined && goodsForSaleQuantity !== "") ? parseFloat(goodsForSaleQuantity.toString().replace(',', '.')) : null,
         goodsForSaleCostPrice: (goodsForSaleCostPrice !== null && goodsForSaleCostPrice !== undefined && goodsForSaleCostPrice !== "") ? parseFloat(goodsForSaleCostPrice.toString().replace(',', '.')) : null,
@@ -243,6 +294,7 @@ export async function POST(req) {
     // Update stock levels (skip in simple version)
     if (!profile.isSimpleVersion) {
       await processNewGoodsReceiptStock(profile.id, relatedQuantities);
+      await processRelatedCostPrices(profile.id, relatedCostPrices);
       await processNewGoodsReceiptGfsStock(
         goodsForSaleId ? parseInt(goodsForSaleId, 10) : null,
         goodsForSaleQuantity,
@@ -287,6 +339,7 @@ export async function PATCH(req) {
       merchantTypes,
       relatedIngredients,
       relatedQuantities,
+      relatedCostPrices,
       goodsForSaleId,
       goodsForSaleQuantity,
       goodsForSaleCostPrice
@@ -345,6 +398,7 @@ export async function PATCH(req) {
         merchantTypes: merchantTypes !== undefined ? merchantTypes : undefined,
         relatedIngredients: relatedIngredients !== undefined ? relatedIngredients : undefined,
         relatedQuantities: relatedQuantities !== undefined ? relatedQuantities : undefined,
+        relatedCostPrices: relatedCostPrices !== undefined ? relatedCostPrices : undefined,
         goodsForSaleId: goodsForSaleId !== undefined ? (goodsForSaleId ? parseInt(goodsForSaleId, 10) : null) : undefined,
         goodsForSaleQuantity: goodsForSaleQuantity !== undefined ? ((goodsForSaleQuantity !== null && goodsForSaleQuantity !== "") ? parseFloat(goodsForSaleQuantity.toString().replace(',', '.')) : null) : undefined,
         goodsForSaleCostPrice: goodsForSaleCostPrice !== undefined ? ((goodsForSaleCostPrice !== null && goodsForSaleCostPrice !== "") ? parseFloat(goodsForSaleCostPrice.toString().replace(',', '.')) : null) : undefined,
@@ -359,6 +413,9 @@ export async function PATCH(req) {
     if (!existing.clientProfile?.isSimpleVersion) {
       const finalNewQuantities = relatedQuantities !== undefined ? relatedQuantities : existing.relatedQuantities;
       await processUpdatedGoodsReceiptStock(profileId, existing.relatedQuantities, finalNewQuantities);
+      if (relatedCostPrices !== undefined) {
+        await processRelatedCostPrices(profileId, relatedCostPrices);
+      }
 
       const finalNewGfsId = goodsForSaleId !== undefined ? (goodsForSaleId ? parseInt(goodsForSaleId, 10) : null) : existing.goodsForSaleId;
       const finalNewGfsQty = goodsForSaleQuantity !== undefined ? goodsForSaleQuantity : existing.goodsForSaleQuantity;

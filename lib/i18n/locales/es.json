@@ -1104,8 +1104,8 @@
     "empty_goods_for_sale": "No tienes mercancías en venta creadas todavía.",
     "no_goods_for_sale_match": "No se encontraron mercancías con ese nombre.",
     "goods_for_sale_selected_title": "Datos de stock y coste para la mercancía en venta seleccionada",
-    "stock_quantity_added": "Cantidad añadida al stock",
-    "cost_price_per_unit": "Precio de coste por unidad",
+    "stock_quantity_added": "Cantidad añadida",
+    "cost_price_per_unit": "Precio de coste",
     "clear_selection": "Quitar selección",
     "selected_good_help": "Al guardar esta entrada de mercancía, se incrementará el stock de esta mercancía en venta y se le asignará este precio de coste.",
     "modal_add_gfs_title": "Nueva mercancía en venta",
@@ -1117,7 +1117,9 @@
     "barcode_help": "Opcional. Código específico de este lote o entrada (para ventas y TPV).",
     "lot_barcode_help": "Opcional. Código específico de este lote o entrada.",
     "general_barcode_inherited": "heredado del producto",
-    "relate_entry_simple": "Relacionar esta entrada con ingredientes"
+    "relate_entry_simple": "Relacionar esta entrada con ingredientes",
+    "stock_and_cost_title": "Cantidades de stock y precio de coste por ingrediente",
+    "stock_and_cost_desc": "Indica la cantidad que suma al stock y el precio de coste por unidad de medida de esta entrada para mantener actualizados los escandallos de tus recetas."
   },
   "plans": {
     "title": "Planes de Precios",

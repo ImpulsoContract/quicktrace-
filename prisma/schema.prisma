@@ -587,6 +587,7 @@ model GoodsReceipt {
   merchantTypes     String[] @default([])
   relatedIngredients String[] @default([])
   relatedQuantities  Json?    @default("{}")
+  relatedCostPrices  Json?    @default("{}")
 
   goodsForSaleId        Int?
   goodsForSale          GoodsForSale? @relation(fields: [goodsForSaleId], references: [id], onDelete: SetNull)

@@ -960,6 +960,7 @@ export default function ClientDashboard() {
     merchantTypes: [],
     relatedIngredients: [],
     relatedQuantities: {},
+    relatedCostPrices: {},
     goodsForSaleId: null,
     goodsForSaleQuantity: "",
     goodsForSaleCostPrice: "",
@@ -2231,6 +2232,7 @@ export default function ClientDashboard() {
           merchantTypes: [],
           relatedIngredients: [],
           relatedQuantities: {},
+          relatedCostPrices: {},
           goodsForSaleId: null,
           goodsForSaleQuantity: "",
           goodsForSaleCostPrice: "",
@@ -2274,6 +2276,7 @@ export default function ClientDashboard() {
       merchantTypes: receipt.merchantTypes || [],
       relatedIngredients: receipt.relatedIngredients || [],
       relatedQuantities: receipt.relatedQuantities || {},
+      relatedCostPrices: receipt.relatedCostPrices || {},
       goodsForSaleId: receipt.goodsForSaleId || null,
       goodsForSaleQuantity: receipt.goodsForSaleQuantity != null ? receipt.goodsForSaleQuantity.toString() : "",
       goodsForSaleCostPrice: receipt.goodsForSaleCostPrice != null ? receipt.goodsForSaleCostPrice.toString() : "",
@@ -20104,17 +20107,19 @@ function GoodsReceiptModal({ onClose, onSubmit, formData, setFormData, loading, 
           defaultQuantity={formData.quantity}
           initialIngredients={formData.relatedIngredients || []}
           initialQuantities={formData.relatedQuantities || {}}
+          initialCostPrices={formData.relatedCostPrices || {}}
           initialGoodsForSaleId={formData.goodsForSaleId}
           initialGoodsForSaleQuantity={formData.goodsForSaleQuantity}
           initialGoodsForSaleCostPrice={formData.goodsForSaleCostPrice}
           initialBarcode={formData.barcode || ""}
           recipes={recipes}
           profile={profile}
-          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
+          onSave={({ relatedIngredients, relatedQuantities, relatedCostPrices, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
             setFormData({
               ...formData,
               relatedIngredients,
               relatedQuantities,
+              relatedCostPrices,
               goodsForSaleId,
               goodsForSaleQuantity,
               goodsForSaleCostPrice,
@@ -26907,6 +26912,7 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers: initialP
         merchantTypes: [],
         relatedIngredients: row.relatedIngredients,
         relatedQuantities: row.relatedQuantities,
+        relatedCostPrices: row.relatedCostPrices,
         goodsForSaleId: row.goodsForSaleId,
         goodsForSaleQuantity: row.goodsForSaleQuantity,
         goodsForSaleCostPrice: row.goodsForSaleCostPrice,
@@ -27378,17 +27384,19 @@ function GoodsReceiptIaScanModal({ isOpen, onClose, recipes, providers: initialP
           defaultQuantity={aiRows[linkRowIndex]?.quantity}
           initialIngredients={aiRows[linkRowIndex]?.relatedIngredients || []}
           initialQuantities={aiRows[linkRowIndex]?.relatedQuantities || {}}
+          initialCostPrices={aiRows[linkRowIndex]?.relatedCostPrices || {}}
           initialGoodsForSaleId={aiRows[linkRowIndex]?.goodsForSaleId}
           initialGoodsForSaleQuantity={aiRows[linkRowIndex]?.goodsForSaleQuantity}
           initialGoodsForSaleCostPrice={aiRows[linkRowIndex]?.goodsForSaleCostPrice}
           initialBarcode={aiRows[linkRowIndex]?.barcode || ""}
           recipes={recipes}
           profile={profile}
-          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
+          onSave={({ relatedIngredients, relatedQuantities, relatedCostPrices, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
             setAiRows(prev => prev.map((r, i) => i === linkRowIndex ? {
               ...r,
               relatedIngredients,
               relatedQuantities,
+              relatedCostPrices,
               goodsForSaleId,
               goodsForSaleQuantity,
               goodsForSaleCostPrice,
@@ -27789,6 +27797,7 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
         merchantTypes: row.merchantTypes || [],
         relatedIngredients: row.relatedIngredients,
         relatedQuantities: row.relatedQuantities,
+        relatedCostPrices: row.relatedCostPrices,
         goodsForSaleId: row.goodsForSaleId,
         goodsForSaleQuantity: row.goodsForSaleQuantity,
         goodsForSaleCostPrice: row.goodsForSaleCostPrice,
@@ -28463,17 +28472,19 @@ function ScannedDeliveryNotesModal({ isOpen, onClose, recipes, providers: initia
           defaultQuantity={editableRows[linkRowIndex]?.quantity}
           initialIngredients={editableRows[linkRowIndex]?.relatedIngredients || []}
           initialQuantities={editableRows[linkRowIndex]?.relatedQuantities || {}}
+          initialCostPrices={editableRows[linkRowIndex]?.relatedCostPrices || {}}
           initialGoodsForSaleId={editableRows[linkRowIndex]?.goodsForSaleId}
           initialGoodsForSaleQuantity={editableRows[linkRowIndex]?.goodsForSaleQuantity}
           initialGoodsForSaleCostPrice={editableRows[linkRowIndex]?.goodsForSaleCostPrice}
           initialBarcode={editableRows[linkRowIndex]?.barcode || ""}
           recipes={recipes}
           profile={profile}
-          onSave={({ relatedIngredients, relatedQuantities, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
+          onSave={({ relatedIngredients, relatedQuantities, relatedCostPrices, goodsForSaleId, goodsForSaleQuantity, goodsForSaleCostPrice, goodsForSale, barcode }) => {
             setEditableRows(prev => prev.map((r, i) => i === linkRowIndex ? {
               ...r,
               relatedIngredients,
               relatedQuantities,
+              relatedCostPrices,
               goodsForSaleId,
               goodsForSaleQuantity,
               goodsForSaleCostPrice,

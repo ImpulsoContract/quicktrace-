@@ -1099,8 +1099,8 @@
     "empty_goods_for_sale": "Non hai ancora creato merci in vendita.",
     "no_goods_for_sale_match": "Nessuna merce trovata con questo nome.",
     "goods_for_sale_selected_title": "Dati di stock e costo per la merce selezionata",
-    "stock_quantity_added": "Quantità aggiunta allo stock",
-    "cost_price_per_unit": "Prezzo di costo per unità",
+    "stock_quantity_added": "Quantità aggiunta",
+    "cost_price_per_unit": "Prezzo di costo",
     "clear_selection": "Rimuovi selezione",
     "selected_good_help": "Al salvataggio di questa voce di merce, lo stock di questa merce aumenterà e questo prezzo di costo verrà assegnato.",
     "modal_add_gfs_title": "Nuova merce in vendita",
@@ -1112,7 +1112,9 @@
     "barcode_help": "Opzionale. Codice a barre specifico per questo lotto o carico (per vendite e POS).",
     "lot_barcode_help": "Opzionale. Codice specifico per questo lotto o entrata.",
     "general_barcode_inherited": "ereditato dal prodotto",
-    "relate_entry_simple": "Associa questa entrata a ingredienti"
+    "relate_entry_simple": "Associa questa entrata a ingredienti",
+    "stock_and_cost_title": "Quantità di scorte e prezzo di costo per ingrediente",
+    "stock_and_cost_desc": "Indica la quantità da aggiungere allo stock e il prezzo di costo per unità di misura per mantenere aggiornati i costi delle tue ricette."
   },
   "plans": {
     "title": "Piani di Prezzo",

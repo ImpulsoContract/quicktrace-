@@ -1099,8 +1099,8 @@
     "empty_goods_for_sale": "Vous n'avez pas encore créé de marchandises en vente.",
     "no_goods_for_sale_match": "Aucune marchandise trouvée avec ce nom.",
     "goods_for_sale_selected_title": "Données de stock et de coût pour la marchandise sélectionnée",
-    "stock_quantity_added": "Quantité ajoutée au stock",
-    "cost_price_per_unit": "Prix de revient par unité",
+    "stock_quantity_added": "Quantité ajoutée",
+    "cost_price_per_unit": "Prix de revient",
     "clear_selection": "Effacer la sélection",
     "selected_good_help": "En enregistrant cette entrée de marchandise, le stock de cette marchandise sera augmenté et ce prix de revient sera attribué.",
     "modal_add_gfs_title": "Nouvelle marchandise en vente",
@@ -1112,7 +1112,9 @@
     "barcode_help": "Optionnel. Code-barres spécifique à ce lot ou cette entrée (pour les ventes et le TPV).",
     "lot_barcode_help": "Optionnel. Code spécifique pour ce lot ou cette entrée.",
     "general_barcode_inherited": "hérité du produit",
-    "relate_entry_simple": "Associer cette entrée à des ingrédients"
+    "relate_entry_simple": "Associer cette entrée à des ingrédients",
+    "stock_and_cost_title": "Quantités en stock et prix de revient par ingrédient",
+    "stock_and_cost_desc": "Indiquez la quantité à ajouter au stock et le prix de revient par unité de mesure pour maintenir à jour le coût de vos recettes."
   },
   "plans": {
     "title": "Plans de Tarification",
