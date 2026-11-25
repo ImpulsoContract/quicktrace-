@@ -67,6 +67,7 @@ model ClientProfile {
 
   canManageRecipes Boolean @default(true)
   labelConfig      Json?   @default("{}")
+  vitrinaLabelConfig Json? @default("{}")
   hasIaGoods       Boolean @default(true)
 
   // Referrals / Affiliates

@@ -40,6 +40,9 @@ import SelectWarehousesPdfModal from "@/components/SelectWarehousesPdfModal";
 import LinkGoodsIngredientModal from "@/components/LinkGoodsIngredientModal";
 import AssignLotWarehouseModal from "@/components/AssignLotWarehouseModal";
 import TaskAlertsConfigModal from "@/components/TaskAlertsConfigModal";
+import LabelTypeChoiceModal from "@/components/LabelTypeChoiceModal";
+import VitrinaLabelConfigModal, { mergeVitrinaLabelConfig } from "@/components/VitrinaLabelConfigModal";
+import { generateVitrinaLabelPDF } from "@/lib/vitrinaLabelGenerator";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import JsBarcode from "jsbarcode";
@@ -863,6 +866,8 @@ export default function ClientDashboard() {
   const [isManageZonesModalOpen, setIsManageZonesModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
+  const [isLabelChoiceModalOpen, setIsLabelChoiceModalOpen] = useState(false);
+  const [isVitrinaLabelModalOpen, setIsVitrinaLabelModalOpen] = useState(false);
   const [isTraceabilityReportModalOpen, setIsTraceabilityReportModalOpen] = useState(false);
   const [isSalesReportModalOpen, setIsSalesReportModalOpen] = useState(false);
   const [salesReportLoading, setSalesReportLoading] = useState(false);
@@ -3961,6 +3966,18 @@ export default function ClientDashboard() {
     }
 
     doc.save(`Etiqueta_${elaboration?.name || "elaboracion"}.pdf`);
+  };
+
+  const generateVitrinaLabel = (elaboration, overrideConfig = null, isPreview = false) => {
+    return generateVitrinaLabelPDF({
+      elaboration,
+      overrideConfig,
+      profile,
+      recipes,
+      t,
+      locale,
+      isPreview
+    });
   };
 
   const generateGoodsReportPDF = async (startDate, endDate) => {
@@ -8982,7 +8999,7 @@ export default function ClientDashboard() {
                       <WarehouseIcon size={18} /> {t('dashboard.warehouses_btn') || "Almacenes"}
                     </button>
                     <button 
-                      onClick={() => setIsLabelModalOpen(true)}
+                      onClick={() => setIsLabelChoiceModalOpen(true)}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                     >
@@ -9296,7 +9313,7 @@ export default function ClientDashboard() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', maxWidth: '240px' }}>
                               <span style={{ fontWeight: '700', color: 'var(--corp-green)', fontSize: '0.95rem' }}>{el.name}</span>
                               
-                              {/* Fila 1: Botón Etiqueta ancho completo */}
+                              {/* Fila 1: Botón Imprimir etiqueta de producto */}
                               <button 
                                 type="button"
                                 onClick={(e) => {
@@ -9321,10 +9338,41 @@ export default function ClientDashboard() {
                                   width: '100%',
                                   transition: 'all 0.15s ease'
                                 }}
-                                title={t('traceability_form.label_btn') || "Etiqueta"}
+                                title={t('traceability_form.product_label_btn') || "Imprimir etiqueta de producto"}
                               >
                                 <Printer size={13} color="var(--corp-green)" />
-                                <span>{t('traceability_form.label_btn') || "Etiqueta"}</span>
+                                <span>{t('traceability_form.product_label_btn') || "Imprimir etiqueta de producto"}</span>
+                              </button>
+
+                              {/* Fila 1b: Botón Imprimir etiqueta de vitrina */}
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  generateVitrinaLabel(el);
+                                }}
+                                className="btn-action-uniform"
+                                style={{ 
+                                  background: 'white', 
+                                  border: '1px solid #cbd5e1', 
+                                  color: 'var(--text-main)', 
+                                  padding: '0.35rem 0.6rem', 
+                                  borderRadius: '0.375rem', 
+                                  cursor: 'pointer', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  gap: '0.35rem', 
+                                  fontSize: '0.75rem', 
+                                  fontWeight: '600',
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                  width: '100%',
+                                  transition: 'all 0.15s ease'
+                                }}
+                                title={t('traceability_form.vitrina_label_btn') || "Imprimir etiqueta de vitrina"}
+                              >
+                                <Store size={13} color="var(--corp-green)" />
+                                <span>{t('traceability_form.vitrina_label_btn') || "Imprimir etiqueta de vitrina"}</span>
                               </button>
 
                               {/* Fila 2: Exportar y Ver elaboración (50% cada uno) */}
@@ -9794,7 +9842,7 @@ export default function ClientDashboard() {
 
                         {/* Botones de acción uniformes */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', width: '100%', padding: '0.35rem 0', borderTop: '1px dashed #f1f5f9', borderBottom: '1px dashed #f1f5f9' }}>
-                          {/* Fila 1: Botón Etiqueta ancho completo */}
+                          {/* Fila 1: Botón Imprimir etiqueta de producto */}
                           <button 
                             type="button"
                             onClick={(e) => {
@@ -9819,10 +9867,41 @@ export default function ClientDashboard() {
                               width: '100%',
                               transition: 'all 0.15s ease'
                             }}
-                            title={t('traceability_form.label_btn') || "Etiqueta"}
+                            title={t('traceability_form.product_label_btn') || "Imprimir etiqueta de producto"}
                           >
                             <Printer size={14} color="var(--corp-green)" />
-                            <span>{t('traceability_form.label_btn') || "Etiqueta"}</span>
+                            <span>{t('traceability_form.product_label_btn') || "Imprimir etiqueta de producto"}</span>
+                          </button>
+
+                          {/* Fila 1b: Botón Imprimir etiqueta de vitrina */}
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              generateVitrinaLabel(el);
+                            }}
+                            className="btn-action-uniform"
+                            style={{ 
+                              background: 'white', 
+                              border: '1px solid #cbd5e1', 
+                              color: 'var(--text-main)', 
+                              padding: '0.45rem 0.75rem', 
+                              borderRadius: '0.375rem', 
+                              cursor: 'pointer', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center',
+                              gap: '0.35rem', 
+                              fontSize: '0.78rem', 
+                              fontWeight: '600',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                              width: '100%',
+                              transition: 'all 0.15s ease'
+                            }}
+                            title={t('traceability_form.vitrina_label_btn') || "Imprimir etiqueta de vitrina"}
+                          >
+                            <Store size={14} color="var(--corp-green)" />
+                            <span>{t('traceability_form.vitrina_label_btn') || "Imprimir etiqueta de vitrina"}</span>
                           </button>
 
                           {/* Fila 2: Exportar y Ver elaboración (50% cada uno) */}
@@ -12733,13 +12812,14 @@ export default function ClientDashboard() {
                           <td style={{ padding: '1.25rem 1.5rem' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                               <span style={{ fontWeight: '700', color: 'var(--corp-green)' }}>{elab.name}</span>
-                              <div style={{ margin: '0.15rem 0' }}>
+                              <div style={{ margin: '0.15rem 0', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                 <button 
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     generateLabelPDF(elab);
                                   }}
+                                  className="btn-action-uniform"
                                   style={{ 
                                     background: 'white', 
                                     border: '1px solid #cbd5e1', 
@@ -12754,9 +12834,34 @@ export default function ClientDashboard() {
                                     fontWeight: '600',
                                     boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
                                   }}
-                                  title={t('traceability_form.label_btn') || "Etiqueta"}
+                                  title={t('traceability_form.product_label_btn') || "Imprimir etiqueta de producto"}
                                 >
-                                  <Printer size={13} color="var(--corp-green)" /> {t('traceability_form.label_btn') || "Etiqueta"}
+                                  <Printer size={13} color="var(--corp-green)" /> {t('traceability_form.product_label_btn') || "Imprimir etiqueta de producto"}
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateVitrinaLabel(elab);
+                                  }}
+                                  className="btn-action-uniform"
+                                  style={{ 
+                                    background: 'white', 
+                                    border: '1px solid #cbd5e1', 
+                                    color: 'var(--text-main)', 
+                                    padding: '0.25rem 0.6rem', 
+                                    borderRadius: '0.375rem', 
+                                    cursor: 'pointer', 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.35rem', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                                  }}
+                                  title={t('traceability_form.vitrina_label_btn') || "Imprimir etiqueta de vitrina"}
+                                >
+                                  <Store size={13} color="var(--corp-green)" /> {t('traceability_form.vitrina_label_btn') || "Imprimir etiqueta de vitrina"}
                                 </button>
                               </div>
                               <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
@@ -13737,6 +13842,19 @@ export default function ClientDashboard() {
         />
       )}
 
+      <LabelTypeChoiceModal 
+        isOpen={isLabelChoiceModalOpen}
+        onClose={() => setIsLabelChoiceModalOpen(false)}
+        onSelectProduct={() => {
+          setIsLabelChoiceModalOpen(false);
+          setIsLabelModalOpen(true);
+        }}
+        onSelectVitrina={() => {
+          setIsLabelChoiceModalOpen(false);
+          setIsVitrinaLabelModalOpen(true);
+        }}
+      />
+
       {isLabelModalOpen && (
         <LabelConfigModal 
           config={mergeLabelConfig(profile?.labelConfig)}
@@ -13787,6 +13905,40 @@ export default function ClientDashboard() {
                   ]
             };
             return generateLabelPDF(el, overrideConfig, true);
+          }}
+        />
+      )}
+
+      {isVitrinaLabelModalOpen && (
+        <VitrinaLabelConfigModal 
+          config={mergeVitrinaLabelConfig(profile?.vitrinaLabelConfig)}
+          onClose={() => setIsVitrinaLabelModalOpen(false)}
+          onSave={(newConfig) => handleUpdateProfile({ vitrinaLabelConfig: newConfig })}
+          latestElaboration={elaborations.length > 0 ? elaborations[0] : null}
+          onGeneratePreview={(overrideConfig) => {
+            const sampleElab = elaborations.length > 0 ? elaborations[0] : {
+              id: 0,
+              name: "L-2026-001",
+              date: new Date().toISOString(),
+              expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              netWeight: "500 g",
+              unitPrice: 5.95,
+              quantityUnit: "unidad",
+              personName: profile?.personName || "Responsable",
+              extraInfo: "Lote de elaboración de prueba",
+              ingredients: [
+                { name: "Harina de trigo", realAmount: 350, unit: "g", lote: "LOT-01" },
+                { name: "Agua", realAmount: 200, unit: "ml", lote: "LOT-02" },
+                { name: "Aceite de oliva virgen extra", realAmount: 30, unit: "ml", lote: "LOT-03" },
+                { name: "Levadura fresca", realAmount: 15, unit: "g", lote: "LOT-04" },
+                { name: "Sal marina", realAmount: 8, unit: "g", lote: "LOT-05" }
+              ],
+              recipe: {
+                name: "Pan artesano de masa madre",
+                allergens: ["gluten", "sesame"]
+              }
+            };
+            return generateVitrinaLabel(sampleElab, overrideConfig, true);
           }}
         />
       )}
