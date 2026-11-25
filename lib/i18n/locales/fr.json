@@ -2031,7 +2031,15 @@
     "pdf_generation_error": "Erreur lors de la génération du PDF de la carte.",
     "menu_subtitle_label": "Sous-titre de la carte",
     "menu_title_placeholder": "Ex : NOTRE CARTE, MENU DÉGUSTATION...",
-    "menu_subtitle_placeholder": "Écrivez ici le texte qui apparaîtra sous le titre..."
+    "menu_subtitle_placeholder": "Écrivez ici le texte qui apparaîtra sous le titre...",
+    "col_header_generic": "Colonne",
+    "col_header_photo": "Photo",
+    "col_header_dish": "Plat",
+    "col_header_ingredients": "Ingrédients",
+    "col_header_allergens": "Allergènes",
+    "col_header_price": "Prix",
+    "col_header_elaboration": "Élaboration",
+    "col_header_conservation": "Conservation"
   },
   "oil_collection": {
     "title": "Collecte des huiles de friture",

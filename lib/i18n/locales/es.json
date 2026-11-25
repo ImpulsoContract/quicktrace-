@@ -2036,7 +2036,15 @@
     "pdf_generation_error": "Error al generar el PDF de la carta.",
     "menu_subtitle_label": "Subtítulo de la carta",
     "menu_title_placeholder": "Ej: NUESTRA CARTA, MENÚ DEGUSTACIÓN...",
-    "menu_subtitle_placeholder": "Escribe aquí el texto que aparecerá debajo del título..."
+    "menu_subtitle_placeholder": "Escribe aquí el texto que aparecerá debajo del título...",
+    "col_header_generic": "Columna",
+    "col_header_photo": "Foto",
+    "col_header_dish": "Plato",
+    "col_header_ingredients": "Ingredientes",
+    "col_header_allergens": "Alérgenos",
+    "col_header_price": "Precio",
+    "col_header_elaboration": "Elaboración",
+    "col_header_conservation": "Conservación"
   },
   "oil_collection": {
     "title": "Retirada de aceites de fritura",

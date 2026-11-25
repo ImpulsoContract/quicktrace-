@@ -2031,7 +2031,15 @@
     "pdf_generation_error": "Errore durante la generazione del PDF del menu.",
     "menu_subtitle_label": "Sottotitolo del menu",
     "menu_title_placeholder": "Es: IL NOSTRO MENU, MENU DEGUSTAZIONE...",
-    "menu_subtitle_placeholder": "Scrivi qui il testo che apparirà sotto il titolo..."
+    "menu_subtitle_placeholder": "Scrivi qui il testo che apparirà sotto il titolo...",
+    "col_header_generic": "Colonna",
+    "col_header_photo": "Foto",
+    "col_header_dish": "Piatto",
+    "col_header_ingredients": "Ingredienti",
+    "col_header_allergens": "Allergeni",
+    "col_header_price": "Prezzo",
+    "col_header_elaboration": "Preparazione",
+    "col_header_conservation": "Conservazione"
   },
   "oil_collection": {
     "title": "Ritiro oli di frittura",

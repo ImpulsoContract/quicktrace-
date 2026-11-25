@@ -2030,7 +2030,15 @@
     "pdf_generation_error": "Erro ao gerar o PDF da ementa.",
     "menu_subtitle_label": "Subtítulo da ementa",
     "menu_title_placeholder": "Ex: A NOSSA EMENTA, MENU DEGUSTAÇÃO...",
-    "menu_subtitle_placeholder": "Escreva aqui o texto que aparecerá por baixo do título..."
+    "menu_subtitle_placeholder": "Escreva aqui o texto que aparecerá por baixo do título...",
+    "col_header_generic": "Coluna",
+    "col_header_photo": "Foto",
+    "col_header_dish": "Prato",
+    "col_header_ingredients": "Ingredientes",
+    "col_header_allergens": "Alérgenos",
+    "col_header_price": "Preço",
+    "col_header_elaboration": "Elaboração",
+    "col_header_conservation": "Conservação"
   },
   "oil_collection": {
     "title": "Recolha de óleos de fritura",
