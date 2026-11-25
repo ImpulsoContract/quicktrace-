@@ -1964,7 +1964,13 @@
     "use_custom_label_ingredients": "Utilizza un elenco ingredienti alternativo sulle etichette",
     "use_custom_label_ingredients_desc": "Quando abilitato, le etichette di qualsiasi elaborazione di questa ricetta stamperanno il testo seguente al posto del consueto elenco degli ingredienti.",
     "custom_label_ingredients_label": "Testo degli ingredienti per le etichette",
-    "custom_label_ingredients_placeholder": "Inserisci qui l'elenco degli ingredienti come desideri che appaia sulle etichette (es: Farina di frumento, acqua, lievito madre, sale, lievito...)"
+    "custom_label_ingredients_placeholder": "Inserisci qui l'elenco degli ingredienti come desideri che appaia sulle etichette (es: Farina di frumento, acqua, lievito madre, sale, lievito...)",
+    "export_excel_btn": "Esporta in Excel",
+    "export_excel_tooltip": "Esporta tutte le informazioni delle mie ricette in Excel",
+    "export_excel_error": "Errore durante l'esportazione delle ricette in Excel",
+    "no_recipes_to_export": "Nessuna ricetta disponibile da esportare",
+    "excel_sheet_recipes": "Ricette",
+    "excel_sheet_ingredients": "Dettaglio Ingredienti"
   },
   "oil_collection": {
     "title": "Ritiro oli di frittura",

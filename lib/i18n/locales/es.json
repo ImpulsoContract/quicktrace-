@@ -1969,7 +1969,13 @@
     "use_custom_label_ingredients": "Utilizar listado de ingredientes alternativo en las etiquetas",
     "use_custom_label_ingredients_desc": "Al activar esta opción, en las etiquetas de cualquier elaboración de esta receta se imprimirá el texto indicado abajo en lugar del listado de ingredientes habitual.",
     "custom_label_ingredients_label": "Listado de ingredientes para etiquetas",
-    "custom_label_ingredients_placeholder": "Escribe aquí el listado de ingredientes tal y como debe aparecer en las etiquetas (ej: Harina de trigo, agua, masa madre, sal, levadura...)"
+    "custom_label_ingredients_placeholder": "Escribe aquí el listado de ingredientes tal y como debe aparecer en las etiquetas (ej: Harina de trigo, agua, masa madre, sal, levadura...)",
+    "export_excel_btn": "Exportar a Excel",
+    "export_excel_tooltip": "Exportar toda la información de mis recetas a un Excel",
+    "export_excel_error": "Error al exportar las recetas a Excel",
+    "no_recipes_to_export": "No hay recetas disponibles para exportar",
+    "excel_sheet_recipes": "Recetas",
+    "excel_sheet_ingredients": "Detalle de Ingredientes"
   },
   "oil_collection": {
     "title": "Retirada de aceites de fritura",

@@ -1964,7 +1964,13 @@
     "use_custom_label_ingredients": "Utiliser une liste d'ingrédients alternative sur les étiquettes",
     "use_custom_label_ingredients_desc": "Lorsque cette option est activée, les étiquettes de toute élaboration de cette recette imprimeront le texte ci-dessous au lieu de la liste d'ingrédients habituelle.",
     "custom_label_ingredients_label": "Texte des ingrédients pour les étiquettes",
-    "custom_label_ingredients_placeholder": "Saisissez ici la liste des ingrédients telle qu'elle doit apparaître sur les étiquettes (ex : Farine de blé, eau, levain, sel, levure...)"
+    "custom_label_ingredients_placeholder": "Saisissez ici la liste des ingrédients telle qu'elle doit apparaître sur les étiquettes (ex : Farine de blé, eau, levain, sel, levure...)",
+    "export_excel_btn": "Exporter vers Excel",
+    "export_excel_tooltip": "Exporter toutes les informations de mes recettes vers Excel",
+    "export_excel_error": "Erreur lors de l'exportation des recettes vers Excel",
+    "no_recipes_to_export": "Aucune recette disponible à exporter",
+    "excel_sheet_recipes": "Recettes",
+    "excel_sheet_ingredients": "Détails des Ingrédients"
   },
   "oil_collection": {
     "title": "Collecte des huiles de friture",

@@ -30,6 +30,7 @@ export async function GET() {
             { id: 'asc' }
           ]
         },
+        productFamily: true,
         _count: {
           select: { elaborations: true }
         }

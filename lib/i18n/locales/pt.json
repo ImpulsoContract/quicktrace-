@@ -1963,7 +1963,13 @@
     "use_custom_label_ingredients": "Usar lista de ingredientes alternativa nos rótulos",
     "use_custom_label_ingredients_desc": "Quando ativado, os rótulos de qualquer elaboração desta receita imprimirão o texto abaixo em vez da lista habitual de ingredientes.",
     "custom_label_ingredients_label": "Texto de ingredientes para rótulos",
-    "custom_label_ingredients_placeholder": "Digite aqui a lista de ingredientes conforme deseja que apareça nos rótulos (ex: Farinha de trigo, água, massa mãe, sal, levedura...)"
+    "custom_label_ingredients_placeholder": "Digite aqui a lista de ingredientes conforme deseja que apareça nos rótulos (ex: Farinha de trigo, água, massa mãe, sal, levedura...)",
+    "export_excel_btn": "Exportar para Excel",
+    "export_excel_tooltip": "Exportar toda a informação das minhas receitas para Excel",
+    "export_excel_error": "Erro ao exportar as receitas para Excel",
+    "no_recipes_to_export": "Não há receitas disponíveis para exportar",
+    "excel_sheet_recipes": "Receitas",
+    "excel_sheet_ingredients": "Detalhe dos Ingredientes"
   },
   "oil_collection": {
     "title": "Recolha de óleos de fritura",

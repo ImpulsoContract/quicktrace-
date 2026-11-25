@@ -4,9 +4,10 @@ import React, { useState, useMemo } from "react";
 import { 
   ChefHat, Search, X, FileText, Copy, Edit, Trash2, 
   PlayCircle, ArrowUpDown, ChevronUp, ChevronDown, 
-  Plus, Calendar, Hash, Boxes, ScanBarcode
+  Plus, Calendar, Hash, Boxes, ScanBarcode, FileSpreadsheet, Loader2
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { exportRecipesToExcel } from "@/lib/recipeExcelExporter";
 
 const formatDateDDMMYYYY = (dateInput) => {
   if (!dateInput) return "-";
@@ -33,10 +34,23 @@ export default function RecipeListModal({
   onElaborate,
   onNewRecipe
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("name"); // 'name' | 'ingredients' | 'createdAt' | 'elaborations'
   const [sortDirection, setSortDirection] = useState("asc"); // 'asc' | 'desc'
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportExcel = () => {
+    setIsExporting(true);
+    try {
+      exportRecipesToExcel(recipes, t, locale);
+    } catch (err) {
+      console.error("Error exporting recipes to Excel:", err);
+      alert(t('recipes.export_excel_error') || "Error al exportar las recetas a Excel");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -226,6 +240,37 @@ export default function RecipeListModal({
               <PlayCircle size={15} />
               <span>{totalElaborations} {t('recipes.total_elaborations') || "elaboraciones"}</span>
             </div>
+
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={isExporting || recipes.length === 0}
+              className="btn-secondary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.55rem 1rem',
+                fontSize: '0.85rem',
+                borderRadius: '0.75rem',
+                fontWeight: '600',
+                background: 'white',
+                border: '1px solid #cbd5e1',
+                color: '#15803d',
+                cursor: (isExporting || recipes.length === 0) ? 'not-allowed' : 'pointer',
+                opacity: (isExporting || recipes.length === 0) ? 0.6 : 1,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                transition: 'all 0.15s ease'
+              }}
+              title={t('recipes.export_excel_tooltip') || "Exportar toda la información de mis recetas a Excel"}
+            >
+              {isExporting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <FileSpreadsheet size={16} color="#15803d" />
+              )}
+              <span>{t('recipes.export_excel_btn') || "Exportar a Excel"}</span>
+            </button>
 
             {onNewRecipe && (
               <button
@@ -567,14 +612,45 @@ export default function RecipeListModal({
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Mostrando {filteredAndSortedRecipes.length} de {recipes.length} recetas
           </span>
-          <button 
-            type="button" 
-            onClick={onClose} 
-            className="btn-secondary"
-            style={{ padding: '0.65rem 1.5rem', fontSize: '0.9rem', borderRadius: '0.75rem' }}
-          >
-            {t('common.close') || "Cerrar"}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={isExporting || recipes.length === 0}
+              className="btn-secondary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.65rem 1.25rem',
+                fontSize: '0.85rem',
+                borderRadius: '0.75rem',
+                fontWeight: '600',
+                background: 'white',
+                border: '1px solid #cbd5e1',
+                color: '#15803d',
+                cursor: (isExporting || recipes.length === 0) ? 'not-allowed' : 'pointer',
+                opacity: (isExporting || recipes.length === 0) ? 0.6 : 1,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+              }}
+              title={t('recipes.export_excel_tooltip') || "Exportar toda la información de mis recetas a Excel"}
+            >
+              {isExporting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <FileSpreadsheet size={16} color="#15803d" />
+              )}
+              <span>{t('recipes.export_excel_btn') || "Exportar a Excel"}</span>
+            </button>
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="btn-secondary"
+              style={{ padding: '0.65rem 1.5rem', fontSize: '0.9rem', borderRadius: '0.75rem' }}
+            >
+              {t('common.close') || "Cerrar"}
+            </button>
+          </div>
         </footer>
       </div>
     </div>

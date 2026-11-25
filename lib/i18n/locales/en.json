@@ -1969,7 +1969,13 @@
     "use_custom_label_ingredients": "Use alternative ingredients list on labels",
     "use_custom_label_ingredients_desc": "When enabled, labels for any elaboration of this recipe will print the text below instead of the regular ingredients list.",
     "custom_label_ingredients_label": "Ingredients text for labels",
-    "custom_label_ingredients_placeholder": "Enter the ingredients list as you want it to appear on labels (e.g., Wheat flour, water, sourdough, salt, yeast...)"
+    "custom_label_ingredients_placeholder": "Enter the ingredients list as you want it to appear on labels (e.g., Wheat flour, water, sourdough, salt, yeast...)",
+    "export_excel_btn": "Export to Excel",
+    "export_excel_tooltip": "Export all recipe information to Excel",
+    "export_excel_error": "Error exporting recipes to Excel",
+    "no_recipes_to_export": "No recipes available to export",
+    "excel_sheet_recipes": "Recipes",
+    "excel_sheet_ingredients": "Ingredient Details"
   },
   "oil_collection": {
     "title": "Frying oil collection",
