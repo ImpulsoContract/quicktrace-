@@ -2710,6 +2710,7 @@
     "element_health_registry": "Registro sanitario",
     "health_registry_title": "Registro sanitario",
     "health_registry_desc": "Inserisci il numero di registro sanitario della tua azienda per includerlo nell'etichetta di vetrina.",
-    "health_registry_placeholder": "es: IT 12 3456 o registro sanitario..."
+    "health_registry_placeholder": "es: IT 12 3456 o registro sanitario...",
+    "element_expiration_date": "Data di scadenza"
   }
 }

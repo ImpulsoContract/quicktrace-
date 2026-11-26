@@ -2715,6 +2715,7 @@
     "element_health_registry": "Health registry",
     "health_registry_title": "Health registry",
     "health_registry_desc": "Enter your company's health registry (or RGSEAA) number to include it on the showcase label.",
-    "health_registry_placeholder": "e.g., HR-123456 or health registry..."
+    "health_registry_placeholder": "e.g., HR-123456 or health registry...",
+    "element_expiration_date": "Expiration date"
   }
 }

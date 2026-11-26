@@ -2715,6 +2715,7 @@
     "element_health_registry": "Registro sanitario",
     "health_registry_title": "Registro sanitario",
     "health_registry_desc": "Indica el número de registro sanitario de tu empresa (o RGSEAA) para poder incluirlo en la etiqueta de vitrina.",
-    "health_registry_placeholder": "ej: ES 10.01234/B o RGSEAA..."
+    "health_registry_placeholder": "ej: ES 10.01234/B o RGSEAA...",
+    "element_expiration_date": "Fecha de caducidad"
   }
 }

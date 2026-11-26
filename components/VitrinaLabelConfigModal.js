@@ -122,6 +122,7 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
     "ingredientsList",
     "allergens",
     "elaborationDate",
+    "expirationDate",
     "lote",
     "elaborationInstructions",
     "conservationInstructions",
@@ -191,6 +192,7 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
       case "ingredientsList": return t("vitrina_labels.element_ingredients") || "Ingredientes";
       case "allergens": return t("vitrina_labels.element_allergens") || "Alérgenos";
       case "elaborationDate": return t("vitrina_labels.element_elaboration_date") || "Fecha de elaboración";
+      case "expirationDate": return t("vitrina_labels.element_expiration_date") || t("traceability_form.label_expiration") || "Fecha de caducidad";
       case "lote": return t("vitrina_labels.element_lote") || "Número de lote";
       case "elaborationInstructions": return t("vitrina_labels.element_elaboration_mode") || "Elaboración";
       case "conservationInstructions": return t("vitrina_labels.element_conservation") || "Conservación";

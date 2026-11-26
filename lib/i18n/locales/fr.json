@@ -2710,6 +2710,7 @@
     "element_health_registry": "Registre sanitaire",
     "health_registry_title": "Registre sanitaire",
     "health_registry_desc": "Indiquez le numéro de registre sanitaire de votre entreprise pour l'inclure sur l'étiquette de vitrine.",
-    "health_registry_placeholder": "ex: FR 12.345.678 ou registre sanitaire..."
+    "health_registry_placeholder": "ex: FR 12.345.678 ou registre sanitaire...",
+    "element_expiration_date": "Date de péremption"
   }
 }
