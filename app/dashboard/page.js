@@ -14199,7 +14199,7 @@ export default function ClientDashboard() {
 
       {isVitrinaLabelModalOpen && (
         <VitrinaLabelConfigModal 
-          config={mergeVitrinaLabelConfig(profile?.vitrinaLabelConfig)}
+          config={mergeVitrinaLabelConfig(profile?.vitrinaLabelConfig, profile)}
           onClose={() => setIsVitrinaLabelModalOpen(false)}
           onSave={(newConfig) => handleUpdateProfile({ vitrinaLabelConfig: newConfig })}
           latestElaboration={elaborations.length > 0 ? elaborations[0] : null}

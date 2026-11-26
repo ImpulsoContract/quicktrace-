@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 export const DEFAULT_VITRINA_LABEL_CONFIG = {
   headerImage: null,
   freeText: "",
+  healthRegistry: "",
   dimensions: {
     width: 100,
     height: 70
@@ -25,7 +26,7 @@ export const DEFAULT_VITRINA_LABEL_CONFIG = {
   showAllergenIcons: true
 };
 
-export const mergeVitrinaLabelConfig = (rawConfig) => {
+export const mergeVitrinaLabelConfig = (rawConfig, profile = null) => {
   let config = rawConfig;
   if (typeof rawConfig === "string") {
     try {
@@ -35,11 +36,21 @@ export const mergeVitrinaLabelConfig = (rawConfig) => {
     }
   }
 
-  if (!config || Object.keys(config).length === 0) return { ...DEFAULT_VITRINA_LABEL_CONFIG };
+  const defaultHealthRegistry = profile?.rgs || profile?.labelConfig?.healthRegistry || "";
+
+  if (!config || Object.keys(config).length === 0) {
+    return { 
+      ...DEFAULT_VITRINA_LABEL_CONFIG,
+      healthRegistry: defaultHealthRegistry
+    };
+  }
 
   return {
     ...DEFAULT_VITRINA_LABEL_CONFIG,
     ...config,
+    healthRegistry: config.healthRegistry !== undefined 
+      ? config.healthRegistry 
+      : (config.sanitaryRegister !== undefined ? config.sanitaryRegister : defaultHealthRegistry),
     dimensions: {
       width: parseInt(config.dimensions?.width, 10) || 100,
       height: parseInt(config.dimensions?.height, 10) || 70
@@ -114,7 +125,8 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
     "lote",
     "elaborationInstructions",
     "conservationInstructions",
-    "elaborationNotes"
+    "elaborationNotes",
+    "healthRegistry"
   ];
 
   const getAvailableElements = () => {
@@ -183,6 +195,7 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
       case "elaborationInstructions": return t("vitrina_labels.element_elaboration_mode") || "Elaboración";
       case "conservationInstructions": return t("vitrina_labels.element_conservation") || "Conservación";
       case "elaborationNotes": return t("vitrina_labels.element_notes") || "Notas de elaboración";
+      case "healthRegistry": return t("vitrina_labels.element_health_registry") || t("modals.labels_health_registry") || "Registro sanitario";
       default: return el;
     }
   };
@@ -334,10 +347,28 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
             />
           </section>
 
-          {/* 3. Dimensions */}
+          {/* 3. Sanitary Register / Health Registry */}
           <section style={{ background: "#f8fafc", padding: "1.25rem 1.5rem", borderRadius: "1rem", border: "1px solid var(--border)" }}>
             <h3 style={{ fontSize: "0.98rem", fontWeight: "800", marginBottom: "0.35rem", color: "var(--corp-green)" }}>
-              3. {t("modals.labels_dimensions") || "Dimensiones de la etiqueta"}
+              3. {t("vitrina_labels.health_registry_title") || "Registro sanitario"}
+            </h3>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "0.75rem" }}>
+              {t("vitrina_labels.health_registry_desc") || "Indica el número de registro sanitario de tu empresa para poder incluirlo en la etiqueta de vitrina."}
+            </p>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder={t("vitrina_labels.health_registry_placeholder") || "ej: ES 10.01234/B o RGSEAA..."}
+              value={localConfig.healthRegistry || ""}
+              onChange={(e) => setLocalConfig({ ...localConfig, healthRegistry: e.target.value })}
+              style={{ fontSize: "0.88rem" }}
+            />
+          </section>
+
+          {/* 4. Dimensions */}
+          <section style={{ background: "#f8fafc", padding: "1.25rem 1.5rem", borderRadius: "1rem", border: "1px solid var(--border)" }}>
+            <h3 style={{ fontSize: "0.98rem", fontWeight: "800", marginBottom: "0.35rem", color: "var(--corp-green)" }}>
+              4. {t("modals.labels_dimensions") || "Dimensiones de la etiqueta"}
             </h3>
             <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "0.75rem" }}>
               {t("vitrina_labels.dimensions_desc") || "Indica el tamaño en milímetros de tu etiqueta de vitrina o expositor."}
@@ -374,10 +405,10 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
             </div>
           </section>
 
-          {/* 4. Ingredients Configurator */}
+          {/* 5. Ingredients Configurator */}
           <section style={{ background: "#f8fafc", padding: "1.25rem 1.5rem", borderRadius: "1rem", border: "1px solid var(--border)" }}>
             <h3 style={{ fontSize: "0.98rem", fontWeight: "800", marginBottom: "0.35rem", color: "var(--corp-green)" }}>
-              4. {t("modals.ingredients_config") || "Configuración de ingredientes"}
+              5. {t("modals.ingredients_config") || "Configuración de ingredientes"}
             </h3>
             <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "0.85rem" }}>
               {t("vitrina_labels.ingredients_config_desc") || "Define cómo se mostrará la lista de ingredientes en la etiqueta."}
@@ -425,10 +456,10 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
             </div>
           </section>
 
-          {/* 5. Drag and Drop Elements Selector */}
+          {/* 6. Drag and Drop Elements Selector */}
           <section style={{ background: "#f8fafc", padding: "1.25rem 1.5rem", borderRadius: "1rem", border: "1px solid var(--border)" }}>
             <h3 style={{ fontSize: "0.98rem", fontWeight: "800", marginBottom: "0.35rem", color: "var(--corp-green)" }}>
-              5. {t("vitrina_labels.elements_selection_title") || "Elementos de la etiqueta (Drag & Drop)"}
+              6. {t("vitrina_labels.elements_selection_title") || "Elementos de la etiqueta (Drag & Drop)"}
             </h3>
             <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "1rem" }}>
               {t("vitrina_labels.elements_selection_desc") || "Arrastra o añade los elementos que deben aparecer en tu etiqueta y ordénalos según tu preferencia."}
@@ -570,10 +601,10 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
             </div>
           </section>
 
-          {/* 6. Special Settings for Specific Elements: Recipe Name, Price & Allergens */}
+          {/* 7. Special Settings for Specific Elements: Recipe Name, Price & Allergens */}
           <section style={{ background: "#f8fafc", padding: "1.25rem 1.5rem", borderRadius: "1rem", border: "1px solid var(--border)" }}>
             <h3 style={{ fontSize: "0.98rem", fontWeight: "800", marginBottom: "0.35rem", color: "var(--corp-green)" }}>
-              6. {t("vitrina_labels.special_settings_title") || "Configuración especial (Nombre, Precio y Alérgenos)"}
+              7. {t("vitrina_labels.special_settings_title") || "Configuración especial (Nombre, Precio y Alérgenos)"}
             </h3>
             <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "1rem" }}>
               {t("vitrina_labels.special_settings_desc") || "Personaliza el tamaño destacado del título y precio, y activa los iconos gráficos para los alérgenos."}
@@ -636,10 +667,10 @@ export default function VitrinaLabelConfigModal({ config, onClose, onSave, lates
             </div>
           </section>
 
-          {/* 7. General Font Size */}
+          {/* 8. General Font Size */}
           <section style={{ background: "#f8fafc", padding: "1.25rem 1.5rem", borderRadius: "1rem", border: "1px solid var(--border)" }}>
             <h3 style={{ fontSize: "0.98rem", fontWeight: "800", marginBottom: "0.35rem", color: "var(--corp-green)" }}>
-              7. {t("vitrina_labels.general_font_size_title") || "Tamaño de letra general"}
+              8. {t("vitrina_labels.general_font_size_title") || "Tamaño de letra general"}
             </h3>
             <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "0.75rem" }}>
               {t("vitrina_labels.general_font_size_desc") || "Este tamaño afectará a todos los elementos excepto al precio y al nombre de la receta (ingredientes, lote, fechas, notas...)"}

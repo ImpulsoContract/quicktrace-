@@ -2705,6 +2705,10 @@
     "general_font_size_desc": "Afeta os restantes elementos da etiqueta (ingredientes, textos, notas, etc.).",
     "preview_modal_title": "Pré-visualização da etiqueta de vitrina",
     "preview_btn": "Pré-visualização",
-    "save_btn": "Guardar configuração"
+    "save_btn": "Guardar configuração",
+    "element_health_registry": "Registo sanitário",
+    "health_registry_title": "Registo sanitário",
+    "health_registry_desc": "Indique o número de registo sanitário da sua empresa para incluí-lo na etiqueta de vitrina.",
+    "health_registry_placeholder": "ex: PT 12345 ou registo sanitário..."
   }
 }

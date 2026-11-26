@@ -2711,6 +2711,10 @@
     "general_font_size_desc": "Afecta al resto de elementos de la etiqueta (ingredientes, textos, notas, etc.).",
     "preview_modal_title": "Vista previa de etiqueta de vitrina",
     "preview_btn": "Vista previa",
-    "save_btn": "Guardar configuración"
+    "save_btn": "Guardar configuración",
+    "element_health_registry": "Registro sanitario",
+    "health_registry_title": "Registro sanitario",
+    "health_registry_desc": "Indica el número de registro sanitario de tu empresa (o RGSEAA) para poder incluirlo en la etiqueta de vitrina.",
+    "health_registry_placeholder": "ej: ES 10.01234/B o RGSEAA..."
   }
 }

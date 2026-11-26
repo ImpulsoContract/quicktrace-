@@ -2706,6 +2706,10 @@
     "general_font_size_desc": "Influisce sugli altri elementi dell'etichetta (ingredienti, testi, note, ecc.).",
     "preview_modal_title": "Anteprima etichetta vetrina",
     "preview_btn": "Anteprima",
-    "save_btn": "Salva configurazione"
+    "save_btn": "Salva configurazione",
+    "element_health_registry": "Registro sanitario",
+    "health_registry_title": "Registro sanitario",
+    "health_registry_desc": "Inserisci il numero di registro sanitario della tua azienda per includerlo nell'etichetta di vetrina.",
+    "health_registry_placeholder": "es: IT 12 3456 o registro sanitario..."
   }
 }

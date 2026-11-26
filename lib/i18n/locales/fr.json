@@ -2706,6 +2706,10 @@
     "general_font_size_desc": "S'applique aux autres éléments de l'étiquette (ingrédients, textes, notes, etc.).",
     "preview_modal_title": "Aperçu de l'étiquette de vitrine",
     "preview_btn": "Aperçu",
-    "save_btn": "Enregistrer la configuration"
+    "save_btn": "Enregistrer la configuration",
+    "element_health_registry": "Registre sanitaire",
+    "health_registry_title": "Registre sanitaire",
+    "health_registry_desc": "Indiquez le numéro de registre sanitaire de votre entreprise pour l'inclure sur l'étiquette de vitrine.",
+    "health_registry_placeholder": "ex: FR 12.345.678 ou registre sanitaire..."
   }
 }
